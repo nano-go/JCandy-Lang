@@ -7,22 +7,22 @@ import com.nano.candy.utils.Logger.LogMessage;
 
 public class CandyLogger extends Logger {
 	
-	private List<LogMessage> errors ;
-	private List<LogMessage> warns ;
+	private List<LogMessage> errors;
+	private List<LogMessage> warns;
 	
 	protected CandyLogger() {
-		errors = new ArrayList<>() ;
-		warns = new ArrayList<>() ;
+		errors = new ArrayList<>();
+		warns = new ArrayList<>();
 	}
 	
 	@Override
 	public void error(Position pos, String message, Object... args) {
-		errors.add(new LogMessage(pos, String.format(message, args))) ;
+		errors.add(new LogMessage(pos, String.format(message, args)));
 	}
 
 	@Override
 	public void warn(Position pos, String message, Object... args) {
-		warns.add(new LogMessage(pos, String.format(message, args))) ;
+		warns.add(new LogMessage(pos, String.format(message, args)));
 	}
 
 	@Override
@@ -47,33 +47,33 @@ public class CandyLogger extends Logger {
 	
 	@Override
 	public void clearErrors() {
-		errors.clear() ;
+		errors.clear();
 	}
 
 	@Override
 	public void clearWarns() {
-		warns.clear() ;
+		warns.clear();
 	}
 
 	@Override
 	public void printErrors(Writer out) throws IOException {
-		printMessages(out, "Error: ", errors) ;
+		printMessages(out, "Error: ", errors);
 	}
 
 	@Override
 	public void printWarns(Writer out) throws IOException {
-		printMessages(out, "Warn: ", warns) ;
+		printMessages(out, "Warn: ", warns);
 	}
 
 	private void printMessages(Writer out, String prefix, List<LogMessage> messages) throws IOException {
-		StringBuilder msgStr = new StringBuilder() ;
+		StringBuilder msgStr = new StringBuilder();
 		for (LogMessage msg : messages) {
 			msgStr.append(prefix)
 				.append(msg.toString())
-				.append("\n\n") ;
+				.append("\n\n");
 		}
-		out.write(msgStr.toString()) ;
-		out.flush() ;
+		out.write(msgStr.toString());
+		out.flush();
 	}
 
 }

@@ -126,7 +126,7 @@ public abstract class NumberObject extends CandyObject {
 
 	@Override
 	public StringObject stringValue() {
-		return StringObject.of(String.valueOf(doubleValue())) ;
+		return StringObject.of(String.valueOf(doubleValue()));
 	}
 	
 	/*===================== Built-in Methods ===================*/

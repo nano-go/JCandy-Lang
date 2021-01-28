@@ -7,14 +7,14 @@ import java.util.Spliterator;
 
 public class TreeNode implements Iterable<Map.Entry<String, Object>> {
 	
-	private LinkedHashMap<String, Object> attrs ;
-	private String nodeName ;
-	private Position pos ;
+	private LinkedHashMap<String, Object> attrs;
+	private String nodeName;
+	private Position pos;
 
 	public TreeNode(String nodeName, Position pos) {
 		this.nodeName = nodeName;
 		this.pos = pos;
-		this.attrs = new LinkedHashMap<>() ;
+		this.attrs = new LinkedHashMap<>();
 	}
 
 	public void setNodeName(String nodeName) {
@@ -34,12 +34,12 @@ public class TreeNode implements Iterable<Map.Entry<String, Object>> {
 	}
 	
 	public TreeNode put(String key, Object value) {
-		attrs.put(key, value) ;
-		return this ;
+		attrs.put(key, value);
+		return this;
 	}
 	
 	public Object get(String key) {
-		return attrs.get(key) ;
+		return attrs.get(key);
 	}
 	
 	@Override

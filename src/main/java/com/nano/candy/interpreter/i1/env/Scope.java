@@ -9,8 +9,8 @@ public interface Scope {
 	 * 
 	 * @return Nullable
 	 */
-	public Scope getOutterScope() ;
-	public Optional<Variable> lookupVariable(String name) ;
-	public Optional<Variable> lookupVariableInCurrentScope(String name) ;
-	public Variable defineVariable(String name, CandyObject reference) ;
+	public Scope getOutterScope();
+	public Optional<Variable> lookupVariable(String name);
+	public Optional<Variable> lookupVariableInCurrentScope(String name);
+	public Variable defineVariable(String name, CandyObject reference);
 }

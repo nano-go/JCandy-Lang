@@ -6,69 +6,69 @@ import java.util.Objects;
 
 public class CandySourceCodeReader extends SourceCodeReader {
 
-	private StringBuffer currentLineBuffer ;
-	private String       currentLineStr ;
-	private int          currentLineNumber ;
-	private int          currentColumnNumber ;
+	private StringBuffer currentLineBuffer;
+	private String       currentLineStr;
+	private int          currentLineNumber;
+	private int          currentColumnNumber;
 
 	private char[] in;
-	private char   currentChar ;
-	private int    currentCharPosition ;
+	private char   currentChar;
+	private int    currentCharPosition;
 
 	public CandySourceCodeReader(String filename, char[] in) {
-		super(filename) ;
-		this.in = Objects.requireNonNull(in) ;
-		this.in = Arrays.copyOf(in, in.length + 1) ;
-		this.in[this.in.length - 1] = Characters.EOF ;
-		this.currentLineBuffer = new StringBuffer() ;
-		this.currentChar = '\1' ;
-		readNextChar() ;
+		super(filename);
+		this.in = Objects.requireNonNull(in);
+		this.in = Arrays.copyOf(in, in.length + 1);
+		this.in[this.in.length - 1] = Characters.EOF;
+		this.currentLineBuffer = new StringBuffer();
+		this.currentChar = '\1';
+		readNextChar();
 	}
 	
 	private void fullLineBuffer() {	
 		if(currentColumnNumber < currentLineBuffer.length()) {
-			return ;
+			return;
 		}
 		
-		clearLineBuffer() ;
+		clearLineBuffer();
 		while(true) {
-			char ch = in[currentCharPosition ++] ;
+			char ch = in[currentCharPosition ++];
 
 			if(ch == Characters.EOF || ch == '\n') {
-				currentLineStr = currentLineBuffer.toString() ;
-				currentLineBuffer.append(ch) ;
-				break ;
+				currentLineStr = currentLineBuffer.toString();
+				currentLineBuffer.append(ch);
+				break;
 			}
-			currentLineBuffer.append(ch) ;
+			currentLineBuffer.append(ch);
 		}
 
-		currentLineNumber ++ ;
-		currentColumnNumber = 0 ;
+		currentLineNumber ++;
+		currentColumnNumber = 0;
 	}
 
 	private void clearLineBuffer() {
-		this.currentLineBuffer.delete(0, this.currentLineBuffer.length()) ;
+		this.currentLineBuffer.delete(0, this.currentLineBuffer.length());
 	}
 
 	@Override
 	public char tryConvertToEscapeChar() {
 		currentChar = super.tryConvertToEscapeChar();
-		return currentChar ;
+		return currentChar;
 	} 
 	
 	@Override
 	public char peek() {
-		return currentChar ;
+		return currentChar;
 	}
 
 	@Override
 	public char readNextChar() {
 		if (isAtEnd()) {
-			return currentChar ;
+			return currentChar;
 		}
-		fullLineBuffer() ;
-		currentChar = currentLineBuffer.charAt(currentColumnNumber ++) ;
-		return currentChar ;
+		fullLineBuffer();
+		currentChar = currentLineBuffer.charAt(currentColumnNumber ++);
+		return currentChar;
 	}
 
 	@Override
@@ -78,17 +78,17 @@ public class CandySourceCodeReader extends SourceCodeReader {
 
 	@Override
 	public int curLine() {
-		return currentLineNumber ;
+		return currentLineNumber;
 	}
 
 	@Override
 	public int curCol() {
-		return currentColumnNumber ;
+		return currentColumnNumber;
 	}
 
 	@Override
 	public String curLineStr() {
-		return currentLineStr ;
+		return currentLineStr;
 	}
     
 }

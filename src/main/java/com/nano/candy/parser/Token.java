@@ -6,9 +6,9 @@ import java.util.Objects;
 
 public class Token {
 
-	private final Position pos ;
-	private final Optional<String> literal ;
-	private final TokenKind kind ;
+	private final Position pos;
+	private final Optional<String> literal;
+	private final TokenKind kind;
 	
 	public Token(Position pos, String literal, TokenKind kind) {
 		this.pos = pos;
@@ -22,9 +22,9 @@ public class Token {
 
 	public String getLiteral() {
 		if (literal.isPresent()) {
-			return literal.get() ;
+			return literal.get();
 		}
-		return kind.literal ;
+		return kind.literal;
 	}
 
 	public TokenKind getKind() {
@@ -33,14 +33,14 @@ public class Token {
 
 	@Override
 	public boolean equals(Object obj) {
-		if (obj == this) return true ;
+		if (obj == this) return true;
 		if (obj instanceof Token) {
-			Token tok = (Token) obj ;
+			Token tok = (Token) obj;
 			return    Objects.equals(pos, tok.getPos())
 			       && Objects.equals(getLiteral(), tok.getLiteral())
-				   && kind == tok.kind ;
+				   && kind == tok.kind;
 		}
-		return false ;
+		return false;
 	}
 
 	@Override
@@ -49,7 +49,7 @@ public class Token {
 			.add("pos", pos)
 			.add("literal", getLiteral())
 			.add("kind", kind)
-			.toString() ;
+			.toString();
 	}
 	
 }

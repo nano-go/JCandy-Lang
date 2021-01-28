@@ -8,20 +8,20 @@ import java.util.Objects;
 
 public class Environment {
 
-	private Position currentPosition ;
-	private Scope scope ;
-	private GlobalScope global ;
-	private HashMap<Expr, Integer> distances ;
+	private Position currentPosition;
+	private Scope scope;
+	private GlobalScope global;
+	private HashMap<Expr, Integer> distances;
 	
 	public Environment() {
-		this.global = new GlobalScope() ;
-		this.scope = global ;
-		this.distances = new HashMap<>() ;
+		this.global = new GlobalScope();
+		this.scope = global;
+		this.distances = new HashMap<>();
 	}
 	
 	public HashMap<Expr, Integer> setDistances(HashMap<Expr, Integer> distances) {
-		this.distances.putAll(distances) ;
-		return this.distances ;
+		this.distances.putAll(distances);
+		return this.distances;
 	}
 	
 	public Scope enterScope() {
@@ -48,18 +48,18 @@ public class Environment {
 	
 	public Scope getScopeAt(Expr expr) {
 		if (!this.distances.containsKey(expr)) {
-			return global ;
+			return global;
 		}
-		int distance = this.distances.get(expr) ;
+		int distance = this.distances.get(expr);
 		return getScopeAt(distance);
 	}
 	
 	public Scope getScopeAt(int distance) {
-		Scope scope = this.scope ;
+		Scope scope = this.scope;
 		for (int i = 0; i < distance; i ++) {
-			scope = scope.getOutterScope() ;
+			scope = scope.getOutterScope();
 		}
-		return scope ;
+		return scope;
 	}
 	
 	public int getDistance(Expr expr) {
@@ -70,17 +70,17 @@ public class Environment {
 	 * Syncronizes the position of the given tree node for reporting errors.
 	 */
 	public void syncLocation(ASTreeNode node) {
-		syncLocation(node.pos) ;
+		syncLocation(node.pos);
 	}
 
 	/**
 	 * Syncronizes the position for reporting errors.
 	 */
 	public void syncLocation(Position pos) {
-		currentPosition = Objects.requireNonNull(pos) ;
+		currentPosition = Objects.requireNonNull(pos);
 	}
 
 	public Position getCurrentLocation() {
-		return currentPosition ;
+		return currentPosition;
 	}
 }

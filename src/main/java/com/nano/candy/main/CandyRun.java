@@ -14,10 +14,10 @@ import org.apache.commons.cli.ParseException;
 
 public class CandyRun {
 	
-	private static final Logger logger = Logger.getLogger() ;
+	private static final Logger logger = Logger.getLogger();
 	private static final Interpreter interpreter = InterpreterFactory.newInterpreter("i1");
 	
-	private CandyOptions options ; 
+	private CandyOptions options; 
 	
 	public CandyRun(String... args) throws ParseException {
 		this.options = CandyOptionsParser.parse(args);
@@ -42,11 +42,11 @@ public class CandyRun {
 	}
 
 	private void printAst() throws IOException, RuntimeException {
-		AstPrinter printer = AstPrinters.newPrinter(options) ;
+		AstPrinter printer = AstPrinters.newPrinter(options);
 		for (File f : options.getFiles()) {
 			Program program = ParserFactory.newParser(f).parse();
 			printMessage(true);
-			printer.print(System.out, program) ;
+			printer.print(System.out, program);
 			System.out.println();
 		}
 	}
@@ -72,7 +72,7 @@ public class CandyRun {
 		while (true) {
 			System.out.print(">>> ");
 			if (!scanner.hasNext()) {
-				return ;
+				return;
 			}
 			String line = scanner.nextLine().trim();
 			if (line.endsWith("$")) {
@@ -94,7 +94,7 @@ public class CandyRun {
 			FileUtils.readText(sourceFile), 
 			exitIfError, 
 			interactively
-		) ;
+		);
 	}
 
 	private boolean run(String fileName, 
@@ -111,7 +111,7 @@ public class CandyRun {
 		} catch (ExitError e) {
 			System.exit(e.getCode());
 		}
-		return false ;
+		return false;
 	}
 
 	private static boolean printMessage(boolean exitIfError) throws IOException {

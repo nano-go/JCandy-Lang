@@ -14,16 +14,16 @@ import com.nano.candy.interpreter.i1.builtin.type.RangeObject;
 public class GlobalScope extends CommonScope{
 	
 	public GlobalScope() {
-		super(null) ;
-		init() ;
+		super(null);
+		init();
 	}
 
 	private void init() {
-		defineVariable("print", BuiltinFunction.PRINT) ;
-		defineVariable("println", BuiltinFunction.PRINTLN) ;
-		defineVariable("clock", BuiltinFunction.CLOCK) ;
-		defineVariable("exit", BuiltinFunction.EXIT) ;
-		defineVariable("range", BuiltinFunction.RANGE) ;
+		defineVariable("print", BuiltinFunction.PRINT);
+		defineVariable("println", BuiltinFunction.PRINTLN);
+		defineVariable("clock", BuiltinFunction.CLOCK);
+		defineVariable("exit", BuiltinFunction.EXIT);
+		defineVariable("range", BuiltinFunction.RANGE);
 		
 		defineClass(ObjectClass.getInstance());
 		defineClass(CallableClass.getInstance());

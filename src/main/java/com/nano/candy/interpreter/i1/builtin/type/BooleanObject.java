@@ -4,21 +4,21 @@ import com.nano.candy.interpreter.i1.builtin.classes.BooleanClass;
 
 public class BooleanObject extends CandyObject {
 	
-    public static final BooleanObject TRUE = new BooleanObject(true) ;
-	public static final BooleanObject FALSE = new BooleanObject(false) ;
+    public static final BooleanObject TRUE = new BooleanObject(true);
+	public static final BooleanObject FALSE = new BooleanObject(false);
 	
 	public static BooleanObject valueOf(boolean bool) {
-		return bool ? TRUE : FALSE ;
+		return bool ? TRUE : FALSE;
 	}
 	
 	public static BooleanObject valueOf(CandyObject obj) {
 		if (obj == NullPointer.nil()) {
-			return FALSE ;
+			return FALSE;
 		}
 		if (obj instanceof BooleanObject) {
-			return (BooleanObject) obj ;
+			return (BooleanObject) obj;
 		}
-		return TRUE ;
+		return TRUE;
 	}
 	
 	private boolean value;
@@ -29,7 +29,7 @@ public class BooleanObject extends CandyObject {
 	}
 
 	public boolean value() {
-		return value ;
+		return value;
 	}
 	
 	public BooleanObject not() {
@@ -38,11 +38,11 @@ public class BooleanObject extends CandyObject {
 
 	@Override
 	public BooleanObject booleanValue() {
-		return this ;
+		return this;
 	}
 
 	@Override
 	public StringObject stringValue() {
-		return StringObject.of(value ? "true" : "false") ;
+		return StringObject.of(value ? "true" : "false");
 	}
 }

@@ -4,14 +4,14 @@ import java.util.Optional;
 
 public class Position {
 	
-	private final String fileName ;
-	private final Optional<String> lineFromSource ;
-	private final int col ;
-	private final int line ;
+	private final String fileName;
+	private final Optional<String> lineFromSource;
+	private final int col;
+	private final int line;
 
 	public Position(String fileName, String lineFromSource, int line, int col) {
 		this.fileName = fileName;
-		this.lineFromSource = Optional.ofNullable(lineFromSource) ;
+		this.lineFromSource = Optional.ofNullable(lineFromSource);
 		this.col = col;
 		this.line = line;
 	}
@@ -34,14 +34,14 @@ public class Position {
 
 	@Override
 	public boolean equals(Object obj) {
-		if (obj == this) return true ;
+		if (obj == this) return true;
 		if (obj instanceof Position) {
-			Position pos = (Position) obj ;
+			Position pos = (Position) obj;
 			return    col == pos.col 
 			       && line == pos.line
-				   && Objects.equals(getLineFromSource(), pos.getLineFromSource()) ;
+				   && Objects.equals(getLineFromSource(), pos.getLineFromSource());
 		}
-		return false ;
+		return false;
 	}
 
 	@Override
@@ -51,7 +51,7 @@ public class Position {
 			.add("line text", getLineFromSource().get())
 			.add("line", line)
 			.add("col", col)
-			.toString() ;
+			.toString();
 	}
 	
 }

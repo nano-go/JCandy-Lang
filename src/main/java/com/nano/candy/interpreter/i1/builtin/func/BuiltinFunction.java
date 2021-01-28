@@ -20,23 +20,23 @@ public abstract class BuiltinFunction extends CallableObject {
 	public static final BuiltinFunction PRINT = new BuiltinFunction(1){
 		@Override
 		public CandyObject onCall(AstInterpreter interpreter, CandyObject[] args) {
-			System.out.print(args[0].stringValue(interpreter).value()) ;
-			return NullPointer.nil() ;
+			System.out.print(args[0].stringValue(interpreter).value());
+			return NullPointer.nil();
 		}
 	};
 
 	public static final BuiltinFunction PRINTLN = new BuiltinFunction(1){
 		@Override
 		public CandyObject onCall(AstInterpreter interpreter, CandyObject[] args) {
-			System.out.println(args[0].stringValue(interpreter).value()) ;
-			return NullPointer.nil() ;
+			System.out.println(args[0].stringValue(interpreter).value());
+			return NullPointer.nil();
 		}
 	};
 
 	public static final BuiltinFunction CLOCK = new BuiltinFunction(0){
 		@Override
 		public CandyObject onCall(AstInterpreter interpreter, CandyObject[] args) {
-			return new DoubleObject(System.currentTimeMillis()) ;
+			return new DoubleObject(System.currentTimeMillis());
 		}
 	};
 
@@ -60,11 +60,11 @@ public abstract class BuiltinFunction extends CallableObject {
 	};
 
 	public BuiltinFunction(int arity) {
-		super(arity) ;
+		super(arity);
 	}
 
 	@Override
 	public StringObject stringValue() {
-		return StringObject.of("<built-in " + stringValue().value() + ">") ;
+		return StringObject.of("<built-in " + stringValue().value() + ">");
 	}
 }

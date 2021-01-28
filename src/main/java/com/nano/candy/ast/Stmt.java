@@ -22,7 +22,7 @@ public abstract class Stmt extends ASTreeNode {
 	}
 	
 	public static class Return extends Stmt {
-		public Optional<Expr> expr ;
+		public Optional<Expr> expr;
 
 		public Return(Expr expr) {
 			this.expr = Optional.ofNullable(expr);
@@ -98,9 +98,9 @@ public abstract class Stmt extends ASTreeNode {
 	}
 	
 	public static class FuncDef extends Stmt {
-		public Optional<String> name ;
-		public List<String> params ;
-		public Stmt.Block body ;
+		public Optional<String> name;
+		public List<String> params;
+		public Stmt.Block body;
 		
 		public FuncDef(String name, List<String> params, Stmt.Block body) {
 			this.name = Optional.ofNullable(name) ;
@@ -110,26 +110,26 @@ public abstract class Stmt extends ASTreeNode {
 
 		@Override
 		public <R> R accept(AstVisitor<R> visitor) {
-			return visitor.accept(this) ;
+			return visitor.accept(this);
 		}
 	}
 	
 	public static class VarDef extends Stmt {
-		public String name ;
-		public Optional<Expr> init ;
+		public String name;
+		public Optional<Expr> init;
 		
 		public VarDef(String name) {
-			this(name, null) ;
+			this(name, null);
 		}
 
 		public VarDef(String name, Expr init) {
 			this.name = name;
-			this.init = Optional.ofNullable(init) ;
+			this.init = Optional.ofNullable(init);
 		}
 		
 		@Override
 		public <R> R accept(AstVisitor<R> visitor) {
-			return visitor.accept(this) ;
+			return visitor.accept(this);
 		}
 	}
 	
@@ -146,7 +146,7 @@ public abstract class Stmt extends ASTreeNode {
 			this.name = name;
 			this.methods = methods;
 			this.superClassName = Optional.ofNullable(superClassName);
-			this.initializer = Optional.ofNullable(null);
+			this.initializer = Optional.empty();
 		}
 
 		public int constructorParamNumber() {
@@ -160,12 +160,12 @@ public abstract class Stmt extends ASTreeNode {
 	}
 
 	public static class ExprS extends Stmt {
-		private boolean shouldPrint ;
-		public Expr expr ;
+		private boolean shouldPrint;
+		public Expr expr;
 		
 		public ExprS(Expr expr) {
 			this.expr = expr;
-			this.pos = expr.pos ;
+			this.pos = expr.pos;
 		}
 
 		public boolean shouldPrint() {
@@ -174,15 +174,15 @@ public abstract class Stmt extends ASTreeNode {
 		
 		@Override
 		public <R> R accept(AstVisitor<R> visitor) {
-			return visitor.accept(this) ;
+			return visitor.accept(this);
 		}
 	}
 	
 	public static class Block extends Stmt {
-		public List<Stmt> stmts ;
+		public List<Stmt> stmts;
 		
 		public Block() {
-			this(new ArrayList<Stmt>()) ;
+			this(new ArrayList<Stmt>());
 		}
 
 		public Block(List<Stmt> stmts) {

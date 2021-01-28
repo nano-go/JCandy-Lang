@@ -89,79 +89,79 @@ public enum TokenKind {
 			.put(TokenKind.CLASS.literal, TokenKind.CLASS)
 			.put(TokenKind.THIS.literal, TokenKind.THIS)
 			.put(TokenKind.SUPER.literal, TokenKind.SUPER)
-			.build() ;
+			.build();
 
 	public static TokenKind lookupKind(String identifier) {
-		TokenKind kind = KEYWORD_KINDS.get(identifier) ;
-		return kind == null ? TokenKind.IDENTIFIER : kind ;
+		TokenKind kind = KEYWORD_KINDS.get(identifier);
+		return kind == null ? TokenKind.IDENTIFIER : kind;
 	}
 	
 	public static int assignOperatorStart() {
-		return ASSIGN.ordinal() ;
+		return ASSIGN.ordinal();
 	}
 	
 	public static int assignOperatorEnd() {
-		return MOD_ASSIGN.ordinal() ;
+		return MOD_ASSIGN.ordinal();
 	}
 	
 	public static int binaryOperatorOrdinalStart() {
-		return PLUS.ordinal() ;
+		return PLUS.ordinal();
 	}
 	
 	public static int binaryOperatorOrdinalEnd() {
-		return LTEQ.ordinal() ;
+		return LTEQ.ordinal();
 	}
 	
 	public static int unaryOperatorOrdinalStart() {
-		return NOT.ordinal() ;
+		return NOT.ordinal();
 	}
 
 	public static int unaryOperatorOrdinalEnd() {
-		return MINUS.ordinal() ;
+		return MINUS.ordinal();
 	}
 	
 	public static boolean isAssignOperator(TokenKind kind) {
-		return kind.ordinal() >= assignOperatorStart() && kind.ordinal() <= assignOperatorEnd() ;
+		return kind.ordinal() >= assignOperatorStart() && kind.ordinal() <= assignOperatorEnd();
 	}
 	
 	public static boolean isBinaryOperator(TokenKind kind) {
-		return kind.ordinal() >= binaryOperatorOrdinalStart() && kind.ordinal() <= binaryOperatorOrdinalEnd() ;
+		return kind.ordinal() >= binaryOperatorOrdinalStart() && kind.ordinal() <= binaryOperatorOrdinalEnd();
 	}
 	
 	public static boolean isUnaryOperator(TokenKind kind) {
-		return kind.ordinal() >= unaryOperatorOrdinalStart() && kind.ordinal() <= unaryOperatorOrdinalEnd() ;
+		return kind.ordinal() >= unaryOperatorOrdinalStart() && kind.ordinal() <= unaryOperatorOrdinalEnd();
 	}
 	
 	public static int precedence(TokenKind kind) {
 		switch (kind) {
 			case LOGICAL_OR: 
-				return 1 ;
+				return 1;
 			case LOGICAL_AND: 
-				return 2 ;
+				return 2;
 			case EQUAL: 
 			case NOT_EQUAL: 
-				return 3 ;
+				return 3;
 			case GT: case GTEQ: 
 			case LT: case LTEQ: 
 			case IS:
-				return 4 ;
+				return 4;
 			case PLUS: case MINUS: 
-				return 5 ;
+				return 5;
 			case STAR: case DIV: case MOD: 
-				return 6 ;
+				return 6;
 		}
-		return 0 ;
+		return 0;
 	}
 
-	protected final String literal ;
+	protected final String literal;
 	private TokenKind() {
-		this("") ;
+		this("");
 	}	
 	private TokenKind(String literal){
 		this.literal = literal;
 	}
 	
 	public String getLiteral() {
-		return literal ;
+		return literal;
 	}
 }

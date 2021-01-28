@@ -5,21 +5,21 @@ import com.nano.candy.utils.Position;
 
 class CandyScanner implements Scanner {
 
-	private SourceCodeReader reader ;
-	private Position startPos ;
-	private Token tok ;
+	private SourceCodeReader reader;
+	private Position startPos;
+	private Token tok;
 	
-	private Position basePos ;
+	private Position basePos;
 	
 	/**
 	 * If true, '\n' or EOF will be replaced with SEMI.
 	 */
-	private boolean insertSemi ;
+	private boolean insertSemi;
 
 	protected CandyScanner(String fileName, char[] in) {
-		reader = new CandySourceCodeReader(fileName, in) ;
-		basePos = reader.pos() ;
-		nextToken() ;
+		reader = new CandySourceCodeReader(fileName, in);
+		basePos = reader.pos();
+		nextToken();
 	}
 
 	@Override
@@ -29,7 +29,7 @@ class CandyScanner implements Scanner {
 	
 	@Override
 	public Token peek() {
-		return tok ;
+		return tok;
 	}
 
 	@Override
@@ -39,126 +39,126 @@ class CandyScanner implements Scanner {
 
 	@Override
 	public Token nextToken() {
-		tok = privateNextToken() ;
-		return tok ;
+		tok = privateNextToken();
+		return tok;
 	}
 
 	public Token privateNextToken() {
 		loop: while (true) {
-			skipWhiteSpaces() ;
+			skipWhiteSpaces();
 			
-			char ch = reader.peek() ;
-			this.startPos = reader.pos() ;
+			char ch = reader.peek();
+			this.startPos = reader.pos();
 			
 			if (Characters.isCandyIdentifierStart(ch)) {
-				Token identifierToken = readIdentifier() ;
-				insertSemi = shouldInsertSemi(identifierToken) ;
-				return identifierToken ;
+				Token identifierToken = readIdentifier();
+				insertSemi = shouldInsertSemi(identifierToken);
+				return identifierToken;
 			}
 			
 			if (Characters.isDigit(ch)) {
-				this.insertSemi = true ;
-				Token tok = readNumberLiteral() ;
-				if (tok == null) continue loop ;
-				return tok ;
+				this.insertSemi = true;
+				Token tok = readNumberLiteral();
+				if (tok == null) continue loop;
+				return tok;
 			}
 			
 			if (ch == '"') {
-				this.insertSemi = true ;
-				Token tok = readStringLiteral() ;
-				if (tok == null) continue loop ;
-				return tok ;
+				this.insertSemi = true;
+				Token tok = readStringLiteral();
+				if (tok == null) continue loop;
+				return tok;
 			}
 			
-			reader.consume() ;
-			TokenKind kind ;
-			String literal = null ;
-			boolean isInsertSemi = false ;
+			reader.consume();
+			TokenKind kind;
+			String literal = null;
+			boolean isInsertSemi = false;
 			
 			switch (ch) {
 				case Characters.EOF :
-					kind = insertSemi ? TokenKind.SEMI : TokenKind.EOF ;
-					literal = "EOF" ;
-					break ;
+					kind = insertSemi ? TokenKind.SEMI : TokenKind.EOF;
+					literal = "EOF";
+					break;
 					
 				case '\n' :
-					kind = TokenKind.SEMI ;
-					literal = Config.END_OF_LINE ;
-					break ;
+					kind = TokenKind.SEMI;
+					literal = Config.END_OF_LINE;
+					break;
 				
 				case '/' :
-					ch = reader.peek() ;
+					ch = reader.peek();
 					if (ch == '/') {
-						readSingleLineComment() ;
-						continue loop ;
+						readSingleLineComment();
+						continue loop;
 					} else if (ch == '*') {
-						readMultiLineComment() ;
-						continue loop ;
+						readMultiLineComment();
+						continue loop;
 					}
-					kind = switch2('=', TokenKind.DIV_ASSIGN, TokenKind.DIV) ;
-					break ;
+					kind = switch2('=', TokenKind.DIV_ASSIGN, TokenKind.DIV);
+					break;
 					
 				case '&' :
-					ch = reader.peek() ;
+					ch = reader.peek();
 					if (ch != '&') {
-						reader.error(startPos, "The operator '&' doesn't yet suppored.") ;
-						continue loop ;
+						reader.error(startPos, "The operator '&' doesn't yet suppored.");
+						continue loop;
 					}
-					reader.consume() ;
-					literal = "&&" ;
-					kind = TokenKind.LOGICAL_AND ;
-					break ;
+					reader.consume();
+					literal = "&&";
+					kind = TokenKind.LOGICAL_AND;
+					break;
 					
 				case '|' :
-					ch = reader.peek() ;
+					ch = reader.peek();
 					if (ch != '|') {
-						reader.error(startPos, "The operator '|' doesn't yet suppored.") ;
-						continue loop ;
+						reader.error(startPos, "The operator '|' doesn't yet suppored.");
+						continue loop;
 					}
-					reader.consume() ;
-					literal = "||" ;
-					kind = TokenKind.LOGICAL_OR ;
-					break ;
+					reader.consume();
+					literal = "||";
+					kind = TokenKind.LOGICAL_OR;
+					break;
 					
 				case '!' :
-					kind = switch2('=', TokenKind.NOT_EQUAL, TokenKind.NOT) ;
-					break ;
+					kind = switch2('=', TokenKind.NOT_EQUAL, TokenKind.NOT);
+					break;
 					
 				case '>' :
-					kind = switch2('=', TokenKind.GTEQ, TokenKind.GT) ;
-					break ;
+					kind = switch2('=', TokenKind.GTEQ, TokenKind.GT);
+					break;
 					
 				case '<' :
-					kind = switch2('=', TokenKind.LTEQ, TokenKind.LT) ;	
-					break ;
+					kind = switch2('=', TokenKind.LTEQ, TokenKind.LT);	
+					break;
 				
 				case '+' :
-					kind = switch2('=', TokenKind.PLUS_ASSIGN, TokenKind.PLUS) ;
-					break ;
+					kind = switch2('=', TokenKind.PLUS_ASSIGN, TokenKind.PLUS);
+					break;
 					
 				case '-' :
-					kind = switch3('=', TokenKind.MINUS_ASSIGN, '>', TokenKind.ARROW, TokenKind.MINUS) ;
-					break ;
+					kind = switch3('=', TokenKind.MINUS_ASSIGN, '>', TokenKind.ARROW, TokenKind.MINUS);
+					break;
 					
 				case '*' :
-					kind = switch2('=', TokenKind.STAR_ASSIGN, TokenKind.STAR) ;
-					break ;
+					kind = switch2('=', TokenKind.STAR_ASSIGN, TokenKind.STAR);
+					break;
 					
 				case '%' :
-					kind = switch2('=', TokenKind.MOD_ASSIGN, TokenKind.MOD) ;
-					break ;
+					kind = switch2('=', TokenKind.MOD_ASSIGN, TokenKind.MOD);
+					break;
 					
 				case '=' :
-					kind = switch2('=', TokenKind.EQUAL, TokenKind.ASSIGN) ;
-					break ;
+					kind = switch2('=', TokenKind.EQUAL, TokenKind.ASSIGN);
+					break;
 					
 				case '{' :
-					kind = TokenKind.LBRACE ;
-					break ;
+					kind = TokenKind.LBRACE;
+					break;
 				
 				case '}' :
-					kind = TokenKind.RBRACE ;
-					break ;
+					kind = TokenKind.RBRACE;
+					break;
 				
 				case '[':
 					kind = TokenKind.LBRACKET;
@@ -171,35 +171,35 @@ class CandyScanner implements Scanner {
 					
 				case '(' :	
 					kind = TokenKind.LPAREN;
-					break ;
+					break;
 				
 				case ')' :
 					isInsertSemi = true;
 					kind = TokenKind.RPAREN;
-					break ;
+					break;
 				
 				case ';' :
-					kind = TokenKind.SEMI ;
-					break ;
+					kind = TokenKind.SEMI;
+					break;
 				
 				case ':' :
-					kind = TokenKind.COLON ;
-					break ;
+					kind = TokenKind.COLON;
+					break;
 					
 				case ',' :
-					kind = TokenKind.COMMA ;
-					break ;
+					kind = TokenKind.COMMA;
+					break;
 					
 				case '.' :
 					kind = TokenKind.DOT;
-					break ;
+					break;
 					
 				default :
-					reader.error(startPos, "Unknown character: '%c'", ch) ;
-					continue loop ;
+					reader.error(startPos, "Unknown character: '%c'", ch);
+					continue loop;
 			}
-			this.insertSemi = isInsertSemi ;
-			return new Token(startPos, literal, kind) ;
+			this.insertSemi = isInsertSemi;
+			return new Token(startPos, literal, kind);
 		}
 	}
 
@@ -212,112 +212,112 @@ class CandyScanner implements Scanner {
 			case BREAK:
 			case CONTINUE:
 			case RETURN:
-				return true ;
+				return true;
 		}
 		return false;
 	}
 	
 	private void skipWhiteSpaces() {
 		while (Characters.isWhitespace(reader.peek())) {
-			if (insertSemi && reader.peek() == '\n') break ;
-			reader.consume() ;
+			if (insertSemi && reader.peek() == '\n') break;
+			reader.consume();
 		}
 	}
 	
 	private TokenKind switch2(char case1, TokenKind result, TokenKind def) {
 		if (reader.peek() == case1) {
-			reader.consume() ;
-			return result ;
+			reader.consume();
+			return result;
 		}
-		return def ;
+		return def;
 	}
 	
 	private TokenKind switch3(char case1, TokenKind result1, char case2, TokenKind result2, TokenKind def) {
 		if (reader.peek() == case1) {
-			reader.consume() ;
-			return result1 ;
+			reader.consume();
+			return result1;
 		} else if (reader.peek() == case2) {
-			reader.consume() ;
-			return result2 ;
+			reader.consume();
+			return result2;
 		}
-		return def ;
+		return def;
 	}
 	
 	private Token readIdentifier() {
-		reader.putChar(true) ;
+		reader.putChar(true);
 		while (Characters.isCandyIdentifier(reader.peek())) {
-			reader.putChar(true) ;
+			reader.putChar(true);
 		}
-		String identifier = reader.savedString() ;
-		return new Token(startPos, identifier, TokenKind.lookupKind(identifier)) ;
+		String identifier = reader.savedString();
+		return new Token(startPos, identifier, TokenKind.lookupKind(identifier));
 	}
 
 	private Token readNumberLiteral() {
-		reader.putChar(true) ;
-		char ch = reader.peek() ;
-		boolean hasRadixPoint = false ;
+		reader.putChar(true);
+		char ch = reader.peek();
+		boolean hasRadixPoint = false;
 		while(Characters.isDigit(ch) || ch == '.') {
 			if (ch == '.') {
 				if (hasRadixPoint) {
 					// Save the position of the point '.' in advance
 					// putChar will take a char forward
-					Position pointPos = reader.pos() ;
-					reader.putChar(true) ;
+					Position pointPos = reader.pos();
+					reader.putChar(true);
 					reader.error(
 						pointPos,
 						"Invalid radix point in number literal '%s'.", 
 						reader.savedString()
-					) ;
-					reader.consume() ;
-					return null ;
+					);
+					reader.consume();
+					return null;
 				}
-				hasRadixPoint = true ;
+				hasRadixPoint = true;
 			}
-			reader.putChar(true) ;
-			ch = reader.peek() ;
+			reader.putChar(true);
+			ch = reader.peek();
 		}
 		return new Token(
 			startPos, reader.savedString(), 
 			hasRadixPoint ? TokenKind.DOUBLE : TokenKind.INTEGER
-		) ;
+		);
 	}
 	
 	private Token readStringLiteral() {
-		reader.consume() ;
-		char ch = reader.peek() ;
+		reader.consume();
+		char ch = reader.peek();
 		while (ch != '"') {
 			if (reader.isAtEnd() || ch == '\n') {
-				reader.error("Unterminated string literal.") ;
-				return null ;
+				reader.error("Unterminated string literal.");
+				return null;
 			}
-			reader.putChar(reader.tryConvertToEscapeChar()) ;
-			ch = reader.readNextChar() ;
+			reader.putChar(reader.tryConvertToEscapeChar());
+			ch = reader.readNextChar();
 		}
-		reader.consume() ;
-		return new Token(startPos, reader.savedString(), TokenKind.STRING) ;
+		reader.consume();
+		return new Token(startPos, reader.savedString(), TokenKind.STRING);
 	}
 	
 	private void readSingleLineComment() {
-		reader.consume() ;
-		char ch = reader.peek() ;
+		reader.consume();
+		char ch = reader.peek();
 		while (ch != '\n' && ch != Characters.EOF) {
-			ch = reader.readNextChar() ;
+			ch = reader.readNextChar();
 		}
 	}
 	
 	private void readMultiLineComment() {
-		reader.consume() ;
+		reader.consume();
 		while (true) {
 			if (reader.isAtEnd()) {
-				reader.error("Unterminated comment.") ;
-				return ;
+				reader.error("Unterminated comment.");
+				return;
 			}
-			char ch = reader.peek() ;
-			reader.consume() ;
+			char ch = reader.peek();
+			reader.consume();
 			if (ch == '*') {
 				if (reader.peek() == '/') {
-					reader.consume() ;
-					return ;
+					reader.consume();
+					return;
 				}
 			}
 		}

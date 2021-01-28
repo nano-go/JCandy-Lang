@@ -13,26 +13,26 @@ public abstract class SerializablePrinter extends AstPrinter {
 	
 	protected String accept(Object obj) {
 		if (obj instanceof TreeNode) {
-			return serialize((TreeNode)obj) ;
+			return serialize((TreeNode)obj);
 		} else if (obj instanceof List) {
-			return serialize((List)obj) ;
+			return serialize((List)obj);
 		} else if (obj instanceof Position) {
-			return serialize((Position)obj) ;
+			return serialize((Position)obj);
 		} else if (obj instanceof String) {
-			return serialize((String)obj) ;
+			return serialize((String)obj);
 		} else if (obj instanceof TokenKind) {
-			return serialize((TokenKind)obj) ;
+			return serialize((TokenKind)obj);
 		}
 		if (obj.getClass().isArray()) {
-			return serialize((Object[])obj) ;
+			return serialize((Object[])obj);
 		}
-		return obj.toString() ;
+		return obj.toString();
 	}
 
-	protected abstract String serialize(TokenKind tk) ;
-	protected abstract String serialize(Object[] array) ;
-	protected abstract String serialize(List list) ;
-	protected abstract String serialize(String str) ;
-	protected abstract String serialize(Position pos) ;
-	protected abstract String serialize(TreeNode treeNode) ;
+	protected abstract String serialize(TokenKind tk);
+	protected abstract String serialize(Object[] array);
+	protected abstract String serialize(List list);
+	protected abstract String serialize(String str);
+	protected abstract String serialize(Position pos);
+	protected abstract String serialize(TreeNode treeNode);
 }

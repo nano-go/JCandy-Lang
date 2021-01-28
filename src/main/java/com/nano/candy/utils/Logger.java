@@ -7,40 +7,40 @@ import java.util.List;
 
 public abstract class Logger {
 	
-	private static CandyLogger logger = new CandyLogger() ;
+	private static CandyLogger logger = new CandyLogger();
 
 	public static CandyLogger getLogger() {
-		return logger ;
+		return logger;
 	}
 	
 	public void printErrors(OutputStream out) throws IOException {
-		printErrors(new OutputStreamWriter(out)) ;
+		printErrors(new OutputStreamWriter(out));
 	}
 	public void printWarns(OutputStream out) throws IOException {
-		printWarns(new OutputStreamWriter(out)) ;
+		printWarns(new OutputStreamWriter(out));
 	}
 
 	public void clearAllMessages() {
-		clearErrors() ;
-		clearWarns() ;
+		clearErrors();
+		clearWarns();
 	}
 	
-	public abstract void error(Position pos, String message, Object... args) ;
-	public abstract void warn(Position pos, String message, Object... args) ;
-	public abstract boolean hadErrors() ;
-	public abstract boolean hadWarns() ;
-	public abstract void clearErrors() ;
-	public abstract void clearWarns() ;
-	public abstract List<LogMessage> getErrorMessages() ;
-	public abstract List<LogMessage> getWarnMessages() ;
+	public abstract void error(Position pos, String message, Object... args);
+	public abstract void warn(Position pos, String message, Object... args);
+	public abstract boolean hadErrors();
+	public abstract boolean hadWarns();
+	public abstract void clearErrors();
+	public abstract void clearWarns();
+	public abstract List<LogMessage> getErrorMessages();
+	public abstract List<LogMessage> getWarnMessages();
 	
 	
-	public abstract void printErrors(Writer out) throws IOException ;
-	public abstract void printWarns(Writer out) throws IOException ;
+	public abstract void printErrors(Writer out) throws IOException;
+	public abstract void printWarns(Writer out) throws IOException;
 	
 	public static class LogMessage {
-		protected Position pos ;
-		protected String message ;
+		protected Position pos;
+		protected String message;
 
 		public LogMessage(Position pos, String message) {
 			this.pos = pos;
@@ -63,12 +63,12 @@ public abstract class Logger {
 			//     15 | getTestCases(
 			StringBuilder builder = new StringBuilder().append(message)
 				.append("\n    in source: ")
-				.append(pos.getFileName()) ;
+				.append(pos.getFileName());
 			if (pos.getLineFromSource().isPresent()) {
 				builder.append("\n    ").append(pos.getLine())
-					.append(" | ").append(pos.getLineFromSource().get().trim()) ;
+					.append(" | ").append(pos.getLineFromSource().get().trim());
 			}
-			return builder.toString() ;
+			return builder.toString();
 		}
 	}
 }

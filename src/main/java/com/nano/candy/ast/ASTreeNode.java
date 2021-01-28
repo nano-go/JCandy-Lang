@@ -3,11 +3,10 @@ import com.nano.candy.utils.Position;
 
 public abstract class ASTreeNode {
 	
-	public Position pos ;
-	
+	public Position pos;
 	public Position pos() {
-		return pos ;
+		return pos;
 	}
 	
-	public abstract <R> R accept(AstVisitor<R> visitor) ;
+	public abstract <R> R accept(AstVisitor<R> visitor);
 }
