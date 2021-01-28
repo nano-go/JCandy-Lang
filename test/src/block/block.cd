@@ -1,0 +1,13 @@
+var a = 50
+{
+	var a = "Hello World\n"
+	assert a == "Hello World\n"
+}
+
+
+{
+	var a = a * 2
+	assert a == 100
+}
+
+assert a == 50

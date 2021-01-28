@@ -1,0 +1,110 @@
+
+class Node {
+	init(prev, value, next) {
+		this.prev = prev
+		this.value = value
+		this.next = next
+	}
+}
+
+class LinkedList {
+	init() {
+		this.beginMarker = Node(null, 0, null)
+		this.endMarker = Node(this.beginMarker, 0, null)
+		this.beginMarker.next = this.endMarker
+		this.size = 0
+	}
+	
+	_getAt(index) {
+		if (index < 0 || index >= this.size) return null
+		var n 
+		if (index >= this.size / 2) {
+			n = this.endMarker.prev
+			var i = this.size - 1
+			while (i != index) {
+				n = n.prev
+				i -= 1
+			}
+		} else {
+			n = this.beginMarker.next
+			var i = 0
+			while (i != index) {
+				n = n.next
+				i += 1
+			}
+		}
+		return n
+	}
+	
+	_addBefore(value, node) {
+		var newNode = Node(node.prev, value, node)
+		node.prev.next = newNode
+		node.prev = newNode
+	}
+	
+	add(value) {
+		this._addBefore(value, this.endMarker)
+		this.size += 1
+	}
+	
+	removeAt(index) {
+		var n = this._getAt(index)
+		this.size -= 1
+		n.next.prev = n.prev
+		n.prev.next = n.next
+	}
+	
+	getAt(index) {
+		var n = this._getAt(index)
+		if (n == null) return null
+		return n.value
+	}
+	
+	foreach(f) {
+		for (e in this) f(e)
+	}
+	
+	foreachReverse(f) {
+		fun recursive(f, n) {
+			if (n == this.beginMarker) return
+			f(n.value)
+			recursive(f, n.prev)
+		}
+		recursive(f, this.endMarker.prev)
+	}
+	
+	_iterator() {
+		var iterator = Object()
+		var node = this.beginMarker.next
+		iterator._hasNext = lambda -> node != this.endMarker
+		iterator._next = lambda -> {
+			var n = node
+			node = node.next
+			return n.value
+		};
+		return iterator
+	}
+}
+
+fun checkSum(list, expected) {
+	var sum = 0
+	list.foreach(lambda e -> sum += e)
+	assert sum == expected: "Foreach: (" + sum + "), Exp: (" + expected + ")"
+	sum = 0
+	list.foreachReverse(lambda e -> sum += e)
+	assert sum == expected: "Foreach Reverse: (" + sum + "), Exp: (" + expected + ")"
+}
+
+var list = LinkedList()
+var i = 0
+while (i < 10) {
+	list.add(i)
+	i += 1
+}
+list.removeAt(4)
+checkSum(list, 41)
+list.removeAt(1)
+checkSum(list, 40)
+list.removeAt(list.size - 1)
+assert list.getAt(list.size - 1) == 8
+checkSum(list, 31)

@@ -1,0 +1,44 @@
+var arr = [1, 2, 3, 4]
+
+assert arr.get(0) == 1
+assert arr[3] == 4
+assert arr.remove(1)
+
+// current: arr = [2, 3, 4]
+arr[0] = 1
+arr.removeAt(1)
+arr.set(1, 2)
+
+assert arr[0] == 1
+assert arr[1] == 2
+assert arr.size() == 2
+
+var arr = Array(10, lambda i -> i * 2)
+assert arr.size() == 10
+var i = 0
+for (e in arr) {
+	assert e == i * 2
+	i += 1
+}
+
+/* append in foreach */
+
+var arr = range(0, 10).toArray()
+var i = 0
+for (e in arr) {
+	arr.append(e)
+	if ((i += 1) == 20) {
+		break
+	}
+}
+
+/* random element */
+var arr = range(0, 10).toArray()
+var set = Object()
+println(arr)
+for (i in range(0, 50)) {
+	set._setAttr(arr.randElement()._str(), true)
+}
+for (e in arr) {
+	assert set._getAttr(e._str())
+}

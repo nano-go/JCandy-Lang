@@ -1,0 +1,41 @@
+
+fun userAvailable() {
+	return true
+}
+
+var userId = 10001
+fun getUserId() {
+	return userId
+}
+
+fun printUserInfo() {
+	// ...
+	var userId = 0
+	if (userAvailable()) {
+		userId = getUserId()
+	} else {
+		userId = -1
+	}
+	assert userId == 10001
+	// ...
+}
+
+printUserInfo()
+
+var x = 128
+{
+	fun getX() {
+		return x;
+	}
+	var x = 256
+	assert getX() == 128
+}
+
+{
+	var a = 155
+	{
+		fun getAValue() { return a; }
+		var a = 66
+		assert getAValue() == 155
+	}
+}

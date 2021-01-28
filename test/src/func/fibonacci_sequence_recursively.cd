@@ -1,0 +1,6 @@
+fun fibonacci_sequenece(n) {
+	if (n <= 3) return 1
+	return fibonacci_sequenece(n - 2) + fibonacci_sequenece(n - 1)
+}
+
+assert fibonacci_sequenece(10) == 34

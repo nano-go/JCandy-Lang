@@ -1,0 +1,6 @@
+var arr = []
+
+assert arr._class() == Array
+assert arr._class()._super == Object
+assert arr is Object
+assert arr.size() == 0

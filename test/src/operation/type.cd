@@ -1,0 +1,52 @@
+
+/** null */
+
+assert null == null
+assert 0 == 0
+assert 0 != null
+assert null != 0
+assert "" != null
+assert null != ""
+assert null != false
+assert false != null
+
+/** string */
+
+assert "abc" == "abc"
+assert "abcd" != "abc"
+
+/** bool type */
+
+assert true == true
+assert false != true
+assert true != false
+assert false == false
+
+/** logical operator */
+
+assert !null
+assert 1 && 2
+assert 2 and 1
+assert null || 1
+assert null or ""
+
+/** object's boolean value */
+assert 1
+assert ""
+assert true
+
+/** diff type */
+assert 1 != true
+assert 0 != false
+assert "" != 1
+assert false != ""
+
+/** instanceOf */
+assert 1 is Integer
+assert 1.0 is Double
+assert 2 is Number
+assert 3.14159 is Number
+assert true is Bool
+assert (2)._bool() is Bool
+assert "strstr" is String
+assert null is NullPointer

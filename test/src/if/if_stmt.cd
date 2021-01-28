@@ -1,0 +1,17 @@
+if (null) {
+	assert false
+}
+
+var a = false
+if (a) {
+	assert false
+} else if (a && true){
+	assert false
+} else assert !a
+
+if (!a)
+	if (a)
+		assert false
+	else a = 150
+
+assert a == 150

@@ -1,0 +1,12 @@
+fun foreach(n, f) {
+	var i = 0
+	while (i < n) {
+		f(i)
+		i = i + 1
+	}
+}
+
+var n = 50
+var sum = 0
+foreach(n, lambda e -> sum += e)
+assert sum == (n - 1) * (n / 2)

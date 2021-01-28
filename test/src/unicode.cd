@@ -1,0 +1,8 @@
+var cn = "繁华声遁入空门折煞了世人"
+var kor = "그대없이는..."
+var jp = "忘れていた目を閉じて 取り戻せ恋のうた\n青空に隠れている 手を伸ばしてもう一度"
+
+println(cn)
+println(kor)
+println(jp)
+

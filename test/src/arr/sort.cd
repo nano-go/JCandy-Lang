@@ -1,0 +1,58 @@
+fun insertionSort(arr, left, right) {
+	if (right <= left) return
+	for (i in range(left, right)) {
+		var j = i
+		var e = arr[j + 1]
+		while (j >= 0 && e < arr[j]) {
+			arr[j + 1] = arr[j]
+			j -= 1
+		}
+		arr[j + 1] = e
+	}
+}
+
+fun quickSort(arr) {
+	fun partition(arr, left, right) {
+		var pivotIndex = range(left, right + 1).rand()
+		arr.swap(pivotIndex, left)
+		var pivot = arr[left]
+		var l = left
+		var r = right+1
+		while (true) {
+			while (arr[l += 1] < pivot)
+				if (l == right) break
+			while (arr[r -= 1] >= pivot) 
+				if (r == left) break
+			if (r <= l) break
+			arr.swap(l, r)
+		}
+		arr.swap(r, left)
+		return r
+	}
+	
+	fun qs(arr, left, right) {
+		if (right - left <= 17) {
+			insertionSort(arr, left, right)
+			return
+		}
+		var mid = partition(arr, left, right)
+		qs(arr, left, mid - 1)
+		qs(arr, mid + 1, right)
+	}
+	
+	qs(arr, 0, arr.size() - 1)
+}
+
+for (i in range(0, 50)) {
+	var expectedArr = []
+	var arr = []
+	for (i in range(0, range(10, 1000).rand())) {
+		var randomElement = range(0, 100000).rand()
+		expectedArr.append(randomElement)
+		arr.append(randomElement)
+	}
+	expectedArr.sort()
+	quickSort(arr)
+
+	assert expectedArr == arr : "\nExp: " + expectedArr + "\nBut: " + arr;
+}

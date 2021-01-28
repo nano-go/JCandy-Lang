@@ -1,0 +1,62 @@
+
+var a = range(0, 10)
+
+var cmpI = 0
+for (i in a) {
+	assert cmpI == i
+	cmpI += 1
+}
+
+var cmpI = 0
+for (i in a.toArray()) {
+	assert cmpI == i
+	cmpI += 1
+}
+
+
+var a = range(10, 0)
+var cmpI = 10
+for (i in a) {
+	assert cmpI == i
+	cmpI -= 1
+}
+
+var cmpI = 10
+for (i in a.toArray()) {
+	assert cmpI == i
+	cmpI -= 1
+}
+
+var a1 = range(0, 0)
+var a2 = Range(1, 1)
+
+for (i in a1) a1 = false
+for (i in a2) a2 = false
+assert a1 && a2
+
+assert a1._class() == Range && a2._class() == Range
+assert a1.toArray().size() == 0
+assert a2.toArray().size() == 0
+
+
+var a = range(0, 10)
+var set = Object()
+
+for (i in range(0, 100)) {
+	set._setAttr(a.rand()._str(), true)
+}
+
+for (i in a) {
+	assert set._getAttr(i._str())
+}
+
+var a = range(10, 0)
+var set = Object()
+
+for (i in range(0, 100)) {
+	set._setAttr(a.rand()._str(), true)
+}
+
+for (i in a) {
+	assert set._getAttr(i._str())
+}

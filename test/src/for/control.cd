@@ -1,0 +1,19 @@
+var t = 1
+for (i in range(0, 15)) {
+	var t = i
+	if ((i % 5) == 0) {
+		break
+	}
+}
+assert t == 1
+
+var arr = []
+for (i in range(0, 100)) {
+	if (i % 10 == 0) {
+		continue
+	}
+	if (i % 5 == 0) {
+		arr.append(i)
+	}
+}
+assert arr == [5, 15, 25, 35, 45, 55, 65, 75, 85, 95]

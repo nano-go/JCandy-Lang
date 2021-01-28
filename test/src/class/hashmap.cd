@@ -1,0 +1,107 @@
+
+class Entry {
+	init(key, value, next) {
+		this.key = key
+		this.value = value
+		this.next = next
+	}
+}
+
+class HashMap {
+	init(initialCapacity) {
+		if (initialCapacity <= 0) initialCapacity = 1
+		this.table = Array(initialCapacity, null)
+		this.loadFactor = 0.75
+		this.threshould = (initialCapacity * this.loadFactor).intVal()
+		this.size = 0
+	}
+	
+	_hash(key) {
+		return key._hashcode() % this.table.size()
+	}
+	
+	_resize() {
+		var oldTable = this.table
+		var newSize = oldTable.size() * 2
+		this.table = Array(newSize, null)
+		this.threshould = (newSize * this.loadFactor).intVal()
+		for (e in oldTable) {
+			if (e == null) continue;
+			while (e != null) {
+				this.put(e.key, e.value)
+				e = e.next
+			}
+		}
+	}
+	
+	_findEntry(index, key) {
+		var entry = this.table[index]
+		while (entry != null) {
+			if (entry.key == key) {
+				return entry
+			}
+			entry = entry.next
+		}
+		return null
+	}
+	
+	put(key, value) {
+		if (this.size >= this.threshould) {
+			this._resize()
+		}
+		var index = this._hash(key)
+		var entry = this._findEntry(index, key)
+		if (entry != null) {
+			entry.value = value
+		} else {
+			this.table[index] = Entry(key, value, this.table[index])
+			this.size += 1
+		}
+		return value
+	}
+	
+	get(key) {
+		var index = this._hash(key)
+		var entry = this._findEntry(index, key)
+		if (entry != null) {
+			return entry.value
+		}
+		return entry
+	}
+	
+	/**
+	 * Operator overload: 'hashMap[key]'
+	 */
+	_getItem(key) { return this.get(key); }
+	
+	/**
+	 * Operator overload: 'hashMap[key] = value'
+	 */
+	_setItem(key, value) { return this.put(key, value); }
+}
+
+var hashMap = HashMap(16)
+
+// puts and gets
+var i = 0
+while (i <= 50) {
+	hashMap[i] = i
+	hashMap.put("i" + i, i)
+	assert hashMap[i] == i
+	assert hashMap.get("i" + i) == i
+	i += 1
+}
+
+// reputs and gets
+var i = 0
+while (i <= 50) {
+	var value = i * i
+	hashMap[i] = value
+	hashMap.put("i" + i, value)
+	assert hashMap[i] == value
+	assert hashMap.get("i" + i) == value
+	i += 1
+}
+
+assert hashMap[51] == null
+assert hashMap["i51"] == null

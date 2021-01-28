@@ -1,0 +1,17 @@
+fun test(f, n) {
+	fun closure (){
+		n = 5
+		return n 
+	}
+	var funValue = f()
+	if (n <= 0) {
+		return
+	}
+	test(closure, n - 1)
+	assert n == 5
+}
+
+fun initFunc() {
+	return 1
+}
+test(initFunc, 5)

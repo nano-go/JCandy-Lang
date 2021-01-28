@@ -1,0 +1,89 @@
+class UnionFind {
+	init(N) {
+		this.arr = range(0, N).toArray()
+		this.count = N
+	}
+	
+	find(p) {
+		var q = this.arr[p]
+		if (p == q) return q
+		q = this.find(q)
+		this.arr[p] = q
+		return q
+	}
+	
+	connected(p, q) {
+		return this.find(p) == this.find(q)
+	}
+	
+	union(p, q) {
+		if (p == q) return true
+		var pRoot = this.find(p)
+		var qRoot = this.find(q)
+		if (pRoot == qRoot) {
+			return true
+		}
+		this.arr[pRoot] = qRoot
+		this.count -= 1
+		return false
+	}
+}
+
+var uf = UnionFind(15)
+// 0 -- 5
+uf.union(0, 5)
+// 0 -- 2, 5
+uf.union(0, 2)
+// 0 -- 2, 5, 7
+uf.union(5, 7)
+
+assert uf.connected(5, 0)
+assert uf.connected(2, 7)
+assert uf.connected(0, 7)
+assert uf.connected(5, 7)
+
+// [0 -- 2, 5, 7] [8 -- 12]
+uf.union(8, 12)
+// [0 -- 2, 5, 7] [8 -- 12] [9 -- 11]
+uf.union(9, 11)
+// [0 -- 2, 5, 7] [8 -- 12] [9 -- 11] [6 -- 3]
+uf.union(6, 3)
+// [0 -- 2, 5, 7] [8 -- 12] [9 -- 11] [6 -- 3, 14]
+uf.union(14, 6)
+// [0 -- 2, 5, 7] [8 -- 12, 13] [9 -- 11] [6 -- 3, 14]
+uf.union(13, 8)
+// [0 -- 1, 5, 7, 8, 12, 13] [9 -- 11] [6 -- 3, 14]
+uf.union(5, 8)
+// [0 -- 1, 2, 5, 7, 8, 12, 13] [9 -- 11] [6 -- 3, 14]
+uf.union(2, 1)
+// [0 -- 1, 2, 5, 7, 8, 12, 13] [9 -- 11, 10] [6 -- 3, 14]
+uf.union(9, 10)
+
+assert uf.connected(4, 4)
+assert uf.connected(8, 12)
+assert uf.connected(0, 12)
+assert uf.connected(2, 13)
+assert uf.connected(13, 5)
+assert uf.connected(13, 7)
+assert uf.connected(7, 12)
+assert uf.connected(3, 14)
+
+// [0 -- 1, 2, 5, 7, 8, 12, 13] [4] [9 -- 11, 10] [6 -- 3, 14]
+assert uf.count == 4
+
+// [0 -- 1, 2, 5, 7, 8, 12, 13] [9 -- 11, 10] [6 -- 3, 4, 14]
+uf.union(4, 6)
+assert uf.count == 3
+
+// [0 -- 1, 2, 5, 7, 8, 12, 13] [9 -- 11, 10, 6, 4, 3, 14]
+uf.union(9, 6)
+assert uf.count == 2
+
+uf.union(0, 9)
+assert uf.count == 1
+
+for (i in range(0, 15)) {
+	for (j in range(i, 15)) {
+		assert uf.union(i, j)
+	}
+}

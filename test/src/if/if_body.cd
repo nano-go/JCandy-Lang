@@ -1,0 +1,18 @@
+var outter = 10
+if (true) 
+	var outter = 20
+assert outter == 10
+
+if (true) {
+	var eoutter = 20
+}
+assert outter == 10
+
+if (false) {} else
+	var outter = 20
+assert outter == 10
+
+if (false) {} else {
+	var outter = 20
+}
+assert outter == 10
