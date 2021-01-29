@@ -6,10 +6,13 @@ import java.util.Objects;
 
 public class CandySourceCodeReader extends SourceCodeReader {
 
-	private StringBuffer currentLineBuffer;
-	private String       currentLineStr;
-	private int          currentLineNumber;
-	private int          currentColumnNumber;
+	private String currentLineStr;
+
+	private int lineStart;
+	private int lineLength;
+	
+	private int currentLineNumber;
+	private int currentColumnNumber;
 
 	private char[] in;
 	private char   currentChar;
@@ -18,36 +21,32 @@ public class CandySourceCodeReader extends SourceCodeReader {
 	public CandySourceCodeReader(String filename, char[] in) {
 		super(filename);
 		this.in = Objects.requireNonNull(in);
-		this.in = Arrays.copyOf(in, in.length + 1);
-		this.in[this.in.length - 1] = Characters.EOF;
-		this.currentLineBuffer = new StringBuffer();
-		this.currentChar = '\1';
+		int len = in.length;
+		this.in = Arrays.copyOf(in, len + 1);
+		this.in[len] = Characters.EOF;
+		this.currentChar = 1;
 		readNextChar();
 	}
 	
 	private void fullLineBuffer() {	
-		if(currentColumnNumber < currentLineBuffer.length()) {
+		if(currentColumnNumber < lineLength) {
 			return;
 		}
-		
-		clearLineBuffer();
+		lineStart = currentCharPosition;
 		while(true) {
-			char ch = in[currentCharPosition ++];
-
-			if(ch == Characters.EOF || ch == '\n') {
-				currentLineStr = currentLineBuffer.toString();
-				currentLineBuffer.append(ch);
-				break;
+			char ch = in[currentCharPosition ++] ;
+			if(ch == '\n' || ch == Characters.EOF) {
+				lineLength = currentCharPosition - lineStart;
+				break ;
 			}
-			currentLineBuffer.append(ch);
 		}
-
-		currentLineNumber ++;
-		currentColumnNumber = 0;
-	}
-
-	private void clearLineBuffer() {
-		this.currentLineBuffer.delete(0, this.currentLineBuffer.length());
+		if (lineLength - 1 == 0) {
+			currentLineStr = "";
+		} else {
+			currentLineStr = String.valueOf(in, lineStart, lineLength - 1);
+		}
+		currentLineNumber ++ ;
+		currentColumnNumber = 0 ;
 	}
 
 	@Override
@@ -63,11 +62,11 @@ public class CandySourceCodeReader extends SourceCodeReader {
 
 	@Override
 	public char readNextChar() {
-		if (isAtEnd()) {
-			return currentChar;
+		if (currentChar != Characters.EOF) {
+			fullLineBuffer();
+			currentChar = in[lineStart + currentColumnNumber];
+			currentColumnNumber ++;
 		}
-		fullLineBuffer();
-		currentChar = currentLineBuffer.charAt(currentColumnNumber ++);
 		return currentChar;
 	}
 
