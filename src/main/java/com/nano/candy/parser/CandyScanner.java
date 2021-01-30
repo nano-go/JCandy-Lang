@@ -17,7 +17,7 @@ class CandyScanner implements Scanner {
 	private boolean insertSemi;
 
 	protected CandyScanner(String fileName, char[] in) {
-		reader = new CandySourceCodeReader(fileName, in);
+		reader = new SourceCodeReader(fileName, in);
 		basePos = reader.pos();
 		nextToken();
 	}
