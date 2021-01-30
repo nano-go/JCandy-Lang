@@ -11,9 +11,7 @@ import java.util.Arrays;
 import static com.nano.candy.parser.TokenKind.*;
 import static org.junit.Assert.*;
 
-public abstract class ScannerTestCase {
-	
-	public abstract void assertExpected() ;
+public class ScannerTestCase {
 	
 	private static final TokenKind ID = TokenKind.IDENTIFIER ;
 	private static final Token SEMIEOF= tk(TokenKind.SEMI, "EOF") ;
@@ -29,6 +27,13 @@ public abstract class ScannerTestCase {
 		newTKCase("\n\t\t_abc 123 \n", tk(ID, "_abc"), tk(INTEGER, "123"), SEMILN),
 		newTKCase("3.14159", tk(DOUBLE, "3.14159"), SEMIEOF),
 		newTKCase("12345.6789", tk(DOUBLE, "12345.6789"), SEMIEOF),
+		newTKCase("12345_.67_89", tk(DOUBLE, "12345.6789"), SEMIEOF),
+		newTKCase("2345._", tk(DOUBLE, "2345."), SEMIEOF),
+		newTKCase("2_.____", tk(DOUBLE, "2."), SEMIEOF),
+		newTKCase("256", tk(INTEGER, "256"), SEMIEOF),
+		newTKCase("256_", tk(INTEGER, "256"), SEMIEOF),
+		newTKCase("25__________6", tk(INTEGER, "256"), SEMIEOF),
+		newTKCase("_256", tk(ID, "_256"), SEMIEOF),
 		newTKCase("length - 1", tk(ID, "length"), MINUS, tk(INTEGER, "1"), SEMIEOF),
 		newTKCase(
 			"3.14159 * 360 + 180 / 50 % 45", 
@@ -58,8 +63,8 @@ public abstract class ScannerTestCase {
 		newTKCase("\n\n\n123456789 \n abcd", tk(INTEGER, "123456789"), SEMILN, tk(ID, "abcd"), SEMIEOF),
 		newTKCase("() /** \n\n\n */ b", LPAREN, RPAREN, tk(ID, "b"), SEMIEOF),
 		newTKCase("() ; \n /** \n\n\n */ b", LPAREN, RPAREN, SEMI, tk(ID, "b"), SEMIEOF),
-		newTKCase("\t\n\r\f() \n /** \t\n\r\f \n\n\n */ b", LPAREN, RPAREN, SEMILN, tk(ID, "b"), SEMIEOF),
-		newTKCase("\t\n\r\f() ; ", LPAREN, RPAREN, SEMI),
+		newTKCase("\t\n\r() \n /** \t\n\r \n\n\n */ b", LPAREN, RPAREN, SEMILN, tk(ID, "b"), SEMIEOF),
+		newTKCase("\t\n\r() ; ", LPAREN, RPAREN, SEMI),
 		newTKCase("// what \n what + \n - \n * \n /", tk(ID, "what"), PLUS, MINUS, STAR, DIV),
 		newTKCase("var testA = _testA", VAR, tk(ID, "testA"), ASSIGN, tk(ID, "_testA"), SEMIEOF),
 		newTKCase("+= -= /= %= *= =", PLUS_ASSIGN, MINUS_ASSIGN, DIV_ASSIGN, MOD_ASSIGN, STAR_ASSIGN, ASSIGN),
@@ -69,7 +74,6 @@ public abstract class ScannerTestCase {
 			tk(ID, "abc"), tk(STRING, "Godness\n\tI'm bad.\"Hello World\""), tk(ID, "abc"), SEMIEOF
 		),
 		newTKCase("\"keep keep\''\"", tk(STRING, "keep keep''"), SEMIEOF),
-		newTKCase("\"\b\\b\f\\f\t\\t\r\\r\\nkeep\"", tk(STRING, "\b\b\f\f\t\t\r\r\nkeep"), SEMIEOF),
 		newTKCase("\"\"", tk(STRING, ""), SEMIEOF),
 		newTKCase(
 			"var lambdaExpr = lambda a, b -> a * b", 
@@ -155,7 +159,6 @@ public abstract class ScannerTestCase {
 		newPECase("\n\t\t_abc 123 \n", false, pos(2, 3), pos(2, 8), pos(2,12)),
 		newPECase("\n//\t\t_abc 123\n\t/*abcd*/abcd/**/", false, pos(3, 10), pos(3, 18)),
 		newPECase("\n\"Oh my god! Are you ok?\"\n\n bbbbb", false, pos(2, 1), pos(2, 25), pos(4, 2), pos(4, 7)),
-		newPECase("3.14.159", true, pos(1, 5)),
 		newPECase("/** abc.\n\n\t\t*/≈≈___╳", true, pos(3, 5), pos(3, 6), pos(3, 10)),
 		newPECase("\n\n/** good good", true, pos(3,14)),
 		newPECase("/**abcd", true, pos(1, 8)),
