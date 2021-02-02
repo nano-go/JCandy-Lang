@@ -7,7 +7,6 @@ import com.nano.candy.ast.Program;
 import com.nano.candy.ast.Stmt;
 import com.nano.candy.utils.Logger;
 import java.util.HashSet;
-import com.nano.candy.ast.Stmt.For;
 
 public abstract class Checker extends AbstractAstVisitor<Void> {
 	
@@ -133,6 +132,7 @@ public abstract class Checker extends AbstractAstVisitor<Void> {
 		if (node.initializer.isPresent()) {
 			node.initializer.get().accept(this);
 		}
+		
 		HashSet<String> duplicatedNameHelper = new HashSet<>(node.methods.size());
 		for (Stmt.FuncDef method : node.methods) {
 			String name = method.name.get();
@@ -142,6 +142,7 @@ public abstract class Checker extends AbstractAstVisitor<Void> {
 			} else duplicatedNameHelper.add(name);
 			method.accept(this);
 		}
+		
 		inClass = origin;
 		return null;
 	}
@@ -165,16 +166,18 @@ public abstract class Checker extends AbstractAstVisitor<Void> {
 		if (curFunctionType != FunctionType.INIT) {
 			node.body = toFuncBlock(node.body);
 		}
+		
 		HashSet<String> duplicatedNameHelper = new HashSet<>(node.params.size());
 		for (String param : node.params) {
 			if (duplicatedNameHelper.contains(param)) {
-				warn(node, "Duplcated param in the function '%s'.",
-				     node.name.isPresent() ? node.name.get() : "lambda expression");
+				warn(node, "Duplicated parameter '%s' in the function '%s'.", param,
+				    node.name.isPresent() ? node.name.get() : "lambda func");
 			}
 			duplicatedNameHelper.add(param);
 		}
+		
 		if (node.params.size() > MAX_PARAMETER_NUMBER) {
-			error(node, "The paramter number of the function '%s' must be less than %d.",
+			error(node, "The number of the parameter of the function '%s' must be less than %d.",
 			      node.name.isPresent() ? node.name.get() : "lambda expression",
 				  MAX_PARAMETER_NUMBER);
 		}
@@ -218,7 +221,7 @@ public abstract class Checker extends AbstractAstVisitor<Void> {
 			expr instanceof Expr.Super) {
 			return ;
 		}
-		error(expr, "The expression can't be called.");
+		error(expr, "The expression is not callable.");
 	}
 
 	@Override

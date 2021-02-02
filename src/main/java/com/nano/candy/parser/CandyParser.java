@@ -25,8 +25,8 @@ class CandyParser implements Parser {
 	/**
 	 * In some cases I hope the SEMI token can be ignored.
 	 * <p>e.g: {@code foreach(lambda e -> println(e))}</p>
-	 * In which the {@code println(e)} can be parsed as an expression statement.
-	 * I want this code will work instead of reporting the follwing error:
+	 * In which the {@code println(e)} will be parsed as an expression statement.
+	 * I want this code can work instead of reporting the following error:
 	 * <p>{@code println(e) Missing ';'.}</p>
 	 */
 	private boolean singleLineLambda;
@@ -87,11 +87,12 @@ class CandyParser implements Parser {
 	}
 
 	private Position suitableErrorPosition() {
-		Position pos = peek().getPos();
-		if (pos.getLine() != previous().getPos().getLine()) {
-			pos = previous().getPos();
+		Position currentPosition = peek().getPos();
+		Position previousPosition = previous().getPos();
+		if (currentPosition.getLine() != previousPosition.getLine()) {
+			return previousPosition;
 		}
-		return pos;
+		return currentPosition;
 	}
 
 	protected Token match(TokenKind tok) {
@@ -671,7 +672,7 @@ class CandyParser implements Parser {
 				break;
 
 			default: 
-				error(suitableErrorPosition(), "Expected expression factor.");
+				error(suitableErrorPosition(), "Expected expression.");
 				panic();
 		}
 		return parseExprSuffix(expr);
@@ -752,7 +753,7 @@ class CandyParser implements Parser {
 	}
 	
 	/**
-	 * LambdaExpe = <LAMBDA> Params <ARROW> Body
+	 * LambdaExpr = "lambda" Params "->" Body
 	 */
 	private Expr.Lambda parseLambdaExpr() {
 		Token location = match(LAMBDA);
@@ -762,7 +763,7 @@ class CandyParser implements Parser {
 		boolean originalSingleLineLambda = singleLineLambda;
 		singleLineLambda = peekKind() != TokenKind.LBRACE;
 		
-		Stmt.Block body = parseBody(location.getPos(), "Invalid lambda expression.");
+		Stmt.Block body = parseBody(location.getPos(), "Invalid lambda expression.");	
 		
 		singleLineLambda = originalSingleLineLambda;
 		return location(location, new Expr.Lambda(params, body));
