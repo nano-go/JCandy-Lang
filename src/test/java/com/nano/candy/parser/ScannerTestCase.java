@@ -10,6 +10,7 @@ import java.util.Arrays;
 
 import static com.nano.candy.parser.TokenKind.*;
 import static org.junit.Assert.*;
+import com.nano.candy.common.LoggerMsgChecker;
 
 public class ScannerTestCase {
 	
@@ -74,6 +75,16 @@ public class ScannerTestCase {
 			tk(ID, "abc"), tk(STRING, "Godness\n\tI'm bad.\"Hello World\""), tk(ID, "abc"), SEMIEOF
 		),
 		newTKCase("\"keep keep\''\"", tk(STRING, "keep keep''"), SEMIEOF),
+		newTKCase("\"abcdefg\\uFffFF\"", tk(STRING, "abcdefg\uFFFFF"), SEMIEOF),
+		newTKCase("\"abcdefg\\u0123F\"", tk(STRING, "abcdefg\u0123F"), SEMIEOF),
+		newTKCase("\"abcdefg\\uABCDF\"", tk(STRING, "abcdefg\uABCDF"), SEMIEOF),
+		newTKCase("\"abcdefg\\uabCdF\"", tk(STRING, "abcdefg\uABCDF"), SEMIEOF),
+		newTKCase("\"abcdefg\\uEeeE\"", tk(STRING, "abcdefg\uEEEE"), SEMIEOF),
+		newTKCase("\"abcdefg\\0778\"", tk(STRING, "abcdefg\u003f8"), SEMIEOF),
+		newTKCase("\"abcdefg\\077\"", tk(STRING, "abcdefg\u003f"), SEMIEOF),
+		newTKCase("\"abcdefg\\200\"", tk(STRING, "abcdefg\u0080"), SEMIEOF),
+		newTKCase("\"abcdefg\\377\\u00FF\"", tk(STRING, "abcdefg\u00FF\u00FF"), SEMIEOF),
+		newTKCase("\"abcdefg\\000\"", tk(STRING, "abcdefg\u0000"), SEMIEOF),
 		newTKCase("\"\"", tk(STRING, ""), SEMIEOF),
 		newTKCase(
 			"var lambdaExpr = lambda a, b -> a * b", 
@@ -121,15 +132,7 @@ public class ScannerTestCase {
 		public void assertCase() {
 			Scanner scanner = ScannerFactory.newScanner("test", input) ;
 
-			if (logger.hadErrors()) {
-				try {
-					logger.printErrors(System.err) ;
-				} catch (IOException e) {
-					fail(e.getMessage()) ;
-				}
-			}
-			assertFalse(input, logger.hadErrors()) ;
-			assertFalse(input, logger.hadWarns()) ;
+			LoggerMsgChecker.shouldNotAppearErrors(true, true);
 
 			while (scanner.hasNextToken()) {
 				Token tk = scanner.peek() ;
@@ -163,6 +166,11 @@ public class ScannerTestCase {
 		newPECase("\n\n/** good good", true, pos(3,14)),
 		newPECase("/**abcd", true, pos(1, 8)),
 		newPECase("\"music\nIn the end\"", true, pos(1, 7), pos(2, 12)),
+		newPECase("\"\\uFFFR\"", true, pos(1, 7)),
+		newPECase("\"\\u\"", true, pos(1, 4), pos(1, 5)),
+		newPECase("\"\\888\"", true, pos(1, 3)),
+		newPECase("\"\\788\"", true, pos(1, 4)),
+		newPECase("\"\\777\"", true, pos(1, 5)),
 	} ;
 	
 	public static SimulationPositions.Location pos(int line, int col) {

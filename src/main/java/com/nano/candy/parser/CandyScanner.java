@@ -284,7 +284,7 @@ class CandyScanner implements Scanner {
 				reader.error("Unterminated string literal.");
 				return null;
 			}
-			reader.putChar(reader.tryConvertToEscapeChar());
+			reader.putChar(reader.escapeChar());
 			ch = reader.readNextChar();
 		}
 		reader.consume();

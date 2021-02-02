@@ -8,11 +8,11 @@ import static com.nano.candy.parser.TokenKind.*;
 
 public class ScannerTest {
 	
-	@Test public void testTokenKinds() {
+	@Test(timeout = 2000) public void testTokenKinds() {
 		CandyTestCase.run(ScannerTestCase.TK_TEST_CASES) ;
 	}
 	
-	@Test public void testPositions() {
+	@Test(timeout = 2000) public void testPositions() {
 		CandyTestCase.run(ScannerTestCase.PE_TEST_CASES) ;
 	}
 	

@@ -80,7 +80,7 @@ public class SourceCodeReader {
 	}
 	
 	public Position pos() {
-		return new Position(fileName, curLineStr(), curLine(), curCol());
+		return new Position(fileName, currentLine(), line(), col());
 	}
 	
 	public void consume() {
@@ -110,29 +110,72 @@ public class SourceCodeReader {
 		sp = 0;
 		return savedString;
 	}
-
-	public char tryConvertToEscapeChar() {
+	
+	public char escapeChar() {
 		if (ch != '\\') {
 			return ch;
 		}
-		this.ch = convertToEscapeChar();
-		return ch;
+		return convertToEscapeChar();
 	}
 	
 	private char convertToEscapeChar() {
 		char ch = readNextChar();
-		switch (ch) {
+		switch (ch) {	
+			case '\\' :
+			case '\'' : 
+			case '\"' :
+				return ch;
+				
 			case 't' : return '\t';
 			case 'r' : return '\r';
 			case 'n' : return '\n';
 			case 'f' : return '\f';
 			case 'b' : return '\b';
-			case '\\' : return '\\';
-			case '\'' : return '\'';
-			case '\"' : return '\"';
+			
+			case '0': case '1': case '2': case '3': 
+			case '4': case '5': case '6': case '7':
+				return convertToUnicodeChar(3, 8, 255);
+	
+			case 'u':
+				// consume 'u'
+				consume();
+				return convertToUnicodeChar(4, 16, Character.MAX_CODE_POINT);
 		}
 		error("Unexpected escape char: '\\%c'", ch);
 		return ch;
+	}
+	
+	private char convertToUnicodeChar(int n, int base, int max) {
+		int unicodeChar = 0;
+		int i = 0;
+		n --;
+		while (true) {
+			char ch = peek();
+			int d = base;
+			if (ch >= '0' && ch <= '9') {	
+				d = ch - '0';
+			} else {
+				char hex = Characters.lower(ch);
+				if (hex >= 'a' && hex <= 'f') {
+					d = hex - 'a' + 10;
+				}
+			}
+			if (d >= base) {
+				error("illegal unicode escape: '%c'", ch);
+				return ch;
+			}
+			unicodeChar = unicodeChar * base + d;
+			if (i == n) {
+				break;
+			}
+			i ++;
+			consume();
+		}
+		if (unicodeChar > max) {
+			error("escape is invalid Unicode code point 0x%X", unicodeChar);
+			return ch;
+		}
+		return (char)unicodeChar;
 	}
 	
 	public char peek() {
@@ -152,15 +195,15 @@ public class SourceCodeReader {
 		return ch == Characters.EOF;
 	}
 
-	public int curLine() {
+	public int line() {
 		return line;
 	}
 
-	public int curCol() {
+	public int col() {
 		return col;
 	}
 
-	public String curLineStr() {
+	public String currentLine() {
 		return curLineStr;
 	}
     

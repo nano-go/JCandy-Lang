@@ -16,15 +16,21 @@ public class Characters {
 		return isLetter(c) || c == '_';
 	}
 
-	public static boolean isLetter(char c) {
-		return 'a' <= toLowerIfLetter(c) && toLowerIfLetter(c) <= 'z';
+	public static boolean isLetter(char ch) {
+		ch = lower(ch);
+		return 'a' <= ch && ch <= 'z';
 	}
 	
-	public static boolean isDigit(char c) {
-		return c >= '0' && c <= '9';
+	public static boolean isDigit(char ch) {
+		return ch >= '0' && ch <= '9';
 	}
 	
-	public static char toLowerIfLetter(char letter) {
+	public static char lower(char letter) {
 		return (char)(('a' - 'A') | letter);
+	}
+	
+	public static boolean isHex(char ch) {
+		ch = lower(ch);
+		return ch >= 'a' && ch <= 'f' && isDigit(ch);
 	}
 }
