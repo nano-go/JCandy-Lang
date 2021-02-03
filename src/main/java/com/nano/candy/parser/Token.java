@@ -1,18 +1,16 @@
 package com.nano.candy.parser;
-import com.google.common.collect.ImmutableMap;
 import com.nano.candy.utils.Position;
-import java.util.Optional;
 import java.util.Objects;
 
 public class Token {
 
 	private final Position pos;
-	private final Optional<String> literal;
+	private final String literal;
 	private final TokenKind kind;
 	
 	public Token(Position pos, String literal, TokenKind kind) {
 		this.pos = pos;
-		this.literal = Optional.ofNullable(literal);
+		this.literal = literal;
 		this.kind = kind;
 	}
 	
@@ -21,8 +19,8 @@ public class Token {
 	}
 
 	public String getLiteral() {
-		if (literal.isPresent()) {
-			return literal.get();
+		if (literal != null) {
+			return literal;
 		}
 		return kind.literal;
 	}
@@ -36,9 +34,9 @@ public class Token {
 		if (obj == this) return true;
 		if (obj instanceof Token) {
 			Token tok = (Token) obj;
-			return    Objects.equals(pos, tok.getPos())
-			       && Objects.equals(getLiteral(), tok.getLiteral())
-				   && kind == tok.kind;
+			return Objects.equals(pos, tok.getPos()) && 
+			       Objects.equals(getLiteral(), tok.getLiteral()) && 
+				   kind == tok.kind;
 		}
 		return false;
 	}
@@ -50,6 +48,30 @@ public class Token {
 			.add("literal", getLiteral())
 			.add("kind", kind)
 			.toString();
+	}
+	
+	public static class DoubleNumberToken extends Token {
+		private double value;
+		public DoubleNumberToken(Position pos, double value, String literal) {
+			super(pos, literal, TokenKind.DOUBLE);
+			this.value = value;
+		}
+		
+		public double getValue() {
+			return value;
+		}
+	}
+	
+	public static class IntegerNumberToken extends Token {
+		private long value;
+		public IntegerNumberToken(Position pos, long value, String literal) {
+			super(pos, literal, TokenKind.INTEGER);
+			this.value = value;
+		}
+
+		public long getValue() {
+			return value;
+		}
 	}
 	
 }

@@ -636,14 +636,14 @@ class CandyParser implements Parser {
 			case INTEGER:
 				consume();
 				expr = location(
-					beginTok, new Expr.IntegerLiteral(beginTok.getLiteral())
+					beginTok, new Expr.IntegerLiteral(beginTok)
 				);
 				break;
 			
 			case DOUBLE:
 				consume();
 				expr = location(
-					beginTok, new Expr.DoubleLiteral(beginTok.getLiteral())
+					beginTok, new Expr.DoubleLiteral(beginTok)
 				);
 				break;
 			

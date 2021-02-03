@@ -89,12 +89,8 @@ public abstract class Expr extends ASTreeNode {
 	public static class DoubleLiteral extends Expr {
 		public double value;
 		
-		public DoubleLiteral(String literal) {
-			this(Double.valueOf(literal));
-		}
-
-		public DoubleLiteral(double literal) {
-			this.value = literal;
+		public DoubleLiteral(Token tok) {
+			this.value = ((Token.DoubleNumberToken)tok).getValue();
 		}
 		
 		@Override
@@ -106,12 +102,8 @@ public abstract class Expr extends ASTreeNode {
 	public static class IntegerLiteral extends Expr {
 		public long value;
 
-		public IntegerLiteral(String literal) {
-			this(Long.valueOf(literal));
-		}
-
-		public IntegerLiteral(long literal) {
-			this.value = literal;
+		public IntegerLiteral(Token tok) {
+			this.value = ((Token.IntegerNumberToken)tok).getValue();
 		}
 
 		@Override
