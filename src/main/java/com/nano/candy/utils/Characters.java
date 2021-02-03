@@ -28,9 +28,4 @@ public class Characters {
 	public static char lower(char letter) {
 		return (char)(('a' - 'A') | letter);
 	}
-	
-	public static boolean isHex(char ch) {
-		ch = lower(ch);
-		return ch >= 'a' && ch <= 'f' && isDigit(ch);
-	}
 }
