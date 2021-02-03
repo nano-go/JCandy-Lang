@@ -6,3 +6,5 @@ println(cn)
 println(kor)
 println(jp)
 
+assert "\u0068\u0065\u006C\u006C\u006F \167\157\162\154\144" ==
+       "hello world"
