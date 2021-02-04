@@ -34,41 +34,6 @@ public abstract class Checker extends AbstractAstVisitor<Void> {
 		LAMBDA,
 		INIT
 	}
-	
-	/**
-	 * Changes the last statement to the {@code Return} statement 
-	 * if the last statement is returnable.
-	 *
-	 * Example:
-	 * <code>
-	 * fun sum(n) {
-	 *     if (n <= 0) return
-     *     n + sum(n - 1)
-	 * }
-	 * </code>
-	 * Change To
-	 * <code>
-	 * ...
-	 *     return n + sum(n - 1)
-	 * }
-	 * </code>
-	 * 
-	 */
-	private Stmt.Block toFuncBlock(Stmt.Block block) {
-		if (block.stmts.isEmpty()) {
-			return block;
-		}
-		int lastIndex = block.stmts.size() - 1;
-		Stmt lastStmt = block.stmts.get(lastIndex);
-		if (lastStmt instanceof Stmt.ExprS) {
-			Stmt.Return ret = new Stmt.Return(((Stmt.ExprS)lastStmt).expr);
-			ret.pos = lastStmt.pos;
-			block.stmts.set(lastIndex, ret);
-		} else if (lastStmt instanceof Stmt.Block) {
-			toFuncBlock((Stmt.Block)lastStmt);
-		}
-		return block;
-	}
 
 	@Override
 	public Void accept(Program node) {
@@ -163,9 +128,6 @@ public abstract class Checker extends AbstractAstVisitor<Void> {
 	public Void accept(Stmt.FuncDef node) {
 		FunctionType origin = curFunctionType;
 		curFunctionType = getFuncType(node);
-		if (curFunctionType != FunctionType.INIT) {
-			node.body = toFuncBlock(node.body);
-		}
 		
 		HashSet<String> duplicatedNameHelper = new HashSet<>(node.params.size());
 		for (String param : node.params) {

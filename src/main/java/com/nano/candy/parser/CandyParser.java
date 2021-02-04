@@ -165,6 +165,42 @@ class CandyParser implements Parser {
 
 	/* =================== parse =================== */
 
+
+	/**
+	 * Changes the last statement to the {@code Return} statement 
+	 * if the last statement is returnable.
+	 *
+	 * Example:
+	 * <code>
+	 * fun sum(n) {
+	 *     if (n <= 0) return
+     *     n + sum(n - 1)
+	 * }
+	 * </code>
+	 * Change To
+	 * <code>
+	 * ...
+	 *     return n + sum(n - 1)
+	 * }
+	 * </code>
+	 * 
+	 */
+	private Stmt.Block toFuncBlock(Stmt.Block block) {
+		if (block.stmts.isEmpty()) {
+			return block;
+		}
+		int lastIndex = block.stmts.size() - 1;
+		Stmt lastStmt = block.stmts.get(lastIndex);
+		if (lastStmt instanceof Stmt.ExprS) {
+			Stmt.Return ret = new Stmt.Return(((Stmt.ExprS)lastStmt).expr);
+			ret.pos = lastStmt.pos;
+			block.stmts.set(lastIndex, ret);
+		} else if (lastStmt instanceof Stmt.Block) {
+			toFuncBlock((Stmt.Block)lastStmt);
+		}
+		return block;
+	}
+	
 	private boolean isFirstSetOfExpr(TokenKind tk) {
 		switch (tk) {
 			case IDENTIFIER: case NULL: 
@@ -469,7 +505,7 @@ class CandyParser implements Parser {
 		Token beginTok = match(FUN);
 		String name = match(IDENTIFIER).getLiteral();
 		List<String> params = parseParams(true);
-		Stmt.Block body = parseBlock();
+		Stmt.Block body = toFuncBlock(parseBlock());
 		return location(beginTok, new Stmt.FuncDef(name, params, body));
 	}
 
@@ -763,7 +799,9 @@ class CandyParser implements Parser {
 		boolean originalSingleLineLambda = singleLineLambda;
 		singleLineLambda = peekKind() != TokenKind.LBRACE;
 		
-		Stmt.Block body = parseBody(location.getPos(), "Invalid lambda expression.");	
+		Stmt.Block body = toFuncBlock(
+			parseBody(location.getPos(), "Invalid lambda expression.")
+		);	
 		
 		singleLineLambda = originalSingleLineLambda;
 		return location(location, new Expr.Lambda(params, body));
