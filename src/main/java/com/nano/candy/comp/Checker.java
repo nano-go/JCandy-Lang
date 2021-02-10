@@ -36,7 +36,7 @@ public class Checker extends AbstractAstVisitor<Void> {
 	}
 	
 	@Override
-	public Void accept(Program node) {
+	public Void visit(Program node) {
 		for (Stmt stmt : node.block.stmts) {
 			stmt.accept(this);
 		}
@@ -44,16 +44,16 @@ public class Checker extends AbstractAstVisitor<Void> {
 	}
 
 	@Override
-	public Void accept(Stmt.While node) {
+	public Void visit(Stmt.While node) {
 		boolean origin = inLoop;
 		inLoop = true;
-		super.accept(node);
+		super.visit(node);
 		inLoop = origin;
 		return null;
 	}
 
 	@Override
-	public Void accept(Stmt.For node) {
+	public Void visit(Stmt.For node) {
 		boolean origin = inLoop;
 		inLoop = true;
 		node.iterable.accept(this);
@@ -65,7 +65,7 @@ public class Checker extends AbstractAstVisitor<Void> {
 	}
 	
 	@Override
-	public Void accept(Stmt.Continue node) {
+	public Void visit(Stmt.Continue node) {
 		if (!inLoop) {
 			error(node, "The 'continue' outside loop.");
 		}
@@ -73,7 +73,7 @@ public class Checker extends AbstractAstVisitor<Void> {
 	}
 
 	@Override
-	public Void accept(Stmt.Break node) {
+	public Void visit(Stmt.Break node) {
 		if (!inLoop) {
 			error(node, "The 'break' outside loop.");
 		}
@@ -81,7 +81,7 @@ public class Checker extends AbstractAstVisitor<Void> {
 	}
 
 	@Override
-	public Void accept(Stmt.ClassDef node) {
+	public Void visit(Stmt.ClassDef node) {
 		if (curFunctionType != FunctionType.NONE) {
 			error(node, "Can't define a class in a function.");
 		}
@@ -125,7 +125,7 @@ public class Checker extends AbstractAstVisitor<Void> {
 	}
 
 	@Override
-	public Void accept(Stmt.FuncDef node) {
+	public Void visit(Stmt.FuncDef node) {
 		FunctionType origin = curFunctionType;
 		curFunctionType = getFuncType(node);
 		
@@ -151,8 +151,8 @@ public class Checker extends AbstractAstVisitor<Void> {
 	}
 
 	@Override
-	public Void accept(Stmt.Return node) {
-		super.accept(node);
+	public Void visit(Stmt.Return node) {
+		super.visit(node);
 		switch (curFunctionType) {
 			case NONE:
 				error(node, "The 'return' outside function.");
@@ -169,8 +169,8 @@ public class Checker extends AbstractAstVisitor<Void> {
 	/*===================== check expression ==================*/
 
 	@Override
-	public Void accept(Expr.CallFunc node) {
-		super.accept(node);
+	public Void visit(Expr.CallFunc node) {
+		super.visit(node);
 		checkCallable(node.expr);
 		return null;
 	}
@@ -187,7 +187,7 @@ public class Checker extends AbstractAstVisitor<Void> {
 	}
 
 	@Override
-	public Void accept(Expr.Super node) {
+	public Void visit(Expr.Super node) {
 		if (!inClass) {
 			error(node, "The 'super' outside class.");
 		}
@@ -195,7 +195,7 @@ public class Checker extends AbstractAstVisitor<Void> {
 	}
 
 	@Override
-	public Void accept(Expr.This node) {
+	public Void visit(Expr.This node) {
 		if (!inClass) {
 			error(node, "The 'this' outside class.");
 		}
@@ -203,32 +203,32 @@ public class Checker extends AbstractAstVisitor<Void> {
 	}
 	
 	@Override
-	public Void accept(Expr.IntegerLiteral node) {
+	public Void visit(Expr.IntegerLiteral node) {
 		return null;
 	}
 
 	@Override
-	public Void accept(Expr.DoubleLiteral node) {
+	public Void visit(Expr.DoubleLiteral node) {
 		return null;
 	}
 
 	@Override
-	public Void accept(Expr.StringLiteral node) {
+	public Void visit(Expr.StringLiteral node) {
 		return null;
 	}
 
 	@Override
-	public Void accept(Expr.BooleanLiteral node) {
+	public Void visit(Expr.BooleanLiteral node) {
 		return null;
 	}
 
 	@Override
-	public Void accept(Expr.NullLiteral node) {
+	public Void visit(Expr.NullLiteral node) {
 		return null;
 	}
 
 	@Override
-	public Void accept(Expr.VarRef node) {
+	public Void visit(Expr.VarRef node) {
 		return null;
 	}
 

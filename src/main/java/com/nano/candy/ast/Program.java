@@ -21,7 +21,7 @@ public class Program extends ASTreeNode {
 	
 	@Override
 	public <R> R accept(AstVisitor<R> visitor) {
-		return visitor.accept(this);
+		return visitor.visit(this);
 	}
 
 }

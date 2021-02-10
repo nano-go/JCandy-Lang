@@ -10,14 +10,14 @@ public abstract class Stmt extends ASTreeNode {
 	public static class Continue extends Stmt {
 		@Override
 		public <R> R accept(AstVisitor<R> visitor) {
-			return visitor.accept(this);
+			return visitor.visit(this);
 		}
 	}
 	
 	public static class Break extends Stmt {
 		@Override
 		public <R> R accept(AstVisitor<R> visitor) {
-			return visitor.accept(this);
+			return visitor.visit(this);
 		}
 	}
 	
@@ -29,7 +29,7 @@ public abstract class Stmt extends ASTreeNode {
 		}
 		@Override
 		public <R> R accept(AstVisitor<R> visitor) {
-			return visitor.accept(this);
+			return visitor.visit(this);
 		}
 	}
 	
@@ -44,7 +44,7 @@ public abstract class Stmt extends ASTreeNode {
 		
 		@Override
 		public <R> R accept(AstVisitor<R> visitor) {
-			return visitor.accept(this);
+			return visitor.visit(this);
 		}
 	}
 	
@@ -61,7 +61,7 @@ public abstract class Stmt extends ASTreeNode {
 		
 		@Override
 		public <R> R accept(AstVisitor<R> visitor) {
-			return visitor.accept(this);
+			return visitor.visit(this);
 		}
 	}
 	
@@ -78,7 +78,7 @@ public abstract class Stmt extends ASTreeNode {
 		
 		@Override
 		public <R> R accept(AstVisitor<R> visitor) {
-			return visitor.accept(this);
+			return visitor.visit(this);
 		}
 	}
 	
@@ -93,7 +93,7 @@ public abstract class Stmt extends ASTreeNode {
 		
 		@Override
 		public <R> R accept(AstVisitor<R> visitor) {
-			return visitor.accept(this);
+			return visitor.visit(this);
 		}
 	}
 	
@@ -110,7 +110,7 @@ public abstract class Stmt extends ASTreeNode {
 
 		@Override
 		public <R> R accept(AstVisitor<R> visitor) {
-			return visitor.accept(this);
+			return visitor.visit(this);
 		}
 	}
 	
@@ -129,7 +129,7 @@ public abstract class Stmt extends ASTreeNode {
 		
 		@Override
 		public <R> R accept(AstVisitor<R> visitor) {
-			return visitor.accept(this);
+			return visitor.visit(this);
 		}
 	}
 	
@@ -155,7 +155,7 @@ public abstract class Stmt extends ASTreeNode {
 		
 		@Override
 		public <R> R accept(AstVisitor<R> visitor) {
-			return visitor.accept(this);
+			return visitor.visit(this);
 		}
 	}
 
@@ -174,7 +174,7 @@ public abstract class Stmt extends ASTreeNode {
 		
 		@Override
 		public <R> R accept(AstVisitor<R> visitor) {
-			return visitor.accept(this);
+			return visitor.visit(this);
 		}
 	}
 	
@@ -191,7 +191,7 @@ public abstract class Stmt extends ASTreeNode {
 		
 		@Override
 		public <R> R accept(AstVisitor<R> visitor) {
-			return visitor.accept(this);
+			return visitor.visit(this);
 		}	
 	}
 }

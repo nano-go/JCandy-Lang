@@ -72,21 +72,21 @@ public class CandyResolver extends Checker {
 	}
 
 	@Override
-	public Void accept(Program node) {
-		super.accept(node);
+	public Void visit(Program node) {
+		super.visit(node);
 		return null;
 	}
 
 	@Override
-	public Void accept(Stmt.Block node) {
+	public Void visit(Stmt.Block node) {
 		enterScope();
-		super.accept(node);
+		super.visit(node);
 		exitScope();
 		return null;
 	}
 
 	@Override
-	public Void accept(Stmt.For node) {
+	public Void visit(Stmt.For node) {
 		node.iterable.accept(this);
 		enterScope();
 		boolean origin = super.inLoop;
@@ -101,7 +101,7 @@ public class CandyResolver extends Checker {
 	}
 
 	@Override
-	public Void accept(Stmt.ClassDef node) {
+	public Void visit(Stmt.ClassDef node) {
 		define(node, node.name);
 		
 		if (node.superClassName.isPresent()) {
@@ -118,7 +118,7 @@ public class CandyResolver extends Checker {
 			Stmt.FuncDef initializer = node.initializer.get();
 			define(initializer, initializer.name.get());
 		}
-		super.accept(node);
+		super.visit(node);
 		
 		exitScope();
 		exitScope();
@@ -126,7 +126,7 @@ public class CandyResolver extends Checker {
 	}
 
 	@Override
-	public Void accept(Stmt.FuncDef node) {
+	public Void visit(Stmt.FuncDef node) {
 		if (node.name.isPresent()) {
 			define(node, node.name.get());
 		}
@@ -134,57 +134,57 @@ public class CandyResolver extends Checker {
 		for (String param : node.params) {
 			define(node, param);
 		}
-		super.accept(node);
+		super.visit(node);
 		exitScope();
 		return null;
 	}
 
 	@Override
-	public Void accept(Stmt.VarDef node) {
-		super.accept(node);
+	public Void visit(Stmt.VarDef node) {
+		super.visit(node);
 		define(node, node.name);
 		return null;
 	}
 	
 	@Override
-	public Void accept(Expr.Assign node) {
-		super.accept(node);
+	public Void visit(Expr.Assign node) {
+		super.visit(node);
 		resolveLocals(node.name, node);
 		return null;
 	}
 	
 	@Override
-	public Void accept(Expr.VarRef node) {
+	public Void visit(Expr.VarRef node) {
 		resolveLocals(node.name, node);
 		return null;
 	}
 
 	@Override
-	public Void accept(Expr.Super node) {
-		super.accept(node);
+	public Void visit(Expr.Super node) {
+		super.visit(node);
 		resolveLocals(TokenKind.SUPER.getLiteral(), node);
 		return null;
 	}
 	
 	@Override
-	public Void accept(Expr.This node) {
-		super.accept(node);
+	public Void visit(Expr.This node) {
+		super.visit(node);
 		resolveLocals(TokenKind.THIS.getLiteral(), node);
 		return null;
 	}
 	
 	@Override
-	public Void accept(Stmt.Continue node) { return null; }
+	public Void visit(Stmt.Continue node) { return null; }
 	@Override
-	public Void accept(Stmt.Break node) { return null; }
+	public Void visit(Stmt.Break node) { return null; }
 	@Override
-	public Void accept(Expr.DoubleLiteral node) { return null; }
+	public Void visit(Expr.DoubleLiteral node) { return null; }
 	@Override
-	public Void accept(Expr.IntegerLiteral node) { return null; }
+	public Void visit(Expr.IntegerLiteral node) { return null; }
 	@Override
-	public Void accept(Expr.StringLiteral node) { return null; }
+	public Void visit(Expr.StringLiteral node) { return null; }
 	@Override
-	public Void accept(Expr.BooleanLiteral node) { return null; }
+	public Void visit(Expr.BooleanLiteral node) { return null; }
 	@Override
-	public Void accept(Expr.NullLiteral node) { return null; }
+	public Void visit(Expr.NullLiteral node) { return null; }
 }
