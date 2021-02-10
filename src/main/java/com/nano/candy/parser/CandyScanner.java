@@ -93,10 +93,10 @@ class CandyScanner implements Scanner {
 				case '/' :
 					ch = reader.peek();
 					if (ch == '/') {
-						readSingleLineComment();
+						skipSingleLineComment();
 						continue scanAgain;
 					} else if (ch == '*') {
-						readMultiLineComment();
+						skipMultiLineComment();
 						continue scanAgain;
 					}
 					kind = switch2('=', TokenKind.DIV_ASSIGN, TokenKind.DIV);
@@ -262,7 +262,8 @@ class CandyScanner implements Scanner {
 			case 16:
 				return "hexadecimal";
 		}
-		throw new Error("Unknown base: " + base);
+		// Unreachable
+		throw new Error("unknown base: " + base);
 	}
 	
 	private boolean digits(int base) {
@@ -273,17 +274,18 @@ class CandyScanner implements Scanner {
 			
 			if (ch >= '0' && ch <= '9') {
 				point = ch - '0';
-			} else if ('a' <= Characters.lower(ch) && 
-			           Characters.lower(ch) <= 'f') {
-				point = Characters.lower(ch) - 'a' + 10;
 			} else if (reader.peek() == '_') {
 				reader.consume();
 				continue;
-			} else break;
+			} else {
+				char lower = Characters.lower(ch);
+				if ('a' <= lower && lower <= 'f') {
+					point = lower - 'a' + 10;
+				} else break;
+			}
 			
 			if (point >= base) {
-				reader.error(
-					"Invalid digit '%c' in %s literal.",
+				reader.error("Invalid digit '%c' in %s literal.",
 					ch, baseName(base)
 				);
 				hasError = true;	
@@ -312,7 +314,7 @@ class CandyScanner implements Scanner {
 					hasPrefix = true;
 					reader.putChar(true);
 					base = 8;
-					 break;
+					break;
 				case 'b': case 'B':
 					hasPrefix = true;
 					reader.putChar(true);
@@ -381,7 +383,7 @@ class CandyScanner implements Scanner {
 	private String readStringLiteral() {
 		char ch = reader.peek();
 		while (ch != '"') {
-			if (reader.isAtEnd() || ch == '\n') {
+			if (ch == '\n' || ch == Characters.EOF) {
 				reader.error("Unterminated string literal.");
 				return null;
 			}
@@ -392,7 +394,8 @@ class CandyScanner implements Scanner {
 		return reader.savedString();
 	}
 	
-	private void readSingleLineComment() {
+	private void skipSingleLineComment() {
+		// consume '/'
 		reader.consume();
 		char ch = reader.peek();
 		while (ch != '\n' && ch != Characters.EOF) {
@@ -400,7 +403,8 @@ class CandyScanner implements Scanner {
 		}
 	}
 	
-	private void readMultiLineComment() {
+	private void skipMultiLineComment() {
+		// consume '*'
 		reader.consume();
 		while (true) {
 			if (reader.isAtEnd()) {
