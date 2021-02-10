@@ -3,6 +3,7 @@ import com.nano.candy.ast.ASTreeNode;
 import com.nano.candy.ast.Expr;
 import com.nano.candy.ast.Program;
 import com.nano.candy.ast.Stmt;
+import com.nano.candy.comp.Checker;
 import com.nano.candy.config.Config;
 import com.nano.candy.parser.TokenKind;
 import java.util.HashMap;
