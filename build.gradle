@@ -6,11 +6,19 @@
  * User Manual available at https://docs.gradle.org/6.6.1/userguide/java_library_plugin.html
  */
 
-plugins {
-    id 'java-library'
-}
+apply plugin: 'java'
+apply plugin: 'jacoco'
 
 version = '0.0.1'
+
+jacocoTestReport {
+    reports {
+        xml.enabled false
+        html.enabled true
+    }
+}
+
+check.dependsOn jacocoTestReport
 
 jar {
 	archiveName = 'candy.jar'
