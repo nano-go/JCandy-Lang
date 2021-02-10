@@ -1,0 +1,17 @@
+if (false) {
+	assert false
+	assert false
+	assert false
+	assert false
+	assert false
+	assert false
+}
+
+var a = true
+
+if (a) {
+	var b = 66
+	a = 15 * 3 - 3 / 4 + b
+}
+
+assert a == 15 * 3 - 3 / 4 + 66

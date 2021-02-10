@@ -1,0 +1,20 @@
+var a = 15
+var b = 20
+
+var target = 0
+
+if (a < b) {
+	target = a*b / 2
+} else {
+	target = a*b / 3
+}
+
+assert target == a*b / 2 : "Target: " + target
+
+if (a > b) {
+	target = (a + b) / 2.0
+} else {
+	target = (a + b) / 3.0
+}
+
+assert target == (a + b) / 3.0 : "Target: " + target

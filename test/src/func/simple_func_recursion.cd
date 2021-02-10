@@ -1,0 +1,6 @@
+fun a(b, c) {
+	if (b * c >= 15) return b * c
+	return a(b + 1, c + 1)
+}
+
+a(1, 2)

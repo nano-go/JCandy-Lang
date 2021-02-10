@@ -1,15 +1,15 @@
 
 var i = 1
 var ans = 0
-while (i <= 100) {
-	if (i % 3 == 0) {
+while (i <= 10) {
+	if (i % 5 == 0) {
 		i += 1
 		continue
 	}
 	ans += i
 	i += 1
 }
-assert ans == 3367
+assert ans == 40
 
 var i = 0
 var t = 0
@@ -20,3 +20,19 @@ while (i <= 100) {
 	}
 }
 assert t == 0
+
+while (i < 10) {
+	var j = i
+	while (j < 10) {
+		if (j % 6 == 0) break
+		if (j % 7 == 0) { 
+			j += 1
+			continue
+		}
+		t *= 2
+		t += 1
+		j += 1
+	}
+	i += 1
+}
+assert t == 1048575

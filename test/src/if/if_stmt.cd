@@ -5,7 +5,7 @@ if (null) {
 var a = false
 if (a) {
 	assert false
-} else if (a && true){
+} else if (false){
 	assert false
 } else assert !a
 

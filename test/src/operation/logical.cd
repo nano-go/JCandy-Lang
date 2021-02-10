@@ -1,0 +1,22 @@
+var a = null or "Right"
+assert a == "Right"
+
+assert true or (null - 1)
+assert !(false and (null + 1))
+assert (false or !null) or (null * 1)
+
+
+var i = 1024
+0 == 1 && (i = 3.14159)
+assert i == 1024
+
+true && (i = 3.14159)
+assert i == 3.14159
+
+var i = 0
+assert i != 0 || (i = 1024)
+assert i == 1024
+
+var i = 0
+assert !(true && (i = 15)) || (i *= 2)
+assert i == 30
