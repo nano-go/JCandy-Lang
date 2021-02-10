@@ -14,7 +14,6 @@ import static org.junit.Assert.*;
 
 public class ScannerTestCase {
 	
-	private static final TokenKind ID = TokenKind.IDENTIFIER ;
 	private static final Token SEMIEOF= tk(TokenKind.SEMI, "EOF") ;
 	private static final Token SEMILN= tk(TokenKind.SEMI, Config.END_OF_LINE) ;
 	
@@ -35,73 +34,214 @@ public class ScannerTestCase {
 	 * Format: Input, Token(TokenKind, [ Literal ])...
 	 */ 
 	protected static final CandyTestCase[] TOK_STREAM_TEST_CASES = {
-		newTKCase("Test__112344__Abc // comment...\n", tk(ID, "Test__112344__Abc"), SEMILN),
-		newTKCase("_abC // comment...", tk(ID, "_abC"), SEMIEOF),
-		newTKCase(" _123bba /** comment...\nabcd*/\n", tk(ID, "_123bba"), SEMILN),
-		newTKCase("_abC /** comment...*/", tk(ID, "_abC"), SEMIEOF),
-		newTKCase("\n\t\t_abc 123 \n", tk(ID, "_abc"), tk(INTEGER, "123"), SEMILN),
-		newTKCase("length - 1", tk(ID, "length"), MINUS, tk(INTEGER, "1"), SEMIEOF),
+		
+		/*====== Test whether comments will affect insertSemi. ======*/
+		
+		newTKCase(
+			"Test__112344__Abc // comment...\n", 
+			id("Test__112344__Abc"), SEMILN
+		),
+		newTKCase(
+			"_abC // comment...", 
+			id("_abC"), SEMIEOF
+		),
+		newTKCase(
+			" _123bba /** comment...\nabcd*/\n", 
+			id("_123bba"), SEMILN
+		),
+		newTKCase(
+			"_abC /** comment...*/", 
+			id("_abC"), SEMIEOF
+		),
+		newTKCase(
+			"\t\n\r() \n /** \t\n\r \n\n\n */ b", 
+			LPAREN, RPAREN, SEMILN, id("b"), SEMIEOF
+		),
+		
+		
+		/*===== Name Test Case ======*/
+		
+		newTKCase(
+			"\n\t\t_abc \n", 
+			id("_abc"), 
+			SEMILN
+		),
+		newTKCase(
+			"_", id("_"), SEMIEOF
+		),
+		newTKCase(
+			"length -", 
+			id("length"), MINUS
+		),
+		newTKCase(
+			"\nabc12_34\n",
+			id("abc12_34"), SEMILN
+		),
+		
+		/*===== String Literal Test Case =====*/
+		
+		newTKCase(
+			"\"keep keep\''\"",
+			str("keep keep''"), SEMIEOF
+		),
+		newTKCase(
+			"\"abcdefg\\uFffFF\"", 
+			str("abcdefg\uFFFFF"), SEMIEOF
+		),
+		newTKCase(
+			"\"abcdefg\\u0123F\"", 
+			str("abcdefg\u0123F"), SEMIEOF
+		),
+		newTKCase(
+			"\"abcdefg\\uABCDF\"", 
+			str("abcdefg\uABCDF"), SEMIEOF
+		),
+		newTKCase(
+			"\"abcdefg\\uabCdF\"",
+			str("abcdefg\uABCDF"), SEMIEOF
+		),
+		newTKCase(
+			"\"abcdefg\\uEeeE\"", 
+			str("abcdefg\uEEEE"), SEMIEOF
+		),
+		newTKCase(
+			"\"abcdefg\\u0000\"",
+			str("abcdefg\u0000"), SEMIEOF
+		),
+		newTKCase(
+			"\"abcdefg\\0778\"", 
+			str("abcdefg\u003f8"), SEMIEOF
+		),
+		newTKCase(
+			"\"abcdefg\\077\"", 
+			str("abcdefg\u003f"), SEMIEOF
+		),
+		newTKCase(
+			"\"abcdefg\\200\"", 
+			str("abcdefg\u0080"), SEMIEOF
+		),
+		newTKCase(
+			"\"abcdefg\\377\\u00FF\"", 
+			str("abcdefg\u00FF\u00FF"), SEMIEOF
+		),
+		newTKCase(
+			"\"abcdefg\\000\"", 
+			str("abcdefg\u0000"), SEMIEOF
+		),
+		newTKCase("\"\"", str(""), SEMIEOF),
+		
+		/*===== InsertSemi Test Case =====*/
+		
+		newTKCase(
+			"() /** \n\n\n */ b", 
+			LPAREN, RPAREN, 
+			id("b"), SEMIEOF
+		),
+		newTKCase(
+			"() ; \n /** \n\n\n */ b", 
+			LPAREN, RPAREN, SEMI, 
+			id("b"), SEMIEOF
+		),
+		newTKCase(
+			"\t\n\r()",
+			LPAREN, RPAREN, SEMIEOF
+		),
+		newTKCase(
+			"\n[\n]",
+			LBRACKET, RBRACKET, SEMIEOF
+		),
+		newTKCase(
+			"\n1234",
+			integer("1234"), SEMIEOF
+		),
+		newTKCase(
+			"\n1234\n",
+			integer("1234"), SEMILN
+		),
+		newTKCase(
+			"\n12.34",
+			doubl("12.34"), SEMIEOF
+		),
+		newTKCase(
+			"\n12.34\n",
+			doubl("12.34"), SEMILN
+		),
+		
+		/*===== Operator Test Case =====*/
+		
+		newTKCase(
+			"+ - * / % is == != > >= < <= and or && ||", 
+			PLUS, MINUS, STAR, DIV, MOD, 
+			IS, EQUAL, NOT_EQUAL,
+			GT, GTEQ, LT, LTEQ,
+			tk(LOGICAL_AND, "and"), tk(LOGICAL_OR, "or"),
+			tk(LOGICAL_AND, "&&"), tk(LOGICAL_OR, "||")
+		),
+		newTKCase(
+			"= += -= *= /= %=",
+			ASSIGN, PLUS_ASSIGN, MINUS_ASSIGN, 
+			STAR_ASSIGN, DIV_ASSIGN, MOD_ASSIGN
+		),
+		newTKCase(
+			">===", GTEQ, EQUAL
+		),
+		newTKCase(
+			"<===", LTEQ, EQUAL
+		),
 		newTKCase(
 			"3.14159 * 0X360+0170 / 50 % 45", 
-			tk(DOUBLE, "3.14159"), STAR, tk(INTEGER, "0X360"), PLUS, tk(INTEGER, "0170"), 
-			DIV, tk(INTEGER, "50"), MOD, tk(INTEGER, "45"),SEMIEOF
+			doubl("3.14159"), STAR, 
+			integer("0X360"), PLUS, 
+			integer("0170"), DIV, 
+			integer("50"), MOD, 
+			integer("45"),SEMIEOF
 		),
-		newTKCase("0xFFFFFFG", tk(INTEGER, "0xFFFFFF"), tk(ID, "G"), SEMIEOF),
-		newTKCase("a > b \n b <===", tk(ID, "a"), GT, tk(ID, "b"), SEMILN, tk(ID, "b"), LTEQ, EQUAL),
-		newTKCase("a < b \n b >===", tk(ID, "a"), LT, tk(ID, "b"), SEMILN, tk(ID, "b"), GTEQ, EQUAL),
+		
+		/*===== KeyWord Test Case ===== */
 		newTKCase(
-			"AAAA && _b and c or d || e", 
-			tk(ID, "AAAA"), tk(LOGICAL_AND, "&&"), tk(ID, "_b"), LOGICAL_AND, 
-			tk(ID, "c"), LOGICAL_OR, tk(ID, "d"), tk(LOGICAL_OR, "||"), tk(ID, "e"), SEMIEOF
+			"if else while for in var fun class lambda return " + 
+			"this super break continue assert",
+			IF, ELSE, WHILE, FOR, IN, VAR, FUN, CLASS, LAMBDA,
+			RETURN, THIS, SUPER, BREAK, CONTINUE, ASSERT
 		),
-		newTKCase("{ null\n }", LBRACE, NULL, SEMILN, RBRACE),
-		newTKCase("true == false != false", TRUE, EQUAL, FALSE, NOT_EQUAL, FALSE, SEMIEOF),
 		newTKCase(
-			"(_123 + 4) == (127)", 
-			LPAREN, tk(ID, "_123"), PLUS, tk(INTEGER, "4"), RPAREN, EQUAL, LPAREN, 
-			tk(INTEGER, "127"), RPAREN, SEMIEOF
+			"true\n false \n null \n",
+			TRUE, SEMILN,
+			FALSE, SEMILN,
+			NULL, SEMILN
 		),
+		
+		/*===== Other =====*/
+		newTKCase(
+			"0XFFFFFGB", 
+			integer("0XFFFFF"), id("GB"), SEMIEOF
+		),
+		newTKCase(
+			"{ null\n: }", 
+			LBRACE, NULL, SEMILN, COLON, RBRACE
+		),
+		newTKCase("a.b", id("a"), DOT, id("b"), SEMIEOF),
 		newTKCase("[a, b, c, d]", 
-			LBRACKET, tk(ID, "a"), COMMA, tk(ID, "b"), COMMA, 
-			tk(ID, "c"), COMMA, tk(ID, "d"), RBRACKET, SEMIEOF
+			LBRACKET, id("a"), COMMA, id("b"), COMMA, 
+			id("c"), COMMA, id("d"), RBRACKET, SEMIEOF
 		),
-		newTKCase("if () \n{}", IF, LPAREN, RPAREN, SEMILN, LBRACE, RBRACE),
-		newTKCase("123456789 \n\n\n\n /** abc */", tk(INTEGER, "123456789"), SEMILN),
-		newTKCase("\n\n\n123456789 \n abcd", tk(INTEGER, "123456789"), SEMILN, tk(ID, "abcd"), SEMIEOF),
-		newTKCase("() /** \n\n\n */ b", LPAREN, RPAREN, tk(ID, "b"), SEMIEOF),
-		newTKCase("() ; \n /** \n\n\n */ b", LPAREN, RPAREN, SEMI, tk(ID, "b"), SEMIEOF),
-		newTKCase("\t\n\r() \n /** \t\n\r \n\n\n */ b", LPAREN, RPAREN, SEMILN, tk(ID, "b"), SEMIEOF),
-		newTKCase("\t\n\r() ; ", LPAREN, RPAREN, SEMI),
-		newTKCase("// what \n what + \n - \n * \n /", tk(ID, "what"), PLUS, MINUS, STAR, DIV),
-		newTKCase("var testA = _testA", VAR, tk(ID, "testA"), ASSIGN, tk(ID, "_testA"), SEMIEOF),
-		newTKCase("+= -= /= %= *= =", PLUS_ASSIGN, MINUS_ASSIGN, DIV_ASSIGN, MOD_ASSIGN, STAR_ASSIGN, ASSIGN),
-		newTKCase("/** sndb */ _println print abc", tk(ID, "_println"), tk(ID, "print"), tk(ID, "abc"), SEMIEOF),
-		newTKCase(
-			"abc\"Godness\\n\\tI'm bad.\\\"Hello World\\\"\"abc",
-			tk(ID, "abc"), tk(STRING, "Godness\n\tI'm bad.\"Hello World\""), tk(ID, "abc"), SEMIEOF
-		),
-		newTKCase("\"keep keep\''\"", tk(STRING, "keep keep''"), SEMIEOF),
-		newTKCase("\"abcdefg\\uFffFF\"", tk(STRING, "abcdefg\uFFFFF"), SEMIEOF),
-		newTKCase("\"abcdefg\\u0123F\"", tk(STRING, "abcdefg\u0123F"), SEMIEOF),
-		newTKCase("\"abcdefg\\uABCDF\"", tk(STRING, "abcdefg\uABCDF"), SEMIEOF),
-		newTKCase("\"abcdefg\\uabCdF\"", tk(STRING, "abcdefg\uABCDF"), SEMIEOF),
-		newTKCase("\"abcdefg\\uEeeE\"", tk(STRING, "abcdefg\uEEEE"), SEMIEOF),
-		newTKCase("\"abcdefg\\u0000\"", tk(STRING, "abcdefg\u0000"), SEMIEOF),
-		newTKCase("\"abcdefg\\0778\"", tk(STRING, "abcdefg\u003f8"), SEMIEOF),
-		newTKCase("\"abcdefg\\077\"", tk(STRING, "abcdefg\u003f"), SEMIEOF),
-		newTKCase("\"abcdefg\\200\"", tk(STRING, "abcdefg\u0080"), SEMIEOF),
-		newTKCase("\"abcdefg\\377\\u00FF\"", tk(STRING, "abcdefg\u00FF\u00FF"), SEMIEOF),
-		newTKCase("\"abcdefg\\000\"", tk(STRING, "abcdefg\u0000"), SEMIEOF),
-		newTKCase("\"\"", tk(STRING, ""), SEMIEOF),
-		newTKCase(
-			"var lambdaExpr = lambda a, b -> a * b", 
-			VAR, tk(IDENTIFIER, "lambdaExpr"), ASSIGN, LAMBDA, tk(IDENTIFIER, "a"), COMMA, tk(IDENTIFIER, "b"),
-			ARROW, tk(IDENTIFIER, "a"), STAR ,tk(IDENTIFIER, "b"), SEMIEOF
-		),
-		newTKCase("/** what \n what \n what **********/"),
-		newTKCase("// what what what"),
-		newTKCase(""),
 	};
+	
+	private static Token integer(String intLiteral) {
+		return tk(INTEGER, intLiteral);
+	}
+	
+	private static Token doubl(String doubleLiteral) {
+		return tk(DOUBLE, doubleLiteral);
+	}
+	
+	private static Token id(String name) {
+		return tk(IDENTIFIER, name);
+	}
+	
+	private static Token str(String str) {
+		return tk(STRING, str);
+	}
 	
 	private static Token tk(TokenKind tk) {
 		return tk(tk, null) ;
@@ -110,7 +250,7 @@ public class ScannerTestCase {
 	private static Token tk(TokenKind tk, String literal) {
 		return new Token(null, literal, tk) ;
 	}
-
+	
 	private static TKindAndLiteralCase newTKCase(String input, Object... toks) {
 		if (toks == null) toks = new Object[0] ;
 		Token[] tks = new Token[toks.length] ;
@@ -145,7 +285,8 @@ public class ScannerTestCase {
 		newNLCase("0b0000_1001", INTEGER, 0b00001001),
 		newNLCase("3_._14159_265358_9793", DOUBLE, 3.141592653589793D),
 		newNLCase("0._35", DOUBLE, 0.35),
-		
+		newNLCase("0.35", DOUBLE, 0.35),
+	
 		newNLCase("0", INTEGER, 0),
 		newNLCase("0b", INTEGER, 0),
 		newNLCase("0o", INTEGER, 0),
@@ -159,30 +300,48 @@ public class ScannerTestCase {
 	
 	/**
 	 * Format: Input, hasError, Positions...
-	 * These 'Positions' are where the error is occured 
-	 * if hasError is true.
+	 * These 'Positions' are where the error is occured if hasError is true.
 	 */
 	static final CandyTestCase[] POSITION_AND_ERROR_TEST_CASES = {
 		newPECase("abc&def|", true, pos(1, 4), pos(1, 8)),
+		
+		/* Position(Have no error) */
+		
 		newPECase("\n\n abcdefg", false, pos(3, 2), pos(3, 9)),
 		newPECase("\n\t\t_abc 123 \n", false, pos(2, 3), pos(2, 8), pos(2,12)),
 		newPECase("\n//\t\t_abc 123\n\t/*abcd*/abcd/**/", false, pos(3, 10), pos(3, 18)),
 		newPECase("\n\"Oh my god! Are you ok?\"\n\n bbbbb", false, pos(2, 1), pos(2, 25), pos(4, 2), pos(4, 7)),
+		
+		/* Comment */
+		
 		newPECase("/** abc.\n\n\t\t*/≈≈___╳", true, pos(3, 5), pos(3, 6), pos(3, 10)),
 		newPECase("\n\n/** good good", true, pos(3,14)),
 		newPECase("/**abcd", true, pos(1, 8)),
+		
+		/* String Literal */
+		
 		newPECase("\"music\nIn the end\"", true, pos(1, 7), pos(2, 12)),
 		newPECase("\"\\uFFFR\"", true, pos(1, 7)),
 		newPECase("\"\\u\"", true, pos(1, 4), pos(1, 5)),
 		newPECase("\"\\888\"", true, pos(1, 3)),
 		newPECase("\"\\788\"", true, pos(1, 4)),
 		newPECase("\"\\777\"", true, pos(1, 5)),
+		
+		/* Number Literal */
+		
 		newPECase("0bFFFF", true, pos(1, 3), pos(1, 4), pos(1, 5), pos(1, 6)),
+		newPECase("0b002", true, pos(1, 5)),
+		newPECase("0xFFFF.FFF", true, pos(1, 7)),
 		newPECase("089", true, pos(1, 2), pos(1, 3)),
+		newPECase("0o89", true, pos(1, 3), pos(1, 4)),
 		newPECase("01.6", true, pos(1, 3)),
 		newPECase("123456FF", true, pos(1, 7), pos(1, 8)),
+		newPECase("0o000.8", true, pos(1, 6), pos(1, 7)),
 		newPECase("0xFFFFFFFFFFFFFFFFFFFFF", true, pos(1, 1)),
-		newPECase("0B1111111111111111111111111111111111111111111111111111111111111111111111", true, pos(1, 1))
+		newPECase("0B1111111111111111111111111111111111111111111111111111111111111111111111", true, pos(1, 1)),
+		
+		/* Unknown Character */
+		newPECase("αβγδ", true, pos(1, 1), pos(1, 2), pos(1, 3), pos(1, 4)),
 	} ;
 
 	public static SimulationPositions.Location pos(int line, int col) {
@@ -263,7 +422,6 @@ public class ScannerTestCase {
 			Token tok = scanner.peek();
 			LoggerMsgChecker.shouldNotAppearErrors(true, true);
 			
-			// assert the kind and the number value.
 			assertEquals("Input:" + literal, kind, tok.getKind());
 			if (kind == TokenKind.DOUBLE) {
 				assertEquals(
