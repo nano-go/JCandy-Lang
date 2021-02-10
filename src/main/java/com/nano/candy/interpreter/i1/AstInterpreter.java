@@ -17,6 +17,8 @@ public class AstInterpreter implements Interpreter, AstVisitor<CandyObject> {
 	private StmtInterpreter stmtInterpreter;
 	private boolean isInteratively;
 
+	private ASTreeNode node;
+
 	protected AstInterpreter() {
 		this.exprInterpreter = new ExpressionInterpreter();
 		this.stmtInterpreter = new StmtInterpreter();
@@ -52,13 +54,14 @@ public class AstInterpreter implements Interpreter, AstVisitor<CandyObject> {
 	}
 	
 	@Override
-	public void resolve(ASTreeNode node) {
+	public void load(ASTreeNode node) {
 		CandyResolver resolver = new CandyResolver();
 		env.setDistances(resolver.resolve(node));
+		this.node = node;
 	}
 
 	@Override
-	public boolean run(ASTreeNode node, boolean isInteratively) {
+	public boolean run(boolean isInteratively) {
 		this.isInteratively = isInteratively;
 		node.accept(this);
 		return true;

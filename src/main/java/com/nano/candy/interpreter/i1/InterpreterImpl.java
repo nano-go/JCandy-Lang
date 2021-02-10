@@ -9,9 +9,9 @@ import com.nano.candy.utils.Position;
 public class InterpreterImpl extends AstInterpreter {
 
 	@Override
-	public boolean run(ASTreeNode node, boolean isInteratively) {
+	public boolean run(boolean isInteratively) {
 		try {
-			return super.run(node, isInteratively) ;
+			return super.run(isInteratively) ;
 		} catch (CandyRuntimeError | 
 		         ArithmeticException | 
 				 IllegalArgumentException |

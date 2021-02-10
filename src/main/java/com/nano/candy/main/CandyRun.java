@@ -105,9 +105,9 @@ public class CandyRun {
 		try {
 			Program program = ParserFactory.newParser(fileName, content).parse();
 			if (!printMessage(exitIfError)) return false;
-			interpreter.resolve(program);
+			interpreter.load(program);
 			if (!printMessage(exitIfError)) return false;
-			return interpreter.run(program, interactively);
+			return interpreter.run(interactively);
 		} catch (ExitError e) {
 			System.exit(e.getCode());
 		}
