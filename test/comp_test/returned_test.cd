@@ -1,0 +1,41 @@
+fun returnExpr(a) {
+	a*a
+}
+
+assert returnExpr(5) == 5*5
+
+fun insertReturn1(a) {
+	if (a < 0) {
+		"a < 0"
+	}
+	// Insert return null
+}
+
+insertReturn1(50)
+
+fun insertReturn2() {
+	while (true) {
+		return
+	}
+	// Can't insert return null
+}
+
+fun insertReturn3(a) {
+	if(a) {
+		return 1
+	} else {
+		return 0
+	}
+	// Can't insert return null
+}
+assert insertReturn3(5) == 1
+assert insertReturn3(null) == 0
+
+fun insertReturn4(a) {
+	if(a) {
+		return 1
+	} else {
+	}
+}
+
+assert insertReturn4(null) == null

@@ -1,9 +1,4 @@
 
-while (true) {
-	break;
-	"Unreachable"
-}
-
 var i = 0
 while (i < 5) {
 	i+=1
@@ -22,29 +17,59 @@ fun f() {
 }
 
 fun f() {
-	fun inner() {
-		if (true) {
-			return
-		} else {
-			return
+	while (false) {}
+	"Reachable"
+	while (true) {
+		continue
+	}
+	"Unreachable after while(true) { continue; }"
+}
+
+fun f() {
+	while (true) {
+		return
+	}
+	"Unreachable after while(true) { return; }"
+}
+
+fun f() {
+	while (true) {
+		while (true) {
+			break
 		}
+		for (i in range(0, 10)) {
+			break
+		}
+		"Reachable"
+		if (a) {
+			break 
+		} else {
+			continue
+		}
+		"Unreachable"
+	}
+	"Unreachable"
+}
+
+fun f() {
+	if (true) {
+		return
+	}
+	"Reachable"
+	
+	fun inner() {
+		return
 	}
 	return
 	"Unreachable"
 	fun inner() { // Unreachable
-		return
+		return // Unreachable
 		var a = lambda -> { // Unreachable
-			"Don't check me"
-			return
-			"Lambda Unreachable"
+			"Unreachable in lambda"
+			return // Unreachable
+			"Unreachable in lambda"
 		}
 		"Unreachable"
-	}
-	
-	if (true) { // Unreachable
-		
-	} else {
-		return
 	}
 }
 
@@ -52,6 +77,7 @@ fun f() {
 	if (true) {
 		return
 	}
+	"Reachable"
 	while (true) {
 		return
 		break // Unreachable
@@ -62,14 +88,25 @@ fun f() {
 	"Unreachable"
 }
 
+class A {
+	a() {
+		return
+		"Unreachable in method"
+	}
+	
+	b() {
+		"Reachable"
+	}
+}
+
 break // Error
 fun a() { // Unreachable
-	"Don't check me."
-	return
-	"Oh, I'm unreachable..."
+	"Unreachable"
+	return // Unreachable
+	"Unreachable..."
 	while (true) { // Unreachable
-		"Don't check me."
-		break
+		"Unreachable"
+		break // Unreachable
 	}
 	"Unreachable"
 }
