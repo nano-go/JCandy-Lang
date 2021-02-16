@@ -1,0 +1,17 @@
+assert 1 + "abcd" + 5 + 5.56 == "1abcd55.56" : "Delete"
+
+var _true = true
+var _false = false
+var _nil = null
+
+assert true + "" == _true + ""
+assert false + "" == _false + ""
+assert null + "" == _nil + ""
+
+var str = "str"
+assert "str"*2 == str*2
+assert (str == "str") == ("str" == "str")
+assert (str != "strt") == ("str" != "strt")
+
+var a = "str" + "str"
+assert a == ("str" + "str")

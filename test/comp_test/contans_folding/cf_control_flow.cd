@@ -1,0 +1,37 @@
+if (false) {
+	assert false
+	assert false
+	assert false
+	assert false
+	assert false
+	assert false
+	assert false
+}
+
+if (true) {
+
+} else {
+	"Here is else body."
+}
+
+if (null) {
+	"Here is then body."
+} else {
+	
+}
+
+var t = true
+if (t) {
+
+} else {
+	assert false
+}
+if (t) {} else assert false
+if (false) {} else {
+	t = 1
+}
+assert t == 1
+
+while (!true == true) {
+	assert false
+}

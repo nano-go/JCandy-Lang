@@ -1,0 +1,36 @@
+assert (0 / 100) == 0 : "Delete"
+assert 0.0 / 100 == 0 : "Delete"
+assert 5 % 10 == 5 : "Delete"
+assert 5.0 % 10 == 5 : "Delete"
+assert 3.5 % 2 == 1.5 : "Delete"
+assert -(-2 * 3) == 6 : "Delete"
+assert -(-2.5 * 3) == 7.5 : "Delete"
+assert -(2.5 * 3) == -7.5 : "Delete"
+assert 1 * (2 + +3) - 4 / 5 % 6 == 5 : "Delete"
+
+assert 2 + 2.5 == 4.5 : "Delete"
+assert 2 + 2.5 is 0.0 : "Delete"
+
+assert !(1 > 2) : "Delete"
+assert 1 > 0.5 : "Delete"
+assert !(1 < 0.5) : "Delete"
+assert 1 >= 1.0 : "Delete"
+assert 1 <= 1.0 : "Delete"
+assert 1 == 1 : "Delete"
+assert 1 != 2 : "Delete"
+
+var n = 1
+assert !(!1) : "Delete"
+assert !n == !1
+assert n && 1
+
+var n = 1.1
+assert !(!1.1) : "Delete"
+assert !n == !1
+assert n && 1.1
+
+
+
+
+
+

@@ -1,0 +1,75 @@
+
+while (true) {
+	break;
+	"Unreachable"
+}
+
+var i = 0
+while (i < 5) {
+	i+=1
+	continue
+	"Unreachable"
+}
+
+var _true = true
+fun f() {
+	if (_true) {
+		return
+	} else {
+		return 
+	}
+	"Unreachable"
+}
+
+fun f() {
+	fun inner() {
+		if (true) {
+			return
+		} else {
+			return
+		}
+	}
+	return
+	"Unreachable"
+	fun inner() { // Unreachable
+		return
+		var a = lambda -> { // Unreachable
+			"Don't check me"
+			return
+			"Lambda Unreachable"
+		}
+		"Unreachable"
+	}
+	
+	if (true) { // Unreachable
+		
+	} else {
+		return
+	}
+}
+
+fun f() {
+	if (true) {
+		return
+	}
+	while (true) {
+		return
+		break // Unreachable
+		"Unreachable"
+	}
+	assert true
+	return
+	"Unreachable"
+}
+
+break // Error
+fun a() { // Unreachable
+	"Don't check me."
+	return
+	"Oh, I'm unreachable..."
+	while (true) { // Unreachable
+		"Don't check me."
+		break
+	}
+	"Unreachable"
+}

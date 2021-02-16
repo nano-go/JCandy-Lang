@@ -1,0 +1,18 @@
+var n = null || ""
+assert !"" == false : "Delete"
+assert !n == !""
+
+assert !false : "Delete"
+assert !(false && 2 - 3 / 4)
+assert !(false && f) : "Delete"
+assert 1 && true : "Delete"
+
+assert true || f * 5 : "Delete"
+assert true : "Delete"
+
+assert (true || 2 / 0) : "Delete"
+
+var n = null
+assert !n == !null
+assert !(null) == true : "Delete"
+assert !(null && (true || 0 == 2) && true * 2 - 3 / 4) :  "Delete"
