@@ -57,6 +57,10 @@ public class AstInterpreter implements Interpreter, AstVisitor<CandyObject, Cand
 	
 	@Override
 	public void load(ASTreeNode node) {
+		Checker.check(node);
+		if (Logger.getLogger().hadErrors()) {
+			return;
+		}
 		CandyResolver resolver = new CandyResolver();
 		env.setDistances(resolver.resolve(node));
 		this.node = node;

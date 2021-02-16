@@ -1,16 +1,16 @@
 package com.nano.candy.interpreter.i1.resolver;
 import com.nano.candy.ast.ASTreeNode;
+import com.nano.candy.ast.AbstractAstVisitor;
 import com.nano.candy.ast.Expr;
 import com.nano.candy.ast.Program;
 import com.nano.candy.ast.Stmt;
-import com.nano.candy.comp.Checker;
 import com.nano.candy.config.Config;
 import com.nano.candy.parser.TokenKind;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Stack;
 
-public class CandyResolver extends Checker {
+public class CandyResolver extends AbstractAstVisitor<Void> {
 	
 	private Stack<HashSet<String>> scopes;
 	private HashMap<Expr, Integer> distances;
@@ -67,14 +67,13 @@ public class CandyResolver extends Checker {
 	}
 	
 	public HashMap<Expr, Integer> resolve(ASTreeNode node) {
-		node.accept(this);
+		ASTreeNode.accept(node, this);
 		return distances;
 	}
 
 	@Override
-	public Void visit(Program node) {
+	public void visit(Program node) {
 		super.visit(node);
-		return null;
 	}
 
 	@Override
@@ -89,14 +88,11 @@ public class CandyResolver extends Checker {
 	public Void visit(Stmt.For node) {
 		node.iterable.accept(this);
 		enterScope();
-		boolean origin = super.inLoop;
-		super.inLoop = true;
 		define(node, node.iteratingVar);
 		for (Stmt stmt : node.body.stmts) {
 			stmt.accept(this);
 		}
 		exitScope();
-		super.inLoop = origin;
 		return null;
 	}
 
@@ -161,14 +157,12 @@ public class CandyResolver extends Checker {
 
 	@Override
 	public Void visit(Expr.Super node) {
-		super.visit(node);
 		resolveLocals(TokenKind.SUPER.getLiteral(), node);
 		return null;
 	}
 	
 	@Override
 	public Void visit(Expr.This node) {
-		super.visit(node);
 		resolveLocals(TokenKind.THIS.getLiteral(), node);
 		return null;
 	}
