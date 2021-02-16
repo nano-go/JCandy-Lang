@@ -176,12 +176,8 @@ public class StmtInterpreter {
 
 	public void execute(AstInterpreter interpreter, Stmt.Assert node) {
 		if (!interpreter.evalExpr(node.condition).booleanValue().value()) {
-			String errorMsg = "" ;
-			if (node.errorInfo.isPresent()) {
-				CandyObject errorInfo = interpreter.evalExpr(node.errorInfo.get());
-				errorMsg = errorInfo.toString() ;
-			}
-			throw new com.nano.candy.interpreter.error.AssertionError(errorMsg);
+			CandyObject errorInfo = interpreter.evalExpr(node.errorInfo);
+			throw new com.nano.candy.interpreter.error.AssertionError(errorInfo.toString());
 		}
 	}
 
