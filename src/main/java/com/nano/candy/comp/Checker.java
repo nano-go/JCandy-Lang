@@ -43,8 +43,11 @@ public class Checker implements AstVisitor<Stmt, Expr> {
 	protected boolean inClass;
 	protected FunctionType curFunctionType = FunctionType.NONE;
 	
-	// This field is used to determine the reachability of a statement.
-	protected boolean reachable = true;
+	// This field is used to analyze the reachability of the statements.
+	private boolean reachable = true;
+	// This field is used to determina a while statement is a infinite loop.
+	private boolean hadBreak = false;
+	private boolean returned = false;
 	
 	private boolean checkReachable(Stmt stmt) {
 		if (!reachable) {
@@ -108,34 +111,51 @@ public class Checker implements AstVisitor<Stmt, Expr> {
 	@Override
 	public Stmt visit(Stmt.While node) {
 		boolean originalInLoop = inLoop;
+		boolean originalHadBreak = hadBreak;
 		boolean originalReachable = reachable;
-		this.reachable = true;
+		boolean originalReturned = returned;
+		this.hadBreak = false;
 		this.inLoop = true;
+		
+		boolean isConstantTrue = false;
 		
 		node.condition = visitExpr(node.condition);
 		visitStmt(node.body);
-		if (node.condition.isFalsely()) {
-			node = null;
-		} 
+		if (node.condition.isConstant()) {
+			if (node.condition.isFalsely()) {
+				node = null;
+			} else {
+				isConstantTrue = true;
+			}
+		}
 		
-		this.inLoop = originalInLoop;
-		this.reachable = originalReachable;
+		// The while statement is infinite loop if the condition expression
+		// is a true constant and the while body has no break statements.
+		// The next statements are unreachable if the while statement is infinite loop.
+		this.reachable = originalReachable && (!isConstantTrue || hadBreak);
+		this.returned = originalReturned;
+		this.hadBreak = originalHadBreak;
+		this.inLoop = originalInLoop;	
 		return node;
 	}
 
 	@Override
 	public Stmt visit(Stmt.For node) {	
 		boolean originalInLoop = inLoop;
+		boolean originalHadBreak = hadBreak;
 		boolean originalReachable = reachable;
-		this.reachable = true;
+		boolean originalReturned = returned;
 		this.inLoop = true;
+		this.hadBreak = false;
 		
 		node.iterable = visitExpr(node.iterable);
 		checkIterable(node.iterable);
 		visitStmt(node.body);
 		
 		this.inLoop = originalInLoop;
+		this.hadBreak = originalHadBreak;
 		this.reachable = originalReachable;
+		this.returned = originalReturned;
 		return node;
 	}
 	
@@ -153,6 +173,7 @@ public class Checker implements AstVisitor<Stmt, Expr> {
 		if (!inLoop) {
 			error(node, "The 'break' outside loop.");
 		}
+		hadBreak = true;
 		reachable = false;
 		return node;
 	}
@@ -161,22 +182,30 @@ public class Checker implements AstVisitor<Stmt, Expr> {
 	public Stmt visit(Stmt.If node) {
 		node.condition = visitExpr(node.condition);
 		
-		boolean thenBodyIsReachable;
-		boolean elseBodyIsReachable = true;
+		boolean originalReachable = reachable;
+		boolean originalReturned = returned;
+		
+		boolean thenBodyReachable;
+		boolean elseBodyReachable = true;
 		
 		Stmt thenBody = visitStmt(node.thenBody);
-		thenBodyIsReachable = this.reachable;
-		this.reachable = true;
+		thenBodyReachable = this.reachable;
 		
 		Stmt elseBody = null;
 		if (node.elseBody.isPresent()) {
-			elseBody = node.elseBody.get();
-			elseBody = visitStmt(elseBody);
-			elseBodyIsReachable = this.reachable;
+			this.reachable = originalReachable;
+			this.returned = originalReturned;
+			elseBody = visitStmt(node.elseBody.get());
+			elseBodyReachable = this.reachable;
 		}
 		
-		this.reachable = thenBodyIsReachable || elseBodyIsReachable;
+		// The next statements are unreachable if the then-body and 
+		// the else-body are both unreachable.
+		this.reachable = originalReachable && 
+			(thenBodyReachable || elseBodyReachable);
+		this.returned = originalReturned;
 		
+		// Pruning
 		if (node.condition.isConstant()) {
 			if (node.condition.isFalsely()) {
 				return isEmtpy(elseBody) ? null : elseBody;
@@ -186,9 +215,10 @@ public class Checker implements AstVisitor<Stmt, Expr> {
 		
 		node.thenBody = thenBody;
 		if (elseBody != null) {
-			node.elseBody = Optional.ofNullable(elseBody);
+			node.elseBody = Optional.of(elseBody);
 		}
 		
+		// if (a) {} else print(a); -> if (!a) printa();
 		if (isEmtpy(node.thenBody)) {
 			Position conditionPos = node.condition.pos;
 			node.condition = new Expr.Unary(TokenKind.NOT, node.condition);
@@ -240,31 +270,38 @@ public class Checker implements AstVisitor<Stmt, Expr> {
 		if (node.initializer.isPresent()) {
 			node.initializer.get().accept(this);
 		}
-		
-		HashSet<String> duplicatedNameHelper = new HashSet<>(node.methods.size());
-		for (Stmt.FuncDef method : node.methods) {
+		checkMethodNames(node);
+		inClass = origin;
+		return node;
+	}
+	
+	private void checkMethodNames(Stmt.ClassDef classDef) {
+		HashSet<String> duplicatedNameHelper = new HashSet<>(classDef.methods.size());
+		for (Stmt.FuncDef method : classDef.methods) {
 			String name = method.name.get();
 			if (duplicatedNameHelper.contains(name)) {
 				warn(method, "Duplicated method '%s' in the class '%s'.",
-				     name, node.name) ;
+				     name, classDef.name) ;
 			} else duplicatedNameHelper.add(name);
 			method.accept(this);
 		}
-		
-		inClass = origin;
-		return node;
 	}
 	
 	@Override
 	public Stmt visit(Stmt.FuncDef node) {
 		boolean originalReachable = reachable;
+		boolean originalReturned = returned;
 		FunctionType originalFuncType = curFunctionType;
-		this.reachable = true;
-		this.curFunctionType = getFuncType(node);	
+		this.curFunctionType = getFuncType(node);
+		this.returned = false;
+		
 		checkParams(node);	
 		visitBlock(node.body);
+		insertReturnStmt(node);
+		
 		this.curFunctionType = originalFuncType;
 		this.reachable = originalReachable;
+		this.returned = originalReturned;
 		return node;
 	}
 	
@@ -279,7 +316,7 @@ public class Checker implements AstVisitor<Stmt, Expr> {
 		} 
 		return FunctionType.FUNCTION;
 	}
-	
+
 	private void checkParams(Stmt.FuncDef node) {
 		String funcName = node.name.isPresent() ? node.name.get() : "lambda";
 		HashSet<String> duplicatedNameHelper = new HashSet<>(node.params.size());
@@ -292,13 +329,22 @@ public class Checker implements AstVisitor<Stmt, Expr> {
 			}
 			duplicatedNameHelper.add(param);
 		}
-		
+
 		if (node.params.size() > MAX_PARAMETER_NUMBER) {
 			error(node, 
 				  "The number of the parameter of the function '%s' must be less than %d.",
 				  funcName, MAX_PARAMETER_NUMBER
 			);
 		}
+	}
+
+	private void insertReturnStmt(Stmt.FuncDef node) {
+		if (!reachable || returned) {
+			return;
+		}
+		Stmt.Return returnStmt = new Stmt.Return(null);
+		returnStmt.pos = Position.PREVIOUS_POSITION;
+		node.body.stmts.add(returnStmt);
 	}
 
 	@Override
