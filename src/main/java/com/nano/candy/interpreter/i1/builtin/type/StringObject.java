@@ -3,6 +3,7 @@ import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
 import com.nano.candy.interpreter.i1.builtin.CandyObject;
 import com.nano.candy.interpreter.i1.builtin.classes.StringClass;
+import com.nano.candy.std.StringFunctions;
 import java.util.concurrent.ExecutionException;
 
 public class StringObject extends CandyObject{
@@ -30,6 +31,15 @@ public class StringObject extends CandyObject{
 	
 	public String value() {
 		return value ;
+	}
+
+	@Override
+	public CandyObject times(CandyObject obj) {
+		if (obj instanceof IntegerObject) {
+			long c = ((IntegerObject) obj).intValue();
+			return of(StringFunctions.repeat(value, c));
+		}
+		return super.times(obj);
 	}
 
 	@Override
