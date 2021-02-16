@@ -5,6 +5,7 @@ import com.nano.candy.ast.Program;
 import com.nano.candy.ast.Stmt;
 import com.nano.candy.utils.Logger;
 import com.nano.candy.utils.Position;
+import com.nano.common.text.StringUtils;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -39,6 +40,13 @@ class CandyParser implements Parser {
 
 
 	/* =================== helper =================== */
+	
+	private String tokStr(TokenKind tok) {
+		if (StringUtils.isEmpty(tok.getLiteral())) {
+			return tok.name();
+		}
+		return tok.getLiteral();
+	}
 
 	protected <R extends ASTreeNode> R location(Token token, R node) {
 		return this.location(token.getPos(), node);
@@ -60,7 +68,7 @@ class CandyParser implements Parser {
 	protected Token previous() {
 		return previous;
 	}
-
+	
 	protected void consume() {
 		nextToken();
 	}
@@ -81,7 +89,7 @@ class CandyParser implements Parser {
 			return true;
 		}
 		if (error) {
-			error(suitableErrorPosition(), "Missing '%s'", expected.literal);
+			error(suitableErrorPosition(), "Missing '%s'", tokStr(expected));
 		}
 		return false;
 	}
@@ -121,10 +129,23 @@ class CandyParser implements Parser {
 	protected void panic() {
 		throw new ParserError();
 	}
+	
+	protected void synchronizeAtMethodContext() {
+		loop: while (true) {
+			switch (peekKind()) {
+				case RBRACE:
+				case FUN:
+				case IDENTIFIER:
+				case EOF:
+					break loop;
+			}
+			consume();
+		}
+	}
 
 	protected void synchronize() {
 		loop: while (true) {
-			switch (peek().getKind()) {
+			switch (peekKind()) {
 				case EOF: 
 				case LBRACE:
 				case IF:
@@ -145,6 +166,32 @@ class CandyParser implements Parser {
 			consume();
 		}
 	}
+	
+	/**
+	 * Ensures the current token kind is the expected kind.
+	 *
+	 * @param expectedKind the token kind must be in statement first set.
+	 */
+	protected void ensureExpectedKind(TokenKind expectedKind) {
+		if (peekKind() == expectedKind) {
+			return;
+		}
+		error(peek(), "Unexpected '%s'.", tokStr(peekKind()));
+		synchronize();
+		if (peekKind() != expectedKind) {
+			// Avoid cascaded errors.
+			insertToken(expectedKind);
+		}
+	}
+	
+	/**
+	 * Replace the current token with new token kind.
+	 */
+	protected Token insertToken(TokenKind kind) {
+		Token insertedToken = new Token(peek.getPos(), kind.getLiteral(), kind);
+		this.peek = insertedToken;
+		return insertedToken;
+	}
 
 	protected void error(Token tok, String message, Object... args) {
 		error(tok.getPos(), message, args);
@@ -158,11 +205,12 @@ class CandyParser implements Parser {
 	 * Called by {@link #match(TokenKind)}
 	 */
 	protected void onError(TokenKind expected, Token actual) {
-		error(actual, "Expetced '%s', but '%s'.", expected, actual.getKind());
+		error(actual, "Expetced '%s', but was '%s'.", 
+			tokStr(expected), tokStr(actual.getKind())
+		);
 		panic();
 	}
-
-
+	
 	/* =================== parse =================== */
 
 
@@ -210,7 +258,7 @@ class CandyParser implements Parser {
 			parseStmts(program.block.stmts);
 			try {
 				if (peekKind() != EOF) {
-					error(peek(), "Unexpected '%s'.", peekKind());
+					error(peek(), "Unexpected '%s'.", tokStr(peekKind()));
 					synchronize();
 					continue;
 				}
@@ -283,6 +331,7 @@ class CandyParser implements Parser {
 		Token beginTok = match(CLASS);
 		Token name = match(IDENTIFIER);
 		Expr.VarRef superClass = parseSuperClass();
+		matchIf(SEMI);
 		matchIf(LBRACE, true);
 		Stmt.ClassDef classDef = new Stmt.ClassDef(
 			name.getLiteral(), superClass, new ArrayList<Stmt.FuncDef>()
@@ -302,31 +351,33 @@ class CandyParser implements Parser {
 		}
 		return null;
 	}
-
+	
 	/**
 	 * Methods = method*
 	 */
 	private void parseMethods(Stmt.ClassDef classDef) {
-		while (true) {
-			try {
-				if (peekKind() != IDENTIFIER) {
+		loop: while (true) {
+			switch (peekKind()) {
+				case RBRACE: case EOF:
 					return;
-				}
-				Stmt.FuncDef method = parseMethod();
-				if (!INITIALIZER_NAME.equals(method.name.get())) {
-					classDef.methods.add(method);
-					continue;
-				}
-				if (!classDef.initializer.isPresent()) {
-					classDef.initializer = Optional.of(method);
-					continue;
-				}
-				error(method.pos, "Duplicate initializer in the '%s' class.",
-					classDef.name
-				);
-			} catch (ParserError e) {
-				synchronize();
+				case FUN: case IDENTIFIER: 
+					break;
+				default:
+					synchronizeAtMethodContext();
+					continue loop;
 			}
+			Stmt.FuncDef method = parseMethod();
+			if (!INITIALIZER_NAME.equals(method.name.get())) {
+				classDef.methods.add(method);
+				continue;
+			}
+			if (!classDef.initializer.isPresent()) {
+				classDef.initializer = Optional.of(method);
+				continue;
+			}
+			error(method.pos, "Duplicate initializer in the '%s' class.",
+				classDef.name
+			);
 		}
 	}
 
@@ -334,8 +385,11 @@ class CandyParser implements Parser {
 	 * Method = <IDENTIFIER> Params Block
 	 */
 	private Stmt.FuncDef parseMethod() {
-		Token name = match(IDENTIFIER);
+		matchIf(FUN);
+		Token name = peek();
+		matchIf(IDENTIFIER, true);
 		List<String> params = parseParams(true);
+		ensureExpectedKind(TokenKind.LBRACE);
 		Stmt.Block body = parseBlock();
 		return location(name, new Stmt.FuncDef(name.getLiteral(), params, body));
 	}
@@ -421,7 +475,7 @@ class CandyParser implements Parser {
 	}
 	
 	/**
-	 * ForStmt = "for" "(" <IDENTIFIER> "in" Expr ")" Body
+	 * ForStmt = "for" "(" <IDENTIFIER> "in" Expr ")" [SEMI] Body
 	 */
 	private Stmt.For parseForStmt() {
 		Token beginTok = match(FOR);
@@ -429,8 +483,9 @@ class CandyParser implements Parser {
 		String iteratingVar = match(IDENTIFIER).getLiteral();
 		match(IN);
 		Expr iterable = parseExpr();
-		matchIf(RPAREN, true);
-		matchIf(SEMI);
+		if (matchIf(RPAREN, true)) {
+			matchIf(SEMI);
+		}
 		Stmt.Block body = parseBody(beginTok.getPos(), "Invalid for statement.");
 		return location(beginTok, new Stmt.For(iteratingVar, iterable, body));
 	}
@@ -454,13 +509,13 @@ class CandyParser implements Parser {
 	}
 
 	/**
-	 * Return = "return" [ Expr ] <SEMI>
+	 * Return = "return" [ ExprOrLambda ] <SEMI>
 	 */
 	private Stmt.Return parseReturn() {
 		Token location = match(RETURN);
 		Expr expr = null;
 		if (peekKind() != SEMI) {
-			expr = parseExpr();
+			expr = parseExprOrLambda();
 		}
 		matchSEMI();
 		return location(location, new Stmt.Return(expr));
@@ -495,13 +550,14 @@ class CandyParser implements Parser {
 	}
 
 	/**
-	 * Params = ( "(" Parameters ")" ) | Parameters
-	 * Parameters = [ <IDENTIFIER> ( "," <IDENTIFIER> )*
+	 * Params = ( ( "(" Parameters ")" ) | Parameters ) [ <SEMI> ]
+	 * Parameters = [ <IDENTIFIER> ( "." <IDENTIFIER> )*
 	 */
 	private List<String> parseParams(boolean mandatoryParenthesis) {
 		ArrayList<String> params = new ArrayList<>(6);
 		boolean leftParenMatched = matchIf(LPAREN, mandatoryParenthesis);
 		if (leftParenMatched && matchIf(RPAREN)) {
+			matchIf(SEMI);
 			return params;
 		}
 		do {
@@ -510,11 +566,12 @@ class CandyParser implements Parser {
 				break;
 			}
 			params.add(nameTok.getLiteral());
-		}while (matchIf(COMMA));
+		} while (matchIf(COMMA));
 		
 		if (mandatoryParenthesis || leftParenMatched) {
 			matchIf(RPAREN, true);
 		}
+		matchIf(SEMI);
 		return params;
 	}
 	
