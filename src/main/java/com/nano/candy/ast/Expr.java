@@ -1,22 +1,70 @@
 package com.nano.candy.ast;
 import com.nano.candy.parser.Token;
 import com.nano.candy.parser.TokenKind;
+import com.nano.candy.std.BoolFunctions;
+import com.nano.candy.std.StringFunctions;
 import com.nano.candy.utils.Position;
 import java.util.List;
 
 public abstract class Expr extends ASTreeNode {
 	
-	public static class Lambda extends Expr {
+	public abstract <E> E accept(AstVisitor<?, E> visitor);
+	
+	public boolean isLiteral() {
+		return false;
+	}
+	
+	public boolean isFalsely() {
+		return false;
+	}
+	
+	public boolean isNumber() {
+		return false;
+	}
+	
+	public boolean isConstant() {
+		return false;
+	}
+	
+	protected static abstract class Literal extends Expr {
+		@Override
+		public boolean isLiteral() {
+			return true;
+		}
+
+		@Override
+		public boolean isConstant() {
+			return true;
+		}
+	}
+	
+	public static abstract class Number extends Literal {
+		@Override
+		public boolean isNumber() {
+			return true;
+		}
 		
+		public abstract boolean isDouble();
+		public abstract double value();
+
+		@Override
+		public boolean equals(Object obj) {
+			if (obj instanceof Number) {
+				return value() == ((Number) obj).value();
+			}
+			return super.equals(obj);
+		}
+	}
+	
+	public static class Lambda extends Expr {		
 		public Stmt.FuncDef funcDef;
 
 		public Lambda(List<String> params, Stmt.Block body) {
 			this.funcDef = new Stmt.FuncDef(null, params, body);
-			this.funcDef.pos = pos;
 		}
 		
 		@Override
-		public <R> R accept(AstVisitor<R> visitor) {
+		public <R> R accept(AstVisitor<?, R> visitor) {
 			return visitor.visit(this);
 		}
 	}
@@ -68,51 +116,119 @@ public abstract class Expr extends ASTreeNode {
 		}
 
 		@Override
-		public <R> R accept(AstVisitor<R> visitor) {
+		public <R> R accept(AstVisitor<?, R> visitor) {
 			return visitor.visit(this);
 		}
 	}
 	
-	public static class StringLiteral extends Expr {
+	public static class StringLiteral extends Literal {
 		public String literal;
 
 		public StringLiteral(String literal) {
 			this.literal = literal;
 		}
+
+		@Override
+		public boolean isFalsely() {
+			return !BoolFunctions.valueOf(literal);
+		}
 		
 		@Override
-		public <R> R accept(AstVisitor<R> visitor) {
+		public <R> R accept(AstVisitor<?, R> visitor) {
 			return visitor.visit(this);
-		}	
+		}
+
+		@Override
+		public String toString() {
+			return StringFunctions.valueOf(literal);
+		}
+
+		@Override
+		public boolean equals(Object obj) {
+			if (obj instanceof StringLiteral) {
+				return StringFunctions.equals(
+					literal, ((StringLiteral) obj).literal
+				);
+			}
+			return super.equals(obj);
+		}
 	}
 	
-	public static class DoubleLiteral extends Expr {
+	public static class DoubleLiteral extends Number {
 		public double value;
+
+		public DoubleLiteral(double value) {
+			this.value = value;
+		}
 		
 		public DoubleLiteral(Token tok) {
 			this.value = ((Token.DoubleNumberToken)tok).getValue();
 		}
 		
 		@Override
-		public <R> R accept(AstVisitor<R> visitor) {
+		public <R> R accept(AstVisitor<?, R> visitor) {
 			return visitor.visit(this);
+		}
+		
+		@Override
+		public boolean isFalsely() {
+			return !BoolFunctions.valueOf(value);
+		}
+
+		@Override
+		public boolean isDouble() {
+			return true;
+		}
+		
+		@Override
+		public double value() {
+			return value;
+		}
+
+		@Override
+		public String toString() {
+			return StringFunctions.valueOf(value);
 		}
 	}
 	
-	public static class IntegerLiteral extends Expr {
+	public static class IntegerLiteral extends Number {
 		public long value;
+
+		public IntegerLiteral(long value) {
+			this.value = value;
+		}
 
 		public IntegerLiteral(Token tok) {
 			this.value = ((Token.IntegerNumberToken)tok).getValue();
 		}
 
 		@Override
-		public <R> R accept(AstVisitor<R> visitor) {
+		public <R> R accept(AstVisitor<?, R> visitor) {
 			return visitor.visit(this);
+		}
+		
+		@Override
+		public boolean isFalsely() {
+			return !BoolFunctions.valueOf(value);
+		}
+
+		@Override
+		public boolean isDouble() {
+			return false;
+		}
+
+		@Override
+		public double value() {
+			return value;
+		}
+
+		@Override
+		public String toString() {
+			return StringFunctions.valueOf(value);
 		}
 	}
 	
-	public static class BooleanLiteral extends Expr {
+	public static class BooleanLiteral extends Literal {
 		public boolean value;
 
 		public BooleanLiteral(boolean value) {
@@ -120,19 +236,55 @@ public abstract class Expr extends ASTreeNode {
 		}
 		
 		@Override
-		public <R> R accept(AstVisitor<R> visitor) {
+		public <R> R accept(AstVisitor<?, R> visitor) {
 			return visitor.visit(this);
 		}
-	}
-	
-	public static class NullLiteral extends Expr {
+
 		@Override
-		public <R> R accept(AstVisitor<R> visitor) {
-			return visitor.visit(this);
+		public boolean isFalsely() {
+			return !value;
+		}
+
+		@Override
+		public String toString() {
+			return StringFunctions.valueOf(value);
+		}
+
+		@Override
+		public boolean equals(Object obj) {
+			if (obj instanceof BooleanLiteral) {
+				return value == ((BooleanLiteral) obj).value;
+			}
+			return super.equals(obj);
 		}
 	}
 	
-	public static class Array extends Expr {
+	public static class NullLiteral extends Literal {
+		@Override
+		public <R> R accept(AstVisitor<?, R> visitor) {
+			return visitor.visit(this);
+		}
+
+		@Override
+		public boolean isFalsely() {
+			return !BoolFunctions.nilBoolValue();
+		}
+
+		@Override
+		public String toString() {
+			return StringFunctions.nullStr();
+		}
+		
+		@Override
+		public boolean equals(Object obj) {
+			if (obj instanceof NullLiteral) {
+				return true;
+			}
+			return super.equals(obj);
+		}
+	}
+	
+	public static class Array extends Literal {
 		
 		public List<Expr> elements;
 
