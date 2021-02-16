@@ -168,22 +168,7 @@ class CandyParser implements Parser {
 
 	/**
 	 * Changes the last statement to the {@code Return} statement 
-	 * if the last statement is returnable.
-	 *
-	 * Example:
-	 * <code>
-	 * fun sum(n) {
-	 *     if (n <= 0) return
-     *     n + sum(n - 1)
-	 * }
-	 * </code>
-	 * Change To
-	 * <code>
-	 * ...
-	 *     return n + sum(n - 1)
-	 * }
-	 * </code>
-	 * 
+	 * if it's returnable.
 	 */
 	private Stmt.Block toFuncBlock(Stmt.Block block) {
 		if (block.stmts.isEmpty()) {
@@ -544,7 +529,7 @@ class CandyParser implements Parser {
 			errorInfo = parseExpr();
 		}
 		matchSEMI();
-		return location(location, new Stmt.Assert(expected, errorInfo));
+		return new Stmt.Assert(location.getPos(), expected, errorInfo);
 	}
 
 	/**
@@ -804,7 +789,10 @@ class CandyParser implements Parser {
 		);	
 		
 		singleLineLambda = originalSingleLineLambda;
-		return location(location, new Expr.Lambda(params, body));
+		Expr.Lambda lambda = new Expr.Lambda(params, body);
+		lambda.pos = location.getPos();
+		lambda.funcDef.pos = location.getPos();
+		return lambda;
 	}
 
 }
