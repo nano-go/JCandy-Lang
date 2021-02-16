@@ -4,6 +4,8 @@ import java.util.Optional;
 
 public class Position {
 	
+	public static final Position PREVIOUS_POSITION = new Position(null, null, -1, -1);
+	
 	private final String fileName;
 	private final Optional<String> lineFromSource;
 	private final int col;
