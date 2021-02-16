@@ -27,7 +27,7 @@ public enum TokenKind {
 	NOT("!"),
 	PLUS("+"),
 	MINUS("-"),
-	STAR("*"), // MULTIPLY
+	STAR("*"),
 	DIV("/"),
 	MOD("%"),
 	LOGICAL_AND("and"),
@@ -96,6 +96,16 @@ public enum TokenKind {
 		return kind == null ? TokenKind.IDENTIFIER : kind;
 	}
 	
+	public static boolean isLogicalOperator(TokenKind operator) {
+		switch (operator) {
+			case LOGICAL_OR:
+			case LOGICAL_AND:
+			case NOT:
+				return true;
+		}
+		return false;
+	}
+	
 	public static int assignOperatorStart() {
 		return ASSIGN.ordinal();
 	}
@@ -121,15 +131,18 @@ public enum TokenKind {
 	}
 	
 	public static boolean isAssignOperator(TokenKind kind) {
-		return kind.ordinal() >= assignOperatorStart() && kind.ordinal() <= assignOperatorEnd();
+		return kind.ordinal() >= assignOperatorStart() && 
+		       kind.ordinal() <= assignOperatorEnd();
 	}
 	
 	public static boolean isBinaryOperator(TokenKind kind) {
-		return kind.ordinal() >= binaryOperatorOrdinalStart() && kind.ordinal() <= binaryOperatorOrdinalEnd();
+		return kind.ordinal() >= binaryOperatorOrdinalStart() && 
+		       kind.ordinal() <= binaryOperatorOrdinalEnd();
 	}
 	
 	public static boolean isUnaryOperator(TokenKind kind) {
-		return kind.ordinal() >= unaryOperatorOrdinalStart() && kind.ordinal() <= unaryOperatorOrdinalEnd();
+		return kind.ordinal() >= unaryOperatorOrdinalStart() && 
+		       kind.ordinal() <= unaryOperatorOrdinalEnd();
 	}
 	
 	public static int precedence(TokenKind kind) {
