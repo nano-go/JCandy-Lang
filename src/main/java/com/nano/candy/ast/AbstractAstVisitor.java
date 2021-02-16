@@ -1,13 +1,12 @@
 package com.nano.candy.ast;
 
-public abstract class AbstractAstVisitor<R> implements AstVisitor<R> {
+public abstract class AbstractAstVisitor<R> implements AstVisitor<R, R> {
 
 	@Override
-	public R visit(Program node) {
+	public void visit(Program node) {
 		for (Stmt stmt : node.block.stmts) {
 			stmt.accept(this);
 		}
-		return null;
 	}
 
 	@Override
@@ -36,10 +35,8 @@ public abstract class AbstractAstVisitor<R> implements AstVisitor<R> {
 
 	@Override
 	public R visit(Stmt.Assert node) {
-		node.condition.accept(this);
-		if (node.errorInfo.isPresent()) {
-			node.errorInfo.get().accept(this);
-		}
+		node.condition.accept(this);	
+		node.errorInfo.accept(this);
 		return null;
 	}
 

@@ -1,22 +1,25 @@
 package com.nano.candy.ast;
 
 import com.nano.candy.ast.printer.FieldName;
-import java.util.ArrayList;
+import com.nano.candy.utils.Position;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Optional;
 
 public abstract class Stmt extends ASTreeNode {
 	
+	public abstract <S> S accept(AstVisitor<S, ?> visitor);
+	
 	public static class Continue extends Stmt {
 		@Override
-		public <R> R accept(AstVisitor<R> visitor) {
+		public <R> R accept(AstVisitor<R, ?> visitor) {
 			return visitor.visit(this);
 		}
 	}
 	
 	public static class Break extends Stmt {
 		@Override
-		public <R> R accept(AstVisitor<R> visitor) {
+		public <R> R accept(AstVisitor<R, ?> visitor) {
 			return visitor.visit(this);
 		}
 	}
@@ -28,7 +31,7 @@ public abstract class Stmt extends ASTreeNode {
 			this.expr = Optional.ofNullable(expr);
 		}
 		@Override
-		public <R> R accept(AstVisitor<R> visitor) {
+		public <R> R accept(AstVisitor<R, ?> visitor) {
 			return visitor.visit(this);
 		}
 	}
@@ -43,7 +46,7 @@ public abstract class Stmt extends ASTreeNode {
 		}
 		
 		@Override
-		public <R> R accept(AstVisitor<R> visitor) {
+		public <R> R accept(AstVisitor<R, ?> visitor) {
 			return visitor.visit(this);
 		}
 	}
@@ -60,7 +63,7 @@ public abstract class Stmt extends ASTreeNode {
 		}
 		
 		@Override
-		public <R> R accept(AstVisitor<R> visitor) {
+		public <R> R accept(AstVisitor<R, ?> visitor) {
 			return visitor.visit(this);
 		}
 	}
@@ -77,22 +80,27 @@ public abstract class Stmt extends ASTreeNode {
 		}
 		
 		@Override
-		public <R> R accept(AstVisitor<R> visitor) {
+		public <R> R accept(AstVisitor<R, ?> visitor) {
 			return visitor.visit(this);
 		}
 	}
 	
 	public static class Assert extends Stmt {
 		public Expr condition;
-		public Optional<Expr> errorInfo;
+		public Expr errorInfo;
 		
-		public Assert(Expr condition, Expr errorInfo) {
+		public Assert(Position pos, Expr condition, Expr errorInfo) {
 			this.condition = condition;
-			this.errorInfo = Optional.ofNullable(errorInfo);
+			this.pos = pos;
+			if (errorInfo == null) {
+				errorInfo = new Expr.StringLiteral("");
+				errorInfo.pos = pos;
+			}
+			this.errorInfo = errorInfo;
 		}
 		
 		@Override
-		public <R> R accept(AstVisitor<R> visitor) {
+		public <R> R accept(AstVisitor<R, ?> visitor) {
 			return visitor.visit(this);
 		}
 	}
@@ -109,7 +117,7 @@ public abstract class Stmt extends ASTreeNode {
 		}
 
 		@Override
-		public <R> R accept(AstVisitor<R> visitor) {
+		public <R> R accept(AstVisitor<R, ?> visitor) {
 			return visitor.visit(this);
 		}
 	}
@@ -128,7 +136,7 @@ public abstract class Stmt extends ASTreeNode {
 		}
 		
 		@Override
-		public <R> R accept(AstVisitor<R> visitor) {
+		public <R> R accept(AstVisitor<R, ?> visitor) {
 			return visitor.visit(this);
 		}
 	}
@@ -154,7 +162,7 @@ public abstract class Stmt extends ASTreeNode {
 		}
 		
 		@Override
-		public <R> R accept(AstVisitor<R> visitor) {
+		public <R> R accept(AstVisitor<R, ?> visitor) {
 			return visitor.visit(this);
 		}
 	}
@@ -173,7 +181,7 @@ public abstract class Stmt extends ASTreeNode {
 		}
 		
 		@Override
-		public <R> R accept(AstVisitor<R> visitor) {
+		public <R> R accept(AstVisitor<R, ?> visitor) {
 			return visitor.visit(this);
 		}
 	}
@@ -182,7 +190,7 @@ public abstract class Stmt extends ASTreeNode {
 		public List<Stmt> stmts;
 		
 		public Block() {
-			this(new ArrayList<Stmt>());
+			this(new LinkedList<Stmt>());
 		}
 
 		public Block(List<Stmt> stmts) {
@@ -190,7 +198,7 @@ public abstract class Stmt extends ASTreeNode {
 		}
 		
 		@Override
-		public <R> R accept(AstVisitor<R> visitor) {
+		public <R> R accept(AstVisitor<R, ?> visitor) {
 			return visitor.visit(this);
 		}	
 	}

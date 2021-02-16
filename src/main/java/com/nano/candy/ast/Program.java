@@ -19,9 +19,8 @@ public class Program extends ASTreeNode {
 		this.pos = basePos;
 	}
 	
-	@Override
-	public <R> R accept(AstVisitor<R> visitor) {
-		return visitor.visit(this);
+	public void accept(AstVisitor visitor) {
+		visitor.visit(this);
 	}
 
 }

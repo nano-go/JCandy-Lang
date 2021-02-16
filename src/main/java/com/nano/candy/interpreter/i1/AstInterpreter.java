@@ -4,13 +4,15 @@ import com.nano.candy.ast.AstVisitor;
 import com.nano.candy.ast.Expr;
 import com.nano.candy.ast.Program;
 import com.nano.candy.ast.Stmt;
+import com.nano.candy.comp.Checker;
 import com.nano.candy.interpreter.Interpreter;
 import com.nano.candy.interpreter.i1.builtin.CandyObject;
 import com.nano.candy.interpreter.i1.env.Environment;
 import com.nano.candy.interpreter.i1.resolver.CandyResolver;
+import com.nano.candy.utils.Logger;
 import com.nano.candy.utils.Position;
 
-public class AstInterpreter implements Interpreter, AstVisitor<CandyObject> {
+public class AstInterpreter implements Interpreter, AstVisitor<CandyObject, CandyObject> {
 
 	private Environment env;
 	private ExpressionInterpreter exprInterpreter;
@@ -63,17 +65,16 @@ public class AstInterpreter implements Interpreter, AstVisitor<CandyObject> {
 	@Override
 	public boolean run(boolean isInteratively) {
 		this.isInteratively = isInteratively;
-		node.accept(this);
+		ASTreeNode.accept(node, this);
 		return true;
 	}
 
 	@Override
-	public CandyObject visit(Program node) {
+	public void visit(Program node) {
 		syncLocation(node);
 		for (Stmt stmt : node.block.stmts) {
 			executeStmt(stmt);
 		}
-		return null;
 	}
 
 	@Override

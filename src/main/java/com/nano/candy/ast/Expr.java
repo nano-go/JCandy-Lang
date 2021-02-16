@@ -33,7 +33,7 @@ public abstract class Expr extends ASTreeNode {
 		}
 		
 		@Override
-		public <R> R accept(AstVisitor<R> visitor) {
+		public <R> R accept(AstVisitor<?, R> visitor) {
 			return visitor.visit(this);
 		}
 	}
@@ -53,7 +53,7 @@ public abstract class Expr extends ASTreeNode {
 		}
 		
 		@Override
-		public <R> R accept(AstVisitor<R> visitor) {
+		public <R> R accept(AstVisitor<?, R> visitor) {
 			return visitor.visit(this);
 		}
 	}
@@ -141,14 +141,19 @@ public abstract class Expr extends ASTreeNode {
 		}
 		
 		@Override
-		public <R> R accept(AstVisitor<R> visitor) {
+		public <R> R accept(AstVisitor<?, R> visitor) {
 			return visitor.visit(this);
+		}
+
+		@Override
+		public boolean isConstant() {
+			return false;
 		}
 	}
 	
 	public static class This extends Expr {
 		@Override
-		public <R> R accept(AstVisitor<R> visitor) {
+		public <R> R accept(AstVisitor<?, R> visitor) {
 			return visitor.visit(this);
 		}	
 	}
@@ -161,7 +166,7 @@ public abstract class Expr extends ASTreeNode {
 		}
 
 		@Override
-		public <R extends Object> R accept(AstVisitor<R> visitor) {
+		public <R extends Object> R accept(AstVisitor<?, R> visitor) {
 			return visitor.visit(this);
 		}
 	}
@@ -174,7 +179,7 @@ public abstract class Expr extends ASTreeNode {
 		}
 		
 		@Override
-		public <R> R accept(AstVisitor<R> visitor) {
+		public <R> R accept(AstVisitor<?, R> visitor) {
 			return visitor.visit(this);
 		}
 	}
@@ -189,7 +194,7 @@ public abstract class Expr extends ASTreeNode {
 		}
 
 		@Override
-		public <R> R accept(AstVisitor<R> visitor) {
+		public <R> R accept(AstVisitor<?, R> visitor) {
 			return visitor.visit(this);
 		}
 	}
@@ -206,7 +211,7 @@ public abstract class Expr extends ASTreeNode {
 		}
 
 		@Override
-		public <R> R accept(AstVisitor<R> visitor) {
+		public <R> R accept(AstVisitor<?, R> visitor) {
 			return visitor.visit(this);
 		}
 	}
@@ -221,7 +226,7 @@ public abstract class Expr extends ASTreeNode {
 		}
 		
 		@Override
-		public <R> R accept(AstVisitor<R> visitor) {
+		public <R> R accept(AstVisitor<?, R> visitor) {
 			return visitor.visit(this);
 		}
 	}
@@ -238,7 +243,7 @@ public abstract class Expr extends ASTreeNode {
 		}
 
 		@Override
-		public <R> R accept(AstVisitor<R> visitor) {
+		public <R> R accept(AstVisitor<?, R> visitor) {
 			return visitor.visit(this);
 		}
 	}
@@ -253,7 +258,7 @@ public abstract class Expr extends ASTreeNode {
 		}
 		
 		@Override
-		public <R> R accept(AstVisitor<R> visitor) {
+		public <R> R accept(AstVisitor<?, R> visitor) {
 			return visitor.visit(this);
 		}
 	}
