@@ -352,16 +352,18 @@ public abstract class Expr extends ASTreeNode {
 	}
 	
 	public static class SetAttr extends Expr {
-		public GetAttr objExpr;
+		public Expr objExpr;
+		public String attr;
 		public TokenKind assignOperator;
 		public Expr rhs;
 
-		public SetAttr(GetAttr objExpr, TokenKind assignOperator, Expr rhs) {
-			this.objExpr = objExpr;
+		public SetAttr(GetAttr getAttrNode, TokenKind assignOperator, Expr rhs) {
+			this.objExpr = getAttrNode.objExpr;
+			this.attr = getAttrNode.attr;
 			this.assignOperator = assignOperator;
 			this.rhs = rhs;
 		}
-
+		
 		@Override
 		public <R> R accept(AstVisitor<?, R> visitor) {
 			return visitor.visit(this);
@@ -384,12 +386,14 @@ public abstract class Expr extends ASTreeNode {
 	}
 	
 	public static class SetItem extends Expr {
-		public GetItem objExpr;
+		public Expr objExpr;
+		public Expr key;
 		public TokenKind assignOperator;
 		public Expr rhs;
 
-		public SetItem(GetItem objExpr, TokenKind assignOperator, Expr rhs) {
-			this.objExpr = objExpr;
+		public SetItem(GetItem getItemNode, TokenKind assignOperator, Expr rhs) {
+			this.objExpr = getItemNode.objExpr;
+			this.key = getItemNode.key;
 			this.assignOperator = assignOperator;
 			this.rhs = rhs;
 		}

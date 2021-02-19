@@ -72,8 +72,8 @@ public class ExpressionInterpreter {
 	}
 	
 	public CandyObject eval(AstInterpreter interpreter, Expr.SetItem node) {
-		CandyObject obj = interpreter.evalExpr(node.objExpr.objExpr) ;
-		CandyObject key = interpreter.evalExpr(node.objExpr.key);
+		CandyObject obj = interpreter.evalExpr(node.objExpr) ;
+		CandyObject key = interpreter.evalExpr(node.key);
 		
 		if (node.assignOperator == TokenKind.ASSIGN) {
 			CandyObject rhs = interpreter.evalExpr(node.rhs) ;
@@ -90,23 +90,23 @@ public class ExpressionInterpreter {
 	}
 	
 	public CandyObject eval(AstInterpreter interpreter, Expr.SetAttr node) {
-		CandyObject obj = interpreter.evalExpr(node.objExpr.objExpr) ;
+		CandyObject obj = interpreter.evalExpr(node.objExpr) ;
 		
 		if (node.assignOperator == TokenKind.ASSIGN) {
 			CandyObject value = interpreter.evalExpr(node.rhs);
-			obj.setAttr(interpreter, node.objExpr.attr, value);
+			obj.setAttr(interpreter, node.attr, value);
 			return value;
 		}
 		
-		CandyObject attrValue = obj.getAttr(node.objExpr.attr);
+		CandyObject attrValue = obj.getAttr(node.attr);
 		AttributeError.requiresAttrNonNull(
-			obj._class(), node.objExpr.attr, attrValue
+			obj._class(), node.attr, attrValue
 		);
 		
 		CandyObject value = assignOperation(
 			interpreter, node.assignOperator, attrValue, node.rhs
 		);
-		obj.setAttr(interpreter, node.objExpr.attr, value);
+		obj.setAttr(interpreter, node.attr, value);
 		return value;
 	}
 
