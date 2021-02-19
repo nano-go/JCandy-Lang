@@ -36,3 +36,6 @@ assert t == 1
 while (!true == true) {
 	assert false
 }
+
+var a = true
+if (a) {} else {}
