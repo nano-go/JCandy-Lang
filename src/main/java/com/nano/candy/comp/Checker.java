@@ -434,7 +434,7 @@ public class Checker implements AstVisitor<Stmt, Expr> {
 	
 	@Override
 	public Expr visit(Expr.GetItem node) {
-		node.objExpr = visitExpr(node.key);
+		node.objExpr = visitExpr(node.objExpr);
 		node.key = visitExpr(node.key);
 		return node;
 	}

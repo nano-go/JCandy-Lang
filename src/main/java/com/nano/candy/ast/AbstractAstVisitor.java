@@ -70,6 +70,9 @@ public abstract class AbstractAstVisitor<R> implements AstVisitor<R, R> {
 
 	@Override
 	public R visit(Stmt.ClassDef node) {
+		if (node.initializer.isPresent()) {
+			node.initializer.get().accept(this);
+		}
 		for (Stmt.FuncDef func : node.methods) {
 			func.accept(this);
 		}
@@ -131,6 +134,7 @@ public abstract class AbstractAstVisitor<R> implements AstVisitor<R, R> {
 	public R visit(Expr.SetItem node) {
 		node.objExpr.accept(this);
 		node.rhs.accept(this);
+		node.key.accept(this);
 		return null;
 	}
 
