@@ -112,9 +112,12 @@ public class CandyResolver extends AbstractAstVisitor<Void> {
 		
 		if (node.initializer.isPresent()) {
 			Stmt.FuncDef initializer = node.initializer.get();
+			initializer.accept(this);
 			define(initializer, initializer.name.get());
 		}
-		super.visit(node);
+		for (Stmt.FuncDef func : node.methods) {
+			func.accept(this);
+		}
 		
 		exitScope();
 		exitScope();
@@ -130,7 +133,9 @@ public class CandyResolver extends AbstractAstVisitor<Void> {
 		for (String param : node.params) {
 			define(node, param);
 		}
-		super.visit(node);
+		for (Stmt stmt : node.body.stmts) {
+			stmt.accept(this);
+		}
 		exitScope();
 		return null;
 	}
