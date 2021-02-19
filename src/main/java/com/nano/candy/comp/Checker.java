@@ -11,6 +11,9 @@ import com.nano.candy.utils.Position;
 import java.util.HashSet;
 import java.util.ListIterator;
 import java.util.Optional;
+import com.nano.candy.ast.printer.AstPrinter;
+import com.nano.candy.ast.printer.AstPrinters;
+import com.nano.candy.ast.printer.JsonAstPrinter;
 
 public class Checker implements AstVisitor<Stmt, Expr> {
 	
@@ -72,6 +75,7 @@ public class Checker implements AstVisitor<Stmt, Expr> {
 	}
 	
 	private Stmt visitStmt(Stmt stmt) {
+		boolean reachable = this.reachable;
 		if (!reachable) {
 			warn(stmt, "Unreachable.");
 		}
@@ -204,8 +208,16 @@ public class Checker implements AstVisitor<Stmt, Expr> {
 			return isEmtpy(thenBody) ? null : thenBody;
 		}
 		
-		// if (a) {} else print(a); -> if (!a) print(a);
+		
 		if (isEmtpy(thenBody)) {
+			// if (a) {} else {} -> a
+			if (isEmtpy(elseBody)) {
+				Stmt.ExprS exprs = new Stmt.ExprS(node.condition);
+				exprs.pos = node.condition.pos;
+				return exprs;
+			}
+			
+			// if (a) {} else print(a); -> if (!a) print(a);
 			Position conditionPos = node.condition.pos;
 			node.condition = new Expr.Unary(TokenKind.NOT, node.condition);
 			node.condition.pos = conditionPos;
