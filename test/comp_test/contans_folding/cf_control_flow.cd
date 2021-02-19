@@ -14,11 +14,12 @@ if (true) {
 	"Here is else body."
 }
 
+if (true) "Pass."
+	else "Here is else body."
+
 if (null) {
 	"Here is then body."
-} else {
-	
-}
+} else "Pass."
 
 var t = true
 if (t) {

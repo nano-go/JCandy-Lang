@@ -15,7 +15,7 @@ insertReturn1(50)
 
 fun insertReturn2() {
 	while (true) {
-		return
+		continue
 	}
 	// Can't insert return null
 }

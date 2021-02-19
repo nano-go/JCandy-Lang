@@ -45,23 +45,10 @@ public class Checker implements AstVisitor<Stmt, Expr> {
 	
 	// This field is used to analyze the reachability of the statements.
 	private boolean reachable = true;
-	// This field is used to determina a while statement is a infinite loop.
+	
+	// This field is used to determina whether a while statement is infinite.
 	private boolean hadBreak = false;
 	private boolean returned = false;
-	
-	private boolean checkReachable(Stmt stmt) {
-		if (!reachable) {
-			warn(stmt, "Unreachable.");
-			return false;
-		}
-		return true;
-	}
-	
-	private void checkIterable(Expr iterable) {
-		if (iterable.isLiteral() && !(iterable instanceof Expr.Array)) {
-			warn(iterable, "The constant is not iterable.");
-		}
-	}
 	
 	private boolean isEmtpy(Stmt stmt) {
 		if (stmt == null) return true;
@@ -85,12 +72,11 @@ public class Checker implements AstVisitor<Stmt, Expr> {
 	}
 	
 	private Stmt visitStmt(Stmt stmt) {
-		boolean reachable = checkReachable(stmt);
-		stmt = stmt.accept(this);
 		if (!reachable) {
-			return null;
+			warn(stmt, "Unreachable.");
 		}
-		return stmt;
+		stmt = stmt.accept(this);
+		return reachable ? stmt : null;
 	}
 	
 	private Expr visitExpr(Expr expr) {
@@ -120,7 +106,7 @@ public class Checker implements AstVisitor<Stmt, Expr> {
 		boolean isConstantTrue = false;
 		
 		node.condition = visitExpr(node.condition);
-		visitStmt(node.body);
+		node.body = visitStmt(node.body);
 		if (node.condition.isConstant()) {
 			if (node.condition.isFalsely()) {
 				node = null;
@@ -129,10 +115,9 @@ public class Checker implements AstVisitor<Stmt, Expr> {
 			}
 		}
 		
-		// The while statement is infinite loop if the condition expression
-		// is a true constant and the while body has no break statements.
-		// The next statements are unreachable if the while statement is infinite loop.
-		this.reachable = originalReachable && (!isConstantTrue || hadBreak);
+		boolean isInfiniteLoop = isConstantTrue && !hadBreak;
+		
+		this.reachable = originalReachable && !isInfiniteLoop;
 		this.returned = originalReturned;
 		this.hadBreak = originalHadBreak;
 		this.inLoop = originalInLoop;	
@@ -150,13 +135,19 @@ public class Checker implements AstVisitor<Stmt, Expr> {
 		
 		node.iterable = visitExpr(node.iterable);
 		checkIterable(node.iterable);
-		visitStmt(node.body);
+		visitBlock(node.body);
 		
 		this.inLoop = originalInLoop;
 		this.hadBreak = originalHadBreak;
 		this.reachable = originalReachable;
 		this.returned = originalReturned;
 		return node;
+	}
+	
+	private void checkIterable(Expr iterable) {
+		if (iterable.isConstant()) {
+			warn(iterable, "The constant '%s' is not iterable.", iterable);
+		}
 	}
 	
 	@Override
@@ -199,8 +190,8 @@ public class Checker implements AstVisitor<Stmt, Expr> {
 			elseBodyReachable = this.reachable;
 		}
 		
-		// The next statements are unreachable if the then-body and 
-		// the else-body are both unreachable.
+		// All the following statements are unreachable if the then-body and the 
+		// else-body are both unreachable.
 		this.reachable = originalReachable && 
 			(thenBodyReachable || elseBodyReachable);
 		this.returned = originalReturned;
@@ -213,19 +204,20 @@ public class Checker implements AstVisitor<Stmt, Expr> {
 			return isEmtpy(thenBody) ? null : thenBody;
 		}
 		
-		node.thenBody = thenBody;
-		if (elseBody != null) {
-			node.elseBody = Optional.of(elseBody);
-		}
-		
-		// if (a) {} else print(a); -> if (!a) printa();
-		if (isEmtpy(node.thenBody)) {
+		// if (a) {} else print(a); -> if (!a) print(a);
+		if (isEmtpy(thenBody)) {
 			Position conditionPos = node.condition.pos;
 			node.condition = new Expr.Unary(TokenKind.NOT, node.condition);
 			node.condition.pos = conditionPos;
 			node.thenBody = elseBody;
 			node.elseBody = Optional.empty();
+		} else {
+			node.thenBody = thenBody;
+			if (elseBody != null) {
+				node.elseBody = Optional.of(elseBody);
+			}
 		}
+		
 		return node;
 	}
 
@@ -260,8 +252,9 @@ public class Checker implements AstVisitor<Stmt, Expr> {
 		}
 		
 		if (node.superClassName.isPresent()) {
-			if (node.superClassName.get().name.equals(node.name)) {
-				error(node, "A class can't inherti itself(%s).", node.name);
+			String superClassName = node.superClassName.get().name;
+			if (superClassName.equals(node.name)) {
+				error(node, "A class can't inherti from itself(%s).", node.name);
 			}
 		}
 		
@@ -280,7 +273,7 @@ public class Checker implements AstVisitor<Stmt, Expr> {
 		for (Stmt.FuncDef method : classDef.methods) {
 			String name = method.name.get();
 			if (duplicatedNameHelper.contains(name)) {
-				warn(method, "Duplicated method '%s' in the class '%s'.",
+				warn(method, "Duplicated method name '%s' in the class '%s'.",
 				     name, classDef.name) ;
 			} else duplicatedNameHelper.add(name);
 			method.accept(this);
@@ -322,19 +315,16 @@ public class Checker implements AstVisitor<Stmt, Expr> {
 		HashSet<String> duplicatedNameHelper = new HashSet<>(node.params.size());
 		for (String param : node.params) {
 			if (duplicatedNameHelper.contains(param)) {
-				error(node, 
-					  "Duplicated parameter '%s' in the function '%s'.", 
-					  param, funcName	  
-				);
+				error(node, "Duplicated parameter name '%s' in the function '%s'.", 
+					  param, funcName);
+			} else {
+				duplicatedNameHelper.add(param);
 			}
-			duplicatedNameHelper.add(param);
 		}
 
 		if (node.params.size() > MAX_PARAMETER_NUMBER) {
-			error(node, 
-				  "The number of the parameter of the function '%s' must be less than %d.",
-				  funcName, MAX_PARAMETER_NUMBER
-			);
+			error(node, "Can't have more than %d in the function '%s'.",
+				  MAX_PARAMETER_NUMBER, funcName);
 		}
 	}
 
@@ -342,6 +332,7 @@ public class Checker implements AstVisitor<Stmt, Expr> {
 		if (!reachable || returned) {
 			return;
 		}
+		
 		Stmt.Return returnStmt = new Stmt.Return(null);
 		returnStmt.pos = Position.PREVIOUS_POSITION;
 		node.body.stmts.add(returnStmt);
@@ -353,6 +344,7 @@ public class Checker implements AstVisitor<Stmt, Expr> {
 			node.expr = Optional.of(visitExpr(node.expr.get()));
 		}
 		this.reachable = false;
+		this.returned = true;
 		switch (curFunctionType) {
 			case NONE:
 				error(node, "The 'return' outside function.");
@@ -360,7 +352,7 @@ public class Checker implements AstVisitor<Stmt, Expr> {
 			
 			case INIT:
 				if (node.expr.isPresent())
-					error(node, "Can't return from initalizer.");
+					error(node, "Can't return a value from an initializer.");
 				break;
 		}
 		return node;
@@ -402,13 +394,13 @@ public class Checker implements AstVisitor<Stmt, Expr> {
 	
 	private void checkCallable(Expr expr) {
 		if (expr.isConstant()) {
-			error(expr, "The constant is not callable.");
+			error(expr, "The constant '%s' is not callable.", expr.toString());
 		}
 	}
 	
 	@Override
 	public Expr visit(Expr.Lambda node) {
-		visitStmt(node.funcDef);
+		node.funcDef.accept(this);
 		return node;
 	}
 
@@ -430,25 +422,29 @@ public class Checker implements AstVisitor<Stmt, Expr> {
 	
 	@Override
 	public Expr visit(Expr.GetItem node) {
+		node.objExpr = visitExpr(node.key);
 		node.key = visitExpr(node.key);
 		return node;
 	}
 
 	@Override
 	public Expr visit(Expr.SetItem node) {
-		visitExpr(node.objExpr);
+		node.objExpr = visitExpr(node.objExpr);
+		node.key = visitExpr(node.key);
 		node.rhs = visitExpr(node.rhs);
 		return node;
 	}
 	
 	@Override
-	public Expr visit(Expr.SetAttr node) {
-		node.rhs = visitExpr(node.rhs);
+	public Expr visit(Expr.GetAttr node) {
+		node.objExpr = visitExpr(node.objExpr);
 		return node;
 	}
-
+	
 	@Override
-	public Expr visit(Expr.GetAttr node) {
+	public Expr visit(Expr.SetAttr node) {
+		node.objExpr = visitExpr(node.objExpr);
+		node.rhs = visitExpr(node.rhs);
 		return node;
 	}
 
