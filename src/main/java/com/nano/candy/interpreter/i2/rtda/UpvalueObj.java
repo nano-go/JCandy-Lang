@@ -19,6 +19,7 @@ public class UpvalueObj {
 	}
 	
 	public void close() {
+		this.ref = slots[index];
 		slots = null;
 	}
 	
