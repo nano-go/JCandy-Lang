@@ -11,6 +11,8 @@ public class CandyOptions {
 	protected int printAstFlag;
 	protected boolean printHelper;
 	protected boolean interactively;
+	protected String toolName;
+	protected String interpreterVersion;
 
 	protected Options options;
 	

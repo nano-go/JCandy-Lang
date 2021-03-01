@@ -2,10 +2,12 @@ package com.nano.candy.main;
 import com.nano.candy.ast.Program;
 import com.nano.candy.ast.printer.AstPrinter;
 import com.nano.candy.ast.printer.AstPrinters;
-import com.nano.candy.parser.ParserFactory;
 import com.nano.candy.interpreter.Interpreter;
 import com.nano.candy.interpreter.InterpreterFactory;
 import com.nano.candy.interpreter.error.ExitError;
+import com.nano.candy.parser.ParserFactory;
+import com.nano.candy.tool.CandyTool;
+import com.nano.candy.tool.CandyToolFactory;
 import com.nano.candy.utils.Logger;
 import com.nano.common.io.FileUtils;
 import java.io.File;
@@ -15,7 +17,7 @@ import org.apache.commons.cli.ParseException;
 public class CandyRun {
 	
 	private static final Logger logger = Logger.getLogger();
-	private static final Interpreter interpreter = InterpreterFactory.newInterpreter("i1");
+	private static Interpreter interpreter = InterpreterFactory.newInterpreter("i2");
 	
 	private CandyOptions options; 
 	
@@ -23,7 +25,8 @@ public class CandyRun {
 		this.options = CandyOptionsParser.parse(args);
 	}
 	
-	public void main() throws IOException {
+	public void main() throws Exception {
+		interpreter = InterpreterFactory.newInterpreter(options.interpreterVersion);
 		if (options.isPrintHelper()) {
 			options.printHelper();
 			return;
@@ -31,6 +34,12 @@ public class CandyRun {
 
 		if (options.isPrintAst()) {
 			printAst();
+			return;
+		}
+		
+		if (options.toolName != null) {
+			CandyTool tool = CandyToolFactory.createCandyTool(options.toolName);
+			tool.run(interpreter, options);
 			return;
 		}
 
@@ -45,7 +54,7 @@ public class CandyRun {
 		AstPrinter printer = AstPrinters.newPrinter(options);
 		for (File f : options.getFiles()) {
 			Program program = ParserFactory.newParser(f).parse();
-			printMessage(true);
+			logger.printAllMessage(true);
 			printer.print(System.out, program);
 			System.out.println();
 		}
@@ -62,6 +71,7 @@ public class CandyRun {
 		if (isFailed) {
 			System.exit(1);
 		}
+		interpreter.onExit();
 	}
 
 	private void runInteractively() throws IOException {
@@ -104,9 +114,13 @@ public class CandyRun {
 	{
 		try {
 			Program program = ParserFactory.newParser(fileName, content).parse();
-			if (!printMessage(exitIfError)) return false;
-			interpreter.load(program);
-			if (!printMessage(exitIfError)) return false;
+			if (!logger.printAllMessage(exitIfError)) {
+				return false;
+			}
+			interpreter.load(program, interactively);
+			if (!logger.printAllMessage(exitIfError)) {
+				return false;
+			}
 			return interpreter.run(interactively);
 		} catch (ExitError e) {
 			System.exit(e.getCode());
@@ -114,18 +128,4 @@ public class CandyRun {
 		return false;
 	}
 
-	private static boolean printMessage(boolean exitIfError) throws IOException {
-		if (logger.hadWarns()) {
-			logger.printWarns(System.out);
-		}
-		if (logger.hadErrors()) {
-			logger.printErrors(System.err);
-			logger.clearAllMessages();
-			if(exitIfError) System.exit(1);
-			return false;
-		}
-		logger.clearAllMessages();
-		return true;
-	}
-	
 }

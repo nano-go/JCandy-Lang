@@ -1,6 +1,6 @@
 package com.nano.candy.main;
 
-import com.nano.candy.config.Config;
+import com.nano.candy.utils.CandyFileFilter;
 import com.nano.common.io.FilePathUtils;
 import java.io.File;
 import java.util.ArrayList;
@@ -21,8 +21,10 @@ public class CandyOptionsParser {
 
 	private static Options defineOptions() {
 		return new Options()
+			.addOption("h", "help", false, "Print command line helper.")
 			.addOption(null, "ast-json", false, "Print the abstract syntax tree by json format.")
-			.addOption("h", "help", false, "Print command line helper.");
+			.addOption("tool", null, true, "Candy Tool.")
+			.addOption("i", "interpreter", true, "Specify interpreter version.");
 	}
 	
 	private static CommandLine parseOptions(CandyOptions candyOptions, Options options, String[] args) throws ParseException {
@@ -31,21 +33,27 @@ public class CandyOptionsParser {
 		if (cmdLine.hasOption("ast-json")) {
 			candyOptions.printAstFlag |= CandyOptions.PRINT_AST_BY_JSON_MASK;
 		}
+		if (cmdLine.hasOption("tool")) {
+			candyOptions.toolName = cmdLine.getOptionValue("tool");
+		}
+		if (cmdLine.hasOption("i")) {
+			candyOptions.interpreterVersion = cmdLine.getOptionValue("i");
+		} else {
+			candyOptions.interpreterVersion = "i2";
+		}
 		candyOptions.printHelper = cmdLine.hasOption("h");
 		candyOptions.inputFiles = getInputFiles(cmdLine.getArgs());
-		candyOptions.interactively = cmdLine.getOptions().length == 0 && cmdLine.getArgList().size() == 0;
+		candyOptions.interactively = cmdLine.getOptions().length == 0 && cmdLine.getArgList().size() == 0;	
 		return cmdLine;
 	}
 
 	private static File[] getInputFiles(String... args) {
 		ArrayList<File> inputFiles = new ArrayList<>();
 		for (String path : args) {
-			inputFiles.addAll(
-				FilePathUtils.getFilesByBfsOrder(
-					new File(path),
-					(f) -> f.isFile() && f.getName().endsWith("." + Config.FILE_SUFFIX)
-				)
-			);
+			inputFiles.addAll(FilePathUtils.getFilesByBfsOrder(
+				new File(path), 
+				CandyFileFilter.CANDY_FILE_FILTER
+			));
 		}
 		return inputFiles.toArray(new File[0]);
 	}
