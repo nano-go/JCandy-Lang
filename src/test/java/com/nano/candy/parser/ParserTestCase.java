@@ -20,6 +20,8 @@ public class ParserTestCase {
 		newUECase("var arr = [1, 5 + 6, a = 15, false]"),
 		newUECase("var arr = [1, 5 + 6, a = lambda a -> b]"),
 		newUECase("var arr = [[c, cpp, cs, lambda lisp -> lisp], id, name, java]"),
+		newUECase("var arr = [ \n[1, 2, 3, 4],\n [5,6,7,8],\n[9, 10, 11, 12]\n]"),
+		newUECase("var arr = [ \n[1, 2, 3, 4],\n [5,6,7,8],\n[9, 10, 11, 12],\n]"),
 		newUECase("[]"),
 		newUECase("if (false) var a = 0\nelse if (true) var b = 155 ; else if (a + b * c) true"),
 		newUECase("if (false) var a = 0\nelse var b = 155"),
