@@ -8,7 +8,7 @@ import com.nano.candy.utils.Position;
 
 public class ConstantFolder {
 	
-	private static final boolean DEBUG_CONSTANT_FOLDING_TRACE = true;
+	private static final boolean DEBUG_CONSTANT_FOLDING_TRACE = false;
 	
 	private static void reportDebug(ASTreeNode node, String message, Object... args) {
 		Position pos = node.pos;
