@@ -11,9 +11,6 @@ import com.nano.candy.utils.Position;
 import java.util.HashSet;
 import java.util.ListIterator;
 import java.util.Optional;
-import com.nano.candy.ast.printer.AstPrinter;
-import com.nano.candy.ast.printer.AstPrinters;
-import com.nano.candy.ast.printer.JsonAstPrinter;
 
 public class Checker implements AstVisitor<Stmt, Expr> {
 	
@@ -395,6 +392,9 @@ public class Checker implements AstVisitor<Stmt, Expr> {
 	@Override
 	public Expr visit(Expr.CallFunc node) {
 		node.expr = visitExpr(node.expr);
+		if (node.arguments.size() > MAX_PARAMETER_NUMBER) {
+			error(node, "Too many arguments.");
+		}
 		ListIterator<Expr> i = node.arguments.listIterator();
 		while (i.hasNext()) {
 			Expr arg = i.next();
