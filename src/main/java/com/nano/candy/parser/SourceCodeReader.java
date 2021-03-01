@@ -19,7 +19,7 @@ public class SourceCodeReader {
 	// The position of current character in the buf.
 	private int bp;
 	
-	// The index of the first character of a line in buf.
+	// The index of the first character of the current line in the buf.
 	private int lineStart;
 	private int lineLength;
 	 
@@ -121,16 +121,16 @@ public class SourceCodeReader {
 	private char convertToEscapeChar() {
 		char ch = readNextChar();
 		switch (ch) {	
-			case '\\' :
-			case '\'' : 
-			case '\"' :
+			case '\\':
+			case '\'': 
+			case '\"':
 				return ch;
 				
-			case 't' : return '\t';
-			case 'r' : return '\r';
-			case 'n' : return '\n';
-			case 'f' : return '\f';
-			case 'b' : return '\b';
+			case 't': return '\t';
+			case 'r': return '\r';
+			case 'n': return '\n';
+			case 'f': return '\f';
+			case 'b': return '\b';
 			
 			case '0': case '1': case '2': case '3': 
 			case '4': case '5': case '6': case '7':
@@ -141,14 +141,14 @@ public class SourceCodeReader {
 				consume();
 				return convertToUnicodeChar(4, 16, Character.MAX_CODE_POINT);
 		}
-		error("Unexpected escape char: '\\%c'", ch);
+		error("escape char: '\\%c'", ch);
 		return ch;
 	}
 	
-	private char convertToUnicodeChar(int n, int base, int max) {
+	private char convertToUnicodeChar(int digitN, int base, int max) {
 		int unicodeChar = 0;
 		int i = 0;
-		n --;
+		digitN --;
 		while (true) {
 			char ch = peek();
 			int d = base;
@@ -165,7 +165,7 @@ public class SourceCodeReader {
 				return ch;
 			}
 			unicodeChar = unicodeChar * base + d;
-			if (i == n) {
+			if (i == digitN) {
 				break;
 			}
 			i ++;
