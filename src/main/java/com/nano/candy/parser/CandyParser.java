@@ -256,17 +256,13 @@ class CandyParser implements Parser {
 		program.setPosition(scanner.basePos());
 		while (true) {
 			parseStmts(program.block.stmts);
-			try {
-				if (peekKind() != EOF) {
-					error(peek(), "Unexpected '%s'.", tokStr(peekKind()));
-					synchronize();
-					continue;
-				}
-				consume();
-				break;
-			} catch (ParserError e) {
+			if (peekKind() != EOF) {
+				error(peek(), "Unexpected '%s'.", tokStr(peekKind()));
 				synchronize();
+				continue;
 			}
+			consume();
+			break;
 		}	
 		return program;
 	}
@@ -296,6 +292,54 @@ class CandyParser implements Parser {
 				stmts.add(stmt);
 			} catch (ParserError e) {
 				synchronize();
+			}
+		}
+	}
+	
+	/**
+	 * Stmt = [ Block | ClassDef
+	 *        | IfStmt | WhileStmt | ForStmt
+	 *        | Break | Continue | Return
+	 *        | BreakStmt | ContinueStmt| ReturnStmt
+	 *        | VarDef | FunDef
+	 *        | AssertStmt | ExprStmt
+	 *        | ( <SEMI> Stmt ) 
+	 *        ]
+	 */
+	private Stmt parseStmt() {
+		loop: while (true) { 
+			TokenKind kind = peek().getKind();
+			switch (kind) {
+				case IF:
+					return parseIfStmt();
+				case WHILE:
+					return parseWhileStmt();
+				case FOR:
+					return parseForStmt();
+				case BREAK:
+					return parseBreak();
+				case CONTINUE:
+					return parseContinue();
+				case RETURN:
+					return parseReturn();
+				case ASSERT:
+					return parseAssertStmt();
+				case VAR:
+					return parseVarDef();
+				case FUN:
+					return parseFunDef();
+				case CLASS:
+					return parseClassDef();
+				case LBRACE:
+					return parseBlock();
+				case SEMI:
+					consume();
+					continue loop;
+				default:
+					if (isFirstSetOfExpr(kind)) {
+						return parseExprStmt();
+					}
+					return null;
 			}
 		}
 	}
@@ -392,54 +436,6 @@ class CandyParser implements Parser {
 		ensureExpectedKind(TokenKind.LBRACE);
 		Stmt.Block body = parseBlock();
 		return location(name, new Stmt.FuncDef(name.getLiteral(), params, body));
-	}
-
-	/**
-	 * Stmt = [ Block | ClassDef    // Above
-	 *        | IfStmt | WhileStmt | ForStmt
-	 *        | Break | Continue | Return
-	 *        | BreakStmt | ContinueStmt| ReturnStmt
-	 *        | VarDef | FunDef
-	 *        | AssertStmt | ExprStmt
-	 *        | ( <SEMI> Stmt ) 
-	 *        ]
-	 */
-	private Stmt parseStmt() {
-		loop: while (true) { 
-			TokenKind kind = peek().getKind();
-			switch (kind) {
-				case IF:
-					return parseIfStmt();
-				case WHILE:
-					return parseWhileStmt();
-				case FOR:
-					return parseForStmt();
-				case BREAK:
-					return parseBreak();
-				case CONTINUE:
-					return parseContinue();
-				case RETURN:
-					return parseReturn();
-				case ASSERT:
-					return parseAssertStmt();
-				case VAR:
-					return parseVarDef();
-				case FUN:
-					return parseFunDef();
-				case CLASS:
-					return parseClassDef();
-				case LBRACE:
-					return parseBlock();
-				case SEMI:
-					consume();
-					continue loop;
-				default:
-					if (isFirstSetOfExpr(kind)) {
-						return parseExprStmt();
-					}
-					return null;
-			}
-		}
 	}
 	
 	/**
@@ -757,7 +753,7 @@ class CandyParser implements Parser {
 	}
 	
 	/**
-	 * Array = "[" [ ExprOrLambda ( "," ExprOrLambda )* ]"]"
+	 * Array = "[" [ ExprOrLambda ( "," ExprOrLambda )* ] [ SEMI ] "]"
 	 */
 	private Expr.Array parseArray() {
 		ArrayList<Expr> elements = new ArrayList<>();
@@ -766,8 +762,12 @@ class CandyParser implements Parser {
 			return location(beginTok, new Expr.Array(elements));
 		}
 		do {
+			if (peekKind() == TokenKind.RBRACKET) {
+				break;
+			}
 			elements.add(parseExprOrLambda());
 		} while (matchIf(COMMA));
+		matchIf(SEMI);
 		matchIf(RBRACKET, true);
 		return location(beginTok, new Expr.Array(elements));
 	}
@@ -804,7 +804,7 @@ class CandyParser implements Parser {
 	}
 
 	/**
-	 * Agruments = "(" [ ExprOrLambda ( "," ExprOrLambda )* ] ")"
+	 * Agruments = "(" [ ExprOrLambda ( "," ExprOrLambda )* ] [ <SEMI> ] ")"
 	 */
 	private List<Expr> parseArguments() {
 		consume();
@@ -813,8 +813,12 @@ class CandyParser implements Parser {
 			return args;
 		}
 		do {
+			if (peekKind() == RPAREN) {
+				break;
+			}
 			args.add(parseExprOrLambda());
 		} while (matchIf(COMMA));
+		matchIf(SEMI);
 		matchIf(RPAREN, true);
 		return args;
 	}
