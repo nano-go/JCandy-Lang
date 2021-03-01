@@ -168,16 +168,11 @@ public abstract class Stmt extends ASTreeNode {
 	}
 
 	public static class ExprS extends Stmt {
-		private boolean shouldPrint;
 		public Expr expr;
 		
 		public ExprS(Expr expr) {
 			this.expr = expr;
 			this.pos = expr.pos;
-		}
-
-		public boolean shouldPrint() {
-			return shouldPrint;
 		}
 		
 		@Override
