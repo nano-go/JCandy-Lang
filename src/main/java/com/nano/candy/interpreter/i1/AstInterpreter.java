@@ -54,9 +54,13 @@ public class AstInterpreter implements Interpreter, AstVisitor<CandyObject, Cand
 	public void initOrReset() {
 		this.env = new Environment();
 	}
+
+	@Override
+	public void onExit() {
+	}
 	
 	@Override
-	public void load(ASTreeNode node) {
+	public void load(ASTreeNode node, boolean interatively) {
 		Checker.check(node);
 		if (Logger.getLogger().hadErrors()) {
 			return;

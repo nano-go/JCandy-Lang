@@ -15,8 +15,7 @@ public class InterpreterFactory {
 			}
 			return (Interpreter) constructor.newInstance() ;
 		} catch (Exception e) {
-			e.printStackTrace() ;
+			throw new InterpreterException("Unknown interpreter type: " + type);
 		}
-		return null ;
 	}    
 }

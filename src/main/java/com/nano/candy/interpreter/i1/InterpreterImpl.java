@@ -1,10 +1,9 @@
 package com.nano.candy.interpreter.i1;
-import com.nano.candy.ast.ASTreeNode;
 import com.nano.candy.interpreter.error.CandyRuntimeError;
 import com.nano.candy.utils.Position;
 
 /**
- * Refectively initialize by @{link com.nano.candy.runtime.interpreter.InterpreterFactory}
+ * Refectively initialized by @{link com.nano.candy.interpreter.InterpreterFactory}
  */
 public class InterpreterImpl extends AstInterpreter {
 
@@ -16,6 +15,7 @@ public class InterpreterImpl extends AstInterpreter {
 		         ArithmeticException | 
 				 IllegalArgumentException |
 		         IndexOutOfBoundsException e) {
+			e.printStackTrace();
 			reportError(getEnvironment().getCurrentLocation(), e);
 		} catch (Throwable e) {
 			reportError(getEnvironment().getCurrentLocation(), e);
