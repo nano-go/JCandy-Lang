@@ -1,77 +1,46 @@
 class A {
-	getCandy() {
-		return "candy a"
+	returnA() {
+		return "a"
 	}
 }
 
+class B: A {
+	returnA() {
+		return super.returnA()
+	}
+	
+	returnB() {
+		return "b"
+	}
+}
+
+class C: B {}
+
+var c = C()
+assert c.returnA() == "a"
+
+
+
+// Local Test
 {
+	class A {
+		returnA() {
+			return "a"
+		}
+	}
+
 	class B: A {
-		getCandy() {
-			return super.getCandy() + " candy b"
+		returnA() {
+			return super.returnA()
+		}
+	
+		returnB() {
+			return "b"
 		}
 	}
-	
-	{
-		class C: B {
-			getCandy() {
-				return super.getCandy() + " candy c"
-			}
-		}
-		var c = C()
-		var cClass = c._class()
-		assert cClass == C
-		assert cClass._super == B
-		assert cClass._super._super == A
-		assert A._super == Object
-		assert c.getCandy() == "candy a candy b candy c"
-		assert c is A && c is B && c is A
-	}
-}
 
-class Override {
-	_str() {
-		return "Candy"
-	}
-	
-	_bool() {
-		return false
-	}
-	
-	_setAttr(name, value) {
-		if (name == "a") {
-			super._setAttr("a", value._bool());
-		}else super._setAttr(name, value)
-	}
-	
-	_getAttr(name) {
-		if (name == "a") {
-			return !super._getAttr("a")
-		} else {
-			return super._getAttr(name)
-		}
-	}
-	
-	_iterator() {
-		var iterator = Object()
-		var n = 15
-		var i = 0
-		iterator._hasNext = lambda -> i < n
-		iterator._next = lambda -> i += 1
-		return iterator
-	}
-}
+	class C: B {}
 
-var a = Override()
-var n = 0
-assert a || (n = 55)
-assert n == 55
-assert "Tag: " + a == "Tag: Candy"
-a.a = n
-assert !a.a
-a.b = 15
-assert a.b == 15
-
-var arr = range(1, 16).toArray()
-for (i in a) {
-	assert i == arr[i - 1]
+	var c = C()
+	assert c.returnA() == "a"
 }

@@ -1,0 +1,142 @@
+{
+	class Coffe {
+		init() {
+			this.name = "coffe"
+			this.price = 5.6
+		}
+	}
+	
+	class Water {
+		init() {
+			this.name = "water"
+			this.price = 0.5
+		}
+	}
+	
+	var addMarker = false
+	var subMarker = false
+	var divMarker = false
+	var mulMarker = false
+	var modMarker = false
+	
+	var gtMarker = false
+	var gteqMarker = false
+	var ltMarker = false
+	var lteqMarker = false
+	
+	class Store {
+		init() {
+			super._setAttr("water", Water())
+			super._setAttr("coffe", Coffe())
+			super._setAttr("choosing", this.coffe)
+			super._setAttr("failed", false)
+		}
+		
+		choose(name) {
+			var drink
+			if (name == "water") {
+				drink = this.water
+			} else if (name == "coffe") {
+				drink = this.coffe 
+			} else {
+				assert false : "Unknown Drink: " + name
+			}
+			super._setAttr("choosing", drink)
+		}
+		
+		_add(operand) {
+			addMarker = true
+			return this.price + operand
+		}
+		
+		_sub(operand) {
+			subMarker = true
+			return this.price - operand
+		}
+		
+		_mul(operand) {
+			mulMarker = true
+			return this.price * operand
+		}
+		
+		_div(operand) {
+			divMarker = true
+			return this.price / operand
+		}
+		
+		_mod(operand) {
+			modMarker = true
+			return this.price % operand
+		}
+		
+		_gt(operand) {
+			gtMarker = true
+			if (operand is Store) {
+				return this.price > operand.price
+			}
+			return this.price > operand
+		}
+		
+		_gteq(operand) {
+			gteqMarker = true
+			if (operand is Store) {
+				return this.price >= operand.price
+			}
+			return this.price >= operand
+		}
+		
+		_lt(operand) {
+			ltMarker = true
+			if (operand is Store) {
+				return this.price < operand.price
+			}
+			return this.price < operand
+		}
+		
+		_lteq(operand) {
+			lteqMarker = true
+			if (operand is Store) {
+				return this.price <= operand.price
+			}
+			return this.price <= operand
+		}
+		
+		_setAttr(name, value) {
+			super._setAttr("failed", true)
+			return null
+		}
+		
+		_getAttr(name) {
+			return getAttr(this.choosing, name)
+		}
+	}
+	
+	var store = Store()
+	
+	assert !store.failed
+	
+	store.choose("water")
+	assert store.price == 0.5
+	assert store.name == "water"
+	
+	store.choose("coffe")
+	assert store.price == 5.6
+	assert store.name == "coffe"
+	
+	assert store + 5 == 5.6 + 5
+	assert store - 5 == 5.6 - 5
+	assert store * 5 == 5.6 * 5
+	assert store / 5 == 5.6 / 5
+	assert store % 5 == 5.6 % 5
+	
+	assert store > 5    == 5.6 > 5
+	assert store >= 5.6 == 5.6 >= 5.6
+	assert store < 5    == 5.6 < 5
+	assert store <= 5.6 == 5.6 <= 5.6
+	
+	assert addMarker && subMarker && mulMarker && divMarker && modMarker
+	assert ltMarker && lteqMarker && gtMarker && gteqMarker
+	
+	store.a = true
+	assert store.failed
+}

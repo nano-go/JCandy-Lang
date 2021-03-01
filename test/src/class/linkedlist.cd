@@ -1,26 +1,36 @@
 
-class Node {
-	init(prev, value, next) {
-		this.prev = prev
-		this.value = value
-		this.next = next
-	}
-}
-
 class LinkedList {
-	init() {
-		this.beginMarker = Node(null, 0, null)
-		this.endMarker = Node(this.beginMarker, 0, null)
+
+	/**
+	 * beginMarker -> list -> eneMarker.
+	 */
+	 init() {
+		this.beginMarker = this._makeNewNode(null, 0, null)
+		this.endMarker = this._makeNewNode(this.beginMarker, 0, null)
 		this.beginMarker.next = this.endMarker
 		this.size = 0
 	}
 	
-	_getAt(index) {
-		if (index < 0 || index >= this.size) return null
-		var n 
-		if (index >= this.size / 2) {
+	_makeNewNode(prev, value, next) {
+		var newNode = Object()
+		newNode.prev = prev
+		newNode.value = value
+		newNode.next = next
+		return newNode
+	}
+	
+	/**
+	 * Returns the node at the speficied position in this list.
+	 */
+	_getNodeAt(index) {
+		var size = this.size
+		if (index < 0 || index >= size) {
+			return null
+		}
+		var n = null
+		if (index >= size / 2) {
 			n = this.endMarker.prev
-			var i = this.size - 1
+			var i = size - 1
 			while (i != index) {
 				n = n.prev
 				i -= 1
@@ -36,75 +46,229 @@ class LinkedList {
 		return n
 	}
 	
-	_addBefore(value, node) {
-		var newNode = Node(node.prev, value, node)
+	/**
+	 * Inserts a new element before the given node.
+	 */
+	_linkBefore(e, node) {
+		var newNode = this._makeNewNode(node.prev, e, node)
 		node.prev.next = newNode
 		node.prev = newNode
+		return newNode
 	}
 	
-	add(value) {
-		this._addBefore(value, this.endMarker)
+	/**
+	 * Appends a new element to the end of this list.
+	 */
+	append(element) {
+		this._linkBefore(element, this.endMarker)
 		this.size += 1
+		return element
 	}
 	
+	/**
+	 * Inserts the given element at the speficied position in this
+	 * list.
+	 */
+	insert(index, element) {
+		var n = this._getNodeAt(index)
+		this._linkBefore(element)
+		this.size += 1
+		return element
+	}
+	
+	/**
+	 * Removes the element at the speficied position in this list.
+	 */
 	removeAt(index) {
-		var n = this._getAt(index)
+		var n = this._getNodeAt(index)
+		if (n == null) {
+			return null
+		}
 		this.size -= 1
 		n.next.prev = n.prev
 		n.prev.next = n.next
+		return n.value;
 	}
 	
+	/**
+	 * Replaces the element at the speficied position in this list 
+	 * with the given element.
+	 */
+	setAt(index, element) {
+		var n = this.getNodeAt(index)
+		if (n == null) {
+			return
+		}
+		return n.value = element
+	}
+	
+	/**
+	 * Returns the element at the speficied position in this list.
+	 */
 	getAt(index) {
-		var n = this._getAt(index)
-		if (n == null) return null
+		var n = this._getNodeAt(index)
+		if (n == null) { 
+			return null
+		}
 		return n.value
 	}
 	
-	foreach(f) {
-		for (e in this) f(e)
-	}
-	
-	foreachReverse(f) {
-		fun recursive(f, n) {
-			if (n == this.beginMarker) return
-			f(n.value)
-			recursive(f, n.prev)
+	/**
+	 * Returns the index of first occurence of the speficied element
+	 * in this list, or -1 if this list does not contains the element.
+	 */
+	indexOf(element) {
+		var i = 0
+		var n = this.beginMarker.next
+		while (n != this.endMarker) {
+			if (n.value == element) {
+				return i
+			}
+			i += 1
+			n = n.next
 		}
-		recursive(f, this.endMarker.prev)
+		return -1
 	}
 	
+	/**
+	 * Returns the index of last occurence of the speficied element
+	 * in this list, or -1 if this list does not contains the element.
+	 */
+	lastIndexOf(element) {
+		var i = 0
+		var n = this.endMarker.prev
+		while (n != this.beginMarker) {
+			if (n.value == element) {
+				return i
+			}
+			i += 1
+			n = n.prev
+		}
+		return -1
+	}
+	
+	/**
+	 * Returns true if this list contains the speficied element.
+	 */
+	contains(element) {
+		return this.indexOf(element) != -1
+	}
+	
+	forEach(f) {
+		for (e in this) { 
+			f(e)
+		}
+	}
+	
+	forEachReversely(f) {
+		var n = this.endMarker.prev
+		while (n != this.beginMarker) {
+			f(n.value)
+			n = n.prev
+		}
+	}
+	
+	/**
+	 * Returns an iterator over all the elements in this list.
+	 */
 	_iterator() {
 		var iterator = Object()
 		var node = this.beginMarker.next
 		iterator._hasNext = lambda -> node != this.endMarker
 		iterator._next = lambda -> {
-			var n = node
+			var prev = node
 			node = node.next
-			return n.value
+			return prev.value
 		};
 		return iterator
 	}
+	
+	_str() {
+		var i = this._iterator()
+		if (!i._hasNext()) {
+			return "[]"
+		}
+		var str = "["
+		while (true) {
+			str += i._next()
+			if (!i._hasNext()) {
+				break
+			}
+			str += ", "
+		}
+		return str + "]"
+	}
 }
 
-fun checkSum(list, expected) {
+// ======================== LinkedList Test ========================
+
+
+fun checkSum(list, expectedSum) {
 	var sum = 0
-	list.foreach(lambda e -> sum += e)
-	assert sum == expected: "Foreach: (" + sum + "), Exp: (" + expected + ")"
+	list.forEach(lambda e -> sum += e)
+	assert sum == expectedSum : "Expected: " + expectedSum + ", but was: " + sum 
 	sum = 0
-	list.foreachReverse(lambda e -> sum += e)
-	assert sum == expected: "Foreach Reverse: (" + sum + "), Exp: (" + expected + ")"
+	list.forEachReversely(lambda e -> sum += e)
+	assert sum == expectedSum : "Expected: " + expectedSum + ", but was: " + sum
+	sum = 0
+	var i = 0
+	while (i < list.size) {
+		sum += list.getAt(i)
+		i += 1
+	}
+	assert sum == expectedSum : "Expected: " + expectedSum + ", but was: " + sum
 }
 
-var list = LinkedList()
-var i = 0
-while (i < 10) {
-	list.add(i)
-	i += 1
+fun simpleOperationTest(n) {
+	var expectedSum = 0
+	var list = LinkedList()
+	var i = 0
+	while (i < n) {
+		expectedSum += i
+		list.append(i)
+		i += 1
+	}
+	checkSum(list, expectedSum)
+	var i = 0
+	var len = n/4
+	var mid = n/2
+	while (i < len) {
+		list.removeAt(mid + 1)
+		list.removeAt(mid - 1)
+		mid-=1
+		i += 1
+	}
+	expectedSum = (expectedSum + n/2) / 2
+	checkSum(list, expectedSum)
 }
-list.removeAt(4)
-checkSum(list, 41)
-list.removeAt(1)
-checkSum(list, 40)
-list.removeAt(list.size - 1)
-assert list.getAt(list.size - 1) == 8
-checkSum(list, 31)
+
+
+class SimpleElement {
+	init(i) {
+		this.n = i
+	}
+	_str() {
+		fun recurs(i) {
+			if (i == 0) {
+				return "i" + i
+			}
+			return ("i" + i) + recurs(i - 1)
+		}
+		return recurs(this.n)
+	}
+}
+
+fun strTest() {
+	var list = LinkedList()
+	list.append(SimpleElement(0))
+	list.append(SimpleElement(1))
+	list.append(SimpleElement(2))
+	assert list._str() == "[i0, i1i0, i2i1i0]"
+}
+
+fun main() {
+	simpleOperationTest(1001)
+	strTest()
+}
+
+main()

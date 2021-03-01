@@ -47,6 +47,4 @@ assert 1.0 is Double
 assert 2 is Number
 assert 3.14159 is Number
 assert true is Bool
-assert (2)._bool() is Bool
 assert "strstr" is String
-assert null is NullPointer

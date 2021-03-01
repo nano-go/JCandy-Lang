@@ -1,0 +1,11 @@
+class A {
+	fun returnThis() {
+		fun retThis() {
+			return this
+		}
+		return retThis()
+	}
+}
+
+var a = A()
+assert a.returnThis() == a

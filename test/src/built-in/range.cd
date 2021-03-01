@@ -1,0 +1,55 @@
+
+fun equals(arr1, arr2) {
+	var s1 = arr1.size()
+	var s2 = arr2.size()
+	if (s1 != s2) {
+		return false
+	}
+	for (i in range(0, s1)) {
+		if (arr1[i] != arr2[i]) {
+			return false
+		}
+	}
+	return true
+}
+
+fun changeAttrTest() {
+	var r = range(0, 1000)
+	r.left = 15
+	r.right = 10
+	var arr = r.toArray()
+	assert equals(arr, range(15, 10).toArray())
+}
+
+fun iteratorTest() {
+	var a = range(0, 10)
+	var cmpI = 0
+	for (i in a) {
+		assert cmpI == i
+		cmpI += 1
+	}
+	
+	a = range(10, 0)
+	cmpI = 10
+	for (i in a) {
+		assert cmpI == i
+		cmpI -= 1
+	}
+}
+
+fun emptySetTest() {
+	var a1 = range(0, 0)
+	var a2 = Range(1, 1)
+
+	for (i in a1) a1 = false
+	for (i in a2) a2 = false
+	assert a1 && a2
+}
+
+fun main() {
+	changeAttrTest()
+	iteratorTest()
+	emptySetTest()
+}
+
+main()

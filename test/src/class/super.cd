@@ -1,0 +1,24 @@
+{
+	class A {
+		init(value) {
+			this.value = value
+		}
+	}
+	
+	class B: A {
+	}
+	
+	var b = B(1)
+	assert b.value == 1
+	
+	class C: B {
+		init(value) {
+			var superInit = super.init(1)
+			assert this == superInit
+		}
+	}
+	
+	var c = C(2)
+	assert c.init(2) == c
+	assert c.value == 1
+}

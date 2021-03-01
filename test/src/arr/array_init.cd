@@ -1,0 +1,11 @@
+var arr = Array(16, lambda i -> i*i)
+for (i in range(0, 16)) {
+	assert i*i == arr[i]
+}
+
+Array(100, print)
+
+arr = Array(15, 0)
+for (i in arr) {
+	assert i == 0
+}

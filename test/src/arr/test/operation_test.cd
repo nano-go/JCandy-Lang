@@ -1,0 +1,116 @@
+
+fun factor() {
+	return range(5, 25).rand()
+}
+
+fun insertTest(arr, i, e) {
+	var oldSize = arr.size()
+	
+	var factor = factor()
+	e += factor
+	
+	assert arr.insert(i, e) == e
+	assert arr.indexOf(e) == i
+	assert arr.lastIndexOf(e) == i
+	assert arr[i] == e
+	setTest(arr, i, e - factor)
+	
+	assert arr.size() == oldSize + 1
+}
+
+fun appendTest(arr, e) {
+	var oldSize = arr.size()
+
+	var factor = factor()
+	
+	arr.append(e + factor)
+	assert arr.get(arr.size() - 1) == e + factor
+	setTest(arr, arr.size() - 1, e)
+	
+	assert arr.size() == oldSize + 1
+}
+
+fun deleteTest(arr, i, e) {
+	var oldSize = arr.size()
+	
+	var factor = factor()
+	e += factor
+	
+	setTest(arr, i, e)
+	assert arr.deleteAt(i) == e
+	if (i >= 0 && i < arr.size()) {
+		arr[i] == e - factor
+	}
+	assert oldSize-1 == arr.size()
+	
+	insertTest(arr, i, e)
+	assert arr.delete(e)
+	if (i >= 0 && i < arr.size()) {
+		arr[i] == e - factor
+	}
+	assert oldSize-1 == arr.size()
+}
+
+fun setTest(arr, i, e) {
+	var old = arr[i]
+	arr.set(i, e)
+	assert arr[i] == e
+	arr[i] = old
+	assert arr.get(i) == old
+	arr[i] = e
+	assert arr[i] == e
+}
+
+fun containsTest(arr, i, e) {
+	var factor = factor()
+	e += factor
+
+	setTest(arr, i, e)
+	assert arr.contains(e)
+	assert !arr.contains(e+1)
+	setTest(arr, i, e - factor)
+}
+
+fun test() {
+	var n = 155
+	var e = 5
+	var arr = Array(n, e)
+	assert arr.size() == n
+	
+	for (i in range(0, 15)) {
+		appendTest(arr, e)
+	}
+	assert arr.size() == (n += 15)
+	for (i in range(0, 15)) {
+		insertTest(arr, arr.size(), e)
+	}
+	assert arr.size() == (n += 15)
+	
+	for (i in range(0, 15)) {
+		deleteTest(arr, i, e)
+	}
+	for (i in range(arr.size()-1, arr.size()-16)) {
+		deleteTest(arr, i, e)
+	}
+	
+	assert arr.size() == (n -= 30)
+	
+	for (i in range(0, arr.size())) {
+		containsTest(arr, i, e)
+	}
+	
+	for (i in range(0, arr.size())) {
+		assert !arr.contains(e + factor())
+	}
+	for (i in range(0, arr.size())) {
+		assert !arr.delete(e + factor())
+	}
+	for (i in range(0, arr.size())) {
+		assert arr.indexOf(e + factor()) == -1
+	}
+	for (i in range(0, arr.size())) {
+		assert arr.lastIndexOf(e + factor()) == -1
+	}
+}
+
+test()

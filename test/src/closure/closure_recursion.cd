@@ -9,6 +9,7 @@ fun test(f, n) {
 	}
 	test(closure, n - 1)
 	assert n == 5
+	return
 }
 
 fun initFunc() {

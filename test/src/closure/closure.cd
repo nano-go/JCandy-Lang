@@ -1,0 +1,58 @@
+
+/* Simpe closure */
+
+fun factorial(n) {
+	fun closure(n) {
+		if (n <= 0) return 1
+		return n * closure(n - 1)
+	}
+	return closure(n)
+}
+
+assert factorial(10) == 3628800
+
+
+/* Changes upvalue */
+
+fun outter() {
+	var x = "outter"
+	fun inner() {
+		x += "inner"
+	}
+	fun inner2() {
+		x += "inner2"
+	}
+	inner()
+	inner2()
+	return x
+}
+
+assert outter() == "outterinnerinner2"
+
+/* Changes upvalue upvalue */
+
+fun outter() {
+	var x = 1
+	fun inner1() {
+		fun inner2() {
+			x *= 15
+		}
+		return inner2
+	}
+	var changeX = inner1()
+	changeX()
+	assert x == 15
+	return changeX
+}
+var changeX = outter()
+assert changeX() == 15 * 15
+
+fun test() {
+	var i = 0
+	while (i < 5000) {
+		fun inLoop() {
+			i += 1
+		}
+		inLoop()
+	}
+}

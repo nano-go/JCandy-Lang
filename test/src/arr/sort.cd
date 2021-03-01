@@ -13,20 +13,24 @@ fun insertionSort(arr, left, right) {
 
 fun quickSort(arr) {
 	fun partition(arr, left, right) {
+		var swap = arr.swap
+		
 		var pivotIndex = range(left, right + 1).rand()
-		arr.swap(pivotIndex, left)
+		swap(pivotIndex, left)
 		var pivot = arr[left]
 		var l = left
 		var r = right+1
 		while (true) {
-			while (arr[l += 1] < pivot)
+			while (arr[l += 1] < pivot) {
 				if (l == right) break
-			while (arr[r -= 1] >= pivot) 
+			}
+			while (arr[r -= 1] >= pivot)  {
 				if (r == left) break
+			}
 			if (r <= l) break
-			arr.swap(l, r)
+			swap(l, r)
 		}
-		arr.swap(r, left)
+		swap(r, left)
 		return r
 	}
 	
@@ -43,16 +47,17 @@ fun quickSort(arr) {
 	qs(arr, 0, arr.size() - 1)
 }
 
-for (i in range(0, 50)) {
-	var expectedArr = []
+for (i in range(0, 25)) {
 	var arr = []
-	for (i in range(0, range(10, 1000).rand())) {
+	for (i in range(1, range(0, 1000).rand())) {
 		var randomElement = range(0, 100000).rand()
-		expectedArr.append(randomElement)
 		arr.append(randomElement)
 	}
-	expectedArr.sort()
 	quickSort(arr)
-
-	assert expectedArr == arr : "\nExp: " + expectedArr + "\nBut: " + arr;
+	var prev = arr[0]
+	var size = arr.size()
+	for (i in range(1, size)) {
+		assert prev <= arr[i] : "Bad."
+		prev = arr[i]
+	}
 }

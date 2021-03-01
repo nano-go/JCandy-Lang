@@ -1,0 +1,32 @@
+var arr = ["a", "b", "c", "d", "e", "f"]
+
+assert arr.get(2) == "c"
+assert arr.get(1) == "b"
+
+assert arr.deleteAt(0)
+
+assert arr.get(0) == "b"
+assert !arr.contains("a")
+
+fun toStr(arr) {
+	var str = "["
+	for (e in arr) {
+		str += e + ", "
+	}
+	return str + "]"
+}
+
+fun toStr2(arr) {
+	var str = "["
+	for (i in range(0, arr.size())) {
+		str += arr[i] + ", "
+	}
+	return str + "]"
+}
+
+assert toStr(arr) == "[b, c, d, e, f, ]"
+assert toStr2(arr) == "[b, c, d, e, f, ]"
+
+var i = -1
+arr[i += 1] += "bb"
+assert toStr2(arr) == "[bbb, c, d, e, f, ]"

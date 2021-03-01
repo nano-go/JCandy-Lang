@@ -1,0 +1,26 @@
+fun sumTest() {
+	var sum = 0
+	var i = 1
+	while (i <= 5000) {
+		sum = sum + i
+		i = i + 1 
+	}
+	assert sum == (5000+1)*(5000/2)
+}
+
+fun factorial() {
+	var c = 0
+	while (c < 1000) {
+		var result = 1
+		var i = 2
+		while (i <= 12) {
+			result = result * i
+			i = i + 1
+		}
+		assert result == 479001600
+		c = c + 1
+	}
+}
+
+factorial()
+sumTest()

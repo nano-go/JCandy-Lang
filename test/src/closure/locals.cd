@@ -1,0 +1,29 @@
+{
+	var a = 0
+	var b = 0
+	
+	var t
+	{
+		var i1
+		var i2
+		fun test() {
+			var c = 0
+			fun inner1() {
+				c = 50
+				a = 1
+			}
+			i1 = inner1
+			fun inner2() {
+				c = 50
+				b = 1
+			}
+			i2 = inner2
+		}
+		test()
+		i2()
+		t = i1
+	}
+	t()
+	assert a == 1
+	assert b == 1
+}

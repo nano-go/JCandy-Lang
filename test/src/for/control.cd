@@ -16,4 +16,8 @@ for (i in range(0, 100)) {
 		arr.append(i)
 	}
 }
-assert arr == [5, 15, 25, 35, 45, 55, 65, 75, 85, 95]
+
+var res = [5, 15, 25, 35, 45, 55, 65, 75, 85, 95]
+for (i in range(0, res.size())) {
+	assert res[i] == arr[i]
+}

@@ -1,0 +1,21 @@
+
+var isInitalized = false
+class Integer {
+	init(intVal) {
+		assert !isInitalized
+		isInitalized = true
+		this.value = intVal
+	}
+	
+	_getItem(key) { return key + 5; }
+	_setItem(key, value) { return key + value; }
+}
+
+var i = 50
+var a
+(a = Integer(i += 50)).value += 1
+assert i == 100
+assert a.value == 101
+
+assert (a[i *= 2] += 5) == 410
+assert i == 200
