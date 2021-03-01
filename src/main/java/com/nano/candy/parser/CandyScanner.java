@@ -201,6 +201,7 @@ class CandyScanner implements Scanner {
 			case BREAK:
 			case CONTINUE:
 			case RETURN:
+			case THIS:
 				return true;
 		}
 		return false;
@@ -339,7 +340,7 @@ class CandyScanner implements Scanner {
 				hasError = true;
 			}
 			reader.putChar(true);
-			hasError = digits(base) ? true : hasError;
+			hasError = digits(base) || hasError;
 		}
 		
 		if (hasError) {
