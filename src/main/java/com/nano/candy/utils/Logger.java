@@ -13,6 +13,22 @@ public abstract class Logger {
 		return logger;
 	}
 	
+	public boolean printAllMessage(boolean exitIfError) throws IOException {
+		if (hadWarns()) {
+			printWarns(System.out);
+		}
+		if (hadErrors()) {
+			printErrors(System.err);
+			clearAllMessages();
+			if(exitIfError) {
+				System.exit(1);
+			}
+			return false;
+		}
+		clearAllMessages();
+		return true;
+	}
+	
 	public void printErrors(OutputStream out) throws IOException {
 		printErrors(new OutputStreamWriter(out));
 	}
