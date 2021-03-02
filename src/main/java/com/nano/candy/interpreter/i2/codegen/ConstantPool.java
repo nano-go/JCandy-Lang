@@ -23,9 +23,13 @@ class ConstantPool {
 		return index;
 	}
 	
+	public int size() {
+		return constantPool.size();
+	}
+	
 	public int addConstantValue(ConstantValue cv) {
 		int index = constantPool.size();
-		if (index > 255) {
+		if (index >= 65536) {
 			throw new Error("Too many constant value!");
 		}
 		constantPool.add(cv);

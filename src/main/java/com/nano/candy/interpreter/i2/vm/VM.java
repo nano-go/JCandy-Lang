@@ -38,6 +38,8 @@ public final class VM {
 	private static final boolean DEBUG_TRACE_FRAME_STACK = false;
 	private static final boolean DEBUG_DISASSEMBLE = false;
 	
+	private static final byte WIDE_INDEX_MARK = (byte) 0xFF;
+	
 	private int maxStackDeepth = 1024*2;
 	private GlobalEnvironment global;
 	
@@ -166,7 +168,11 @@ public final class VM {
 	}
 	
 	private int readIndex(){
-		return code[pc ++] & 0xFF;
+		if (code[pc] != WIDE_INDEX_MARK) {
+			return code[pc ++] & 0xFF;
+		}
+		pc ++;
+		return (code[pc ++] << 8) & 0xFFFF | code[pc ++] & 0xFF;
 	}
 	
 	private UserFunctionObj makeFunctionObject(CandyClass clazz, ConstantValue.MethodInfo methodInfo) {
@@ -394,15 +400,15 @@ public final class VM {
 					break;
 				}		
 				case OP_DCONST: {
-					push(DoubleObj.valueOf(cp.getDouble(readUint8())));
+					push(DoubleObj.valueOf(cp.getDouble(readIndex())));
 					break;
 				}		
 				case OP_ICONST: {
-					push(IntegerObj.valueOf(cp.getInteger(readUint8())));
+					push(IntegerObj.valueOf(cp.getInteger(readIndex())));
 					break;
 				}		
 				case OP_SCONST: {
-					push(StringObj.valueOf(cp.getString(readUint8())));
+					push(StringObj.valueOf(cp.getString(readIndex())));
 					break;
 				}
 				case OP_FALSE: {
@@ -434,12 +440,12 @@ public final class VM {
 				 * Global Operarions.
 				 */
 				case OP_GLOBAL_DEFINE: {
-					String name = cp.getString(readUint8());
+					String name = cp.getString(readIndex());
 					global.setVar(name, pop());
 					break;
 				}		
 				case OP_GLOBAL_SET: {
-					String name = cp.getString(readUint8());
+					String name = cp.getString(readIndex());
 					if (global.getVar(name) == null) {
 						throw new CandyRuntimeError("the variable '%s' not found.", name);
 					}
@@ -447,7 +453,7 @@ public final class VM {
 					break;
 				}		
 				case OP_GLOBAL_GET: {
-					String name = cp.getString(readUint8());
+					String name = cp.getString(readIndex());
 					CandyObject value = global.getVar(name);
 					if (value == null) {
 						throw new CandyRuntimeError("the variable '%s' not found.", name);

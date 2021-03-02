@@ -30,7 +30,11 @@ public class ChunkReader {
 	}
 
 	public int readIndex() {
-		return readUint8();
+		if (code[pc] != (byte) 0xFF) {
+			return code[pc ++] & 0xFF;
+		}
+		pc ++;
+		return ((code[pc ++] << 8) & 0xFFFF) | code[pc ++] & 0xFF;
 	}
 
 	public int readUint8() {

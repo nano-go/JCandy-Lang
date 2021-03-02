@@ -56,9 +56,10 @@ public class ChunkBuilder {
 	}
 
 	private ArrayList<LineNumberInfo> lineNumberTable;
-	private ConstantPool constantPool;
 	private short globalSlots;
 	private String sourceFileName;
+	
+	protected ConstantPool constantPool;
 	
 	private byte[] code = new byte[64];
 	
@@ -281,24 +282,32 @@ public class ChunkBuilder {
 		emitStringConstant(attr);
 	}
 
+	
+	private void emitIndex(int index) {
+		if (index < 255) {
+			emit1((byte) index);
+			return;
+		}
+		emit1((byte) 0xFF);
+		emit2(index);
+	}
+	
 	/**
 	 * Add the given constant into the constant pool and emit
 	 * the index of the constant into code.
 	 */
 	public void emitConstant(ConstantValue constVal) {
-		emit1((byte) constantPool.addConstantValue(constVal));
+		emitIndex(constantPool.addConstantValue(constVal));
 	}
-	
+
 	public void emitIntegerConstant(long constVal) {
-		emit1((byte) constantPool.addInteger(constVal));
+		emitIndex(constantPool.addInteger(constVal));
 	}
-	
 	public void emitDoubleConstant(double constVal) {
-		emit1((byte) constantPool.addDouble(constVal));
+		emitIndex(constantPool.addDouble(constVal));
 	}
-	
 	public void emitStringConstant(String constVal) {
-		emit1((byte) constantPool.addString(constVal));
+		emitIndex(constantPool.addString(constVal));
 	}
 	
 	private Slots buildSlots() {
