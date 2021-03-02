@@ -37,58 +37,59 @@ public class Instructions {
 	public static final byte OP_JUMP_IF_FALSE     = (byte)28;
 	public static final byte OP_JUMP_IF_TRUE      = (byte)29;
 	public static final byte OP_JUMP              = (byte)30;
+	public static final byte OP_LOOP              = (byte)31;
 
-	public static final byte OP_LOAD              = (byte)31;
-	public static final byte OP_LOAD0             = (byte)32;
-	public static final byte OP_LOAD1             = (byte)33;
-	public static final byte OP_LOAD2             = (byte)34;
-	public static final byte OP_LOAD3             = (byte)35;
-	public static final byte OP_LOAD4             = (byte)36;
-	public static final byte OP_STORE             = (byte)37;
-	public static final byte OP_STORE0            = (byte)38;
-	public static final byte OP_STORE1            = (byte)39;
-	public static final byte OP_STORE2            = (byte)40;
-	public static final byte OP_STORE3            = (byte)41;
-	public static final byte OP_STORE4            = (byte)42;
-	public static final byte OP_POP_STORE         = (byte)43;
-	public static final byte OP_LOAD_UPVALUE      = (byte)44;
-	public static final byte OP_STORE_UPVALUE     = (byte)45;
+	public static final byte OP_LOAD              = (byte)32;
+	public static final byte OP_LOAD0             = (byte)33;
+	public static final byte OP_LOAD1             = (byte)34;
+	public static final byte OP_LOAD2             = (byte)35;
+	public static final byte OP_LOAD3             = (byte)36;
+	public static final byte OP_LOAD4             = (byte)37;
+	public static final byte OP_STORE             = (byte)38;
+	public static final byte OP_STORE0            = (byte)39;
+	public static final byte OP_STORE1            = (byte)40;
+	public static final byte OP_STORE2            = (byte)41;
+	public static final byte OP_STORE3            = (byte)42;
+	public static final byte OP_STORE4            = (byte)43;
+	public static final byte OP_POP_STORE         = (byte)44;
+	public static final byte OP_LOAD_UPVALUE      = (byte)45;
+	public static final byte OP_STORE_UPVALUE     = (byte)46;
 
-	public static final byte OP_GET_ATTR          = (byte)46;
-	public static final byte OP_SET_ATTR          = (byte)47;
-	public static final byte OP_GET_ITEM          = (byte)48;
-	public static final byte OP_SET_ITEM          = (byte)49;
+	public static final byte OP_GET_ATTR          = (byte)47;
+	public static final byte OP_SET_ATTR          = (byte)48;
+	public static final byte OP_GET_ITEM          = (byte)49;
+	public static final byte OP_SET_ITEM          = (byte)50;
 
-	public static final byte OP_CLOSE_SLOT        = (byte)50;
-	public static final byte OP_CLOSE_UPVALUE     = (byte)51;
+	public static final byte OP_CLOSE_SLOT        = (byte)51;
+	public static final byte OP_CLOSE_UPVALUE     = (byte)52;
 
-	public static final byte OP_GLOBAL_DEFINE     = (byte)52;
-	public static final byte OP_GLOBAL_SET        = (byte)53;
-	public static final byte OP_GLOBAL_GET        = (byte)54;
+	public static final byte OP_GLOBAL_DEFINE     = (byte)53;
+	public static final byte OP_GLOBAL_SET        = (byte)54;
+	public static final byte OP_GLOBAL_GET        = (byte)55;
 
-	public static final byte OP_INVOKE            = (byte)55;
-	public static final byte OP_CALL_GLOBAL       = (byte)56;
-	public static final byte OP_CALL_SLOT         = (byte)57;
-	public static final byte OP_CALL              = (byte)58;
+	public static final byte OP_INVOKE            = (byte)56;
+	public static final byte OP_CALL_GLOBAL       = (byte)57;
+	public static final byte OP_CALL_SLOT         = (byte)58;
+	public static final byte OP_CALL              = (byte)59;
 
-	public static final byte OP_RETURN_NIL        = (byte)59;
-	public static final byte OP_RETURN            = (byte)60;
+	public static final byte OP_RETURN_NIL        = (byte)60;
+	public static final byte OP_RETURN            = (byte)61;
 
-	public static final byte OP_CLASS             = (byte)61;
-	public static final byte OP_SUPER_GET         = (byte)62;
-	public static final byte OP_SUPER_INVOKE      = (byte)63;
-	public static final byte OP_FUN               = (byte)64;
+	public static final byte OP_CLASS             = (byte)62;
+	public static final byte OP_SUPER_GET         = (byte)63;
+	public static final byte OP_SUPER_INVOKE      = (byte)64;
+	public static final byte OP_FUN               = (byte)65;
 
-	public static final byte OP_NEW_ARRAY         = (byte)65;
-	public static final byte OP_APPEND            = (byte)66;
-	public static final byte OP_ASSERT            = (byte)67;
-	public static final byte OP_PRINT             = (byte)68;
+	public static final byte OP_NEW_ARRAY         = (byte)66;
+	public static final byte OP_APPEND            = (byte)67;
+	public static final byte OP_ASSERT            = (byte)68;
+	public static final byte OP_PRINT             = (byte)69;
 
-	public static final byte OP_EXIT              = (byte)69;
+	public static final byte OP_EXIT              = (byte)70;
 
-	public static final byte INSTRUCTION_NUMBER = 70;
+	public static final byte INSTRUCTION_NUMBER = 71;
 
-	public static final String[] INSTRUCTION_NAMES = new String[70];
+	public static final String[] INSTRUCTION_NAMES = new String[71];
 	static {
 		INSTRUCTION_NAMES[OP_POP]               = "pop";
 		INSTRUCTION_NAMES[OP_DUP]               = "dup";
@@ -121,6 +122,7 @@ public class Instructions {
 		INSTRUCTION_NAMES[OP_JUMP_IF_FALSE]     = "jump_if_false";
 		INSTRUCTION_NAMES[OP_JUMP_IF_TRUE]      = "jump_if_true";
 		INSTRUCTION_NAMES[OP_JUMP]              = "jump";
+		INSTRUCTION_NAMES[OP_LOOP]              = "loop";
 		INSTRUCTION_NAMES[OP_LOAD]              = "load";
 		INSTRUCTION_NAMES[OP_LOAD0]             = "load0";
 		INSTRUCTION_NAMES[OP_LOAD1]             = "load1";

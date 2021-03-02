@@ -34,6 +34,7 @@ OP_POP_JUMP_IF_TRUE pop_jump_if_true
 OP_JUMP_IF_FALSE jump_if_false
 OP_JUMP_IF_TRUE jump_if_true
 OP_JUMP jump
+OP_LOOP loop
 
 OP_LOAD load
 OP_LOAD0 load0

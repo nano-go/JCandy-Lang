@@ -160,7 +160,7 @@ public final class VM {
 	}
 
 	private int readJumpOffset() {
-		return (short)(code[pc] << 8 | code[pc + 1] & 0xFF);
+		return (code[pc] << 8) & 0xFFFF | code[pc + 1] & 0xFF;
 	}
 	
 	private int readUint8() {
@@ -257,17 +257,15 @@ public final class VM {
 				 */
 				case OP_POP_JUMP_IF_FALSE: {
 					if (!pop().boolValue(this).value()) {
-						// pc-1 is jump instruction pointer.
-						pc += readJumpOffset()-1;
+						pc += readJumpOffset();
 					} else {
-						// skip jump-offset.
 						pc += 2;
 					}
 					break;
 				}	
 				case OP_POP_JUMP_IF_TRUE: {
 					if (pop().boolValue(this).value()) {
-						pc += readJumpOffset()-1;
+						pc += readJumpOffset();
 					} else {
 						pc += 2;
 					}
@@ -275,7 +273,7 @@ public final class VM {
 				}		
 				case OP_JUMP_IF_FALSE: {
 					if (!peek(0).boolValue(this).value()) {
-						pc += readJumpOffset()-1;
+						pc += readJumpOffset();
 					} else {
 						pc += 2;
 					}
@@ -283,14 +281,18 @@ public final class VM {
 				}		
 				case OP_JUMP_IF_TRUE: {
 					if (peek(0).boolValue(this).value()) {
-						pc += readJumpOffset()-1;
-					} else {						
+						pc += readJumpOffset();
+					} else {
 						pc += 2;
 					}
 					break;
 				}		
 				case OP_JUMP: {
-					pc += readJumpOffset()-1;
+					pc += readJumpOffset();
+					break;
+				}
+				case OP_LOOP: {
+					pc -= readJumpOffset();
 					break;
 				}
 				
