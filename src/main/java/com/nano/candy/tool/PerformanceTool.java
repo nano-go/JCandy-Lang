@@ -4,6 +4,7 @@ import com.nano.candy.interpreter.Interpreter;
 import com.nano.candy.main.CandyOptions;
 import com.nano.candy.parser.ParserFactory;
 import com.nano.candy.utils.Logger;
+import com.nano.candy.utils.Options;
 import com.nano.candy.utils.TableView;
 import java.io.File;
 
@@ -12,6 +13,11 @@ public class PerformanceTool implements CandyTool {
 	private static final Logger logger = Logger.getLogger();
 	
 	protected PerformanceTool() {}
+
+	@Override
+	public void defineOptions(Options options) {
+		options.newGroup("Performance");
+	}
 	
 	@Override
 	public void run(Interpreter interpreter, CandyOptions options) throws Exception{

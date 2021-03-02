@@ -13,6 +13,7 @@ import com.nano.candy.parser.ParserFactory;
 import com.nano.candy.tool.CandyTool;
 import com.nano.candy.utils.BlockView;
 import com.nano.candy.utils.Logger;
+import com.nano.candy.utils.Options;
 import java.io.File;
 
 import static com.nano.candy.interpreter.i2.instruction.Instructions.*;
@@ -20,9 +21,15 @@ import static com.nano.candy.interpreter.i2.instruction.Instructions.*;
 public class DisassembleTool implements CandyTool {
 	
 	public static final DisassembleTool DISASSEMBLE_TOOL = new DisassembleTool();
+
+	@Override
+	public void defineOptions(Options options) {
+		options.newGroup("Disassemble");
+	}
 	
 	@Override
 	public void run(Interpreter interpreter, CandyOptions options) throws Exception {
+		options.checkSrc();
 		BlockView blockView = new BlockView();
 		for (File src : options.getFiles()) {
 			ASTreeNode node = ParserFactory.newParser(src).parse();
@@ -38,7 +45,6 @@ public class DisassembleTool implements CandyTool {
 		}
 		System.out.println(blockView.toString());
 	}
-	
 	
 	DisassembleInfoBuilder builder;
 	ChunkReader reader;

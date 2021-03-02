@@ -1,37 +1,38 @@
 package com.nano.candy.main;
+import com.nano.candy.tool.CandyTool;
+import com.nano.candy.tool.CandyToolFactory;
+import com.nano.candy.utils.CommandLine;
+import com.nano.candy.utils.Options;
 import java.io.File;
-import org.apache.commons.cli.HelpFormatter;
-import org.apache.commons.cli.Options;
 
 public class CandyOptions {
 	
-	public static final int PRINT_AST_BY_JSON_MASK = 1;
 	
-	protected File[] inputFiles;
-	protected int printAstFlag;
+	protected File[] srcFiles;
 	protected boolean printHelper;
-	protected boolean interactively;
-	protected String toolName;
-	protected String interpreterVersion;
-
+	protected CandyTool tool;
+	
+	protected CommandLine cmdLine;
 	protected Options options;
 	
 	protected CandyOptions() {}
-
-	public boolean isInteractively() {
-		return interactively;
+	
+	public void checkSrc() {
+		if (srcFiles == null || srcFiles.length == 0) {
+			throw new Options.ParseException("Missing source files.");
+		}
 	}
 	
 	public File[] getFiles() {
-		return inputFiles;
+		return srcFiles;
 	}
 	
-	public boolean isPrintAst() {
-		return printAstFlag != 0;
+	public CandyTool getTool() {
+		return tool;
 	}
 	
-	public int getPrintAstFlag() {
-		return printAstFlag;
+	public CommandLine getCmd() {
+		return cmdLine;
 	}
 	
 	public boolean isPrintHelper() {
@@ -39,10 +40,12 @@ public class CandyOptions {
 	}
 	
 	public void printHelper() {
-		HelpFormatter hf = new HelpFormatter();
-		hf.setWidth(100);
-		hf.setLeftPadding(2);
-		hf.setSyntaxPrefix("  Usage: ");
-		hf.printHelp("candy [-options] source files...", "  Options: ", options, "");
+		StringBuilder helper = new StringBuilder();
+		helper.append("candy [tool] [options] [source] args\nTools:\n");
+		for (String toolName : CandyToolFactory.names()) {
+			helper.append("    ").append(toolName).append("\n");
+		}
+		helper.append(options.helper());
+		System.out.print(helper.toString());
 	}
 }

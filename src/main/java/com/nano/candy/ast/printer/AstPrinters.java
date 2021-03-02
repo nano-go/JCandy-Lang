@@ -1,12 +1,11 @@
 package com.nano.candy.ast.printer;
 
-import com.nano.candy.main.CandyOptions;
-
 public class AstPrinters {
 
-	public static AstPrinter newPrinter(CandyOptions options) {
-		int flag = options.getPrintAstFlag();
-		if ((flag & CandyOptions.PRINT_AST_BY_JSON_MASK) != 0) {
+	public static final int PRINT_AST_IN_JSON_MASK = 1;
+	
+	public static AstPrinter newPrinter(int flag) {
+		if ((flag & PRINT_AST_IN_JSON_MASK) != 0) {
 			return new JsonAstPrinter();
 		}
 		throw new RuntimeException("Unknown ast printer flag: " + Integer.toBinaryString(flag));

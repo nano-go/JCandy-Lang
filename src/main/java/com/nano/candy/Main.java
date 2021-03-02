@@ -1,14 +1,12 @@
 package com.nano.candy;
 import com.nano.candy.main.CandyRun;
-import com.nano.candy.tool.UnknownToolException;
-import org.apache.commons.cli.ParseException;
+import com.nano.candy.utils.Options;
 
 public class Main {
 	public static void main(String... args){
 		try {
 			new CandyRun(args).main();
-		}  catch (ParseException | 
-		          UnknownToolException | 
+		}  catch (Options.ParseException | 
 				  InterruptedException e) {
 			System.err.println(e.getMessage());
 			System.exit(1);

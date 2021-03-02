@@ -1,6 +1,8 @@
 package com.nano.candy.tool;
 import com.nano.candy.interpreter.i2.tool.DisassembleTool;
+import java.util.Collection;
 import java.util.HashMap;
+import java.util.Set;
 
 public class CandyToolFactory {
 	
@@ -8,7 +10,18 @@ public class CandyToolFactory {
 	
 	static {
 		CandyToolFactory.register("perf", new PerformanceTool());
-		CandyToolFactory.register("disassemble", DisassembleTool.DISASSEMBLE_TOOL);
+		CandyToolFactory.register("exe", new ExeTool());
+		CandyToolFactory.register("ast", new AstTool());
+		
+		CandyToolFactory.register("dis", DisassembleTool.DISASSEMBLE_TOOL);
+	}
+	
+	public static Collection<CandyTool> tools() {
+		return TOOLS.values();
+	}
+	
+	public static Set<String> names() {
+		return TOOLS.keySet();
 	}
 	
 	public static void register(String name, CandyTool tool, String... aliases) {
@@ -24,10 +37,14 @@ public class CandyToolFactory {
 		}
 	}
 	
-	public static CandyTool createCandyTool(String name) throws UnknownToolException {
+	public static boolean isTool(String name) {
+		return TOOLS.containsKey(name);
+	}
+	
+	public static CandyTool createCandyTool(String name) {
 		CandyTool tool = TOOLS.get(name);
 		if (tool == null) {
-			throw new UnknownToolException(name);
+			return new ExeTool();
 		}
 		return tool;
 	}
