@@ -245,7 +245,7 @@ public class ChunkBuilder {
 	 * Place two bytes into code at the specified position.
 	 */
 	public void backpatch(int position) {
-		int offset = cp - position + 1;
+		int offset = cp - position;
 		code[position]     = (byte) (offset >> 8);
 		code[position + 1] = (byte) offset;
 	}

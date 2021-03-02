@@ -18,7 +18,7 @@ import static com.nano.candy.interpreter.i2.instruction.Instructions.*;
 import static com.nano.candy.interpreter.i2.rtda.ConstantValue.*;
 
 /**
- * This converts the Candy syntax tree to bytecodes.
+ * This converts the Candy syntax tree to a chunk.
  */
 public class CodeGenerator implements AstVisitor<Void, Void> {
 	
@@ -306,16 +306,16 @@ public class CodeGenerator implements AstVisitor<Void, Void> {
 		methodInfo.codeBytes = builder.curCp() - posBodyBegin;
 		methodInfo.slots = (byte)locals.maxSlotCount();
 		methodInfo.stackSize = builder.state().stackSize;
-		methodInfo.upvalues = makeUpvalueBytes(locals.upvalues());	
+		methodInfo.upvalues = genUpvalueBytes(locals.upvalues());	
 		
 		closeFunctionScope();
 		return methodInfo;
 	}
 	
 	/**
-	 * Gen specified bytes for the given upvalues.
+	 * Gen bytes in the specified format for the given upvalues.
 	 */
-	private byte[] makeUpvalueBytes(LocalsTable.Upvalue[] upvalues) {
+	private byte[] genUpvalueBytes(LocalsTable.Upvalue[] upvalues) {
 		byte[] upvalueBytes = new byte[upvalues.length*2];
 		for (int i = 0; i < upvalues.length; i ++) {
 			upvalueBytes[i*2] = (byte)(upvalues[i].isLocal ? 1 : 0);
@@ -352,8 +352,7 @@ public class CodeGenerator implements AstVisitor<Void, Void> {
 		
 		if (node.superClassName.isPresent()) {
 			Expr.VarRef superClass = node.superClassName.get();
-			// adavance to load super class object to stack
-			// operand top.
+			// adavance to load super class object to operand stack top.
 			loadVariable(superClass.name, line(superClass));
 			
 			// If true, VM will fetch the super class from 
@@ -436,7 +435,7 @@ public class CodeGenerator implements AstVisitor<Void, Void> {
 		
 		node.body.accept(this);
 		// Jump back to the begin position of While statement
-		builder.emitLable(OP_JUMP, (short) (loopPos - builder.curCp()), -1);
+		builder.emitLable(OP_LOOP, builder.curCp() - loopPos + 1, -1);
 		
 		if (!isTrueConstant) {
 			builder.backpatch(jumpOutLable);
@@ -465,7 +464,7 @@ public class CodeGenerator implements AstVisitor<Void, Void> {
 		for (Stmt stmt : node.body.stmts) {
 			stmt.accept(this);
 		}
-		builder.emitLable(OP_JUMP, (loopPos - builder.curCp()), -1);
+		builder.emitLable(OP_LOOP, (builder.curCp() - loopPos + 1), -1);
 		
 		builder.backpatch(jumpOutLable);
 		loopMarkers.pop().concatenetesLableforBreak();
@@ -497,7 +496,7 @@ public class CodeGenerator implements AstVisitor<Void, Void> {
 	public Void visit(Stmt.Continue node) {
 		int continuePos = loopMarkers.peek().beginPosition;
 		builder.emitLable(
-			OP_JUMP, (continuePos - builder.curCp()), line(node)
+			OP_LOOP, (builder.curCp() - continuePos + 1), line(node)
 		);
 		return null;
 	}
@@ -513,14 +512,16 @@ public class CodeGenerator implements AstVisitor<Void, Void> {
 	@Override
 	public Void visit(Stmt.If node) {
 		node.condition.accept(this);
-		// Jump to the begin of the else statement or 
-		// jump out of the If statement.
+		// Jump to the beginning of the else block or jump out 
+		// of the If statement.
 		int jumpToElseLable = builder.emitLable(OP_POP_JUMP_IF_FALSE, line(node));
 		
 		node.thenBody.accept(this);
 		if (node.elseBody.isPresent()) {
-			// When the boyd isfinish jump out of the If statement.
+			// If the else block exists, VM needs to skip the else block
+			// at the end of then-body.
 			int jumpOutIfLable = builder.emitLable(OP_JUMP, -1);
+			
 			builder.backpatch(jumpToElseLable);			
 			node.elseBody.get().accept(this);
 			builder.backpatch(jumpOutIfLable);
@@ -559,7 +560,8 @@ public class CodeGenerator implements AstVisitor<Void, Void> {
 	@Override
 	public Void visit(Stmt.Return node) {
 		if (isInInitializer) {
-			// the instance(this pointer) is at slot 0.
+			// the 'this' pointer is at the slot 0.
+			// VM requires to return the 'this' pointer in initializer.
 			builder.emitop(OP_LOAD0, line(node));
 		} else if (node.expr.isPresent()) {
 			node.expr.get().accept(this);
@@ -594,13 +596,14 @@ public class CodeGenerator implements AstVisitor<Void, Void> {
 	public Void visit(Expr.Unary node) {
 		node.expr.accept(this);
 		switch (node.operator) {
+			case PLUS:
+				builder.emitop(OP_POSITIVE, line(node));
+				break;
 			case MINUS:
 				builder.emitop(OP_NEGATIVE, line(node));
 				break;
 			case NOT:
 				builder.emitop(OP_NOT, line(node));
-				break;
-			case PLUS:
 				break;
 		}
 		return null;
@@ -611,7 +614,7 @@ public class CodeGenerator implements AstVisitor<Void, Void> {
 		switch (node.operator) {
 			case LOGICAL_AND:
 			case LOGICAL_OR:
-				genBinaryLocalOpCode(node);
+				genBinaryLogicalOpCode(node);
 				return null;
 		}
 		
@@ -623,15 +626,16 @@ public class CodeGenerator implements AstVisitor<Void, Void> {
 		return null;
 	}
 
-	private void genBinaryLocalOpCode(Expr.Binary node) {
+	private void genBinaryLogicalOpCode(Expr.Binary node) {
 		node.left.accept(this);
 		int bp;
+		int opLine = node.operatorPos.getLine();
 		switch (node.operator) {
 			case LOGICAL_AND:
-				bp = builder.emitLable(OP_JUMP_IF_FALSE, node.operatorPos.getLine());
+				bp = builder.emitLable(OP_JUMP_IF_FALSE, opLine);
 				break;
 			case LOGICAL_OR:
-				bp = builder.emitLable(OP_JUMP_IF_TRUE, node.operatorPos.getLine());
+				bp = builder.emitLable(OP_JUMP_IF_TRUE, opLine);
 				break;
 			default:
 				throw new Error(node.operator.getLiteral());
