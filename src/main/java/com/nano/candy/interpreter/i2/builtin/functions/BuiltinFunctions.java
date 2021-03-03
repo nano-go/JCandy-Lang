@@ -61,4 +61,11 @@ public class BuiltinFunctions {
 		obj.setAttr(vm, attrStr, value);
 		vm.returnFromVM(value);
 	}
+	
+	public static final BuiltinFunctionEntity STR = 
+		new BuiltinFunctionEntity("str", 1, BuiltinFunctions::str);
+	public static void str(VM vm) {
+		CandyObject obj = vm.pop();
+		vm.returnFromVM(obj.strApiExeUser(vm));
+	}
 }
