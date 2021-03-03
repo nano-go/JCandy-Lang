@@ -48,12 +48,17 @@ public class Position {
 
 	@Override
 	public String toString() {
-		return com.google.common.base.MoreObjects.toStringHelper(Position.class)
-			.add("file name", fileName)
-			.add("line text", getLineFromSource().get())
-			.add("line", line)
-			.add("col", col)
-			.toString();
+		return "file: " + fileName +
+		       "\nline text: " + getLineStr() +
+			   "\nrow: " + line +
+			   "\ncol: " + col;
+	}
+	
+	private String getLineStr() {
+		if (lineFromSource.isPresent()) {
+			return lineFromSource.get();
+		}
+		return "null";
 	}
 	
 }

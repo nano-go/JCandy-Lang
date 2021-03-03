@@ -43,11 +43,14 @@ public class Token {
 
 	@Override
 	public String toString() {
-		return com.google.common.base.MoreObjects.toStringHelper(this)
-			.add("pos", pos)
-			.add("literal", getLiteral())
-			.add("kind", kind)
-			.toString();
+		StringBuilder builder = new StringBuilder();
+		builder.append("token: ").append(kind);
+		builder.append("\nliteral: ").append(literal);
+		if (pos != null) {
+			builder.append("\nrow: ").append(pos.getLine());
+			builder.append("\ncol: ").append(pos.getCol());
+		}
+		return builder.toString();
 	}
 	
 	public static class DoubleNumberToken extends Token {

@@ -1,5 +1,5 @@
 package com.nano.candy.ast.printer;
-import com.google.common.base.Strings;
+
 import com.nano.candy.parser.TokenKind;
 import com.nano.candy.utils.Position;
 import java.util.Arrays;
@@ -13,7 +13,7 @@ public class JsonAstPrinter extends SerializablePrinter {
 	private String indentStr = "  ";
 	
 	private String indent() {
-		return Strings.repeat(indentStr, indent).intern(); 
+		return indentStr.repeat(indent);
 	}
 	
 	private String wrapString(String str) {

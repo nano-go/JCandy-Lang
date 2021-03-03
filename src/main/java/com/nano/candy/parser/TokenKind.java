@@ -1,7 +1,7 @@
 package com.nano.candy.parser;
 
-import com.google.common.collect.ImmutableMap;
 import com.nano.candy.parser.TokenKind;
+import java.util.HashMap;
 
 public enum TokenKind {
 	
@@ -66,30 +66,31 @@ public enum TokenKind {
 	INTEGER,
 	STRING;
 	
-	private static final ImmutableMap<String, TokenKind> KEYWORD_KINDS = 
-		ImmutableMap.<String, TokenKind>builder()
-			.put(TokenKind.VAR.literal, TokenKind.VAR)
-			.put(TokenKind.ASSERT.literal, TokenKind.ASSERT)
-			.put(TokenKind.LOGICAL_OR.literal, TokenKind.LOGICAL_OR)
-			.put(TokenKind.LOGICAL_AND.literal, TokenKind.LOGICAL_AND)
-			.put(TokenKind.IS.literal, TokenKind.IS)
-			.put(TokenKind.FOR.literal, TokenKind.FOR)
-			.put(TokenKind.IN.literal, TokenKind.IN)
-			.put(TokenKind.WHILE.literal, TokenKind.WHILE)
-			.put(TokenKind.CONTINUE.literal, TokenKind.CONTINUE)
-			.put(TokenKind.BREAK.literal, TokenKind.BREAK)
-			.put(TokenKind.TRUE.literal, TokenKind.TRUE)
-			.put(TokenKind.FALSE.literal, TokenKind.FALSE)
-			.put(TokenKind.NULL.literal, TokenKind.NULL)
-			.put(TokenKind.IF.literal, TokenKind.IF)
-			.put(TokenKind.ELSE.literal, TokenKind.ELSE)
-			.put(TokenKind.FUN.literal, TokenKind.FUN)
-			.put(TokenKind.RETURN.literal, TokenKind.RETURN)
-			.put(TokenKind.LAMBDA.literal, TokenKind.LAMBDA)
-			.put(TokenKind.CLASS.literal, TokenKind.CLASS)
-			.put(TokenKind.THIS.literal, TokenKind.THIS)
-			.put(TokenKind.SUPER.literal, TokenKind.SUPER)
-			.build();
+	private static final HashMap<String, TokenKind> KEYWORD_KINDS = 
+		new HashMap<String, TokenKind>();
+	static {
+		KEYWORD_KINDS.put(TokenKind.VAR.literal, TokenKind.VAR);
+		KEYWORD_KINDS.put(TokenKind.ASSERT.literal, TokenKind.ASSERT);
+		KEYWORD_KINDS.put(TokenKind.LOGICAL_OR.literal, TokenKind.LOGICAL_OR);
+		KEYWORD_KINDS.put(TokenKind.LOGICAL_AND.literal, TokenKind.LOGICAL_AND);
+		KEYWORD_KINDS.put(TokenKind.IS.literal, TokenKind.IS);
+		KEYWORD_KINDS.put(TokenKind.FOR.literal, TokenKind.FOR);
+		KEYWORD_KINDS.put(TokenKind.IN.literal, TokenKind.IN);
+		KEYWORD_KINDS.put(TokenKind.WHILE.literal, TokenKind.WHILE);
+		KEYWORD_KINDS.put(TokenKind.CONTINUE.literal, TokenKind.CONTINUE);
+		KEYWORD_KINDS.put(TokenKind.BREAK.literal, TokenKind.BREAK);
+		KEYWORD_KINDS.put(TokenKind.TRUE.literal, TokenKind.TRUE);
+		KEYWORD_KINDS.put(TokenKind.FALSE.literal, TokenKind.FALSE);
+		KEYWORD_KINDS.put(TokenKind.NULL.literal, TokenKind.NULL);
+		KEYWORD_KINDS.put(TokenKind.IF.literal, TokenKind.IF);
+		KEYWORD_KINDS.put(TokenKind.ELSE.literal, TokenKind.ELSE);
+		KEYWORD_KINDS.put(TokenKind.FUN.literal, TokenKind.FUN);
+		KEYWORD_KINDS.put(TokenKind.RETURN.literal, TokenKind.RETURN);
+		KEYWORD_KINDS.put(TokenKind.LAMBDA.literal, TokenKind.LAMBDA);
+		KEYWORD_KINDS.put(TokenKind.CLASS.literal, TokenKind.CLASS);
+		KEYWORD_KINDS.put(TokenKind.THIS.literal, TokenKind.THIS);
+		KEYWORD_KINDS.put(TokenKind.SUPER.literal, TokenKind.SUPER);
+	}
 
 	public static TokenKind lookupKind(String identifier) {
 		TokenKind kind = KEYWORD_KINDS.get(identifier);
