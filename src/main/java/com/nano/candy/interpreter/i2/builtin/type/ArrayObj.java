@@ -60,10 +60,19 @@ public final class ArrayObj extends BuiltinObject {
 		initArray(n);
 	}
 	
+	protected ArrayObj(CandyObject[] elements) {
+		super(ARRAY_CLASS);
+		this.elements = elements;
+		this.size = elements.length;
+	}
+	
 	protected ArrayObj(CandyObject[] elements, int size) {
 		super(ARRAY_CLASS);
 		this.elements = elements;
 		this.size = size;
+		if (size > elements.length) {
+			throw new ArgumentError("Illegal size: %d", size);
+		}
 	}
 	
 	private void initArray(long n) {

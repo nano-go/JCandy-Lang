@@ -131,6 +131,6 @@ public class Range extends BuiltinObject {
 		for (int i = 0; i < size; i ++, e += v) {
 			elements[i] = IntegerObj.valueOf(e);
 		}
-		vm.returnFromVM(new ArrayObj(elements, size));
+		vm.returnFromVM(new ArrayObj(elements));
 	}
 }
