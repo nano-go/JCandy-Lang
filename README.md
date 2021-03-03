@@ -4,6 +4,36 @@
 
 ## 构建
 Candy 通过 Java 语言编写，需要 JRE(Java Runtime Environment) 去运行 Candy。
+Candy 所需要的 Java8 及其以上的版本才能编译、运行。
+
+下载项目并且编译：
+``` shell
+git clone git@github.com:nano-go/JCandy-Lang.git
+cd JCandy-Lang
+
+# 生成的 Jar 包在 test 目录下
+gradle makeJar
+```
+
+这里并不一定需要安装 Gradle，因为没有什么依赖，用 javac 也是可以的。
+
+## 运行
+``` shell
+cd test/
+
+# 运行整个测试目录下所有的 Candy 源文件
+java -jar candy.jar src/
+```
+
+如果没有参数，则进入交互式命令行。
+
+### Disassemble
+
+可以通过 dis 工具来查看 Candy 源文件生成的指令。
+``` shell
+java -jar candy.jar dis tmp.cd
+```
+
 
 ## 语法
 Candy 的一些语法有一点类 C 语言语法，其语句都是使用大括号所包裹的，也有 `if`, `for`, `while` 这样的流程控制语法。
