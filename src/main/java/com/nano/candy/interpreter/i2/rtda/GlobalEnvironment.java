@@ -12,6 +12,8 @@ import com.nano.candy.interpreter.i2.builtin.type.Range;
 import com.nano.candy.interpreter.i2.builtin.type.StringObj;
 import com.nano.candy.interpreter.i2.builtin.type.classes.CandyClass;
 import com.nano.candy.interpreter.i2.builtin.type.classes.ObjectClass;
+import java.lang.reflect.Field;
+import java.lang.reflect.Modifier;
 import java.util.HashMap;
 
 public class GlobalEnvironment {
@@ -24,12 +26,7 @@ public class GlobalEnvironment {
 	}
 	
 	private void init() {
-		defineBuiltinFunction(BuiltinFunctions.PRINT);
-		defineBuiltinFunction(BuiltinFunctions.PRINTLN);
-		defineBuiltinFunction(BuiltinFunctions.RANGE);
-		defineBuiltinFunction(BuiltinFunctions.CLOCK);
-		defineBuiltinFunction(BuiltinFunctions.GET_ATTR);
-		defineBuiltinFunction(BuiltinFunctions.SET_ATTR);
+		defineBuiltinFunctions();
 		defineClass(Range.RANGE_CLASS);
 		defineClass(ArrayObj.ARRAY_CLASS);
 		defineClass(IntegerObj.INTEGER_CLASS);
@@ -38,6 +35,23 @@ public class GlobalEnvironment {
 		defineClass(StringObj.STRING_CLASS);
 		defineClass(BoolObj.BOOL_CLASS);
 		defineClass(ObjectClass.getObjClass());
+	}
+
+	private void defineBuiltinFunctions() {
+		for (Field field : BuiltinFunctions.class.getFields()) {
+			int modifiers = field.getModifiers();
+			if (!Modifier.isStatic(modifiers)) {
+				continue;
+			}
+			if (field.getType() == BuiltinFunctionEntity.class) {
+				try {
+					defineBuiltinFunction(
+						(BuiltinFunctionEntity) field.get(null));
+				} catch (Exception e) {
+					throw new Error(e);
+				}
+			}
+		}
 	}
 
 	private void defineBuiltinFunction(BuiltinFunctionEntity func) {
