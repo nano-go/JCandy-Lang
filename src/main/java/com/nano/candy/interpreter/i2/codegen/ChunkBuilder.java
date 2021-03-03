@@ -231,11 +231,11 @@ public class ChunkBuilder {
 	 *
 	 * @return the lable pc.
 	 */	
-	public int emitLable(byte opcode, int line) {
-		return emitLable(opcode, 0xFFFF, line);
+	public int emitLabel(byte opcode, int line) {
+		return emitLabel(opcode, 0xFFFF, line);
 	}
 
-	public int emitLable(byte opcode, int offset, int lineNumber) {
+	public int emitLabel(byte opcode, int offset, int lineNumber) {
 		emitop(opcode);
 		emit2(offset);
 		return cp - 2;

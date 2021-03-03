@@ -73,7 +73,8 @@ public class InterpreterImpl implements Interpreter {
 				"    at %s (%s: line %d)\n",
 				frame.name,
 				frame.chunk.getSourceFileName(),
-				frame.chunk.getLineNumber(frame.pc)
+				// Aborts error when the last instruction is executed.
+				frame.chunk.getLineNumber(frame.pc-1)
 			);
 			stackInfo.append(info);
 		}

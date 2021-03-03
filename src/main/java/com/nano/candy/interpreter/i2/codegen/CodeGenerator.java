@@ -23,38 +23,32 @@ import static com.nano.candy.interpreter.i2.rtda.ConstantValue.*;
 public class CodeGenerator implements AstVisitor<Void, Void> {
 	
 	/**
-	 * A loop marker represents a current loop.
+	 * This saves the beginning position of the current loop which is
+	 * used for the 'continue' label, and the break labels which is back
+	 * patched at the end of the loop.
 	 */
-	private class LoopMarker {
-		
-		/**
-		 * The begin position of the current loop.
-		 */
-		public int beginPosition;
-		
-		/**
-		 * the unresolve lable of Break statements.
-		 */
-		public int[] lablePosOfBreakStmts;
+	private class LoopMarker {	
+		public int beginningPos;	
+		public int[] breakLabels;
 		public int bp;
 		
 		public LoopMarker(int beginPosition) {
-			this.beginPosition = beginPosition;
-			this.lablePosOfBreakStmts = new int[4]; 
+			this.beginningPos = beginPosition;
+			this.breakLabels = new int[4]; 
 		}
 		
 		public void addLableForBreak(int position) {
-			lablePosOfBreakStmts = ArrayUtils.growCapacity(
-				lablePosOfBreakStmts, bp
+			breakLabels = ArrayUtils.growCapacity(
+				breakLabels, bp
 			);
-			lablePosOfBreakStmts[bp ++] = position;
+			breakLabels[bp ++] = position;
 		}
 		
-		public void concatenetesLableforBreak() {
+		public void concatenetesLabelforBreak() {
 			for (int i = 0; i < bp; i ++) {
-				builder.backpatch(lablePosOfBreakStmts[i]);
+				builder.backpatch(breakLabels[i]);
 			}
-			lablePosOfBreakStmts = null;
+			breakLabels = null;
 		}
 	}
 
@@ -116,7 +110,7 @@ public class CodeGenerator implements AstVisitor<Void, Void> {
 	 * Declares a variable in the current local scope.
 	 *
 	 * @return the slot of the given variable or -1 if the current scope 
-	 *         is the global scope.
+	 *         is the global.
 	 */
 	private int declrVariable(String name) {
 		if (locals.isInGlobal()) {
@@ -130,7 +124,7 @@ public class CodeGenerator implements AstVisitor<Void, Void> {
 	}
 	
 	/**
-	 * Defines a declared variable or global variable.
+	 * Defines a declared or global variable.
 	 */
 	private void defineVariable(String name, int line) {
 		if (locals.isInGlobal()) {
@@ -146,7 +140,7 @@ public class CodeGenerator implements AstVisitor<Void, Void> {
 	}
 	
 	/**
-	 * Generate code to load a named variable to stack top.
+	 * Generates code to load a named variable to stack top.
 	 */ 
 	private void loadVariable(String name, int line) {
 		int slot = locals.resolveLocal(name);
@@ -161,7 +155,7 @@ public class CodeGenerator implements AstVisitor<Void, Void> {
 	}
 	
 	/**
-	 * Generate code to store the stack-top operand to the given 
+	 * Generates code to store the stack-top operand to the given 
 	 * named variable.
 	 */ 
 	private void storeVariable(String name, int line) {
@@ -312,9 +306,6 @@ public class CodeGenerator implements AstVisitor<Void, Void> {
 		return methodInfo;
 	}
 	
-	/**
-	 * Gen bytes in the specified format for the given upvalues.
-	 */
 	private byte[] genUpvalueBytes(LocalsTable.Upvalue[] upvalues) {
 		byte[] upvalueBytes = new byte[upvalues.length*2];
 		for (int i = 0; i < upvalues.length; i ++) {
@@ -430,18 +421,18 @@ public class CodeGenerator implements AstVisitor<Void, Void> {
 		int jumpOutLable = -1;
 		if (!isTrueConstant) {
 			node.condition.accept(this);
-			jumpOutLable = builder.emitLable(OP_POP_JUMP_IF_FALSE, line(node));
+			jumpOutLable = builder.emitLabel(OP_POP_JUMP_IF_FALSE, line(node));
 		}
 		
 		node.body.accept(this);
-		// Jump back to the begin position of While statement
-		builder.emitLable(OP_LOOP, builder.curCp() - loopPos + 1, -1);
+		// Jump back to the beginning position of the While statement
+		builder.emitLabel(OP_LOOP, builder.curCp() - loopPos + 1, -1);
 		
 		if (!isTrueConstant) {
 			builder.backpatch(jumpOutLable);
 		}
 		
-		loopMarkers.pop().concatenetesLableforBreak();
+		loopMarkers.pop().concatenetesLabelforBreak();
 		return null;
 	}
 
@@ -458,16 +449,16 @@ public class CodeGenerator implements AstVisitor<Void, Void> {
 		loopMarkers.push(new LoopMarker(loopPos));
 		
 		invokeHasNext();
-		int jumpOutLable = builder.emitLable(OP_POP_JUMP_IF_FALSE, -1);
+		int jumpOutLabel = builder.emitLabel(OP_POP_JUMP_IF_FALSE, -1);
 		invokeNext(iteratingVarSlot, iteratorIndex);	
 		
 		for (Stmt stmt : node.body.stmts) {
 			stmt.accept(this);
 		}
-		builder.emitLable(OP_LOOP, (builder.curCp() - loopPos + 1), -1);
+		builder.emitLabel(OP_LOOP, (builder.curCp() - loopPos + 1), -1);
 		
-		builder.backpatch(jumpOutLable);
-		loopMarkers.pop().concatenetesLableforBreak();
+		builder.backpatch(jumpOutLabel);
+		loopMarkers.pop().concatenetesLabelforBreak();
 		builder.emitop(OP_POP);
 		closeScope(true);	
 		return null;
@@ -494,8 +485,8 @@ public class CodeGenerator implements AstVisitor<Void, Void> {
 	
 	@Override
 	public Void visit(Stmt.Continue node) {
-		int continuePos = loopMarkers.peek().beginPosition;
-		builder.emitLable(
+		int continuePos = loopMarkers.peek().beginningPos;
+		builder.emitLabel(
 			OP_LOOP, (builder.curCp() - continuePos + 1), line(node)
 		);
 		return null;
@@ -504,7 +495,7 @@ public class CodeGenerator implements AstVisitor<Void, Void> {
 	@Override
 	public Void visit(Stmt.Break node) {
 		loopMarkers.peek().addLableForBreak(
-			builder.emitLable(OP_JUMP, line(node))
+			builder.emitLabel(OP_JUMP, line(node))
 		);
 		return null;
 	}
@@ -514,13 +505,13 @@ public class CodeGenerator implements AstVisitor<Void, Void> {
 		node.condition.accept(this);
 		// Jump to the beginning of the else block or jump out 
 		// of the If statement.
-		int jumpToElseLable = builder.emitLable(OP_POP_JUMP_IF_FALSE, line(node));
+		int jumpToElseLable = builder.emitLabel(OP_POP_JUMP_IF_FALSE, line(node));
 		
 		node.thenBody.accept(this);
 		if (node.elseBody.isPresent()) {
 			// If the else block exists, VM needs to skip the else block
 			// at the end of then-body.
-			int jumpOutIfLable = builder.emitLable(OP_JUMP, -1);
+			int jumpOutIfLable = builder.emitLabel(OP_JUMP, -1);
 			
 			builder.backpatch(jumpToElseLable);			
 			node.elseBody.get().accept(this);
@@ -535,7 +526,7 @@ public class CodeGenerator implements AstVisitor<Void, Void> {
 	@Override
 	public Void visit(Stmt.Assert node) {
 		node.condition.accept(this);
-		int lable = builder.emitLable(OP_POP_JUMP_IF_TRUE, line(node));
+		int lable = builder.emitLabel(OP_POP_JUMP_IF_TRUE, line(node));
 		node.errorInfo.accept(this);
 		builder.emitop(OP_ASSERT, line(node));
 		builder.backpatch(lable);
@@ -632,10 +623,10 @@ public class CodeGenerator implements AstVisitor<Void, Void> {
 		int opLine = node.operatorPos.getLine();
 		switch (node.operator) {
 			case LOGICAL_AND:
-				bp = builder.emitLable(OP_JUMP_IF_FALSE, opLine);
+				bp = builder.emitLabel(OP_JUMP_IF_FALSE, opLine);
 				break;
 			case LOGICAL_OR:
-				bp = builder.emitLable(OP_JUMP_IF_TRUE, opLine);
+				bp = builder.emitLabel(OP_JUMP_IF_TRUE, opLine);
 				break;
 			default:
 				throw new Error(node.operator.getLiteral());

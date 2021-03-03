@@ -253,7 +253,7 @@ public final class VM {
 				}
 				
 				/**
-				 * Lable Instructions.
+				 * Label Instructions.
 				 */
 				case OP_POP_JUMP_IF_FALSE: {
 					if (!pop().boolValue(this).value()) {
