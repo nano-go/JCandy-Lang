@@ -12,6 +12,8 @@ import com.nano.candy.interpreter.i2.builtin.utils.ObjectHelper;
 import com.nano.candy.interpreter.i2.error.TypeError;
 import com.nano.candy.interpreter.i2.vm.VM;
 import com.nano.candy.std.StringFunctions;
+import com.nano.candy.utils.ArrayUtils;
+import java.util.ArrayList;
 
 @BuiltinClass("String")
 public class StringObj extends BuiltinObject {
@@ -98,7 +100,7 @@ public class StringObj extends BuiltinObject {
 		long endIndex = ObjectHelper.asInteger(vm.pop());
 		final int size = value.length();
 		IndexError.checkIndex(beginIndex, size);
-		IndexError.checkIndex(endIndex, size);
+		IndexError.checkIndex(endIndex, size+1);
 		if (beginIndex > endIndex) {
 			vm.returnFromVM(EMPTY_STR);
 			return;
@@ -122,6 +124,62 @@ public class StringObj extends BuiltinObject {
 	public void endWith(VM vm) {
 		String str = vm.pop().strApiExeUser(vm).value;
 		vm.returnFromVM(BoolObj.valueOf(value.endsWith(str)));
+	}
+	
+	@BuiltinMethod(name = "split", argc = 1)
+	public void split(VM vm) {
+		String regex = ObjectHelper.asString(vm.pop());
+		String[] res = value.split(regex);
+		CandyObject[] elements = new CandyObject[res.length];
+		for (int i = 0; i < res.length; i ++) {
+			elements[i] = valueOf(res[i]);
+		}
+		vm.returnFromVM(new ArrayObj(elements));
+	}
+	
+	@BuiltinMethod(name = "splitlines", argc = 0)
+	public void splitlines(VM vm) {
+		if (value.length() == 0) {
+			vm.returnFromVM(new ArrayObj(0));
+			return;
+		}
+		ArrayList<CandyObject> lines = new ArrayList<CandyObject>();
+		char[] buffer = new char[Math.min(value.length(), 128)];
+		int bp = 0;
+		char[] chars = value.toCharArray();
+		for (int i = 0; i < chars.length; i ++) {
+			if (chars[i] == '\n') {
+				lines.add(valueOf(String.valueOf(buffer, 0, bp)));
+				bp = 0;
+			} else {
+				ArrayUtils.growCapacity(buffer, bp);
+				buffer[bp ++] = chars[i];
+			}
+		}
+		if (chars[chars.length-1] != '\n') {
+			lines.add(valueOf(String.valueOf(buffer, 0, bp)));
+		}
+		vm.returnFromVM(new ArrayObj(lines.toArray(ArrayObj.EMPTY_ARRAY)));
+	}
+	
+	@BuiltinMethod(name = "trim")
+	public void trim(VM vm) {
+		vm.returnFromVM(valueOf(value.trim()));
+	}
+	
+	@BuiltinMethod(name = "replaceFirst", argc = 2)
+	public void replace(VM vm) {
+		String regex = ObjectHelper.asString(vm.pop());
+		String replacement = vm.pop().strApiExeUser(vm).value;
+		vm.returnFromVM(valueOf(value.replaceFirst(regex, replacement)));
+	}
+	
+
+	@BuiltinMethod(name = "replaceAll", argc = 2)
+	public void replaceAll(VM vm) {
+		String regex = ObjectHelper.asString(vm.pop());
+		String replacement = vm.pop().strApiExeUser(vm).value;
+		vm.returnFromVM(valueOf(value.replaceAll(regex, replacement)));
 	}
 	
 	@BuiltinMethod(name = "join", argc = 1)
