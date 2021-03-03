@@ -3,7 +3,6 @@ import java.io.IOException;
 import java.io.Writer;
 import java.util.ArrayList;
 import java.util.List;
-import com.nano.candy.utils.Logger.LogMessage;
 
 public class CandyLogger extends Logger {
 	
