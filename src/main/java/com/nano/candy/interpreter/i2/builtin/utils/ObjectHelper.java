@@ -1,5 +1,5 @@
 package com.nano.candy.interpreter.i2.builtin.utils;
-import com.nano.candy.interpreter.error.CandyNullPointerError;
+
 import com.nano.candy.interpreter.i2.builtin.CandyObject;
 import com.nano.candy.interpreter.i2.builtin.functions.BuiltinFunctionEntity;
 import com.nano.candy.interpreter.i2.builtin.functions.Callback;
@@ -11,6 +11,7 @@ import com.nano.candy.interpreter.i2.builtin.type.classes.BoundBuiltinMethod;
 import com.nano.candy.interpreter.i2.builtin.type.classes.CandyClass;
 import com.nano.candy.interpreter.i2.builtin.type.classes.MethodCallback;
 import com.nano.candy.interpreter.i2.error.ArgumentError;
+import com.nano.candy.interpreter.i2.error.NullPointerError;
 import com.nano.candy.interpreter.i2.error.TypeError;
 import com.nano.candy.interpreter.i2.vm.VM;
 
@@ -23,7 +24,7 @@ public class ObjectHelper {
 	
 	public static void checkNullObject(CandyObject obj, String msg, Object... args) {
 		if (obj == null) {
-			throw new CandyNullPointerError(String.format(msg, args));
+			throw new NullPointerError(String.format(msg, args));
 		}
 	}
 	

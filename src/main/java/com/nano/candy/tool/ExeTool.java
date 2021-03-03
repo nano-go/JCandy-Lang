@@ -1,7 +1,6 @@
 package com.nano.candy.tool;
 import com.nano.candy.ast.Program;
 import com.nano.candy.interpreter.Interpreter;
-import com.nano.candy.interpreter.error.ExitError;
 import com.nano.candy.main.CandyOptions;
 import com.nano.candy.parser.ParserFactory;
 import com.nano.candy.utils.Logger;
@@ -83,20 +82,16 @@ public class ExeTool implements CandyTool {
 	                          String fileName, 
 	                          String content, 
 	                          boolean exitIfError, 
-	                          boolean interactively) throws IOException {
-		try {
-			Program program = ParserFactory.newParser(fileName, content).parse();
-			if (!logger.printAllMessage(exitIfError)) {
-				return false;
-			}
-			interpreter.load(program, interactively);
-			if (!logger.printAllMessage(exitIfError)) {
-				return false;
-			}
-			return interpreter.run(interactively);
-		} catch (ExitError e) {
-			System.exit(e.getCode());
+	                          boolean interactively) throws IOException
+	{
+		Program program = ParserFactory.newParser(fileName, content).parse();
+		if (!logger.printAllMessage(exitIfError)) {
+			return false;
 		}
-		return false;
+		interpreter.load(program, interactively);
+		if (!logger.printAllMessage(exitIfError)) {
+			return false;
+		}
+		return interpreter.run(interactively);
 	}
 }
