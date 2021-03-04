@@ -20,3 +20,15 @@ assert i == 1024
 var i = 0
 assert !(true && (i = 15)) || (i *= 2)
 assert i == 30
+
+var gint = 0
+var gdouble = 0.0
+var gnil = null
+
+fun test() {
+	assert gint || gnil
+	assert !(gint && gnil)
+	assert !(gnil)
+}
+
+test()

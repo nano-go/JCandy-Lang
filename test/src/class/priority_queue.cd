@@ -1,0 +1,128 @@
+
+/**
+ * Verify Result.
+ */
+fun insertionSort(arr, left, right) {
+	if (right <= left) return
+	for (i in range(left, right)) {
+		var j = i
+		var e = arr[j + 1]
+		while (j >= 0 && e < arr[j]) {
+			arr[j + 1] = arr[j]
+			j -= 1
+		}
+		arr[j + 1] = e
+	}
+}
+
+fun quickSort(arr) {
+	fun partition(arr, left, right) {
+		var swap = arr.swap
+		
+		var pivotIndex = range(left, right + 1).rand()
+		swap(pivotIndex, left)
+		var pivot = arr[left]
+		var l = left
+		var r = right+1
+		while (true) {
+			while (arr[l += 1] < pivot) {
+				if (l == right) break
+			}
+			while (arr[r -= 1] >= pivot)  {
+				if (r == left) break
+			}
+			if (r <= l) break
+			swap(l, r)
+		}
+		swap(r, left)
+		return r
+	}
+	
+	fun qs(arr, left, right) {
+		if (right - left <= 17) {
+			insertionSort(arr, left, right)
+			return
+		}
+		var mid = partition(arr, left, right)
+		qs(arr, left, mid - 1)
+		qs(arr, mid + 1, right)
+	}
+	
+	qs(arr, 0, arr.size() - 1)
+}
+
+class PriorityQueue {
+	init() {
+		this.heap = []
+	}
+	
+	_swim(i) {
+		var parent = (i-1)/2
+		var heap = this.heap
+		while (i != 0 && heap[i] < heap[parent]) {
+			heap.swap(i, parent)
+			i = parent
+			parent = (i-1)/2
+		}
+	}
+	
+	_skin(i) {
+		var heap = this.heap
+		var size = heap.size()
+		while (true) {
+			var child = i*2 + 1
+			if (child >= size) break
+			if (child + 1 < size && 
+			     heap[child + 1] < heap[child]) {
+				child += 1
+			}
+			if (heap[i] < heap[child]) break
+			heap.swap(i, child)
+			i = child
+		}
+	}
+	
+	offer(element) {
+		var heap = this.heap
+		var size = this.heap.size()
+		heap.append(element)
+		this._swim(size)
+	}
+	
+	poll() {
+		var heap = this.heap
+		var size = this.heap.size()
+		var last = heap.deleteAt(size-1)
+		if (size == 1) {
+			return last
+		}
+		var ret = heap[0]
+		heap[0] = last
+		this._skin(0)
+		return ret
+	}
+}
+
+fun test() {
+	var pq = PriorityQueue()
+	var arr = [0, 5, 2, -3, 7, 2, -1]
+	var ans = [-3, -1, 0, 2, 2, 5, 7]
+	
+	for (i in arr) pq.offer(i)
+	for (i in ans) assert pq.poll() == i
+	
+	for (i in range(0, 50)) {
+		pq = PriorityQueue()
+		var ans = []
+		var randSize = range(0, 50).rand()
+		for (i in range(0, randSize)) {
+			var randE = range(-10000, 10000).rand()
+			pq.offer(randE)
+			ans.append(randE)
+		}
+		quickSort(ans)
+		for (e in ans) assert pq.poll() == e
+	}
+}
+
+test()
