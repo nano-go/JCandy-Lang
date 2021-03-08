@@ -1,4 +1,4 @@
-package com.nano.candy.interpreter.i2.vm;
+package com.nano.candy.interpreter.i2.vm.debug;
 
 import com.nano.candy.interpreter.i2.instruction.Instructions;
 import com.nano.candy.interpreter.i2.rtda.Frame;

@@ -1,14 +1,14 @@
 package com.nano.candy.interpreter.i2.codegen;
 
-import com.nano.candy.interpreter.i2.rtda.Chunk;
-import com.nano.candy.interpreter.i2.rtda.ChunkAttributes;
-import com.nano.candy.interpreter.i2.rtda.ConstantValue;
+import com.nano.candy.interpreter.i2.rtda.chunk.Chunk;
+import com.nano.candy.interpreter.i2.rtda.chunk.ChunkAttributes;
+import com.nano.candy.interpreter.i2.rtda.chunk.ConstantValue;
 import java.util.ArrayList;
 import java.util.Arrays;
 
 import static com.nano.candy.interpreter.i2.instruction.Instructions.*;
-import static com.nano.candy.interpreter.i2.rtda.ChunkAttributes.*;
-import static com.nano.candy.interpreter.i2.rtda.ConstantValue.*;
+import static com.nano.candy.interpreter.i2.rtda.chunk.ChunkAttributes.*;
+import static com.nano.candy.interpreter.i2.rtda.chunk.ConstantValue.*;
 
 public class ChunkBuilder {
 	

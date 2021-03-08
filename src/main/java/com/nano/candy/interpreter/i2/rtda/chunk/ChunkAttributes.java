@@ -1,4 +1,4 @@
-package com.nano.candy.interpreter.i2.rtda;
+package com.nano.candy.interpreter.i2.rtda.chunk;
 
 public class ChunkAttributes {
 	

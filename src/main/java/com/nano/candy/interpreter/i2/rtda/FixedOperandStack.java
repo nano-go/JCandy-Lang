@@ -1,7 +1,7 @@
 package com.nano.candy.interpreter.i2.rtda;
 import com.nano.candy.interpreter.i2.builtin.CandyObject;
 
-public class FixedOperandStack implements OperandStack {
+public final class FixedOperandStack implements OperandStack {
 	
 	private CandyObject[] opStack;
 	private int sp;

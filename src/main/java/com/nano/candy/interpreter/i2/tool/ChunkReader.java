@@ -1,9 +1,9 @@
 package com.nano.candy.interpreter.i2.tool;
 
-import com.nano.candy.interpreter.i2.rtda.Chunk;
-import com.nano.candy.interpreter.i2.rtda.ChunkAttributes;
-import com.nano.candy.interpreter.i2.rtda.ConstantPool;
-import com.nano.candy.interpreter.i2.rtda.ConstantValue;
+import com.nano.candy.interpreter.i2.rtda.chunk.Chunk;
+import com.nano.candy.interpreter.i2.rtda.chunk.ChunkAttributes;
+import com.nano.candy.interpreter.i2.rtda.chunk.ConstantPool;
+import com.nano.candy.interpreter.i2.rtda.chunk.ConstantValue;
 
 public class ChunkReader {
 	

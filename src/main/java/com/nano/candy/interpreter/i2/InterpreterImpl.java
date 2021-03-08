@@ -7,8 +7,8 @@ import com.nano.candy.interpreter.i2.codegen.CodeGenerator;
 import com.nano.candy.interpreter.i2.error.CandyRuntimeError;
 import com.nano.candy.interpreter.i2.error.NativeError;
 import com.nano.candy.interpreter.i2.rtda.Frame;
-import com.nano.candy.interpreter.i2.vm.InstructionBenchmarking;
 import com.nano.candy.interpreter.i2.vm.VM;
+import com.nano.candy.interpreter.i2.vm.debug.InstructionBenchmarking;
 import com.nano.candy.utils.Logger;
 
 public class InterpreterImpl implements Interpreter {

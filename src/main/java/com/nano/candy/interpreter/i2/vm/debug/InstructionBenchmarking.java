@@ -1,38 +1,39 @@
-package com.nano.candy.interpreter.i2.vm;
+package com.nano.candy.interpreter.i2.vm.debug;
+
 import com.nano.candy.interpreter.i2.instruction.Instructions;
 import com.nano.candy.utils.TableView;
 
 public class InstructionBenchmarking {
-	
+
 	public static final boolean DEBUG = false;
-	
+
 	private static final InstructionBenchmarking instance = new InstructionBenchmarking();
-	
+
 	public static InstructionBenchmarking getInstance() {
 		return instance;
 	}
-	
+
 	private int[] exeCounter;
 	private long[] totalDuration;
-	
+
 	private long start;
 	private byte opcode;
-	
+
 	public InstructionBenchmarking() {
 		exeCounter = new int[Instructions.INSTRUCTION_NUMBER];
 		totalDuration = new long[Instructions.INSTRUCTION_NUMBER];
 	}
-	
+
 	public void startExeInstructoon(byte opcode) {
 		this.exeCounter[opcode] ++;
 		this.opcode = opcode;
 		this.start = System.nanoTime();
 	}
-	
+
 	public void endExeInstruction() {
 		this.totalDuration[opcode] += System.nanoTime() - start;
 	}
-	
+
 	public void printResult() {
 		TableView tableView = new TableView();
 		tableView.setSpace("  ");
@@ -43,7 +44,7 @@ public class InstructionBenchmarking {
 			if (exeCounter[opcode] < 50 || opcode == Instructions.OP_EXIT) {
 				continue;
 			}
-			
+
 			validInsCount ++;
 			long averageExeTime = totalDuration[opcode] / exeCounter[opcode];		
 			long ops;
@@ -53,7 +54,7 @@ public class InstructionBenchmarking {
 				ops = (long)Math.pow(10, 9);
 			}
 			averageTotal += averageExeTime;
-			
+
 			tableView.addItem(
 				Instructions.getName(opcode),
 				String.valueOf(exeCounter[opcode]),

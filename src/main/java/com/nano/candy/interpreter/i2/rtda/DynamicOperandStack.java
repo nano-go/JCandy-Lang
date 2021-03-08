@@ -3,7 +3,7 @@ package com.nano.candy.interpreter.i2.rtda;
 import com.nano.candy.interpreter.i2.builtin.CandyObject;
 import com.nano.candy.utils.ArrayUtils;
 
-public class DynamicOperandStack implements OperandStack {
+public final class DynamicOperandStack implements OperandStack {
 	
 	private CandyObject[] opStack;
 	private int sp;

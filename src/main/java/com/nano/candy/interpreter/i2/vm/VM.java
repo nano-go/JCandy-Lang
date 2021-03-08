@@ -7,22 +7,24 @@ import com.nano.candy.interpreter.i2.builtin.type.CallableObj;
 import com.nano.candy.interpreter.i2.builtin.type.DoubleObj;
 import com.nano.candy.interpreter.i2.builtin.type.IntegerObj;
 import com.nano.candy.interpreter.i2.builtin.type.NullPointer;
+import com.nano.candy.interpreter.i2.builtin.type.PrototypeFunctionObj;
 import com.nano.candy.interpreter.i2.builtin.type.StringObj;
-import com.nano.candy.interpreter.i2.builtin.type.UserFunctionObj;
 import com.nano.candy.interpreter.i2.builtin.type.classes.CandyClass;
 import com.nano.candy.interpreter.i2.builtin.type.classes.ObjectClass;
 import com.nano.candy.interpreter.i2.builtin.utils.ObjectHelper;
 import com.nano.candy.interpreter.i2.error.CandyRuntimeError;
 import com.nano.candy.interpreter.i2.error.TypeError;
-import com.nano.candy.interpreter.i2.rtda.Chunk;
-import com.nano.candy.interpreter.i2.rtda.ChunkAttributes;
-import com.nano.candy.interpreter.i2.rtda.ConstantPool;
-import com.nano.candy.interpreter.i2.rtda.ConstantValue;
 import com.nano.candy.interpreter.i2.rtda.Frame;
 import com.nano.candy.interpreter.i2.rtda.GlobalEnvironment;
 import com.nano.candy.interpreter.i2.rtda.OperandStack;
 import com.nano.candy.interpreter.i2.rtda.UpvalueObj;
+import com.nano.candy.interpreter.i2.rtda.chunk.Chunk;
+import com.nano.candy.interpreter.i2.rtda.chunk.ChunkAttributes;
+import com.nano.candy.interpreter.i2.rtda.chunk.ConstantPool;
+import com.nano.candy.interpreter.i2.rtda.chunk.ConstantValue;
 import com.nano.candy.interpreter.i2.tool.DisassembleTool;
+import com.nano.candy.interpreter.i2.vm.debug.DebugHelper;
+import com.nano.candy.interpreter.i2.vm.debug.InstructionBenchmarking;
 import java.util.Arrays;
 
 import static com.nano.candy.interpreter.i2.instruction.Instructions.*;
@@ -175,16 +177,15 @@ public final class VM {
 		return (code[pc ++] << 8) & 0xFFFF | code[pc ++] & 0xFF;
 	}
 	
-	private UserFunctionObj makeFunctionObject(CandyClass clazz, ConstantValue.MethodInfo methodInfo) {
+	private PrototypeFunctionObj makeFunctionObject(CandyClass clazz, ConstantValue.MethodInfo methodInfo) {
 		UpvalueObj[] upvalues = frame.makeUpvalueObjs(methodInfo);
 		String tagName = methodInfo.name;
 		if (clazz != null) {
 			tagName = ObjectHelper.methodName(clazz, tagName);
 		}
-		return new UserFunctionObj(
+		return new PrototypeFunctionObj(
 			frame.chunk, pc, 
-			methodInfo.name, tagName, upvalues,
-			methodInfo.arity, methodInfo.slots, methodInfo.stackSize
+			upvalues, tagName, methodInfo
 		);
 	}
 	

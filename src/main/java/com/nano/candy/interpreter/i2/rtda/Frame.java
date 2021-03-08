@@ -1,5 +1,8 @@
 package com.nano.candy.interpreter.i2.rtda;
 import com.nano.candy.interpreter.i2.builtin.CandyObject;
+import com.nano.candy.interpreter.i2.rtda.chunk.Chunk;
+import com.nano.candy.interpreter.i2.rtda.chunk.ChunkAttributes;
+import com.nano.candy.interpreter.i2.rtda.chunk.ConstantValue;
 import java.util.LinkedList;
 import java.util.ListIterator;
 
