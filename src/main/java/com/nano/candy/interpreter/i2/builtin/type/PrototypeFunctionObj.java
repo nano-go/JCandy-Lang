@@ -1,12 +1,13 @@
 package com.nano.candy.interpreter.i2.builtin.type;
 
 import com.nano.candy.interpreter.i2.builtin.type.CallableObj;
-import com.nano.candy.interpreter.i2.rtda.Chunk;
 import com.nano.candy.interpreter.i2.rtda.Frame;
 import com.nano.candy.interpreter.i2.rtda.UpvalueObj;
+import com.nano.candy.interpreter.i2.rtda.chunk.Chunk;
+import com.nano.candy.interpreter.i2.rtda.chunk.ConstantValue;
 import com.nano.candy.interpreter.i2.vm.VM;
 
-public class UserFunctionObj extends CallableObj {
+public class PrototypeFunctionObj extends CallableObj {
 
 	private Chunk chunk;
 	private int pc;
@@ -15,14 +16,14 @@ public class UserFunctionObj extends CallableObj {
 	private int slots;
 	private int stackSize;
 	
-	public UserFunctionObj(Chunk chunk, int pc, String declredName, String name, 
-	                       UpvalueObj[] upvalues, int arity, int slots, int stackSize) {
-		super(declredName, name, arity);
+	public PrototypeFunctionObj(Chunk chunk, int pc, UpvalueObj[] upvalues, 
+		                        String name, ConstantValue.MethodInfo methodInfo) {
+		super(methodInfo.name, name, methodInfo.arity);
 		this.chunk = chunk;
 		this.pc = pc;
 		this.upvalues = upvalues;
-		this.slots = slots;
-		this.stackSize = stackSize;
+		this.slots = methodInfo.slots;
+		this.stackSize = methodInfo.stackSize;
 	}
 
 	public Chunk getChunk() {
