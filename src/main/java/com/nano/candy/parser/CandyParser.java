@@ -15,27 +15,36 @@ import static com.nano.candy.parser.TokenKind.*;
 class CandyParser implements Parser {
 	
 	public static final String INITIALIZER_NAME = "init";
+	private static final int LOOKAHEAD_K = 2;
 
 	protected final Logger logger = Logger.getLogger();
 
 	protected Scanner scanner;
-
+	private Token[] lookahead;
+	private int lp;
 	private Token previous;
 	private Token peek;
 	
 	/**
-	 * In some cases I hope the SEMI token can be ignored.
-	 * <p>e.g: {@code foreach(lambda e -> println(e))}</p>
-	 * In which the {@code println(e)} will be parsed as an expression statement.
-	 * I want this code can work instead of reporting the following error:
-	 * <p>{@code println(e) Missing ';'.}</p>
+	 * In some cases, I hope the SEMI at the end of a statement can be ignored.
+	 * E.g: {@code foreach(lambda e -> println(e))}
+	 *
+	 * I want this code to be valid instead of reporting the following error:
+	 * <code> Missing ';' after 'println(e)' </code>
 	 */
 	private boolean singleLineLambda;
 
 	public CandyParser(Scanner scanner) {
 		this.scanner = scanner;
 		this.peek = scanner.peek();
+		// avoid null pointer.
 		this.previous = peek;
+		this.lookahead = new Token[LOOKAHEAD_K];
+		this.lookahead[0] = peek;
+		for (int i = 1; i < LOOKAHEAD_K; i ++) {
+			lookahead[i] = scanner.nextToken();
+		}
+		this.lp = 0;
 	}
 
 
@@ -64,6 +73,10 @@ class CandyParser implements Parser {
 	protected Token peek() {
 		return peek;
 	}
+	
+	protected Token peek(int k) {
+		return lookahead[(lp + k) % LOOKAHEAD_K];
+	}
 
 	protected Token previous() {
 		return previous;
@@ -75,7 +88,9 @@ class CandyParser implements Parser {
 
 	protected Token nextToken() {
 		previous = peek();
-		peek = scanner.nextToken();
+		lookahead[lp] = scanner.nextToken();
+		lp = (lp + 1) % LOOKAHEAD_K;
+		peek = lookahead[lp];
 		return peek;
 	}
 
@@ -118,7 +133,6 @@ class CandyParser implements Parser {
 			return;
 		}
 		
-		// I want that the ';' is unforced if the previous token is '}'.
 		// e.g: function = lambda -> { return value }
 		matchIf(SEMI, previous().getKind() != RBRACE);
 	}
@@ -185,7 +199,7 @@ class CandyParser implements Parser {
 	}
 	
 	/**
-	 * Replace the current token with new token kind.
+	 * Replace the current token with a new token kind.
 	 */
 	protected Token insertToken(TokenKind kind) {
 		Token insertedToken = new Token(peek.getPos(), kind.getLiteral(), kind);
@@ -200,10 +214,7 @@ class CandyParser implements Parser {
 	protected void error(Position pos, String message, Object... args) {
 		logger.error(pos, String.format(message, args));
 	}
-
-	/**
-	 * Called by {@link #match(TokenKind)}
-	 */
+	
 	protected void onError(TokenKind expected, Token actual) {
 		error(actual, "Expetced '%s', but was '%s'.", 
 			tokStr(expected), tokStr(actual.getKind())
