@@ -14,7 +14,7 @@ public class ParserTestCase {
 	
 	static final Logger logger = Logger.getLogger() ;
 	
-	public static CandyTestCase[] UNEXPECTED_ERROR_CASES = {
+	public static final CandyTestCase[] UNEXPECTED_ERROR_CASES = {
 		newUECase("var a = 5; a += 15; a -= 15; a *= 15; a /= 15; a %= 15"),
 		newUECase("var arr = [1, 5 + 6, lambda a,b -> 9, c] + 123 * 5"),
 		newUECase("var arr = [1, 5 + 6, a = 15, false]"),
@@ -51,6 +51,7 @@ public class ParserTestCase {
 		newUECase("var lambdaExpr = lambda a, b -> return b"),
 		newUECase("var a = lambda a -> return lambda a -> a"),
 		newUECase("a.b.c = 1566 * 55\n manager.getUser(5).getId = lambda -> return user.id"),
+		newUECase("stream()\n\t.filter(a).map(b).\nlimit(5)\n.skip(15)\n"),
 		newUECase("_call(a, lambda a -> a)"),
 		newUECase("_call(lambda a -> a)"),
 		newUECase("class Point {\n x() { \n return x; } y() { \n return y; } }"),
@@ -78,11 +79,9 @@ public class ParserTestCase {
 		}
 	}
 	
-	public static CandyTestCase[] PARSER_ERROR_CASES = {
+	public static final CandyTestCase[] PARSER_ERROR_CASES = {
 		newETCase("var a += 5", loc(1, 7), loc(1, 7)),
 		newETCase("(a + b * 2", loc(1, 11)),
-		// newETCase("while (true)\n{break;}\nbreak", loc(3, 1)),
-		// newETCase("while (true)\n{while(true){} break;}\n{if (true) }", loc(3, 2))
 	} ;
 	
 	public static ErrorTestCase newETCase(String input, SimulationPositions.Location... expectedLocations) {
@@ -96,7 +95,7 @@ public class ParserTestCase {
 		
 		public ErrorTestCase(String input, SimulationPositions.Location... expected) {
 			this.expected = new SimulationPositions(input, expected) ;
-			actualPos = new ArrayList<>() ;
+			this.actualPos = new ArrayList<>() ;
 		}	
 		
 		@Override
@@ -109,8 +108,7 @@ public class ParserTestCase {
 			}
 			for (Logger.LogMessage msg : logger.getErrorMessages()) {
 				actualPos.add(msg.getPos()) ;
-			}
-			System.out.println(expected.input) ;
+			}		
 			LoggerMsgChecker.shouldAppearErrors(true, true) ;
 			assertArrayEquals(expected.positions, actualPos.toArray()) ;
 		}
