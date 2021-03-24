@@ -804,6 +804,13 @@ class CandyParser implements Parser {
 					expr = location(tok, new Expr.GetItem(expr, key));
 					continue;
 				
+				case SEMI:
+					// for supporting following chained syntax:
+					//     stream()\n.filter()\n.map()\n.close()
+					if (peek(1).getKind() != DOT) {
+						break;
+					} 
+					consume();
 				case DOT:
 					consume();
 					Token attr = match(IDENTIFIER);
