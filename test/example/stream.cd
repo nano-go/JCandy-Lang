@@ -1,0 +1,133 @@
+
+var FLAG_CONTINUE = Object()
+var FLAG_BREAK = Object()
+
+class Stream {
+	fun init(iterable) {
+		this.iterable = iterable
+		this.evalfs = []
+	}
+	
+	fun collect(collector) {
+		return collector(this)
+	}
+
+	fun filter(accepter) {
+		this.evalfs.append(lambda e -> {
+			if (accepter(e)) {
+				return e
+			}
+			return FLAG_CONTINUE
+		})
+		return this
+	}
+	
+	fun map(convertor) {
+		this.evalfs.append(convertor)
+		return this
+	}
+	
+	fun limit(n) {
+		this.evalfs.append(lambda e -> {
+			if (n <= 0) {
+				return FLAG_BREAK
+			}
+			n -= 1
+			return e
+		})
+		return this
+	}
+	
+	fun skip(n) {
+		this.evalfs.append(lambda e -> {
+			if (n > 0) {
+				n -= 1
+				return FLAG_CONTINUE
+			}
+			return e
+		})
+		return this
+	}
+	
+	fun foreach(f) {
+		var iterable = this.iterable
+		var evalfs = this.evalfs
+		for (e in iterable) {
+			var res = null
+			for (eval in evalfs) {
+				res = eval(e)
+				if (res == FLAG_CONTINUE || res == FLAG_BREAK) {
+					break
+				}
+				e = res
+			}
+			if (res == FLAG_CONTINUE) {
+				continue
+			}
+			if (res == FLAG_BREAK) {
+				break
+			}
+			f(e)
+		}
+		return this
+	}
+}
+
+fun arrayCollector(stream) {
+	var arr = []
+	stream.foreach(lambda e -> arr.append(e))
+	return arr
+}
+
+fun averageCollector(stream) {
+	var val = 0.0
+	var n = 0
+	stream.foreach(lambda e -> {
+		val += e
+		n += 1
+	})
+	return val / n
+}
+
+var students = Array(500, lambda i -> {
+	var student = Object()
+	student.age = range(18, 23).rand()
+	student.mathScore = range(15, 101).rand()
+	student.engScore = range(15, 101).rand()
+	student.csScore = range(15, 101).rand()
+	return student
+})
+
+fun expected(students) {
+	var avrg = 0.0
+	var limit = 0
+	var n = 0
+	for (s in students) {
+		if (s.age >= 20) {
+			var savrg = (s.mathScore + s.engScore + s.csScore) / 3
+			if (savrg >= 40) {
+				limit += 1
+				if (limit <= 20) {
+					continue
+				}
+				n += 1
+				avrg += savrg
+			}
+		}
+		if (limit >= 50) {
+			break
+		}
+	}
+	return avrg / n
+}
+
+var res = Stream(students)
+		.filter(lambda e -> e.age >= 20)
+		.map(lambda e -> (e.mathScore + e.engScore + e.csScore) / 3)
+		.filter(lambda e -> e >= 40)
+		.limit(50)
+		.skip(20)
+		.collect(averageCollector)
+
+assert res == expected(students)
+println(res)
