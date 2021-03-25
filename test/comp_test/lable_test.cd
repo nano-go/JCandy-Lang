@@ -1,0 +1,28 @@
+fun a() {
+	lable1:
+		for (i in range(0, 15)) {
+			lable1: // error
+				for (j in range(0, 20)) {
+					if (j + i % 8 == 0) {
+						continue lable1
+					}
+					if (j + i % 12 == 0) {
+						break lable2 // error
+					}
+				}
+		}
+}
+
+fun b() {
+	l1: while (true) {
+			break l1
+	}
+	
+	l1: for (i in range(0, 15)) {
+		l2: for (j in range(0, 15)) {
+			break l1
+		}
+		break l2 // error
+	}
+
+}

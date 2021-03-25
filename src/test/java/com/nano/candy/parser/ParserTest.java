@@ -39,6 +39,8 @@ public class ParserTest {
 		"for (i in b) \n b;",
 		"for (i in b) \n { b; }",
 		"for (i in a = lambda a,b -> a*b) {\nprintln(i);}",
+		"lable1: for(i in a) {\nlable2: while(true) {continue lable1; break lable2;}}",
+		"l1: while(true) {\nbreak l1;}",
 		"fun test(a, b, c) { return 0 ; }",
 		"fun test(a, b, c) { a * b * c ; }",
 		"fun test(a, b, c) \n { a * b * c ; }",
@@ -84,7 +86,8 @@ public class ParserTest {
 		newPECase("a. ", loc(1, 4)),
 		newPECase("fun ", loc(1, 5)),
 		newPECase("class ", loc(1, 7)),
-		newPECase("class a :", loc(1, 10))
+		newPECase("class a :", loc(1, 10)),
+		newPECase("lable1:\nvar a = ", loc(1, 7), loc(2, 9)),
 	};
 	 
 	public static ParserErrorCase newPECase(String input, SimulationPositions.Location... expectedLocations) {
