@@ -3,6 +3,7 @@ import com.nano.candy.ast.ASTreeNode;
 import com.nano.candy.ast.Expr;
 import com.nano.candy.ast.Program;
 import com.nano.candy.ast.Stmt;
+import com.nano.candy.std.Names;
 import com.nano.candy.utils.Logger;
 import com.nano.candy.utils.Position;
 import com.nano.common.text.StringUtils;
@@ -14,7 +15,7 @@ import static com.nano.candy.parser.TokenKind.*;
 
 class CandyParser implements Parser {
 	
-	public static final String INITIALIZER_NAME = "init";
+	private static final String INITIALIZER_NAME = Names.METHOD_INITALIZER;
 	private static final int LOOKAHEAD_K = 2;
 
 	protected final Logger logger = Logger.getLogger();
@@ -108,23 +109,31 @@ class CandyParser implements Parser {
 		}
 		return false;
 	}
-
-	private Position suitableErrorPosition() {
-		Position currentPosition = peek().getPos();
-		Position previousPosition = previous().getPos();
-		if (currentPosition.getLine() != previousPosition.getLine()) {
-			return previousPosition;
-		}
-		return currentPosition;
-	}
-
-	protected Token match(TokenKind tok) {
+	
+	protected Token matchIf(TokenKind tok, String errmsg, Object... args) {
 		Token actual = peek();
 		if (peek().getKind() == tok) {
 			consume();
 			return actual;
 		}
-		onError(tok, peek());
+		error(actual, errmsg, args);
+		return actual;
+	}
+	
+	protected Token match(TokenKind tok) {
+		return match(tok, "Expetced '%s', but was '%s'.", 
+			  tokStr(tok), tokStr(peek().getKind())
+		);
+	}
+	
+	protected Token match(TokenKind tok, String errmsg, Object... args) {
+		Token actual = peek();
+		if (peek().getKind() == tok) {
+			consume();
+			return actual;
+		}
+		error(actual, errmsg, args);
+		panic();
 		return actual;
 	}
 	
@@ -136,6 +145,15 @@ class CandyParser implements Parser {
 		// e.g: function = lambda -> { return value }
 		matchIf(SEMI, previous().getKind() != RBRACE);
 	}
+	
+	private Position suitableErrorPosition() {
+		Position currentPosition = peek().getPos();
+		Position previousPosition = previous().getPos();
+		if (currentPosition.getLine() != previousPosition.getLine()) {
+			return previousPosition;
+		}
+		return currentPosition;
+	}
 
 	/* =================== errors =================== */
 
@@ -144,7 +162,7 @@ class CandyParser implements Parser {
 		throw new ParserError();
 	}
 	
-	protected void synchronizeAtMethodContext() {
+	protected void synchronizeInMethodContext() {
 		loop: while (true) {
 			switch (peekKind()) {
 				case RBRACE:
@@ -182,7 +200,7 @@ class CandyParser implements Parser {
 	}
 	
 	/**
-	 * Ensures the current token kind is the expected kind.
+	 * Ensures the current token kind is specified expected kind.
 	 *
 	 * @param expectedKind the token kind must be in statement first set.
 	 */
@@ -213,13 +231,6 @@ class CandyParser implements Parser {
 
 	protected void error(Position pos, String message, Object... args) {
 		logger.error(pos, String.format(message, args));
-	}
-	
-	protected void onError(TokenKind expected, Token actual) {
-		error(actual, "Expetced '%s', but was '%s'.", 
-			tokStr(expected), tokStr(actual.getKind())
-		);
-		panic();
 	}
 	
 	/* =================== parse =================== */
@@ -384,7 +395,7 @@ class CandyParser implements Parser {
 	 */
 	private Stmt.ClassDef parseClassDef() {
 		Token beginTok = match(CLASS);
-		Token name = match(IDENTIFIER);
+		Token name = match(IDENTIFIER, "Expected class name.");
 		Expr.VarRef superClass = parseSuperClass();
 		matchIf(SEMI);
 		matchIf(LBRACE, true);
@@ -401,7 +412,7 @@ class CandyParser implements Parser {
 	 */
 	private Expr.VarRef parseSuperClass() {
 		if (matchIf(COLON)) {
-			Token name = match(IDENTIFIER);
+			Token name = match(IDENTIFIER, "Expected super class name.");
 			return location(name, new Expr.VarRef(name.getLiteral()));
 		}
 		return null;
@@ -418,7 +429,7 @@ class CandyParser implements Parser {
 				case FUN: case IDENTIFIER: 
 					break;
 				default:
-					synchronizeAtMethodContext();
+					synchronizeInMethodContext();
 					continue loop;
 			}
 			Stmt.FuncDef method = parseMethod();
@@ -533,7 +544,7 @@ class CandyParser implements Parser {
 	 */
 	private Stmt.VarDef parseVarDef() {
 		Token position = match(VAR);
-		Token identifier = match(IDENTIFIER);
+		Token identifier = match(IDENTIFIER, "Expected variable name.");
 		Expr initializer = null;
 		if (matchIf(ASSIGN)) {
 			initializer = parseExprOrLambda();
@@ -550,7 +561,7 @@ class CandyParser implements Parser {
 	 */
 	private Stmt.FuncDef parseFunDef() {
 		Token beginTok = match(FUN);
-		String name = match(IDENTIFIER).getLiteral();
+		String name = match(IDENTIFIER, "Expected function name.").getLiteral();
 		List<String> params = parseParams(true);
 		Stmt.Block body = toFuncBlock(parseBlock());
 		return location(beginTok, new Stmt.FuncDef(name, params, body));
@@ -560,9 +571,9 @@ class CandyParser implements Parser {
 	 * Params = ( ( "(" Parameters ")" ) | Parameters ) [ <SEMI> ]
 	 * Parameters = [ <IDENTIFIER> ( "." <IDENTIFIER> )*
 	 */
-	private List<String> parseParams(boolean mandatoryParenthesis) {
+	private List<String> parseParams(boolean forcibleParenthesis) {
 		ArrayList<String> params = new ArrayList<>(6);
-		boolean leftParenMatched = matchIf(LPAREN, mandatoryParenthesis);
+		boolean leftParenMatched = matchIf(LPAREN, forcibleParenthesis);
 		if (leftParenMatched && matchIf(RPAREN)) {
 			matchIf(SEMI);
 			return params;
@@ -575,9 +586,10 @@ class CandyParser implements Parser {
 			params.add(nameTok.getLiteral());
 		} while (matchIf(COMMA));
 		
-		if (mandatoryParenthesis || leftParenMatched) {
-			matchIf(RPAREN, true);
+		if (forcibleParenthesis || leftParenMatched) {
+			matchIf(RPAREN, "Expected parameter declaration.");
 		}
+		// syntax: fun a()\n{
 		matchIf(SEMI);
 		return params;
 	}
@@ -788,6 +800,7 @@ class CandyParser implements Parser {
 	 * GetAttr = "." <IDENTIFIER>
 	 * GetItem = "[" Expr "]"
 	 */
+	@SuppressWarnings("fallthrough")
 	private Expr parseExprSuffix(Expr expr) {
 		while (true) {
 			Token tok = peek();
@@ -810,10 +823,10 @@ class CandyParser implements Parser {
 					if (peek(1).getKind() != DOT) {
 						break;
 					} 
-					consume();
+					consume(); /* down: parse dot. */
 				case DOT:
 					consume();
-					Token attr = match(IDENTIFIER);
+					Token attr = match(IDENTIFIER, "Expected attribute name.");
 					expr = location(tok, new Expr.GetAttr(expr, attr.getLiteral()));
 					continue;
 			}
