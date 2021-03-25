@@ -379,7 +379,7 @@ public class ScannerTestCase {
 				scanner.nextToken() ;
 			}
 			
-			LoggerMsgChecker.shouldNotAppearErrors(true, true);
+			LoggerMsgChecker.unexpectedErrors(true, true);
 			
 			assertEquals(msg(), expectedToks.length, actualToks.size()) ;
 			for (int i = 0; i < expectedToks.length; i ++) {
@@ -420,7 +420,7 @@ public class ScannerTestCase {
 			Scanner scanner = ScannerFactory.newScanner("number literal", literal);
 			
 			Token tok = scanner.peek();
-			LoggerMsgChecker.shouldNotAppearErrors(true, true);
+			LoggerMsgChecker.unexpectedErrors(true, true);
 			
 			assertEquals("Input:" + literal, kind, tok.getKind());
 			if (kind == TokenKind.DOUBLE) {

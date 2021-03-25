@@ -8,10 +8,10 @@ import static org.junit.Assert.* ;
 public class LoggerMsgChecker {
 	static final Logger logger = Logger.getLogger() ;
 	
-	public static void shouldAppearErrors(boolean output, boolean clear) {
+	public static void expectedErrors(boolean output, boolean clear) {
 		try {
 			if (!logger.hadErrors()) {
-				fail("There should appear errors.") ;
+				fail("expected errors.") ;
 			}
 			if (output) {
 				logger.printErrors(System.err) ;
@@ -25,7 +25,7 @@ public class LoggerMsgChecker {
 		}
 	}   
 	
-	public static void shouldNotAppearErrors(boolean output, boolean clear) {
+	public static void unexpectedErrors(boolean output, boolean clear) {
 		try {		
 			if (output) {
 				logger.printErrors(System.err) ;
@@ -35,7 +35,7 @@ public class LoggerMsgChecker {
 				if (clear) {
 					logger.clearErrors() ;
 				}
-				fail("There shouldn't appear errors.") ;
+				fail("unexpected errors.") ;
 			}
 			
 			if (clear) {
