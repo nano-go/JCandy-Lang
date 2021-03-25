@@ -4,6 +4,7 @@ public interface AstVisitor<S, E> {
 
 	public void visit(Program node);
 	
+	public S visit(Stmt.ErrorStmt node);
 	public S visit(Stmt.Return node);
 	public S visit(Stmt.Continue node);
 	public S visit(Stmt.Break node);

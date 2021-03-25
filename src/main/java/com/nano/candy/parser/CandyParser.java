@@ -320,12 +320,12 @@ class CandyParser implements Parser {
 	
 	/**
 	 * Stmt = [ Block | ClassDef
-	 *        | IfStmt | WhileStmt | ForStmt
+	 *        | IfStmt | Lable | WhileStmt | ForStmt
 	 *        | Break | Continue | Return
 	 *        | BreakStmt | ContinueStmt| ReturnStmt
 	 *        | VarDef | FunDef
 	 *        | AssertStmt | ExprStmt
-	 *        | ( <SEMI> Stmt ) 
+	 *        | ( <SEMI> Stmt )
 	 *        ]
 	 */
 	private Stmt parseStmt() {
@@ -338,6 +338,11 @@ class CandyParser implements Parser {
 					return parseWhileStmt();
 				case FOR:
 					return parseForStmt();
+				case IDENTIFIER:
+					if (peek(1).getKind() == COLON) {
+						return parseLable();
+					}
+					return parseExprStmt();
 				case BREAK:
 					return parseBreak();
 				case CONTINUE:
@@ -353,7 +358,7 @@ class CandyParser implements Parser {
 				case CLASS:
 					return parseClassDef();
 				case LBRACE:
-					return parseBlock();
+					return parseBlock();			
 				case SEMI:
 					consume();
 					continue loop;
@@ -479,6 +484,26 @@ class CandyParser implements Parser {
 	}
 	
 	/**
+	 * Lable = <IDENTIGIER> ":" ( ForStmt | WhileStmt)
+	 */
+	private Stmt parseLable() {
+		Token name = match(IDENTIFIER);
+		match(COLON);
+		Stmt.Loop loop = null;
+		TokenKind kind = peekKind();
+		if (kind == WHILE) {
+			loop = parseWhileStmt();
+		} else if (kind == FOR) {
+			loop = parseForStmt();
+		} else {
+			error(previous(), "Expected loop statement after lable.");
+			return new Stmt.ErrorStmt();
+		}
+		loop.setLableName(name.getLiteral(), name.getPos());
+		return loop;
+	}
+	
+	/**
 	 * WhileStmt = "while" "(" Expr ")" [ <SEMI> ] Body
 	 */
 	private Stmt.While parseWhileStmt() {
@@ -509,21 +534,31 @@ class CandyParser implements Parser {
 	}
 
 	/**
-	 * Break = "break" <SEMI>
+	 * Break = "break" [ <IDENTIFIER> ] <SEMI>
 	 */
 	private Stmt.Break parseBreak() {
 		Token location = match(BREAK);
+		Stmt.Break breakStmt = new Stmt.Break();
+		if (peekKind() == IDENTIFIER) {
+			breakStmt.lableName = Optional.of(peek().getLiteral());
+			consume();
+		}
 		matchSEMI();
-		return location(location, new Stmt.Break());
+		return location(location, breakStmt);
 	}
 	
 	/**
-	 * Continue = "continue" <SEMI>
+	 * Continue = "continue" [ <IDENTIFIER> ] <SEMI>
 	 */
 	private Stmt.Continue parseContinue() {
 		Token location = match(CONTINUE);
+		Stmt.Continue continueStmt = new Stmt.Continue();
+		if (peekKind() == IDENTIFIER) {
+			continueStmt.lableName = Optional.of(peek().getLiteral());
+			consume();
+		}
 		matchSEMI();
-		return location(location, new Stmt.Continue());
+		return location(location, continueStmt);
 	}
 
 	/**

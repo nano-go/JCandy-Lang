@@ -50,6 +50,8 @@ public class Checker implements AstVisitor<Stmt, Expr> {
 	private boolean hadBreak = false;
 	private boolean returned = false;
 	
+	private HashSet<String> lableTable = new HashSet<>();
+	
 	private boolean isEmtpy(Stmt stmt) {
 		if (stmt == null) return true;
 		if (stmt instanceof Stmt.Block) {
@@ -90,13 +92,42 @@ public class Checker implements AstVisitor<Stmt, Expr> {
 	}
 
 	@Override
+	public Stmt visit(Stmt.ErrorStmt node) {
+		throw new Error("Unexpected error statement.");
+	}
+
+	@Override
 	public Stmt visit(Stmt.Block node) {
 		visitBlock(node);
 		return node;
 	}
+	
+	private boolean addLable(Stmt.Loop loop) {
+		if (loop.lableName.isPresent()) {
+			if (lableTable.add(loop.lableName.get())) {
+				return true;
+			}
+			logger.error(loop.lablePos.get(), "the lable is defined.");
+			return false;
+		}
+		return false;
+	}
+	
+	private void removeLable(boolean newLable, Stmt.Loop loop) {
+		if (newLable) {
+			lableTable.remove(loop.lableName.get());
+		}
+	}
+	
+	private void referenceLable(String name, ASTreeNode node) {
+		if (!lableTable.contains(name)) {
+			error(node, "the lable '%s' is not defined.", name);
+		}
+	}
 
 	@Override
 	public Stmt visit(Stmt.While node) {
+		boolean newLable = addLable(node);
 		boolean originalInLoop = inLoop;
 		boolean originalHadBreak = hadBreak;
 		boolean originalReachable = reachable;
@@ -118,15 +149,18 @@ public class Checker implements AstVisitor<Stmt, Expr> {
 		
 		boolean isInfiniteLoop = isConstantTrue && !hadBreak;
 		
+		this.inLoop = originalInLoop;
+		this.hadBreak = originalHadBreak;
 		this.reachable = originalReachable && !isInfiniteLoop;
 		this.returned = originalReturned;
-		this.hadBreak = originalHadBreak;
-		this.inLoop = originalInLoop;	
+		
+		removeLable(newLable, node);
 		return node;
 	}
 
 	@Override
 	public Stmt visit(Stmt.For node) {	
+		boolean newLable = addLable(node);
 		boolean originalInLoop = inLoop;
 		boolean originalHadBreak = hadBreak;
 		boolean originalReachable = reachable;
@@ -142,6 +176,7 @@ public class Checker implements AstVisitor<Stmt, Expr> {
 		this.hadBreak = originalHadBreak;
 		this.reachable = originalReachable;
 		this.returned = originalReturned;
+		removeLable(newLable, node);
 		return node;
 	}
 	
@@ -155,6 +190,8 @@ public class Checker implements AstVisitor<Stmt, Expr> {
 	public Stmt visit(Stmt.Continue node) {
 		if (!inLoop) {
 			error(node, "The 'continue' outside loop.");
+		} else if (node.lableName.isPresent()) {
+			referenceLable(node.lableName.get(), node);
 		}
 		reachable = false;
 		return node;
@@ -164,6 +201,8 @@ public class Checker implements AstVisitor<Stmt, Expr> {
 	public Stmt visit(Stmt.Break node) {
 		if (!inLoop) {
 			error(node, "The 'break' outside loop.");
+		} else if (node.lableName.isPresent()) {
+			referenceLable(node.lableName.get(), node);
 		}
 		hadBreak = true;
 		reachable = false;
