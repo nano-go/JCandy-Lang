@@ -236,7 +236,7 @@ public class ChunkBuilder {
 	}
 
 	public int emitLabel(byte opcode, int offset, int lineNumber) {
-		emitop(opcode);
+		emitop(opcode, lineNumber);
 		emit2(offset);
 		return cp - 2;
 	}
