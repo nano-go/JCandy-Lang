@@ -4,7 +4,7 @@ import com.nano.candy.utils.ArrayUtils;
 import java.util.ArrayList;
 import java.util.List;
 
-public class LocalsTable {
+public class LocalTable {
 	
 	public final static class Local {
 		protected String name;
@@ -29,22 +29,26 @@ public class LocalsTable {
 		}
 	}
 	
-	protected LocalsTable enclosing;
-	protected int deepth;
+	protected LocalTable enclosing;
 	
-	protected Local[] locals;
-	protected int localCount;
+	private Local[] locals;
+	private int deepth;
+	private int curLocalCount;
 	private int maxLocalCount;
 	
 	private ArrayList<Upvalue> upvalues;
 	
-	public LocalsTable() {
+	public LocalTable() {
 		locals = new Local[8];
 		upvalues = new ArrayList<>();
 	}
 	
 	public boolean isInGlobal() {
-		return deepth == 0;
+		return deepth == 0 && enclosing == null;
+	}
+	
+	public int curLocalCount() {
+		return curLocalCount;
 	}
 	
 	public int maxSlotCount() {
@@ -60,13 +64,13 @@ public class LocalsTable {
 	}
 	
 	public int addLocal(String name) {
-		if (localCount >= Byte.MAX_VALUE) {
+		if (curLocalCount >= Byte.MAX_VALUE) {
 			throw new CandyRuntimeError("Too many local variables.");
 		}
-		locals = ArrayUtils.growCapacity(locals, localCount);
-		locals[localCount ++] = new Local(name, deepth);
-		maxLocalCount = Math.max(localCount, maxLocalCount);
-		return localCount - 1;
+		locals = ArrayUtils.growCapacity(locals, curLocalCount);
+		locals[curLocalCount ++] = new Local(name, deepth);
+		maxLocalCount = Math.max(curLocalCount, maxLocalCount);
+		return curLocalCount - 1;
 	}
 	
 	/**
@@ -75,7 +79,7 @@ public class LocalsTable {
 	 * @return the slot of the given named variable or -1 if not found.
 	 */
 	public int resolveLocalInCurrentDeepth(String name) {
-		for (int i = localCount-1; i >=0; i --) {
+		for (int i = curLocalCount-1; i >=0; i --) {
 			if (deepth != locals[i].deepth) {
 				return -1;
 			}
@@ -92,7 +96,7 @@ public class LocalsTable {
 	 * @return the slot of the given named variable or -1 if not found.
 	 */
 	public int resolveLocal(String name) {
-		for (int i = localCount-1; i >=0; i --) {
+		for (int i = curLocalCount-1; i >=0; i --) {
 			if (name.equals(locals[i].name)) {
 				return i;
 			}
@@ -145,8 +149,8 @@ public class LocalsTable {
 	public List<Local> exitScope() {
 		ArrayList<Local> discardedSlots = new ArrayList<>();
 		deepth --;
-		for (; localCount > 0; localCount --) {
-			int i = localCount-1;
+		for (; curLocalCount > 0; curLocalCount --) {
+			int i = curLocalCount-1;
 			if (locals[i].deepth <= deepth) {
 				break;
 			}

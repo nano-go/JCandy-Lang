@@ -19,23 +19,27 @@ import static com.nano.candy.interpreter.i2.instruction.Instructions.*;
 import static com.nano.candy.interpreter.i2.rtda.chunk.ConstantValue.*;
 
 /**
- * This converts the Candy syntax tree to a chunk.
+ * This converts a Candy syntax tree to a code chunk.
  */
 public class CodeGenerator implements AstVisitor<Void, Void> {
 	
-	/**
-	 * This saves the beginning position of the current loop which is
-	 * used for the 'continue' label, and the break labels which is back
-	 * patched at the end of the loop.
-	 */
-	private class LoopMarker {	
-		public int beginningPos;	
+	private static class LoopMarker {
+		
+		/**
+		 * The beginning pc of this loop.
+		 */
+		public int beginningPc;
+		
+		/**
+		 * The break lables in this loop.
+		 */
 		public int[] breakLabels;
 		public int bp;
 		
 		public LoopMarker(int beginPosition) {
-			this.beginningPos = beginPosition;
-			this.breakLabels = new int[4]; 
+			this.beginningPc = beginPosition;
+			this.breakLabels = new int[4];
+			this.bp = 0;
 		}
 		
 		public void addLableForBreak(int position) {
@@ -45,26 +49,30 @@ public class CodeGenerator implements AstVisitor<Void, Void> {
 			breakLabels[bp ++] = position;
 		}
 		
-		public void concatenetesLabelforBreak() {
+		public void concatsLableForBreak(ChunkBuilder builder) {
 			for (int i = 0; i < bp; i ++) {
 				builder.backpatch(breakLabels[i]);
 			}
 			breakLabels = null;
 		}
 	}
-
+	
+	private static int line(ASTreeNode node) {
+		return node.pos.getLine();
+	}
+	
 	private ChunkBuilder builder;
-	private LocalsTable locals;
+	private LocalTable locals;
 	
 	private boolean isInteractionMode;
+	private boolean isInInitializer;
 	
 	private LinkedList<LoopMarker> loopMarkers;
 	private HashMap<String, LoopMarker> lableTable;
-	private boolean isInInitializer;
 	
 	public CodeGenerator(boolean isInteractionMode) {
 		this.builder = new ChunkBuilder();
-		this.locals = new LocalsTable();
+		this.locals = new LocalTable();
 		this.loopMarkers = new LinkedList<>();
 		this.lableTable = new HashMap<>();
 		this.isInteractionMode = isInteractionMode;
@@ -78,34 +86,36 @@ public class CodeGenerator implements AstVisitor<Void, Void> {
 		return builder.build();
 	}
 	
-	private int line(ASTreeNode node) {
-		return node.pos.getLine();
+	private void walkStatements(List<Stmt> stmts) {
+		for (Stmt stmt : stmts) {
+			stmt.accept(this);
+		}
 	}
 	
-	private LocalsTable enterScope() {
+	private LocalTable enterScope() {
 		locals.enterScope();
 		return locals;
 	}
 	
-	private LocalsTable closeScope(boolean closeSlots) {
+	private LocalTable closeScope(boolean closeSlots) {
 		if (!closeSlots) {
 			locals.exitScope();
 			return locals;
 		}
-		int index = locals.localCount-1;
-		List<LocalsTable.Local> closedLocals = locals.exitScope();
+		int localCount = locals.curLocalCount();
+		int upvalueIndex = localCount-1;
+		List<LocalTable.Local> closedLocals = locals.exitScope();
 		if (closedLocals.isEmpty()) {
 			return locals;
-		}
-		
-		for (LocalsTable.Local local : closedLocals) {
+		}	
+		for (LocalTable.Local local : closedLocals) {
 			if (local.isCaptured) {
 				builder.emitop(OP_CLOSE_UPVALUE);
-				builder.emit1((byte) index);
+				builder.emit1((byte) upvalueIndex);
 			}
-			index --;
+			upvalueIndex --;
 		}
-		builder.emitopWithArg(OP_CLOSE_SLOT, locals.localCount);
+		builder.emitopWithArg(OP_CLOSE_SLOT, localCount);
 		return locals;
 	}
 	
@@ -127,7 +137,7 @@ public class CodeGenerator implements AstVisitor<Void, Void> {
 	}
 	
 	/**
-	 * Defines a declared or global variable.
+	 * Generates code to define a declared or global variable.
 	 */
 	private void defineVariable(String name, int line) {
 		if (locals.isInGlobal()) {
@@ -174,25 +184,26 @@ public class CodeGenerator implements AstVisitor<Void, Void> {
 	}
 	
 	/**
-	 * Parse the assign expression.
+	 * Generates code to assign the value of its left-hand operand to its
+	 * right-hand operand, a variable or an attribute or an indexer element.
 	 *
-	 * Assign:  a    [op]= value
-	 * SetAttr: a.b  [op]= value
-	 * SetItem: a[c] [op]= value
+	 * Assign:  a    op= value
+	 * SetAttr: a.b  op= value
+	 * SetItem: a[c] op= value
 	 */ 
-	private void parseAssignExpr(Expr lhs, TokenKind operator, Expr rhs) {
-		boolean isOnlyAssignOp = operator == TokenKind.ASSIGN;
-		if (!isOnlyAssignOp) {
-			loadLeftValue(lhs);	
+	private void writeAssignExpr(Expr lhs, TokenKind operator, Expr rhs) {
+		boolean isCompoundAssignment = operator != TokenKind.ASSIGN;
+		if (isCompoundAssignment) {
+			loadLeftValue(lhs);
 		}
 		
 		rhs.accept(this);
 		
-		if (!isOnlyAssignOp) {
+		if (isCompoundAssignment) {
 			byte opcode = OperatorInstructionMap.lookupOperatorIns(operator);		
 			builder.emitop(opcode, line(lhs));
-		}
-		assignTo(lhs, isOnlyAssignOp);
+		}	
+		assignTo(lhs, isCompoundAssignment);
 	}
 	
 	/**
@@ -223,7 +234,7 @@ public class CodeGenerator implements AstVisitor<Void, Void> {
 		throw new Error("Unknown Expr Type: " + lhs.getClass().getName());
 	}
 	
-	private void assignTo(Expr leftNode, boolean isOnlyAssignOp) {
+	private void assignTo(Expr leftNode, boolean isCompoundAssignment) {
 		if (leftNode instanceof Expr.Assign) {
 			storeVariable(((Expr.Assign)leftNode).name, line(leftNode));
 			return;
@@ -231,7 +242,7 @@ public class CodeGenerator implements AstVisitor<Void, Void> {
 		
 		if (leftNode instanceof Expr.SetAttr) {
 			Expr.SetAttr node = ((Expr.SetAttr)leftNode);
-			if (isOnlyAssignOp) {
+			if (!isCompoundAssignment) {
 				node.objExpr.accept(this);
 			} else {
 				// operand stack: obj, value
@@ -245,7 +256,7 @@ public class CodeGenerator implements AstVisitor<Void, Void> {
 		
 		if (leftNode instanceof Expr.SetItem) {
 			Expr.SetItem node = ((Expr.SetItem)leftNode);
-			if (isOnlyAssignOp) {
+			if (!isCompoundAssignment) {
 				node.key.accept(this);
 				node.objExpr.accept(this);
 			} else {
@@ -261,7 +272,7 @@ public class CodeGenerator implements AstVisitor<Void, Void> {
 	}
 	
 	/**
-	 * Write code to load the speficied function to stack top.
+	 * Generates code to load the speficied function to stack top.
 	 */
 	private void loadFunction(String name, Stmt.FuncDef node) {
 		boolean originalIsInInit = isInInitializer;
@@ -280,28 +291,25 @@ public class CodeGenerator implements AstVisitor<Void, Void> {
 	}
 	
 	private MethodInfo makeMethodInfo(MethodInfo methodInfo, String name, 
-	                                  Stmt.FuncDef node, boolean definedInClass) {
-		methodInfo.name = name;
-		methodInfo.arity = node.params.size();
-
+	                                  Stmt.FuncDef node, boolean definedInClass) {	
 		enterFunctionScope();
 		
+		int arity = node.params.size();
 		if (definedInClass) {
 			declrVariable("this");
-			methodInfo.arity ++;
+			arity ++;
 		}
 
 		for (String param : node.params) {
 			locals.addLocal(param);
 		}
+		int bodyBegainningPos = builder.curCp();
+		walkStatements(node.body.stmts);
 
-		int posBodyBegin = builder.curCp();
-		for (Stmt stmt : node.body.stmts) {
-			stmt.accept(this);
-		}
-
-		methodInfo.codeBytes = builder.curCp() - posBodyBegin;
-		methodInfo.slots = (byte)locals.maxSlotCount();
+		methodInfo.name = name;	
+		methodInfo.arity = arity;
+		methodInfo.codeBytes = builder.curCp() - bodyBegainningPos;
+		methodInfo.slots = (byte) locals.maxSlotCount();
 		methodInfo.stackSize = builder.state().stackSize;
 		methodInfo.upvalues = genUpvalueBytes(locals.upvalues());	
 		
@@ -309,17 +317,17 @@ public class CodeGenerator implements AstVisitor<Void, Void> {
 		return methodInfo;
 	}
 	
-	private byte[] genUpvalueBytes(LocalsTable.Upvalue[] upvalues) {
+	private byte[] genUpvalueBytes(LocalTable.Upvalue[] upvalues) {
 		byte[] upvalueBytes = new byte[upvalues.length*2];
 		for (int i = 0; i < upvalues.length; i ++) {
-			upvalueBytes[i*2] = (byte)(upvalues[i].isLocal ? 1 : 0);
+			upvalueBytes[i*2] = (byte) (upvalues[i].isLocal ? 1 : 0);
 			upvalueBytes[i*2 + 1] = (byte) upvalues[i].slot;
 		}
 		return upvalueBytes;
 	}
 	
 	private void enterFunctionScope() {
-		LocalsTable newLocals = new LocalsTable();
+		LocalTable newLocals = new LocalTable();
 		newLocals.enclosing = locals;
 		locals = newLocals;
 		enterScope();
@@ -334,23 +342,26 @@ public class CodeGenerator implements AstVisitor<Void, Void> {
 	
 	@Override
 	public void visit(Program node) {	
-		for (Stmt stmt : node.block.stmts) {
-			stmt.accept(this);
-		}
+		walkStatements(node.block.stmts);
 	}
 	
+	/**
+	 * Generates code to store a class.
+	 *
+	 * Byte code layout (push a class to stack top):
+	 *     1. OP_CLASS
+	 *     2. Class Constant (constant index)
+	 *     3. Super Class Slot (unsigned byte)
+	 */
 	@Override
 	public Void visit(Stmt.ClassDef node) {
 		ClassInfo classInfo = new ClassInfo();
-		classInfo.className = node.name;
 		
 		if (node.superClassName.isPresent()) {
 			Expr.VarRef superClass = node.superClassName.get();
-			// adavance to load super class object to operand stack top.
+			// load super class object to operand stack top.
 			loadVariable(superClass.name, line(superClass));
-			
-			// If true, VM will fetch the super class from 
-			// the operand stack top.
+			// If true, VM will fetch the super class from the operand stack top.
 			classInfo.hasSuperClass = true;
 		} else {
 			builder.state().push(1);
@@ -358,12 +369,12 @@ public class CodeGenerator implements AstVisitor<Void, Void> {
 		
 		declrVariable(node.name);
 		enterScope();
-		int superSlot = declrVariable("super");
 		
 		builder.emitop(OP_CLASS, line(node));
 		builder.emitConstant(classInfo);
-		builder.emit1((byte) superSlot);
+		builder.emit1((byte) declrVariable("super"));
 		
+		classInfo.className = node.name;
 		classInfo.initializer = initalizer(node);
 		classInfo.methods = methods(node);
 		
@@ -373,16 +384,14 @@ public class CodeGenerator implements AstVisitor<Void, Void> {
 	}
 
 	private Optional<MethodInfo> initalizer(Stmt.ClassDef node) {
-		if (node.initializer.isPresent()) {
-			Stmt.FuncDef initalizer = node.initializer.get();
-			this.isInInitializer = true;
-			Optional<MethodInfo> methodInfo = Optional.of(
-				makeMethodInfo(initalizer, true)
-			);
-			this.isInInitializer = false;
-			return methodInfo;
+		if (!node.initializer.isPresent()) {
+			return Optional.empty();
 		} 
-		return Optional.empty();
+		this.isInInitializer = true;
+		Stmt.FuncDef initalizer = node.initializer.get();
+		MethodInfo methodInfo = makeMethodInfo(initalizer, true);
+		this.isInInitializer = false;
+		return Optional.of(methodInfo);
 	}
 
 	private MethodInfo[] methods(Stmt.ClassDef node) {
@@ -406,9 +415,7 @@ public class CodeGenerator implements AstVisitor<Void, Void> {
 	@Override
 	public Void visit(Stmt.Block node) {
 		enterScope();
-		for (Stmt stmt : node.stmts) {
-			stmt.accept(this);
-		}
+		walkStatements(node.stmts);
 		closeScope(true);
 		return null;
 	}
@@ -419,9 +426,9 @@ public class CodeGenerator implements AstVisitor<Void, Void> {
 			lableTable.put(node.lableName.get(), loopMarker);
 		}
 	}
-	
+
 	private void exitLoop(Stmt.Loop node) {
-		loopMarkers.pop().concatenetesLabelforBreak();
+		loopMarkers.pop().concatsLableForBreak(builder);
 		if (node.lableName.isPresent()) {
 			lableTable.remove(node.lableName.get());
 		}
@@ -429,25 +436,22 @@ public class CodeGenerator implements AstVisitor<Void, Void> {
 	
 	@Override
 	public Void visit(Stmt.While node) {
-		int loopPos = builder.curCp();
-		enterLoop(node, new LoopMarker(loopPos));
+		int beginningPos = builder.curCp();
+		enterLoop(node, new LoopMarker(beginningPos));
 				
 		// Optimize 'while (true)'
-		boolean isTrueConstant = node.condition.isConstant() && !node.condition.isFalsely();
-		
-		int jumpOutLable = -1;
-		if (!isTrueConstant) {
-			node.condition.accept(this);
-			jumpOutLable = builder.emitLabel(OP_POP_JUMP_IF_FALSE, line(node));
+		if (node.condition.isConstant() && !node.condition.isFalsely()) {
+			node.body.accept(this);
+			builder.emitLoop(beginningPos, -1);
+			exitLoop(node);
+			return null;
 		}
 		
+		node.condition.accept(this);
+		int jumpOutLable = builder.emitLabel(OP_POP_JUMP_IF_FALSE, line(node));
 		node.body.accept(this);
-		// Jump back to the beginning position of the While statement
-		builder.emitLabel(OP_LOOP, builder.curCp() - loopPos + 1, -1);
-		
-		if (!isTrueConstant) {
-			builder.backpatch(jumpOutLable);
-		}
+		builder.emitLoop(beginningPos, -1);
+		builder.backpatch(jumpOutLable);
 		
 		exitLoop(node);
 		return null;
@@ -455,41 +459,38 @@ public class CodeGenerator implements AstVisitor<Void, Void> {
 
 	@Override
 	public Void visit(Stmt.For node) {
+		// push iterable to stack top.
 		node.iterable.accept(this);
 		
 		enterScope();
+		int iteratorSlot = invokeIterator(line(node));
+		int iteratingSlot = locals.addLocal(node.iteratingVar);
 		
-		int iteratorIndex = invokeIterator(line(node));	
-		int iteratingVarSlot = locals.addLocal(node.iteratingVar);
-		
-		int loopPos = builder.curCp();
-		enterLoop(node, new LoopMarker(loopPos));
-		
-		invokeHasNext(iteratorIndex);
+		int begainningPos = builder.curCp();
+		enterLoop(node, new LoopMarker(begainningPos));
+		invokeHasNext(iteratorSlot);
 		int jumpOutLabel = builder.emitLabel(OP_POP_JUMP_IF_FALSE, -1);
-		invokeNext(iteratingVarSlot, iteratorIndex);	
 		
-		for (Stmt stmt : node.body.stmts) {
-			stmt.accept(this);
-		}
-		builder.emitLabel(OP_LOOP, (builder.curCp() - loopPos + 1), -1);
+		invokeNext(iteratingSlot, iteratorSlot);
+		walkStatements(node.body.stmts);
 		
+		builder.emitLoop(begainningPos, -1);
 		builder.backpatch(jumpOutLabel);
 		exitLoop(node);
+		
 		closeScope(true);
 		return null;
 	}
 	
 	private int invokeIterator(int lineNumber) {
+		int iteratorSlot = locals.addLocal("hidden$iterator");
 		builder.emitInvoke(Names.METHOD_ITERATOR, 0, lineNumber);
-		// add hidden local variable for iterator.
-		int iteratorIndex = locals.addLocal("hidden$iterator");
-		builder.emitopWithArg(OP_POP_STORE, iteratorIndex, -1);
-		return iteratorIndex;
+		builder.emitopWithArg(OP_POP_STORE, iteratorSlot, -1);
+		return iteratorSlot;
 	}
 
-	private void invokeHasNext(int iteratorIndex) {
-		builder.emitLoad(iteratorIndex, -1);
+	private void invokeHasNext(int iteratorSlot) {
+		builder.emitLoad(iteratorSlot, -1);
 		builder.emitInvoke(Names.METHOD_ITERATOR_HAS_NEXT, 0, -1);
 	}
 	
@@ -505,10 +506,7 @@ public class CodeGenerator implements AstVisitor<Void, Void> {
 		if (node.lableName.isPresent()) {
 			loopMarker = lableTable.get(node.lableName.get());
 		}
-		int continuePos = loopMarker.beginningPos;
-		builder.emitLabel(
-			OP_LOOP, (builder.curCp() - continuePos + 1), line(node)
-		);
+		builder.emitLoop(loopMarker.beginningPc, line(node));
 		return null;
 	}
 
@@ -527,23 +525,19 @@ public class CodeGenerator implements AstVisitor<Void, Void> {
 	@Override
 	public Void visit(Stmt.If node) {
 		node.condition.accept(this);
-		// Jump to the beginning of the else block or jump out 
-		// of the If statement.
-		int jumpToElseLable = builder.emitLabel(OP_POP_JUMP_IF_FALSE, line(node));
+		int jumpOverThanLable = builder.emitLabel(
+			OP_POP_JUMP_IF_FALSE, line(node));
 		
 		node.thenBody.accept(this);
-		if (node.elseBody.isPresent()) {
-			// If the else block exists, VM needs to skip the else block
-			// at the end of then-body.
-			int jumpOutIfLable = builder.emitLabel(OP_JUMP, -1);
-			
-			builder.backpatch(jumpToElseLable);			
-			node.elseBody.get().accept(this);
-			builder.backpatch(jumpOutIfLable);
-		} else {
-			builder.backpatch(jumpToElseLable);
+		if (!node.elseBody.isPresent()) {
+			builder.backpatch(jumpOverThanLable);
+			return null;
 		}
 		
+		int jumpOverElseLable = builder.emitLabel(OP_JUMP, -1);		
+		builder.backpatch(jumpOverThanLable);			
+		node.elseBody.get().accept(this);
+		builder.backpatch(jumpOverElseLable);
 		return null;
 	}
 
@@ -560,11 +554,11 @@ public class CodeGenerator implements AstVisitor<Void, Void> {
 	@Override
 	public Void visit(Stmt.ExprS node) {
 		node.expr.accept(this);
-		boolean shouldPrint = 
+		boolean print = 
 			!(node.expr instanceof Expr.Assign) &&
 			!(node.expr instanceof Expr.SetItem) &&
 			!(node.expr instanceof Expr.SetAttr);
-		if (isInteractionMode && locals.isInGlobal() && shouldPrint) {
+		if (isInteractionMode && locals.isInGlobal() && print) {
 			builder.emitop(OP_PRINT, line(node));
 		} else {
 			builder.emitop(OP_POP, line(node));
@@ -576,7 +570,7 @@ public class CodeGenerator implements AstVisitor<Void, Void> {
 	public Void visit(Stmt.Return node) {
 		if (isInInitializer) {
 			// the 'this' pointer is at the slot 0.
-			// VM requires to return the 'this' pointer in initializer.
+			// VM requires to return the 'this' pointer from a initializer.
 			builder.emitop(OP_LOAD0, line(node));
 		} else if (node.expr.isPresent()) {
 			node.expr.get().accept(this);
@@ -584,7 +578,6 @@ public class CodeGenerator implements AstVisitor<Void, Void> {
 			builder.emitop(OP_RETURN_NIL);
 			return null;
 		}
-		
 		builder.emitop(OP_RETURN);
 		return null;
 	}
@@ -603,7 +596,7 @@ public class CodeGenerator implements AstVisitor<Void, Void> {
 
 	@Override
 	public Void visit(Expr.Assign node) {
-		parseAssignExpr(node, node.assignOperator, node.rhs);
+		writeAssignExpr(node, node.assignOperator, node.rhs);
 		return null;
 	}
 
@@ -620,6 +613,8 @@ public class CodeGenerator implements AstVisitor<Void, Void> {
 			case NOT:
 				builder.emitop(OP_NOT, line(node));
 				break;
+			default:
+				throw new Error("Unknown unary operator: " + node.operator);
 		}
 		return null;
 	}
@@ -635,7 +630,6 @@ public class CodeGenerator implements AstVisitor<Void, Void> {
 		
 		node.left.accept(this);
 		node.right.accept(this);
-		
 		byte opcode = OperatorInstructionMap.lookupOperatorIns(node.operator);
 		builder.emitop(opcode, line(node));
 		return null;
@@ -684,65 +678,75 @@ public class CodeGenerator implements AstVisitor<Void, Void> {
 	 * OP_GET_GLOBAL, OP_CALL -> OP_CALL_GLOBAL
 	 */
 	@Override
-	public Void visit(Expr.CallFunc node) {	
+	public Void visit(Expr.CallFunc node) {
 		Collections.reverse(node.arguments);
 		for (Expr arg : node.arguments) {
 			arg.accept(this);
 		}
 		
-		final int argc = node.arguments.size();
+		final int ARGC = node.arguments.size();
+		final int LINE = line(node);
 		
-		// call attributes
 		if (node.expr instanceof Expr.GetAttr) {
-			Expr.GetAttr getAttrNode = (Expr.GetAttr) node.expr;
-			getAttrNode.objExpr.accept(this);
-			builder.emitInvoke(getAttrNode.attr, argc, line(node));
-			builder.state().pop(argc);
+			invokeAttribute((Expr.GetAttr) node.expr, ARGC, LINE);
 			return null;
 		} 
 		
-		// call super methods
 		if (node.expr instanceof Expr.Super) {
-			Expr.Super superNode = (Expr.Super) node.expr;
-			loadVariable("this", line(node));
-			loadVariable("super", -1);
-			builder.emitopWithArg(
-				OP_SUPER_INVOKE, argc, -1);
-			builder.emitStringConstant(superNode.reference);
-			builder.state().pop(argc);
+			invokeSuper((Expr.Super) node.expr, ARGC, LINE);
 			return null;
 		}
 		
 		if (node.expr instanceof Expr.VarRef) {
 			Expr.VarRef varRef = (Expr.VarRef) node.expr;
-			int slot = locals.resolveLocal(varRef.name);
-			// call local vars
+			
+			int slot = locals.resolveLocal(varRef.name);	
 			if (slot != -1) {
-				builder.emitopWithArg(OP_CALL_SLOT, argc, line(node));
-				builder.emit1((byte) slot);
-				builder.state().pop(argc);
+				callLocalVar(slot, ARGC, LINE);
 				return null;
 			}
 			
-			// call global vars
 			if (locals.resolveUpvalue(varRef.name) == -1) {
-				builder.emitopWithArg(OP_CALL_GLOBAL, argc, line(node));
-				builder.emitStringConstant(varRef.name);
-				builder.state().pop(argc);
+				callGlobalVar(varRef.name, ARGC, LINE);
 				return null;
 			}
 		} 
 		
 		node.expr.accept(this);
-		builder.emitopWithArg(
-			OP_CALL, node.arguments.size(), line(node));
-		builder.state().pop(node.arguments.size());
+		builder.emitopWithArg(OP_CALL, ARGC, LINE);
+		builder.state().pop(ARGC);
 		return null;
+	}
+
+	private void invokeAttribute(Expr.GetAttr node, int argc, int line) {
+		node.objExpr.accept(this);
+		builder.emitInvoke(node.attr, argc, line);
+		builder.state().pop(argc);
+	}
+	
+	private void invokeSuper(Expr.Super superNode, int argc, int line) {
+		loadVariable("this", line);
+		loadVariable("super", -1);
+		builder.emitopWithArg(OP_SUPER_INVOKE, argc, -1);
+		builder.emitStringConstant(superNode.reference);
+		builder.state().pop(argc);
+	}
+	
+	private void callLocalVar(int slot, int argc, int line) {
+		builder.emitopWithArg(OP_CALL_SLOT, argc, line);
+		builder.emit1((byte) slot);
+		builder.state().pop(argc);
+	}
+	
+	private void callGlobalVar(String name, int argc, int line) {
+		builder.emitopWithArg(OP_CALL_GLOBAL, argc, line);
+		builder.emitStringConstant(name);
+		builder.state().pop(argc);
 	}
 
 	@Override
 	public Void visit(Expr.SetAttr node) {
-		parseAssignExpr(node, node.assignOperator, node.rhs);
+		writeAssignExpr(node, node.assignOperator, node.rhs);
 		return null;
 	}
 
@@ -756,7 +760,7 @@ public class CodeGenerator implements AstVisitor<Void, Void> {
 
 	@Override
 	public Void visit(Expr.SetItem node) {
-		parseAssignExpr(node, node.assignOperator, node.rhs);
+		writeAssignExpr(node, node.assignOperator, node.rhs);
 		return null;
 	}
 

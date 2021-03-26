@@ -240,6 +240,13 @@ public class ChunkBuilder {
 		emit2(offset);
 		return cp - 2;
 	}
+	
+	/**
+	 * Emit a loop opcode to jump back the specified begainning position.
+	 */
+	public void emitLoop(int begainningPos, int lineNumber) {
+		emitLabel(OP_LOOP, cp - begainningPos + 1, lineNumber);
+	}
 
 	/**
 	 * Place two bytes into code at the specified position.
