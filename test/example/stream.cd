@@ -5,7 +5,18 @@ var FLAG_BREAK = Object()
 class Stream {
 	fun init(iterable) {
 		this.iterable = iterable
-		this.evalfs = []
+		this.eval = lambda e -> e
+	}
+	
+	fun _eval(fn) {
+		var eval = this.eval
+		return lambda e -> {
+			e = eval(e)
+			if (e == FLAG_CONTINUE || e == FLAG_BREAK) {
+				return e
+			}
+			return fn(e)
+		}
 	}
 	
 	fun collect(collector) {
@@ -13,7 +24,7 @@ class Stream {
 	}
 
 	fun filter(accepter) {
-		this.evalfs.append(lambda e -> {
+		this.eval = this._eval(lambda e -> {
 			if (accepter(e)) {
 				return e
 			}
@@ -23,12 +34,12 @@ class Stream {
 	}
 	
 	fun map(convertor) {
-		this.evalfs.append(convertor)
+		this.eval = this._eval(convertor)
 		return this
 	}
 	
 	fun limit(n) {
-		this.evalfs.append(lambda e -> {
+		this.eval = this._eval(lambda e -> {
 			if (n <= 0) {
 				return FLAG_BREAK
 			}
@@ -39,7 +50,7 @@ class Stream {
 	}
 	
 	fun skip(n) {
-		this.evalfs.append(lambda e -> {
+		this.eval = this._eval(lambda e -> {
 			if (n > 0) {
 				n -= 1
 				return FLAG_CONTINUE
@@ -51,20 +62,13 @@ class Stream {
 	
 	fun foreach(f) {
 		var iterable = this.iterable
-		var evalfs = this.evalfs
+		var eval = this.eval
 		for (e in iterable) {
-			var res = null
-			for (eval in evalfs) {
-				res = eval(e)
-				if (res == FLAG_CONTINUE || res == FLAG_BREAK) {
-					break
-				}
-				e = res
-			}
-			if (res == FLAG_CONTINUE) {
+			e = eval(e)
+			if (e == FLAG_CONTINUE) {
 				continue
 			}
-			if (res == FLAG_BREAK) {
+			if (e == FLAG_BREAK) {
 				break
 			}
 			f(e)
@@ -121,13 +125,16 @@ fun expected(students) {
 	return avrg / n
 }
 
-var res = Stream(students)
-		.filter(lambda e -> e.age >= 20)
-		.map(lambda e -> (e.mathScore + e.engScore + e.csScore) / 3)
-		.filter(lambda e -> e >= 40)
-		.limit(50)
-		.skip(20)
-		.collect(averageCollector)
+fun test() {
+	var res = Stream(students)
+			.filter(lambda e -> e.age >= 20)
+			.map(lambda e -> (e.mathScore + e.engScore + e.csScore) / 3)
+			.filter(lambda e -> e >= 40)
+			.limit(50)
+			.skip(20)
+			.collect(averageCollector)
 
-assert res == expected(students)
-println(res)
+	assert res == expected(students)
+	println(res)
+}
+test()
