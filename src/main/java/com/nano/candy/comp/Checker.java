@@ -121,7 +121,7 @@ public class Checker implements AstVisitor<Stmt, Expr> {
 	
 	private void referenceLable(String name, ASTreeNode node) {
 		if (!lableTable.contains(name)) {
-			error(node, "the lable '%s' is not defined.", name);
+			error(node, "the lable '%s' is undefined.", name);
 		}
 	}
 
@@ -332,17 +332,20 @@ public class Checker implements AstVisitor<Stmt, Expr> {
 	public Stmt visit(Stmt.FuncDef node) {
 		boolean originalReachable = reachable;
 		boolean originalReturned = returned;
+		HashSet<String> originalLableTable = lableTable;
 		FunctionType originalFuncType = curFunctionType;
 		this.curFunctionType = getFuncType(node);
 		this.returned = false;
+		this.lableTable = new HashSet<>();
 		
 		checkParams(node);	
-		visitBlock(node.body);
+		visitStmts(node.body.stmts);
 		insertReturnStmt(node);
 		
 		this.curFunctionType = originalFuncType;
 		this.reachable = originalReachable;
 		this.returned = originalReturned;
+		this.lableTable = originalLableTable;
 		return node;
 	}
 	
