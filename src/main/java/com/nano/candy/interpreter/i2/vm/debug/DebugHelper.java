@@ -2,17 +2,18 @@ package com.nano.candy.interpreter.i2.vm.debug;
 
 import com.nano.candy.interpreter.i2.instruction.Instructions;
 import com.nano.candy.interpreter.i2.rtda.Frame;
+import com.nano.candy.interpreter.i2.rtda.FrameStack;
 import com.nano.candy.interpreter.i2.rtda.OperandStack;
 import com.nano.candy.interpreter.i2.rtda.UpvalueObj;
 import java.util.List;
 
 public class DebugHelper {
 
-	public static void traceFrameStack(Frame[] frameStack, int sp) {
+	public static void traceFrameStack(FrameStack fs) {
 		StringBuilder builder = new StringBuilder();
 		builder.append("Frame Stack: ");
-		for (int i = 0; i < sp; i ++) {
-			builder.append("[ ").append(frameStack[i].name).append(" ] ");
+		for (int i = 0; i < fs.sp(); i ++) {
+			builder.append("[ ").append(fs.getAt(i).name).append(" ] ");
 		}
 		builder.append("\n");
 		System.out.print(builder.toString());
