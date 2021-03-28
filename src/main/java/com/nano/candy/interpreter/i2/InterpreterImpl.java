@@ -57,31 +57,10 @@ public class InterpreterImpl implements Interpreter {
 	}
 
 	private void reportError(CandyRuntimeError e) {
-		StringBuilder error = new StringBuilder();
-		error.append(e.getClass().getSimpleName())
-			.append(": ").append(e.getMessage()).append("\n");
-		printStackInfo(error);
-		System.out.print(error);
-	}
-
-	private void printStackInfo(StringBuilder stackInfo) {
-		vm.syncPcToFrame();
-		int max = vm.sp() - Math.min(vm.sp(), 24);
-		for (int sp = vm.sp(); sp > max; sp --) {
-			Frame frame = vm.getFrameAt(sp);
-			String info = String.format(
-				"    at %s (%s: line %d)\n",
-				frame.name,
-				frame.chunk.getSourceFileName(),
-				// Aborts error when the last instruction is executed.
-				frame.chunk.getLineNumber(frame.pc-1)
-			);
-			stackInfo.append(info);
-		}
-		if (max != 0) {
-			stackInfo.append("    More Frames...\n");
-		}
-		vm.clearStackFrame();
+		vm.syncPcToTopFrame();
+		FrameStack stack = vm.getFrameStack();
+		e.printStackTrace(stack, "    ", 24, System.out);
+		stack.clearFrame();
 	}
 
 }
