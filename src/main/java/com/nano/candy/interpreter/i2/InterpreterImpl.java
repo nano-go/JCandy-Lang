@@ -1,15 +1,16 @@
 package com.nano.candy.interpreter.i2;
 
 import com.nano.candy.ast.ASTreeNode;
-import com.nano.candy.comp.Checker;
 import com.nano.candy.interpreter.Interpreter;
-import com.nano.candy.interpreter.i2.codegen.CodeGenerator;
 import com.nano.candy.interpreter.i2.error.CandyRuntimeError;
+import com.nano.candy.interpreter.i2.error.CompilerError;
 import com.nano.candy.interpreter.i2.error.NativeError;
-import com.nano.candy.interpreter.i2.rtda.Frame;
+import com.nano.candy.interpreter.i2.rtda.FrameStack;
+import com.nano.candy.interpreter.i2.rtda.chunk.Chunk;
+import com.nano.candy.interpreter.i2.rtda.moudle.CompiledFileInfo;
+import com.nano.candy.interpreter.i2.tool.Compiler;
 import com.nano.candy.interpreter.i2.vm.VM;
 import com.nano.candy.interpreter.i2.vm.debug.InstructionBenchmarking;
-import com.nano.candy.utils.Logger;
 
 public class InterpreterImpl implements Interpreter {
 
@@ -17,7 +18,7 @@ public class InterpreterImpl implements Interpreter {
 	
 	@Override
 	public void initOrReset() {
-		vm.reset();
+		vm.reset();	
 	}
 
 	@Override
@@ -29,15 +30,22 @@ public class InterpreterImpl implements Interpreter {
 	
 	@Override
 	public void load(ASTreeNode node, boolean isInteractionMode) {
-		Checker.check(node);
-		if (Logger.getLogger().hadErrors()) {
+		Chunk chunk;
+		try {
+			chunk = Compiler.compileTree(node, isInteractionMode, false);
+		} catch (CompilerError e) {
 			return;
 		}
-		vm.loadChunk(new CodeGenerator(isInteractionMode).genCode(node));
+		if (isInteractionMode) {
+			vm.loadChunk(chunk);
+		} else {
+			vm.loadFile(new CompiledFileInfo(
+				chunk.getSourceFileName(), chunk));
+		}
 	}
 
 	@Override
-	public boolean run(boolean isInteratively) {
+	public boolean run() {
 		try {
 			vm.run();
 		} catch (CandyRuntimeError e) {
