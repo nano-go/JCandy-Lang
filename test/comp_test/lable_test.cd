@@ -26,3 +26,16 @@ fun b() {
 	}
 
 }
+
+fun lable_in_func() {
+	var fn
+	lable: for (i in range(0, 15)) {
+		fn = lambda -> {
+			for (j in range(0, 15)) {
+				break lable // error
+			}
+			return i
+		}
+	}
+	println(fn())
+}
