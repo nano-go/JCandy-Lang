@@ -1,6 +1,5 @@
 package com.nano.candy.parser;
 
-import com.nano.candy.common.CandyTestCase;
 import com.nano.candy.common.LoggerMsgChecker;
 import com.nano.candy.parser.Parser;
 import com.nano.candy.utils.Logger;
@@ -60,6 +59,10 @@ public class ParserTest {
 		"class P {\n P() {this.x = x; this.y = y;} A() { super.test().b; } }",
 		"class A \n {}",
 		"class A \n { fun a(a, b) \n {} fun a() \n {} fun a(a, b) {} }",
+		"import \"stream.cd\" as stream;",
+		"import a + b as stream",
+		"import (\n\"stream\" as stream\na + b as stream\n)",
+		"import ()",
 		"",
 	};
 	

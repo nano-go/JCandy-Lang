@@ -200,9 +200,9 @@ public class ScannerTestCase {
 		/*===== KeyWord Test Case ===== */
 		newTKCase(
 			"if else while for in var fun class lambda return " + 
-			"this super break continue assert",
+			"this super break continue assert import as",
 			IF, ELSE, WHILE, FOR, IN, VAR, FUN, CLASS, LAMBDA,
-			RETURN, THIS, SUPER, BREAK, CONTINUE, ASSERT
+			RETURN, THIS, SUPER, BREAK, CONTINUE, ASSERT, IMPORT, AS
 		),
 		newTKCase(
 			"true\n false \n null \n",
