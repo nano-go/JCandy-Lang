@@ -77,6 +77,8 @@ OP_SUPER_GET super_get
 OP_SUPER_INVOKE super_invoke
 OP_FUN fun
 
+OP_IMPORT import
+
 OP_NEW_ARRAY new_array
 OP_APPEND append
 OP_ASSERT assert

@@ -179,6 +179,7 @@ public class ChunkBuilder {
 			case OP_GLOBAL_DEFINE:
 			case OP_ASSERT:
 			case OP_PRINT:
+			case OP_IMPORT:
 			case OP_SET_ATTR:
 			case OP_SUPER_GET:
 			case OP_SUPER_INVOKE:	

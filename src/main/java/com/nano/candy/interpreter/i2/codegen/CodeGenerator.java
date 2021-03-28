@@ -413,6 +413,22 @@ public class CodeGenerator implements AstVisitor<Void, Void> {
 	}
 
 	@Override
+	public Void visit(Stmt.ImportList node) {
+		for (Stmt.Import i : node.importStmts) {
+			i.accept(this);
+		}
+		return null;
+	}
+
+	@Override
+	public Void visit(Stmt.Import node) {
+		node.fileExpr.accept(this);
+		builder.emitop(OP_IMPORT, line(node));
+		builder.emitStringConstant(node.asIdentifier);
+		return null;
+	}
+
+	@Override
 	public Void visit(Stmt.Block node) {
 		enterScope();
 		walkStatements(node.stmts);

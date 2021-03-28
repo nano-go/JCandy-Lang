@@ -148,6 +148,7 @@ public class DisassembleTool implements CandyTool {
 			case OP_GET_ATTR:
 			case OP_SUPER_GET:
 			case OP_NEW_ARRAY:
+			case OP_IMPORT:
 				simpleInstructionWithConst(opcode);
 				break;
 			case OP_INVOKE:

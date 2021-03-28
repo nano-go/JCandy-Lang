@@ -80,16 +80,18 @@ public class Instructions {
 	public static final byte OP_SUPER_INVOKE      = (byte)64;
 	public static final byte OP_FUN               = (byte)65;
 
-	public static final byte OP_NEW_ARRAY         = (byte)66;
-	public static final byte OP_APPEND            = (byte)67;
-	public static final byte OP_ASSERT            = (byte)68;
-	public static final byte OP_PRINT             = (byte)69;
+	public static final byte OP_IMPORT            = (byte)66;
 
-	public static final byte OP_EXIT              = (byte)70;
+	public static final byte OP_NEW_ARRAY         = (byte)67;
+	public static final byte OP_APPEND            = (byte)68;
+	public static final byte OP_ASSERT            = (byte)69;
+	public static final byte OP_PRINT             = (byte)70;
 
-	public static final byte INSTRUCTION_NUMBER = 71;
+	public static final byte OP_EXIT              = (byte)71;
 
-	public static final String[] INSTRUCTION_NAMES = new String[71];
+	public static final byte INSTRUCTION_NUMBER = 72;
+
+	public static final String[] INSTRUCTION_NAMES = new String[72];
 	static {
 		INSTRUCTION_NAMES[OP_POP]               = "pop";
 		INSTRUCTION_NAMES[OP_DUP]               = "dup";
@@ -157,6 +159,7 @@ public class Instructions {
 		INSTRUCTION_NAMES[OP_SUPER_GET]         = "super_get";
 		INSTRUCTION_NAMES[OP_SUPER_INVOKE]      = "super_invoke";
 		INSTRUCTION_NAMES[OP_FUN]               = "fun";
+		INSTRUCTION_NAMES[OP_IMPORT]            = "import";
 		INSTRUCTION_NAMES[OP_NEW_ARRAY]         = "new_array";
 		INSTRUCTION_NAMES[OP_APPEND]            = "append";
 		INSTRUCTION_NAMES[OP_ASSERT]            = "assert";
