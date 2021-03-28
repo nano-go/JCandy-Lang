@@ -9,6 +9,7 @@ import com.nano.candy.parser.TokenKind;
 import com.nano.candy.utils.Logger;
 import com.nano.candy.utils.Position;
 import java.util.HashSet;
+import java.util.List;
 import java.util.ListIterator;
 import java.util.Optional;
 
@@ -60,11 +61,11 @@ public class Checker implements AstVisitor<Stmt, Expr> {
 		return false;
 	}
 	
-	private void visitBlock(Stmt.Block block) {
-		ListIterator<Stmt> i = block.stmts.listIterator();
+	private <T extends Stmt> void visitStmts(List<T> stmts) {
+		ListIterator<T> i = stmts.listIterator();
 		while (i.hasNext()) {
-			Stmt stmt = i.next();
-			stmt = visitStmt(stmt);
+			T stmt = i.next();
+			stmt = (T) visitStmt(stmt);
 			if (stmt == null) {
 				i.remove();
 			} else {
@@ -88,7 +89,7 @@ public class Checker implements AstVisitor<Stmt, Expr> {
 	
 	@Override
 	public void visit(Program node) {
-		visitBlock(node.block);
+		visitStmts(node.block.stmts);
 	}
 
 	@Override
@@ -98,7 +99,7 @@ public class Checker implements AstVisitor<Stmt, Expr> {
 
 	@Override
 	public Stmt visit(Stmt.Block node) {
-		visitBlock(node);
+		visitStmts(node.stmts);
 		return node;
 	}
 	
@@ -170,7 +171,7 @@ public class Checker implements AstVisitor<Stmt, Expr> {
 		
 		node.iterable = visitExpr(node.iterable);
 		checkIterable(node.iterable);
-		visitBlock(node.body);
+		visitStmts(node.body.stmts);
 		
 		this.inLoop = originalInLoop;
 		this.hadBreak = originalHadBreak;
@@ -184,6 +185,18 @@ public class Checker implements AstVisitor<Stmt, Expr> {
 		if (iterable.isConstant()) {
 			warn(iterable, "The constant '%s' is not iterable.", iterable);
 		}
+	}
+
+	@Override
+	public Stmt visit(Stmt.ImportList node) {
+		visitStmts(node.importStmts);
+		return node;
+	}
+
+	@Override
+	public Stmt visit(Stmt.Import node) {
+		node.fileExpr = visitExpr(node.fileExpr);
+		return node;
 	}
 	
 	@Override

@@ -53,6 +53,8 @@ public enum TokenKind {
 	FUN("fun"),
 	LAMBDA("lambda"),
 	CLASS("class"),
+	IMPORT("import"),
+	AS("as"),
 	TRUE("true"),
 	FALSE("false"),
 	NULL("null"),
@@ -87,6 +89,8 @@ public enum TokenKind {
 		KEYWORD_KINDS.put(TokenKind.FUN.literal, TokenKind.FUN);
 		KEYWORD_KINDS.put(TokenKind.RETURN.literal, TokenKind.RETURN);
 		KEYWORD_KINDS.put(TokenKind.LAMBDA.literal, TokenKind.LAMBDA);
+		KEYWORD_KINDS.put(TokenKind.IMPORT.literal, TokenKind.IMPORT);
+		KEYWORD_KINDS.put(TokenKind.AS.literal, TokenKind.AS);
 		KEYWORD_KINDS.put(TokenKind.CLASS.literal, TokenKind.CLASS);
 		KEYWORD_KINDS.put(TokenKind.THIS.literal, TokenKind.THIS);
 		KEYWORD_KINDS.put(TokenKind.SUPER.literal, TokenKind.SUPER);

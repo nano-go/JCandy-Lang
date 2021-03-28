@@ -1,10 +1,14 @@
 package com.nano.candy.ast;
+import com.nano.candy.ast.Stmt.ImportList;
+import com.nano.candy.ast.Stmt.Import;
 
 public interface AstVisitor<S, E> {
 
 	public void visit(Program node);
 	
 	public S visit(Stmt.ErrorStmt node);
+	public S visit(Stmt.Import node);
+	public S visit(Stmt.ImportList node);
 	public S visit(Stmt.Return node);
 	public S visit(Stmt.Continue node);
 	public S visit(Stmt.Break node);

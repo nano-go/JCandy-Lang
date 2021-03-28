@@ -17,6 +17,34 @@ public abstract class Stmt extends ASTreeNode {
 		}
 	}
 	
+	public static class ImportList extends Stmt {
+
+		public List<Import> importStmts;
+
+		public ImportList(List<Import> importStmts) {
+			this.importStmts = importStmts;
+		}
+		
+		@Override
+		public <S extends Object> S accept(AstVisitor<S, ?> visitor) {
+			return visitor.visit(this);
+		}
+	}
+	
+	public static class Import extends Stmt {
+		public Expr fileExpr;
+		public String asIdentifier;
+
+		public Import(Expr fileExpr, String identifier) {
+			this.fileExpr = fileExpr;
+			this.asIdentifier = identifier;
+		}
+		@Override
+		public <S extends Object> S accept(AstVisitor<S, ?> visitor) {
+			return visitor.visit(this);
+		}
+	}
+	
 	public static class Continue extends Stmt {
 		public Optional<String> lableName;
 		public Continue() {

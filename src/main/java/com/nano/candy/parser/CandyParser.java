@@ -319,7 +319,7 @@ class CandyParser implements Parser {
 	}
 	
 	/**
-	 * Stmt = [ Block | ClassDef
+	 * Stmt = [ Block | ClassDef | Imports
 	 *        | IfStmt | Lable | WhileStmt | ForStmt
 	 *        | Break | Continue | Return
 	 *        | BreakStmt | ContinueStmt| ReturnStmt
@@ -357,6 +357,8 @@ class CandyParser implements Parser {
 					return parseFunDef();
 				case CLASS:
 					return parseClassDef();
+				case IMPORT:
+					return parseImports();
 				case LBRACE:
 					return parseBlock();			
 				case SEMI:
@@ -410,6 +412,40 @@ class CandyParser implements Parser {
 		parseMethods(classDef);
 		matchIf(RBRACE, true);
 		return location(beginTok, classDef);
+	}
+	
+	/**
+	 * Imports = "import" ( ( "(" ImportStmt* ")" <SEMI> ) | ImportStmt )
+	 */
+	private Stmt parseImports() {
+		Token begainning = match(IMPORT);
+		if (matchIf(LPAREN)) {
+			List<Stmt.Import> imports = new ArrayList<>();
+			if (matchIf(RPAREN)) {
+				return location(begainning, new Stmt.ImportList(imports));
+			}
+			do {
+				imports.add(parseImportStmt(null));
+			} while (!matchIf(RPAREN));
+			matchSEMI();
+			return location(begainning, new Stmt.ImportList(imports));		
+		}
+		return parseImportStmt(begainning);
+	}
+	
+	/**
+	 * ImportStmt = Expr "as" <IDENTIFIER> <SEMI>
+	 */
+	private Stmt.Import parseImportStmt(Token begainning) {
+		Expr fileExpr = parseExpr();
+		match(AS);
+		String identigier = match(IDENTIFIER).getLiteral();
+		matchSEMI();
+		Stmt.Import importstmt = new Stmt.Import(fileExpr, identigier);
+		if (begainning != null) {
+			return location(begainning, importstmt);
+		}
+		return location(fileExpr.pos, importstmt);
 	}
 
 	/**
