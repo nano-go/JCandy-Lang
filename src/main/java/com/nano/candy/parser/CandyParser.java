@@ -58,11 +58,11 @@ class CandyParser implements Parser {
 		return tok.getLiteral();
 	}
 
-	protected <R extends ASTreeNode> R location(Token token, R node) {
-		return this.location(token.getPos(), node);
+	protected <R extends ASTreeNode> R locate(Token token, R node) {
+		return this.locate(token.getPos(), node);
 	}
 	
-	protected <R extends ASTreeNode> R location(Position pos, R node) {
+	protected <R extends ASTreeNode> R locate(Position pos, R node) {
 		node.pos = pos;
 		return node;
 	}
@@ -298,7 +298,7 @@ class CandyParser implements Parser {
 		block = new Stmt.Block();
 		parseStmts(block.stmts);
 		matchIf(RBRACE, true);
-		return location(location, block);
+		return locate(location, block);
 	}
 	
 	/**
@@ -393,7 +393,7 @@ class CandyParser implements Parser {
 		} else {
 			Stmt.Block block =  new Stmt.Block();
 			block.stmts.add(body);
-			return location(body.pos, block);
+			return locate(body.pos, block);
 		}
 	}
 
@@ -401,7 +401,7 @@ class CandyParser implements Parser {
 	 * ClassDef = "class" <IDENTIFIER> SuperClass "{" Methods "}"
 	 */
 	private Stmt.ClassDef parseClassDef() {
-		Token beginTok = match(CLASS);
+		Token location = match(CLASS);
 		Token name = match(IDENTIFIER, "Expected class name.");
 		Expr.VarRef superClass = parseSuperClass();
 		matchIf(SEMI);
@@ -411,26 +411,26 @@ class CandyParser implements Parser {
 		);
 		parseMethods(classDef);
 		matchIf(RBRACE, true);
-		return location(beginTok, classDef);
+		return locate(location, classDef);
 	}
 	
 	/**
 	 * Imports = "import" ( ( "(" ImportStmt* ")" <SEMI> ) | ImportStmt )
 	 */
 	private Stmt parseImports() {
-		Token begainning = match(IMPORT);
+		Token location = match(IMPORT);
 		if (matchIf(LPAREN)) {
 			List<Stmt.Import> imports = new ArrayList<>();
 			if (matchIf(RPAREN)) {
-				return location(begainning, new Stmt.ImportList(imports));
+				return locate(location, new Stmt.ImportList(imports));
 			}
 			do {
 				imports.add(parseImportStmt(null));
 			} while (!matchIf(RPAREN));
 			matchSEMI();
-			return location(begainning, new Stmt.ImportList(imports));		
+			return locate(location, new Stmt.ImportList(imports));		
 		}
-		return parseImportStmt(begainning);
+		return parseImportStmt(location);
 	}
 	
 	/**
@@ -443,9 +443,9 @@ class CandyParser implements Parser {
 		matchSEMI();
 		Stmt.Import importstmt = new Stmt.Import(fileExpr, identigier);
 		if (begainning != null) {
-			return location(begainning, importstmt);
+			return locate(begainning, importstmt);
 		}
-		return location(fileExpr.pos, importstmt);
+		return locate(fileExpr.pos, importstmt);
 	}
 
 	/**
@@ -454,7 +454,7 @@ class CandyParser implements Parser {
 	private Expr.VarRef parseSuperClass() {
 		if (matchIf(COLON)) {
 			Token name = match(IDENTIFIER, "Expected super class name.");
-			return location(name, new Expr.VarRef(name.getLiteral()));
+			return locate(name, new Expr.VarRef(name.getLiteral()));
 		}
 		return null;
 	}
@@ -498,25 +498,25 @@ class CandyParser implements Parser {
 		List<String> params = parseParams(true);
 		ensureExpectedKind(TokenKind.LBRACE);
 		Stmt.Block body = parseBlock();
-		return location(name, new Stmt.FuncDef(name.getLiteral(), params, body));
+		return locate(name, new Stmt.FuncDef(name.getLiteral(), params, body));
 	}
 	
 	/**
 	 * IfStmt = "if" "(" Expr ")" [ <SEMI> ] Body [ "else" Body ]
 	 */
 	private Stmt.If parseIfStmt() {
-		Token beginTok = match(IF);
+		Token location = match(IF);
 		matchIf(LPAREN, true);
 		Expr expr = parseExpr();
 		if (matchIf(RPAREN, true)) {
 			matchIf(SEMI);
 		}
-		Stmt thenBody = parseBody(beginTok.getPos(), "Invalid if statement.");
+		Stmt thenBody = parseBody(location.getPos(), "Invalid if statement.");
 		Stmt elseBody = null;
 		if (matchIf(ELSE)) {
 			elseBody = parseBody(suitableErrorPosition(), "Invalid if-else statement.");
 		}
-		return location(beginTok, new Stmt.If(expr, thenBody, elseBody));
+		return locate(location, new Stmt.If(expr, thenBody, elseBody));
 	}
 	
 	/**
@@ -543,21 +543,21 @@ class CandyParser implements Parser {
 	 * WhileStmt = "while" "(" Expr ")" [ <SEMI> ] Body
 	 */
 	private Stmt.While parseWhileStmt() {
-		Token beginTok = match(WHILE);
+		Token location = match(WHILE);
 		matchIf(LPAREN, true);
 		Expr expr = parseExpr();
 		if (matchIf(RPAREN, true)) {
 			matchIf(SEMI);
 		}
-		Stmt body = parseBody(beginTok.getPos(), "Invalid while statemenet");
-		return location(beginTok, new Stmt.While(expr, body));
+		Stmt body = parseBody(location.getPos(), "Invalid while statemenet");
+		return locate(location, new Stmt.While(expr, body));
 	}
 	
 	/**
 	 * ForStmt = "for" "(" <IDENTIFIER> "in" Expr ")" [SEMI] Body
 	 */
 	private Stmt.For parseForStmt() {
-		Token beginTok = match(FOR);
+		Token location = match(FOR);
 		matchIf(LPAREN, true);
 		String iteratingVar = match(IDENTIFIER).getLiteral();
 		match(IN);
@@ -565,8 +565,8 @@ class CandyParser implements Parser {
 		if (matchIf(RPAREN, true)) {
 			matchIf(SEMI);
 		}
-		Stmt.Block body = parseBody(beginTok.getPos(), "Invalid for statement.");
-		return location(beginTok, new Stmt.For(iteratingVar, iterable, body));
+		Stmt.Block body = parseBody(location.getPos(), "Invalid for statement.");
+		return locate(location, new Stmt.For(iteratingVar, iterable, body));
 	}
 
 	/**
@@ -580,7 +580,7 @@ class CandyParser implements Parser {
 			consume();
 		}
 		matchSEMI();
-		return location(location, breakStmt);
+		return locate(location, breakStmt);
 	}
 	
 	/**
@@ -594,7 +594,7 @@ class CandyParser implements Parser {
 			consume();
 		}
 		matchSEMI();
-		return location(location, continueStmt);
+		return locate(location, continueStmt);
 	}
 
 	/**
@@ -607,7 +607,7 @@ class CandyParser implements Parser {
 			expr = parseExprOrLambda();
 		}
 		matchSEMI();
-		return location(location, new Stmt.Return(expr));
+		return locate(location, new Stmt.Return(expr));
 	}
 	
 	/**
@@ -621,7 +621,7 @@ class CandyParser implements Parser {
 			initializer = parseExprOrLambda();
 		}
 		matchSEMI();
-		return location(
+		return locate(
 			position, 
 			new Stmt.VarDef(identifier.getLiteral(), initializer)
 		);
@@ -631,11 +631,11 @@ class CandyParser implements Parser {
 	 * FunDef = "fun" <IDENTIFIER> Params Block
 	 */
 	private Stmt.FuncDef parseFunDef() {
-		Token beginTok = match(FUN);
+		Token location = match(FUN);
 		String name = match(IDENTIFIER, "Expected function name.").getLiteral();
 		List<String> params = parseParams(true);
 		Stmt.Block body = toFuncBlock(parseBlock());
-		return location(beginTok, new Stmt.FuncDef(name, params, body));
+		return locate(location, new Stmt.FuncDef(name, params, body));
 	}
 
 	/**
@@ -703,19 +703,19 @@ class CandyParser implements Parser {
 		Expr rhs = parseExprOrLambda();
 		
 		if (lhs instanceof Expr.GetAttr) {
-			return location(
+			return locate(
 				lhs.pos, new Expr.SetAttr((Expr.GetAttr) lhs, assOperator, rhs)
 			);
 		}
 		
 		if (lhs instanceof Expr.VarRef) { 
-			return location(
+			return locate(
 				lhs.pos, new Expr.Assign(((Expr.VarRef) lhs).name, assOperator, rhs)
 			);
 		}
 		
 		if (lhs instanceof Expr.GetItem) {
-			return location(
+			return locate(
 				lhs.pos, new Expr.SetItem((Expr.GetItem) lhs, assOperator, rhs)
 			);
 		}
@@ -748,7 +748,7 @@ class CandyParser implements Parser {
 		Token operator = peek();
 		if (TokenKind.isUnaryOperator(operator.getKind())) {
 			consume();
-			return location(
+			return locate(
 				operator, 
 				new Expr.Unary(operator.getKind(), parseExprTerm())
 			);
@@ -771,47 +771,47 @@ class CandyParser implements Parser {
 	 *            ExprSuffix
 	 */
 	private Expr parseExprTerm() {
-		Token beginTok = peek();
-		TokenKind tokKind = beginTok.getKind();
+		Token location = peek();
+		TokenKind tokKind = location.getKind();
 		Expr expr = null;
 		switch (tokKind) {
 			case TRUE: case FALSE:
 				consume();
-				expr = location(
-					beginTok, new Expr.BooleanLiteral(tokKind == TRUE)
+				expr = locate(
+					location, new Expr.BooleanLiteral(tokKind == TRUE)
 				);
 				break;
 				
 			case NULL:
 				consume();
-				expr = location(beginTok, new Expr.NullLiteral());
+				expr = locate(location, new Expr.NullLiteral());
 				break;
 				
 			case STRING:
 				consume();
-				expr = location(
-					beginTok, new Expr.StringLiteral(beginTok.getLiteral())
+				expr = locate(
+					location, new Expr.StringLiteral(location.getLiteral())
 				);
 				break;
 				
 			case IDENTIFIER:
 				consume();
-				expr = location(
-					beginTok, new Expr.VarRef(beginTok.getLiteral())
+				expr = locate(
+					location, new Expr.VarRef(location.getLiteral())
 				);
 				break;
 				
 			case INTEGER:
 				consume();
-				expr = location(
-					beginTok, new Expr.IntegerLiteral(beginTok)
+				expr = locate(
+					location, new Expr.IntegerLiteral(location)
 				);
 				break;
 			
 			case DOUBLE:
 				consume();
-				expr = location(
-					beginTok, new Expr.DoubleLiteral(beginTok)
+				expr = locate(
+					location, new Expr.DoubleLiteral(location)
 				);
 				break;
 			
@@ -827,15 +827,15 @@ class CandyParser implements Parser {
 				
 			case THIS:
 				consume();
-				expr = location(beginTok, new Expr.This());
+				expr = locate(location, new Expr.This());
 				break;
 				
 			case SUPER:
 				consume();
 				match(DOT);
 				Token name = match(IDENTIFIER);
-				expr = location(
-					beginTok, new Expr.Super(name.getLiteral())
+				expr = locate(
+					location, new Expr.Super(name.getLiteral())
 				);
 				break;
 
@@ -851,9 +851,9 @@ class CandyParser implements Parser {
 	 */
 	private Expr.Array parseArray() {
 		ArrayList<Expr> elements = new ArrayList<>();
-		Token beginTok = match(LBRACKET);
+		Token location = match(LBRACKET);
 		if (matchIf(RBRACKET)) {
-			return location(beginTok, new Expr.Array(elements));
+			return locate(location, new Expr.Array(elements));
 		}
 		do {
 			if (peekKind() == TokenKind.RBRACKET) {
@@ -863,7 +863,7 @@ class CandyParser implements Parser {
 		} while (matchIf(COMMA));
 		matchIf(SEMI);
 		matchIf(RBRACKET, true);
-		return location(beginTok, new Expr.Array(elements));
+		return locate(location, new Expr.Array(elements));
 	}
 
 	/**
@@ -878,14 +878,14 @@ class CandyParser implements Parser {
 			switch (tok.getKind()) {
 				case LPAREN:
 					List<Expr> args = parseArguments();
-					expr = location(tok, new Expr.CallFunc(expr, args));
+					expr = locate(tok, new Expr.CallFunc(expr, args));
 					continue;
 					
 				case LBRACKET:
 					consume();
 					Expr key = parseExpr();
 					matchIf(RBRACKET, true);
-					expr = location(tok, new Expr.GetItem(expr, key));
+					expr = locate(tok, new Expr.GetItem(expr, key));
 					continue;
 				
 				case SEMI:
@@ -898,7 +898,7 @@ class CandyParser implements Parser {
 				case DOT:
 					consume();
 					Token attr = match(IDENTIFIER, "Expected attribute name.");
-					expr = location(tok, new Expr.GetAttr(expr, attr.getLiteral()));
+					expr = locate(tok, new Expr.GetAttr(expr, attr.getLiteral()));
 					continue;
 			}
 			return expr;
