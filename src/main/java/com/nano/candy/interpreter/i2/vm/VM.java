@@ -6,6 +6,7 @@ import com.nano.candy.interpreter.i2.builtin.type.BoolObj;
 import com.nano.candy.interpreter.i2.builtin.type.CallableObj;
 import com.nano.candy.interpreter.i2.builtin.type.DoubleObj;
 import com.nano.candy.interpreter.i2.builtin.type.IntegerObj;
+import com.nano.candy.interpreter.i2.builtin.type.MoudleObj;
 import com.nano.candy.interpreter.i2.builtin.type.NullPointer;
 import com.nano.candy.interpreter.i2.builtin.type.PrototypeFunctionObj;
 import com.nano.candy.interpreter.i2.builtin.type.StringObj;
@@ -718,7 +719,14 @@ public final class VM {
 				
 				/**
 				 * Other.
-				 */		
+				 */
+				case OP_IMPORT: {
+					MoudleObj moudleObj = moudleManager.importFile(
+						this, ObjectHelper.asString(pop())
+					);
+					global.setVar(cp.getString(readIndex()), moudleObj);
+					break;
+				}
 				case OP_ASSERT: {
 					throw new com.nano.candy.interpreter.i2.error.
 						AssertionError(pop().strApiExeUser(this).value());
