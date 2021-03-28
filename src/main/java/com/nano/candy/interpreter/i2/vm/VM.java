@@ -14,18 +14,22 @@ import com.nano.candy.interpreter.i2.builtin.type.classes.ObjectClass;
 import com.nano.candy.interpreter.i2.builtin.utils.ObjectHelper;
 import com.nano.candy.interpreter.i2.error.CandyRuntimeError;
 import com.nano.candy.interpreter.i2.error.TypeError;
+import com.nano.candy.interpreter.i2.rtda.FileScope;
 import com.nano.candy.interpreter.i2.rtda.Frame;
+import com.nano.candy.interpreter.i2.rtda.FrameStack;
 import com.nano.candy.interpreter.i2.rtda.GlobalEnvironment;
 import com.nano.candy.interpreter.i2.rtda.OperandStack;
 import com.nano.candy.interpreter.i2.rtda.UpvalueObj;
 import com.nano.candy.interpreter.i2.rtda.chunk.Chunk;
-import com.nano.candy.interpreter.i2.rtda.chunk.ChunkAttributes;
 import com.nano.candy.interpreter.i2.rtda.chunk.ConstantPool;
 import com.nano.candy.interpreter.i2.rtda.chunk.ConstantValue;
-import com.nano.candy.interpreter.i2.tool.DisassembleTool;
+import com.nano.candy.interpreter.i2.rtda.moudle.CompiledFileInfo;
+import com.nano.candy.interpreter.i2.rtda.moudle.MoudleManager;
+import com.nano.candy.interpreter.i2.rtda.moudle.SourceFileInfo;
 import com.nano.candy.interpreter.i2.vm.debug.DebugHelper;
 import com.nano.candy.interpreter.i2.vm.debug.InstructionBenchmarking;
-import java.util.Arrays;
+import com.nano.candy.utils.SystemUtils;
+import java.io.File;
 
 import static com.nano.candy.interpreter.i2.instruction.Instructions.*;
 
@@ -38,107 +42,133 @@ public final class VM {
 	private static final boolean DEBUG_TRACE_INSTRUCTION = false;
 	private static final boolean DEBUG_TRACE_OPEN_UPVALUE = false;
 	private static final boolean DEBUG_TRACE_FRAME_STACK = false;
-	private static final boolean DEBUG_DISASSEMBLE = false;
 	
 	private static final byte WIDE_INDEX_MARK = (byte) 0xFF;
 	
 	private int maxStackDeepth = 1024*2;
+	
 	private GlobalEnvironment global;
+	private MoudleManager moudleManager;
 	
-	private Frame[] frameStack;
-	
-	private int sp;
-	private Frame frame;
+	private FrameStack frameStack;
 	
 	private ConstantPool cp;
 	private byte[] code;
 	private int pc;
-	
 	private CandyObject[] slots;
 	private OperandStack opStack;
 	
 	public VM() {}
 	
 	public void reset() {
-		global = new GlobalEnvironment();
-		frameStack = new Frame[16];
+		this.global = new GlobalEnvironment();
+		this.moudleManager = new MoudleManager();
+		this.frameStack = new FrameStack(maxStackDeepth);
+	}
+	
+	public CompiledFileInfo getCurRunningFile() {
+		return global.curFileScope().compiledFileInfo;
+	}
+	
+	public SourceFileInfo getCurSourceFileInfo() {
+		CompiledFileInfo compiledFileInfo = global.curFileScope().compiledFileInfo;
+		if (compiledFileInfo.isRealFile()) {
+			return SourceFileInfo.get(compiledFileInfo.getFile());
+		}
+		return null;
+	}
+	
+	/**
+	 * Returns the parent path of the current running file.
+	 */
+	public String getCurrentDirectory() {
+		File f = getCurRunningFile().getFile();
+		if (f.isDirectory()) {
+			return f.getAbsolutePath();
+		}
+		return f.getParentFile().getAbsolutePath();
+	}
+	
+	public MoudleManager getMoudleManager() {
+		return moudleManager;
 	}
 	
 	public void loadChunk(Chunk chunk) {
-		ChunkAttributes attrs = chunk.getAttrs();
-		if (attrs.slots == null) {
-			throw new Error("The slots of top scope can't be null.");
-		}
-		Frame topFrame = new Frame(chunk);
-		this.frame = topFrame;
-		this.frameStack[sp ++] = topFrame;
-		resetFrameData();
+		loadFile(new CompiledFileInfo(
+			SystemUtils.DEFAULT_USER_DIR, chunk, false));
 	}
 	
-	private void resetFrameData() {
+	/**
+	 * VM needs to load one compiled file (only one at a time) to run.
+	 * VM allows to load and run a compiled file at runtime.
+	 */
+	public void loadFile(CompiledFileInfo file) {
+		global.setFileScope(file);
+		pushFrame(new Frame(file.getChunk(), global.curFileScope()));
+	}
+	
+	public FrameStack getFrameStack() {
+		return frameStack;
+	}
+	
+	public void syncPcToTopFrame() {
+		if (!frameStack.isEmpty()) {
+			frameStack.peek().pc = pc;
+		}
+	}
+	
+	public void pushFrame(Frame frame) {
+		syncPcToTopFrame();
+		frameStack.pushFrame(frame);
+		syncFrameData();
+	}
+	
+	public void popFrame() {
+		frameStack.popFrame().release();
+		if (frameStack.isEmpty()) {
+			resetFrameData();
+		} else {
+			syncFrameData();
+		}
+	}
+	
+	public void popFrameWithRet() {
+		Frame top = frameStack.popFrame();
+		syncFrameData();
+		// push return value to operand stack.
+		push(top.pop());
+		top.release();
+	}
+	
+	private void syncFrameData() {
+		Frame frame = frameStack.peek();
 		this.cp = frame.chunk.getConstantPool();
 		this.slots = frame.slots;
 		this.code = frame.chunk.getByteCode();
 		this.pc = frame.pc;
 		this.opStack = frame.opStack;
+		global.setFileScope(frame.fileScope);
 	}
 	
-	public void syncPcToFrame() {
-		Frame top = this.frameStack[sp-1];
-		top.pc = this.pc;
-	}
-	
-	public void pushFrame(Frame frame) {
-		if (sp >= maxStackDeepth) {
-			throw new StackOverflowError();
-		}
-		if (sp >= frameStack.length) {
-			frameStack = Arrays.copyOf(frameStack, frameStack.length*2);
-		}
-		
-		Frame top = this.frameStack[sp-1];
-		top.pc = this.pc;
-		
-		this.frame = frame;
-		this.frameStack[sp ++] = frame;
-		resetFrameData();
-	}
-	
-	public void popFrame() {
-		Frame top = frameStack[-- sp];
-		this.frame = frameStack[sp - 1];	
-		resetFrameData();	
-		push(top.pop());
-		
-		top.release();
-	}
-	
-	public void clearStackFrame() {
-		while (sp > 0) {
-			sp --;
-			frameStack[sp].release();
-			frameStack[sp] = null;
-		}
+	private void resetFrameData() {
+		this.cp = null;
+		this.slots = null;
+		this.code = null;
+		this.pc = 0;
+		this.opStack = null;
+		global.setFileScope((FileScope) null);
 	}
 	
 	public void returnFromVM(CandyObject returnValue) {
-		frame.push(returnValue);
+		frameStack.peek().push(returnValue);
 	}
 
 	public void returnNilFromVM() {
-		frame.push(NullPointer.nil());
+		frameStack.peek().push(NullPointer.nil());
 	}
-
-	public int sp() {
-		return sp;
-	}
-
-	public Frame getFrameAt(int sp) {
-		return frameStack[sp - 1];
-	}
-
+	
 	public Frame frame() {
-		return frame;
+		return frameStack.peek();
 	}
 	
 	public CandyObject pop() {
@@ -173,50 +203,60 @@ public final class VM {
 		if (code[pc] != WIDE_INDEX_MARK) {
 			return code[pc ++] & 0xFF;
 		}
+		// wide index: 2 unsigned bytes.
 		pc ++;
 		return (code[pc ++] << 8) & 0xFFFF | code[pc ++] & 0xFF;
 	}
 	
-	private PrototypeFunctionObj makeFunctionObject(CandyClass clazz, ConstantValue.MethodInfo methodInfo) {
-		UpvalueObj[] upvalues = frame.makeUpvalueObjs(methodInfo);
+	private PrototypeFunctionObj createFunctionObj(CandyClass clazz, ConstantValue.MethodInfo methodInfo) {
+		UpvalueObj[] upvalues = frame().makeUpvalueObjs(methodInfo);
 		String tagName = methodInfo.name;
 		if (clazz != null) {
 			tagName = ObjectHelper.methodName(clazz, tagName);
 		}
 		return new PrototypeFunctionObj(
-			frame.chunk, pc, 
-			upvalues, tagName, methodInfo
+			frame().chunk, pc, 
+			upvalues, tagName, methodInfo, global.curFileScope()
 		);
 	}
 	
-	public void run() {
-		runFrame(false);
-	}
-	
-	public void runFrame(boolean exitMethod) {
-		if (DEBUG_DISASSEMBLE) {
-			System.out.println(
-				new DisassembleTool(frame.chunk).disassemble()
-			);
+	public MoudleObj run() {
+		SourceFileInfo srcFileInfo = getCurSourceFileInfo();
+		if (srcFileInfo != null) {
+			srcFileInfo.markRunning();
 		}
 		
-		Frame curFrame = frame;
+		runFrame(false);
+		
+		if (srcFileInfo != null) {
+			srcFileInfo.unmarkRunning();
+		}
+		
+		FileScope fs = global.curFileScope();
+		MoudleObj moudleObj = new MoudleObj(
+			fs.compiledFileInfo.getAbsPath(), fs.vars);
+		popFrame();
+		return moudleObj;
+	}
+	
+	public void runFrame(boolean exitMethod) {	
+		Frame curFrame = frame();
 		
 		loop: for (;;) {
 			if (DEBUG_TRACE_OPERAND_STACK) {
-				DebugHelper.traceOperandStack(frame.opStack);
+				DebugHelper.traceOperandStack(frame().opStack);
 			}
 			
 			if (DEBUG_TRACE_SLOTS) {
-				DebugHelper.traceSlots(frame);
+				DebugHelper.traceSlots(frame());
 			}
 			
 			if (DEBUG_TRACE_OPEN_UPVALUE) {
-				DebugHelper.traceOpenUpvalues(frame.openUpvalues);
+				DebugHelper.traceOpenUpvalues(frame().openUpvalues);
 			}
 			
 			if (DEBUG_TRACE_FRAME_STACK) {
-				DebugHelper.traceFrameStack(frameStack, sp);
+				DebugHelper.traceFrameStack(frameStack);
 			}
 			
 			if (DEBUG_TRACE_INSTRUCTION) {
@@ -522,8 +562,8 @@ public final class VM {
 				}
 				case OP_CLOSE_SLOT: {
 					final int lastIndex = readUint8();
-					for (int i = frame.slots.length-1; i >= lastIndex; i --) {
-						frame.slots[i] = null;
+					for (int i = frame().slots.length-1; i >= lastIndex; i --) {
+						frame().slots[i] = null;
 					}
 					break;
 				}		
@@ -532,16 +572,15 @@ public final class VM {
 				 * Upvalues.
 				 */
 				case OP_LOAD_UPVALUE: {
-					push(frame.capturedUpvalues[readUint8()].load());
+					push(frame().capturedUpvalues[readUint8()].load());
 					break;
 				}				
 				case OP_STORE_UPVALUE: {
-					frame.capturedUpvalues[readUint8()].store(peek(0));
+					frame().capturedUpvalues[readUint8()].store(peek(0));
 					break;
 				}
 				case OP_CLOSE_UPVALUE: {
-					int closedUpvalues = readUint8();
-					frame.closeUpvalues(closedUpvalues);
+					frame().closeUpvalues(readUint8());
 					break;
 				}
 				
@@ -572,7 +611,7 @@ public final class VM {
 				 */
 				case OP_FUN: {
 					ConstantValue.MethodInfo methodInfo = cp.getMethodInfo(readIndex());
-					push(makeFunctionObject(null, methodInfo));
+					push(createFunctionObj(null, methodInfo));
 					pc += methodInfo.codeBytes;
 					break;
 				}
@@ -601,11 +640,11 @@ public final class VM {
 					
 					if (classInfo.initializer.isPresent()) {
 						ConstantValue.MethodInfo init = classInfo.initializer.get();
-						clazz.setInitalizer(makeFunctionObject(clazz, init));
+						clazz.setInitalizer(createFunctionObj(clazz, init));
 						pc += init.codeBytes;
 					}
 					for (ConstantValue.MethodInfo methodInfo : classInfo.methods) {
-						clazz.defineMethod(methodInfo.name, makeFunctionObject(clazz, methodInfo));
+						clazz.defineMethod(methodInfo.name, createFunctionObj(clazz, methodInfo));
 						pc += methodInfo.codeBytes;
 					}
 					push(clazz);
@@ -694,27 +733,26 @@ public final class VM {
 				}
 				case OP_RETURN: {
 					if (exitMethod) {
-						if (frame == curFrame) {
-							popFrame();
+						if (frame() == curFrame) {
+							popFrameWithRet();
 							break loop;
 						}
 					} 
-					popFrame(); 
+					popFrameWithRet(); 
 					break;
 				}
 				case OP_RETURN_NIL: {
 					push(NullPointer.nil());
 					if (exitMethod) {
-						if (frame == curFrame) {
-							popFrame();
+						if (frame() == curFrame) {
+							popFrameWithRet();
 							break loop;
 						}
 					} 
-					popFrame(); 
+					popFrameWithRet(); 
 					break;
 				}
 				case OP_EXIT: {
-					clearStackFrame();
 					break loop;
 				}
 			}

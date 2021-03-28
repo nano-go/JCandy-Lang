@@ -1,6 +1,7 @@
 package com.nano.candy.interpreter.i2.builtin.type;
 
 import com.nano.candy.interpreter.i2.builtin.type.CallableObj;
+import com.nano.candy.interpreter.i2.rtda.FileScope;
 import com.nano.candy.interpreter.i2.rtda.Frame;
 import com.nano.candy.interpreter.i2.rtda.UpvalueObj;
 import com.nano.candy.interpreter.i2.rtda.chunk.Chunk;
@@ -9,21 +10,24 @@ import com.nano.candy.interpreter.i2.vm.VM;
 
 public class PrototypeFunctionObj extends CallableObj {
 
-	private Chunk chunk;
-	private int pc;
+	public Chunk chunk;
+	public int pc;
 	
-	private UpvalueObj[] upvalues;
-	private int slots;
-	private int stackSize;
+	public FileScope fileScope;
+	public UpvalueObj[] upvalues;
+	public int slots;
+	public int stackSize;
 	
 	public PrototypeFunctionObj(Chunk chunk, int pc, UpvalueObj[] upvalues, 
-		                        String name, ConstantValue.MethodInfo methodInfo) {
+		                        String name, ConstantValue.MethodInfo methodInfo, 
+								FileScope fileScope) {
 		super(methodInfo.name, name, methodInfo.arity);
 		this.chunk = chunk;
 		this.pc = pc;
 		this.upvalues = upvalues;
 		this.slots = methodInfo.slots;
 		this.stackSize = methodInfo.stackSize;
+		this.fileScope = fileScope;
 	}
 
 	public Chunk getChunk() {
@@ -50,8 +54,7 @@ public class PrototypeFunctionObj extends CallableObj {
 	@Override
 	public void onCall(VM vm) {
 		Frame top = vm.frame();
-		Frame newFrame = new Frame(upvalues, declredName(), 
-			chunk, pc, slots, stackSize);
+		Frame newFrame = new Frame(this);
 		for (int i = 0; i < arity; i ++) {
 			newFrame.store(i, top.pop());
 		}

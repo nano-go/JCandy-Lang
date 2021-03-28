@@ -12,20 +12,21 @@ import com.nano.candy.interpreter.i2.builtin.type.Range;
 import com.nano.candy.interpreter.i2.builtin.type.StringObj;
 import com.nano.candy.interpreter.i2.builtin.type.classes.CandyClass;
 import com.nano.candy.interpreter.i2.builtin.type.classes.ObjectClass;
+import com.nano.candy.interpreter.i2.rtda.moudle.CompiledFileInfo;
+import com.nano.candy.interpreter.i2.rtda.moudle.SourceFileInfo;
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
 import java.util.HashMap;
 
 public class GlobalEnvironment {
 	
-	private HashMap<String, CandyObject> vars;
+	private static final HashMap<String, CandyObject> BUILTIN_VARS = new HashMap<>();
 	
-	public GlobalEnvironment() {
-		vars = new HashMap<>();
+	static {
 		init();
 	}
 	
-	private void init() {
+	private static void init() {
 		defineBuiltinFunctions();
 		defineClass(Range.RANGE_CLASS);
 		defineClass(ArrayObj.ARRAY_CLASS);
@@ -37,7 +38,7 @@ public class GlobalEnvironment {
 		defineClass(ObjectClass.getObjClass());
 	}
 
-	private void defineBuiltinFunctions() {
+	private static void defineBuiltinFunctions() {
 		for (Field field : BuiltinFunctions.class.getFields()) {
 			int modifiers = field.getModifiers();
 			if (!Modifier.isStatic(modifiers)) {
@@ -54,20 +55,66 @@ public class GlobalEnvironment {
 		}
 	}
 
-	private void defineBuiltinFunction(BuiltinFunctionEntity func) {
-		vars.put(func.declredName(), func);
+	private static void defineBuiltinFunction(BuiltinFunctionEntity func) {
+		BUILTIN_VARS.put(func.declredName(), func);
 	}
 
-	private void defineClass(CandyClass clazz) {
-		vars.put(clazz.getClassName(), clazz);
+	private static void defineClass(CandyClass clazz) {
+		BUILTIN_VARS.put(clazz.getClassName(), clazz);
+	}
+	
+	private HashMap<String, FileScope> fileScopePool;
+	private FileScope curFileScope;
+	
+	public GlobalEnvironment() {
+		fileScopePool = new HashMap<>();
+		curFileScope = null;
+	}
+	
+	public FileScope getFileScope(CompiledFileInfo compiledFileInfo) {
+		FileScope fs;
+		String onlyPath;
+		if (compiledFileInfo.isRealFile()) {
+			onlyPath = SourceFileInfo.get(compiledFileInfo.getFile())
+				.getFile().getAbsolutePath();
+		} else {
+			onlyPath = compiledFileInfo.getAbsPath();
+		}
+		fs = fileScopePool.get(onlyPath);
+		if (fs == null) {
+			fs = new FileScope(compiledFileInfo);
+			fileScopePool.put(onlyPath, fs);
+		}
+		return fs;
+	}
+	
+	public FileScope curFileScope() {
+		return curFileScope;
+	}
+	
+	public void setFileScope(FileScope fs) {
+		curFileScope = fs;
+	}
+	
+	public FileScope setFileScope(CompiledFileInfo compiledFileInfo) {
+		curFileScope = getFileScope(compiledFileInfo);
+		return curFileScope;
+	}
+	
+	public void clearFileScope() {
+		curFileScope = null;
 	}
 	
 	public CandyObject getVar(String name) {
-		return vars.get(name);
+		CandyObject obj = curFileScope.getVar(name);
+		if (obj != null) {
+			return obj;
+		}
+		return BUILTIN_VARS.get(name);
 	}
 	
 	public void setVar(String name, CandyObject value) {
-		vars.put(name, value);
+		curFileScope.setVar(name, value);
 	}
 	
 }
