@@ -32,9 +32,8 @@ public class ExeTool implements CandyTool {
 		boolean isFailed = false;
 		for (File sourceFile : srcFiles) {
 			interpreter.initOrReset();
-			if (!run(interpreter, sourceFile, true, false)) {
-				isFailed = true;
-			}
+			boolean success = run(interpreter, sourceFile, false);
+			isFailed = !success ? true : isFailed;
 		}
 		if (isFailed) {
 			System.exit(1);
@@ -68,13 +67,12 @@ public class ExeTool implements CandyTool {
 	
 	public static boolean run(Interpreter interpreter, 
 	                          File sourceFile, 
-	                          boolean exitIfError, 
-	                          boolean interactively) throws IOException {
+	                          boolean exitIfError) throws IOException {
 		return run(interpreter,
 			sourceFile.getPath(), 
 			FileUtils.readText(sourceFile), 
 			exitIfError, 
-			interactively
+			false
 		);
 	}
 	
@@ -92,6 +90,6 @@ public class ExeTool implements CandyTool {
 		if (!logger.printAllMessage(exitIfError)) {
 			return false;
 		}
-		return interpreter.run(interactively);
+		return interpreter.run();
 	}
 }

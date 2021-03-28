@@ -38,7 +38,7 @@ public class PerformanceTool implements CandyTool {
 			loadDuration += System.currentTimeMillis() - startTimeMillis;
 			
 			startTimeMillis = System.currentTimeMillis();
-			interpreter.run(false);
+			interpreter.run();
 			runDuration += System.currentTimeMillis() - startTimeMillis;
 		}
 		

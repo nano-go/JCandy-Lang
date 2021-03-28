@@ -11,5 +11,5 @@ public interface Interpreter {
 	public void onExit();
 	
 	public void load(ASTreeNode node, boolean interatively);
-	public boolean run(boolean interatively);
+	public boolean run();
 }
