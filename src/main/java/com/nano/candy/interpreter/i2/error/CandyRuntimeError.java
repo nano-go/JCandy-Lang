@@ -35,7 +35,7 @@ public class CandyRuntimeError extends RuntimeException {
 	                                 int maxFrame, PrintWriter pw) {
 		int max = maxFrame < 0 ? Integer.MAX_VALUE : maxFrame;
 		int bottom = stack.frameCount() - 
-			Math.min(maxFrame, stack.frameCount());
+			Math.min(max, stack.frameCount());
 		for (int i = stack.frameCount()-1; i >= bottom; i --) {
 			Frame frame = stack.getAt(i);
 			String info = String.format(
