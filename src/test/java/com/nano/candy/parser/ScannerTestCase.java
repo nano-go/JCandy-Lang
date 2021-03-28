@@ -2,7 +2,7 @@ package com.nano.candy.parser;
 
 import com.nano.candy.common.CandyTestCase;
 import com.nano.candy.common.LoggerMsgChecker;
-import com.nano.candy.config.Config;
+import com.nano.candy.sys.CandySystem;
 import com.nano.candy.utils.Logger;
 import com.nano.candy.utils.Position;
 import java.io.IOException;
@@ -15,7 +15,7 @@ import static org.junit.Assert.*;
 public class ScannerTestCase {
 	
 	private static final Token SEMIEOF= tk(TokenKind.SEMI, "EOF") ;
-	private static final Token SEMILN= tk(TokenKind.SEMI, Config.END_OF_LINE) ;
+	private static final Token SEMILN= tk(TokenKind.SEMI, CandySystem.END_OF_LINE) ;
 	
 	static final Logger logger = Logger.getLogger() ;
 	

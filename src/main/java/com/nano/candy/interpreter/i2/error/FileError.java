@@ -1,6 +1,7 @@
 package com.nano.candy.interpreter.i2.error;
 
-import com.nano.candy.config.Config;
+
+import com.nano.candy.sys.CandySystem;
 import java.io.File;
 import java.io.IOException;
 
@@ -13,7 +14,7 @@ public class FileError extends CandyRuntimeError {
 	public static void checkCandySourceFile(File file) {
 		if (file.isFile()) {
 			String name = file.getName();
-			if (name.endsWith("." + Config.FILE_SUFFIX)) {
+			if (CandySystem.isCandySource(name)) {
 				return;
 			}
 		}

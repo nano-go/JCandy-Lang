@@ -29,7 +29,7 @@ import com.nano.candy.interpreter.i2.rtda.moudle.MoudleManager;
 import com.nano.candy.interpreter.i2.rtda.moudle.SourceFileInfo;
 import com.nano.candy.interpreter.i2.vm.debug.DebugHelper;
 import com.nano.candy.interpreter.i2.vm.debug.InstructionBenchmarking;
-import com.nano.candy.utils.SystemUtils;
+import com.nano.candy.sys.CandySystem;
 import java.io.File;
 
 import static com.nano.candy.interpreter.i2.instruction.Instructions.*;
@@ -46,7 +46,7 @@ public final class VM {
 	
 	private static final byte WIDE_INDEX_MARK = (byte) 0xFF;
 	
-	private int maxStackDeepth = 1024*2;
+	private int maxStackDeepth = CandySystem.DEFAULT_MAX_STACK;
 	
 	private GlobalEnvironment global;
 	private MoudleManager moudleManager;
@@ -96,7 +96,7 @@ public final class VM {
 	
 	public void loadChunk(Chunk chunk) {
 		loadFile(new CompiledFileInfo(
-			SystemUtils.DEFAULT_USER_DIR, chunk, false));
+			CandySystem.DEFAULT_USER_DIR, chunk, false));
 	}
 	
 	/**

@@ -1,5 +1,5 @@
 package com.nano.candy.utils;
-import com.nano.candy.config.Config;
+import com.nano.candy.sys.CandySystem;
 import java.io.File;
 import java.io.FileFilter;
 
@@ -10,6 +10,6 @@ public class CandyFileFilter implements FileFilter {
 	private CandyFileFilter(){}
 	@Override
 	public boolean accept(File f) {
-		return f.isFile() && f.getName().endsWith("." + Config.FILE_SUFFIX);
+		return f.isFile() && f.getName().endsWith("." + CandySystem.FILE_SUFFIX);
 	}
 }

@@ -1,5 +1,6 @@
 package com.nano.candy.parser;
-import com.nano.candy.config.Config;
+
+import com.nano.candy.sys.CandySystem;
 import com.nano.candy.utils.Characters;
 import com.nano.candy.utils.Position;
 
@@ -78,7 +79,7 @@ class CandyScanner implements Scanner {
 					
 				case '\n' :
 					kind = TokenKind.SEMI;
-					literal = Config.END_OF_LINE;
+					literal = CandySystem.END_OF_LINE;
 					break;
 					
 				case '"':

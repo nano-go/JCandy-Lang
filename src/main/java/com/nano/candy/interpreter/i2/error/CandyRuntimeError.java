@@ -1,7 +1,8 @@
 package com.nano.candy.interpreter.i2.error;
+
 import com.nano.candy.interpreter.i2.rtda.Frame;
 import com.nano.candy.interpreter.i2.rtda.FrameStack;
-import com.nano.candy.utils.SystemUtils;
+import com.nano.candy.sys.CandySystem;
 import com.nano.common.io.FilePathUtils;
 import java.io.PrintStream;
 import java.io.PrintWriter;
@@ -43,7 +44,7 @@ public class CandyRuntimeError extends RuntimeException {
 				indent, frame.name,
 				getRelativePathOf(
 					frame.chunk.getSourceFileName(), 
-					SystemUtils.DEFAULT_USER_DIR
+					CandySystem.DEFAULT_USER_DIR
 				),
 				frame.chunk.getLineNumber(frame.pc-1)
 			);
