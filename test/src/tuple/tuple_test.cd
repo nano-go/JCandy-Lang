@@ -1,0 +1,27 @@
+var t = (5, 5 + 10, lambda e -> e, [ 5, 15 ], (6, 8))
+
+assert t.len() == 5
+assert t[0] == 5
+assert t[1] == 15
+assert t[2].isCallable()
+assert t[3] is Array
+assert t[4] is Tuple
+
+var t = (5, 9)
+assert t == t
+assert t == (5, 9)
+assert str(t) == "(5, 9)"
+
+var t = ()
+var t1 = Tuple()
+assert t == t1
+assert t.len() == 0
+
+var t = (5, 10, 9)
+var sum = 0
+for (e in t) sum += e
+assert sum == 24
+
+var t = (5, [0, 2], 9)
+assert t + ((13,), t) ==
+       (5, [0, 2], 9, (13,), (5, [0, 2], 9))

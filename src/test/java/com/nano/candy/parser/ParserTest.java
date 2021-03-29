@@ -63,6 +63,10 @@ public class ParserTest {
 		"import a + b as stream",
 		"import (\n\"stream\" as stream\na + b as stream\n)",
 		"import ()",
+		"(a, b + 15 / 3, c(a(), b()()))",
+		"(a, b,)",
+		"(a,)",
+		"()",
 		"",
 	};
 	
