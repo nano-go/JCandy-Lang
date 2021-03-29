@@ -27,27 +27,6 @@ public final class ArrayObj extends BuiltinObject {
 		}
 	}
 	
-	private static class ArrIterator extends IteratorObj {
-		private int i;
-		private int size;
-		private CandyObject[] elements;
-		
-		public ArrIterator(CandyObject[] elements, int size) {
-			this.elements = elements;
-			this.size = size;
-		}
-		
-		@Override
-		public boolean hasNext(VM vm) {
-			return i < size;
-		}
-
-		@Override
-		public CandyObject next(VM vm) {
-			return elements[i ++];
-		}
-	}
-	
 	private CandyObject[] elements;
 	private int size;
 	
@@ -208,7 +187,7 @@ public final class ArrayObj extends BuiltinObject {
 	
 	@Override
 	public CandyObject iterator() {
-		return new ArrIterator(elements, size);
+		return new IteratorObj.ArrIterator(elements, size);
 	}
 
 	@Override
