@@ -8,6 +8,8 @@ import com.nano.candy.interpreter.i2.builtin.type.classes.BuiltinClassFactory;
 import com.nano.candy.interpreter.i2.builtin.type.classes.CandyClass;
 import com.nano.candy.interpreter.i2.vm.VM;
 import java.util.HashMap;
+import java.util.Iterator;
+import java.util.Map;
 
 @BuiltinClass("Moudle")
 public class MoudleObj extends BuiltinObject {
@@ -34,14 +36,14 @@ public class MoudleObj extends BuiltinObject {
 
 	@Override
 	public CandyObject iterator() {
-		return super.iterator();
+		return new IteratorObj.MapIterator(attrs.entrySet().iterator());
 	}
 	
 	public String getName() {
 		return name;
 	}
 	
-	@BuiltinMethod(name = "getName")
+	@BuiltinMethod(name = "name")
 	public void getName(VM vm) {
 		vm.returnFromVM(StringObj.valueOf(name));
 	}
