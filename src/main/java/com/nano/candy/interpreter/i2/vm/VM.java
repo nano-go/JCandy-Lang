@@ -10,6 +10,7 @@ import com.nano.candy.interpreter.i2.builtin.type.MoudleObj;
 import com.nano.candy.interpreter.i2.builtin.type.NullPointer;
 import com.nano.candy.interpreter.i2.builtin.type.PrototypeFunctionObj;
 import com.nano.candy.interpreter.i2.builtin.type.StringObj;
+import com.nano.candy.interpreter.i2.builtin.type.TupleObj;
 import com.nano.candy.interpreter.i2.builtin.type.classes.CandyClass;
 import com.nano.candy.interpreter.i2.builtin.type.classes.ObjectClass;
 import com.nano.candy.interpreter.i2.builtin.utils.ObjectHelper;
@@ -477,6 +478,23 @@ public final class VM {
 					for (int i = 0; i < elements; i ++) {
 						arr.append(pop());
 					}
+					break;
+				}
+				
+				/**
+				 * Tuple
+				 */
+				case OP_BUILT_TUPLE: {
+					int size = readUint8();
+					if (size == 0) {
+						push(TupleObj.EMPTY_TUPLE);
+						return;
+					}
+					CandyObject[] elements = new CandyObject[size];
+					for (int i = 0; i < size; i ++) {
+						elements[i] = pop();
+					}
+					push(new TupleObj(elements));
 					break;
 				}
 				

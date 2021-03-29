@@ -524,6 +524,20 @@ public class Checker implements AstVisitor<Stmt, Expr> {
 		}
 		return node;
 	}
+
+	@Override
+	public Expr visit(Expr.Tuple node) {
+		if (node.elements.size() > 255) {
+			error(node, 
+				"The length of a tuple literal can't be greater than 255.");
+		}
+		ListIterator<Expr> i = node.elements.listIterator();
+		while (i.hasNext()) {
+			Expr expr = i.next();
+			i.set(visitExpr(expr));
+		}
+		return node;
+	}
 	
 	@Override
 	public Expr visit(Expr.IntegerLiteral node) {

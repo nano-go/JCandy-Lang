@@ -806,6 +806,21 @@ public class CodeGenerator implements AstVisitor<Void, Void> {
 		}
 		return null;
 	}
+
+	@Override
+	public Void visit(Expr.Tuple node) {
+		final int SIZE = node.elements.size();
+		if (SIZE > 255) {
+			// Unreachable
+			throw new Error("size: " + SIZE + " > 255");
+		}
+		for (int i = SIZE-1; i >= 0; i --) {
+			node.elements.get(i).accept(this);
+		}
+		builder.state().pop(SIZE);
+		builder.emitopWithArg(OP_BUILT_TUPLE, SIZE);
+		return null;
+	}
 	
 	@Override
 	public Void visit(Expr.IntegerLiteral node) {

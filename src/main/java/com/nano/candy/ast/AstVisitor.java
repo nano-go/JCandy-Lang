@@ -1,9 +1,7 @@
 package com.nano.candy.ast;
-import com.nano.candy.ast.Stmt.ImportList;
-import com.nano.candy.ast.Stmt.Import;
 
 public interface AstVisitor<S, E> {
-
+	
 	public void visit(Program node);
 	
 	public S visit(Stmt.ErrorStmt node);
@@ -31,6 +29,7 @@ public interface AstVisitor<S, E> {
 	public E visit(Expr.BooleanLiteral node);
 	public E visit(Expr.NullLiteral node);
 	public E visit(Expr.Array node);
+	public E visit(Expr.Tuple node);
 	public E visit(Expr.VarRef node);
 	public E visit(Expr.Unary node);
 	public E visit(Expr.Binary node);

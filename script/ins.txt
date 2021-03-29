@@ -80,6 +80,7 @@ OP_FUN fun
 OP_IMPORT import
 
 OP_NEW_ARRAY new_array
+OP_BUILT_TUPLE built_tuple
 OP_APPEND append
 OP_ASSERT assert
 OP_PRINT print

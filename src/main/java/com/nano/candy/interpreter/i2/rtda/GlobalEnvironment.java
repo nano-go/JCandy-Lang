@@ -10,6 +10,7 @@ import com.nano.candy.interpreter.i2.builtin.type.IntegerObj;
 import com.nano.candy.interpreter.i2.builtin.type.NumberObj;
 import com.nano.candy.interpreter.i2.builtin.type.Range;
 import com.nano.candy.interpreter.i2.builtin.type.StringObj;
+import com.nano.candy.interpreter.i2.builtin.type.TupleObj;
 import com.nano.candy.interpreter.i2.builtin.type.classes.CandyClass;
 import com.nano.candy.interpreter.i2.builtin.type.classes.ObjectClass;
 import com.nano.candy.interpreter.i2.rtda.moudle.CompiledFileInfo;
@@ -35,6 +36,7 @@ public class GlobalEnvironment {
 		defineClass(DoubleObj.DOUBLE_CLASS);
 		defineClass(StringObj.STRING_CLASS);
 		defineClass(BoolObj.BOOL_CLASS);
+		defineClass(TupleObj.TUPLE_CLASS);
 		defineClass(ObjectClass.getObjClass());
 	}
 

@@ -303,6 +303,25 @@ public abstract class Expr extends ASTreeNode {
 		}
 	}
 	
+	public static class Tuple extends Literal {
+
+		public List<Expr> elements;
+
+		public Tuple(List<Expr> elements) {
+			this.elements = elements;
+		}
+
+		@Override
+		public <R> R accept(AstVisitor<?, R> visitor) {
+			return visitor.visit(this);
+		}
+
+		@Override
+		public boolean isConstant() {
+			return false;
+		}
+	}
+	
 	public static class This extends Expr {
 		@Override
 		public <R> R accept(AstVisitor<?, R> visitor) {

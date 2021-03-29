@@ -9,6 +9,11 @@ import com.nano.candy.interpreter.i2.vm.VM;
 
 public class BuiltinObject extends CandyObject {
 
+	public BuiltinObject(CandyClass clazz) {
+		super(clazz);
+		freeze();
+	}
+	
 	@Override
 	public void positiveApi(VM vm) {
 		vm.returnFromVM(positive(vm));
@@ -119,11 +124,6 @@ public class BuiltinObject extends CandyObject {
 		return lteq(vm, operand);
 	}
 	
-	public BuiltinObject(CandyClass clazz) {
-		super(clazz);
-		freeze();
-	}
-
 	@Override
 	public void hashCodeApi(VM vm) {
 		vm.returnFromVM(hashCodeApiExeUser(vm));

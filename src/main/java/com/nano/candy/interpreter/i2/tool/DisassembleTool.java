@@ -169,6 +169,7 @@ public class DisassembleTool implements CandyTool {
 			case OP_CLOSE_SLOT:
 			case OP_CLOSE_UPVALUE:
 			case OP_CALL:
+			case OP_BUILT_TUPLE:
 			case OP_APPEND:
 				simpleInstructionWithArg(opcode, 1, true);
 				break;

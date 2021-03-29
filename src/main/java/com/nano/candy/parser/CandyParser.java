@@ -763,7 +763,7 @@ class CandyParser implements Parser {
 	 *            | <INTEGER>
 	 *            | <DOUBLE>
 	 *            | <IDENTIFIER>
-	 *            | ( "(" Expr ")" )
+	 *            | ( "(" [ ExprOrLambda [ "," Tuple ] ] ")" )
 	 *            | Array
 	 *            | "this"
 	 *            | ( "super" "." <IDENTIFIER> )
@@ -817,7 +817,16 @@ class CandyParser implements Parser {
 			
 			case LPAREN:
 				consume();
-				expr = parseExpr();
+				if (matchIf(RPAREN)) {
+					expr = new Expr.Tuple(new ArrayList<Expr>());
+					locate(location, expr);
+					break;
+				}
+				expr = parseExprOrLambda();
+				if (matchIf(COMMA)) {
+					expr = parseTuple(expr);
+					locate(location, expr);
+				}
 				matchIf(RPAREN, true);
 				break;
 			
@@ -844,6 +853,22 @@ class CandyParser implements Parser {
 				panic();
 		}
 		return parseExprSuffix(expr);
+	}
+
+	/**
+	 * Tuple = [ ExprOrLambda ( "," ExprOrLambda )* [ "," ] [ SEMI ] ]
+	 */
+	private Expr parseTuple(Expr expr) {
+		List<Expr> tuple = new ArrayList<>();
+		tuple.add(expr);
+		do {
+			if (peekKind() == RPAREN) {
+				break;
+			}
+			tuple.add(parseExprOrLambda());
+		} while (matchIf(COMMA));
+		matchIf(SEMI);
+		return new Expr.Tuple(tuple);
 	}
 	
 	/**
