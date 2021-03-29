@@ -6,6 +6,7 @@ import com.nano.candy.interpreter.i2.builtin.type.IntegerObj;
 import com.nano.candy.interpreter.i2.builtin.type.NullPointer;
 import com.nano.candy.interpreter.i2.builtin.type.Range;
 import com.nano.candy.interpreter.i2.builtin.utils.ObjectHelper;
+import com.nano.candy.interpreter.i2.rtda.moudle.MoudleManager;
 import com.nano.candy.interpreter.i2.vm.VM;
 
 public class BuiltinFunctions {
@@ -67,5 +68,12 @@ public class BuiltinFunctions {
 	public static void str(VM vm) {
 		CandyObject obj = vm.pop();
 		vm.returnFromVM(obj.strApiExeUser(vm));
+	}
+	
+	public static final BuiltinFunctionEntity IMPORT = 
+		new BuiltinFunctionEntity("importFile", 1, BuiltinFunctions::importFile);
+	public static void importFile(VM vm) {
+		String filePath = ObjectHelper.asString(vm.pop());
+		vm.returnFromVM(vm.getMoudleManager().importFile(vm, filePath));
 	}
 }
