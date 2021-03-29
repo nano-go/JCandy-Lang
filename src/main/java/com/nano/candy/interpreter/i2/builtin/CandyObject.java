@@ -134,6 +134,11 @@ public abstract class CandyObject {
 		vm.returnFromVM(getCandyClass());
 	}
 	
+	@BuiltinMethod(name = "isCallable")
+	public void isCallable(VM vm) {
+		vm.returnFromVM(BoolObj.valueOf(isCallable()));
+	}
+	
 	@BuiltinMethod(name = Names.METHOD_HASH_CODE)
 	public void hashCodeMethod(VM vm) {
 		vm.returnFromVM(hashCode(vm));
