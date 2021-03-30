@@ -224,7 +224,7 @@ public class ChunkBuilder {
 	}
 	
 	public void emitopWithArg(byte opcode, int b) {
-		emit1(opcode);
+		emitop(opcode, -1);
 		emit1((byte) b);
 	}
 	
