@@ -183,6 +183,19 @@ public class CodeGenerator implements AstVisitor<Void, Void> {
 		}
 	}
 	
+	private int cacheAttrToLocal(String attrName, String localVarName, int objSlot) {
+		builder.emitLoad(objSlot, -1);
+		return cacheAttrToLocal(attrName, localVarName);
+	}
+	
+	private int cacheAttrToLocal(String attrName, String localVarName) {
+		int cachedVar = locals.addLocal(localVarName);
+		builder.emitop(OP_GET_ATTR);
+		builder.emitStringConstant(attrName);
+		builder.emitopWithArg(OP_POP_STORE, cachedVar);
+		return cachedVar;
+	}
+	
 	/**
 	 * Generates code to assign the value of its left-hand operand to its
 	 * right-hand operand, a variable or an attribute or an indexer element.
@@ -480,17 +493,22 @@ public class CodeGenerator implements AstVisitor<Void, Void> {
 		
 		enterScope();
 		int iteratorSlot = invokeIterator(line(node));
+		int nextSlot = cacheAttrToLocal(Names.METHOD_ITERATOR_NEXT, 
+			"hidden$i_next");
+		int hasNextSlot = cacheAttrToLocal(Names.METHOD_ITERATOR_HAS_NEXT,
+			"hidden$i_has_next", iteratorSlot);
 		int iteratingSlot = locals.addLocal(node.iteratingVar);
 		
-		int begainningPos = builder.curCp();
-		enterLoop(node, new LoopMarker(begainningPos));
-		invokeHasNext(iteratorSlot);
+		int begainning = builder.curCp();
+		enterLoop(node, new LoopMarker(begainning));
+		callLocalVar(hasNextSlot, 0, -1);
 		int jumpOutLabel = builder.emitLabel(OP_POP_JUMP_IF_FALSE, -1);
 		
-		invokeNext(iteratingSlot, iteratorSlot);
+		callLocalVar(nextSlot, 0, -1);
+		builder.emitopWithArg(OP_POP_STORE, iteratingSlot);
 		walkStatements(node.body.stmts);
 		
-		builder.emitLoop(begainningPos, -1);
+		builder.emitLoop(begainning, -1);
 		builder.backpatch(jumpOutLabel);
 		exitLoop(node);
 		
@@ -501,19 +519,8 @@ public class CodeGenerator implements AstVisitor<Void, Void> {
 	private int invokeIterator(int lineNumber) {
 		int iteratorSlot = locals.addLocal("hidden$iterator");
 		builder.emitInvoke(Names.METHOD_ITERATOR, 0, lineNumber);
-		builder.emitopWithArg(OP_POP_STORE, iteratorSlot, -1);
+		builder.emitopWithArg(OP_STORE, iteratorSlot, -1);
 		return iteratorSlot;
-	}
-
-	private void invokeHasNext(int iteratorSlot) {
-		builder.emitLoad(iteratorSlot, -1);
-		builder.emitInvoke(Names.METHOD_ITERATOR_HAS_NEXT, 0, -1);
-	}
-	
-	private void invokeNext(int iteratingVarSlot, int iteratorIndex) {
-		builder.emitLoad(iteratorIndex, -1);
-		builder.emitInvoke(Names.METHOD_ITERATOR_NEXT, 0, -1);
-		builder.emitopWithArg(OP_POP_STORE, iteratingVarSlot, -1);
 	}
 	
 	@Override
