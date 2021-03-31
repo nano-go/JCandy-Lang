@@ -16,9 +16,13 @@ import static com.nano.candy.parser.TokenKind.*;
 class CandyParser implements Parser {
 	
 	private static final String INITIALIZER_NAME = Names.METHOD_INITALIZER;
+	
+	/**
+	 * LL(k)
+	 */
 	private static final int LOOKAHEAD_K = 2;
 
-	protected final Logger logger = Logger.getLogger();
+	private static final Logger logger = Logger.getLogger();
 
 	protected Scanner scanner;
 	private Token[] lookahead;
@@ -27,13 +31,14 @@ class CandyParser implements Parser {
 	private Token peek;
 	
 	/**
-	 * In some cases, I hope the SEMI at the end of a statement can be ignored.
-	 * E.g: {@code foreach(lambda e -> println(e))}
-	 *
-	 * I want this code to be valid instead of reporting the following error:
-	 * <code> Missing ';' after 'println(e)' </code>
+	 * If parser is in a single-line statement of lambda expressions, the 
+	 * SEMI at the end of this statement is needless.
+	 * 
+	 * E.g: var f = lambda e -> println(e);;
+	 * The first ';' is the end of the 'println' and the second ';' is the end of
+	 * the assignment statement. That's ugly.
 	 */
-	private boolean singleLineLambda;
+	private boolean inSingleLineLambda;
 
 	public CandyParser(Scanner scanner) {
 		this.scanner = scanner;
@@ -51,43 +56,43 @@ class CandyParser implements Parser {
 
 	/* =================== helper =================== */
 	
-	private String tokStr(TokenKind tok) {
+	private static String tokStr(TokenKind tok) {
 		if (StringUtils.isEmpty(tok.getLiteral())) {
 			return tok.name();
 		}
 		return tok.getLiteral();
 	}
 
-	protected <R extends ASTreeNode> R locate(Token token, R node) {
-		return this.locate(token.getPos(), node);
+	private static <R extends ASTreeNode> R locate(Token token, R node) {
+		return locate(token.getPos(), node);
 	}
 	
-	protected <R extends ASTreeNode> R locate(Position pos, R node) {
+	private static <R extends ASTreeNode> R locate(Position pos, R node) {
 		node.pos = pos;
 		return node;
 	}
 	
-	protected TokenKind peekKind() {
+	private TokenKind peekKind() {
 		return peek.getKind();
 	}
 	
-	protected Token peek() {
+	private Token peek() {
 		return peek;
 	}
 	
-	protected Token peek(int k) {
+	private Token peek(int k) {
 		return lookahead[(lp + k) % LOOKAHEAD_K];
 	}
 
-	protected Token previous() {
+	private Token previous() {
 		return previous;
 	}
 	
-	protected void consume() {
+	private void consume() {
 		nextToken();
 	}
 
-	protected Token nextToken() {
+	private Token nextToken() {
 		previous = peek();
 		lookahead[lp] = scanner.nextToken();
 		lp = (lp + 1) % LOOKAHEAD_K;
@@ -95,11 +100,11 @@ class CandyParser implements Parser {
 		return peek;
 	}
 
-	protected boolean matchIf(TokenKind expected) {
+	private boolean matchIf(TokenKind expected) {
 		return matchIf(expected, false);
 	}
 
-	protected boolean matchIf(TokenKind expected, boolean error) {
+	private boolean matchIf(TokenKind expected, boolean error) {
 		if (peek().getKind() == expected) {
 			consume();
 			return true;
@@ -110,7 +115,7 @@ class CandyParser implements Parser {
 		return false;
 	}
 	
-	protected Token matchIf(TokenKind tok, String errmsg, Object... args) {
+	private Token matchIf(TokenKind tok, String errmsg, Object... args) {
 		Token actual = peek();
 		if (peek().getKind() == tok) {
 			consume();
@@ -120,13 +125,13 @@ class CandyParser implements Parser {
 		return actual;
 	}
 	
-	protected Token match(TokenKind tok) {
+	private Token match(TokenKind tok) {
 		return match(tok, "Expetced '%s', but was '%s'.", 
 			  tokStr(tok), tokStr(peek().getKind())
 		);
 	}
 	
-	protected Token match(TokenKind tok, String errmsg, Object... args) {
+	private Token match(TokenKind tok, String errmsg, Object... args) {
 		Token actual = peek();
 		if (peek().getKind() == tok) {
 			consume();
@@ -137,13 +142,29 @@ class CandyParser implements Parser {
 		return actual;
 	}
 	
-	protected void matchSEMI() {
-		if (singleLineLambda) {
+	private void matchSEMI() {
+		if (inSingleLineLambda) {
 			return;
 		}
 		
-		// e.g: function = lambda -> { return value }
+		// e.g: var a = lambda -> { return value } // missing ';'
+		// Scanner can't insert a SEMI token to the end of this expression
+		// If the previous kind is '}'.
 		matchIf(SEMI, previous().getKind() != RBRACE);
+	}
+	
+	/**
+	 * Linux style (break before braces) or Chained method calls...
+	 *
+	 * Scanner will insert a SEMI in some cases, e.g:
+	 * 1. func a(a, b)\n /the insertion of a SEMI/ {}
+	 * 2. if (expr)\n /the insertion of a SEMI/ {}
+	 * 3. stream(arr)\n /insertion/ .foreach(...)\n /insertion/ .count()
+	 * 4. [\n expr1,\n expr2,\n expr3\n /insertion/ ]
+	 * ...
+	 */
+	private void ignorableLinebreak() {
+		matchIf(SEMI, false);
 	}
 	
 	private Position suitableErrorPosition() {
@@ -155,14 +176,14 @@ class CandyParser implements Parser {
 		return currentPosition;
 	}
 
+	
 	/* =================== errors =================== */
 
-
-	protected void panic() {
+	private void panic() {
 		throw new ParserError();
 	}
 	
-	protected void synchronizeInMethodContext() {
+	private void synchronizeInMethodContext() {
 		loop: while (true) {
 			switch (peekKind()) {
 				case RBRACE:
@@ -175,7 +196,7 @@ class CandyParser implements Parser {
 		}
 	}
 
-	protected void synchronize() {
+	private void synchronize() {
 		loop: while (true) {
 			switch (peekKind()) {
 				case EOF: 
@@ -200,11 +221,12 @@ class CandyParser implements Parser {
 	}
 	
 	/**
-	 * Ensures the current token kind is specified expected kind.
+	 * Ensures that the kind of the current token is the specified token kind.
+	 * If it's not, Parser will report an error and change lt.
 	 *
 	 * @param expectedKind the token kind must be in statement first set.
 	 */
-	protected void ensureExpectedKind(TokenKind expectedKind) {
+	private void ensureExpectedKind(TokenKind expectedKind) {
 		if (peekKind() == expectedKind) {
 			return;
 		}
@@ -219,17 +241,17 @@ class CandyParser implements Parser {
 	/**
 	 * Replace the current token with a new token kind.
 	 */
-	protected Token insertToken(TokenKind kind) {
+	private Token insertToken(TokenKind kind) {
 		Token insertedToken = new Token(peek.getPos(), kind.getLiteral(), kind);
 		this.peek = insertedToken;
 		return insertedToken;
 	}
 
-	protected void error(Token tok, String message, Object... args) {
+	private void error(Token tok, String message, Object... args) {
 		error(tok.getPos(), message, args);
 	}
 
-	protected void error(Position pos, String message, Object... args) {
+	private void error(Position pos, String message, Object... args) {
 		logger.error(pos, String.format(message, args));
 	}
 	
@@ -237,8 +259,8 @@ class CandyParser implements Parser {
 
 
 	/**
-	 * Changes the last statement to the {@code Return} statement 
-	 * if it's returnable.
+	 * Changes the last statement in the specified block into the 
+	 * {@code Return-Stmt} if it's returnable.
 	 */
 	private Stmt.Block toFuncBlock(Stmt.Block block) {
 		if (block.stmts.isEmpty()) {
@@ -380,21 +402,18 @@ class CandyParser implements Parser {
 	 */
 	private Stmt.Block parseBody(Position posIfErr, String msgIfErr) {	
 		Stmt body = parseStmt();
-		// Reports error if the body is empty.
 		if (body == null) {
 			error(posIfErr, msgIfErr);
 			return null;
 		}
 		
 		if (body instanceof Stmt.Block) {
-			// Reduces AST level.
-			Stmt.Block block = (Stmt.Block) body;
-			return block;
-		} else {
-			Stmt.Block block =  new Stmt.Block();
-			block.stmts.add(body);
-			return locate(body.pos, block);
+			return (Stmt.Block) body;
 		}
+		
+		Stmt.Block block =  new Stmt.Block();	
+		block.stmts.add(body);
+		return locate(body.pos, block);
 	}
 
 	/**
@@ -404,7 +423,7 @@ class CandyParser implements Parser {
 		Token location = match(CLASS);
 		Token name = match(IDENTIFIER, "Expected class name.");
 		Expr.VarRef superClass = parseSuperClass();
-		matchIf(SEMI);
+		ignorableLinebreak();
 		matchIf(LBRACE, true);
 		Stmt.ClassDef classDef = new Stmt.ClassDef(
 			name.getLiteral(), superClass, new ArrayList<Stmt.FuncDef>()
@@ -495,7 +514,7 @@ class CandyParser implements Parser {
 		matchIf(FUN);
 		Token name = peek();
 		matchIf(IDENTIFIER, true);
-		List<String> params = parseParams(true);
+		List<String> params = parseParams(false);
 		ensureExpectedKind(TokenKind.LBRACE);
 		Stmt.Block body = parseBlock();
 		return locate(name, new Stmt.FuncDef(name.getLiteral(), params, body));
@@ -509,7 +528,7 @@ class CandyParser implements Parser {
 		matchIf(LPAREN, true);
 		Expr expr = parseExpr();
 		if (matchIf(RPAREN, true)) {
-			matchIf(SEMI);
+			ignorableLinebreak();
 		}
 		Stmt thenBody = parseBody(location.getPos(), "Invalid if statement.");
 		Stmt elseBody = null;
@@ -547,7 +566,7 @@ class CandyParser implements Parser {
 		matchIf(LPAREN, true);
 		Expr expr = parseExpr();
 		if (matchIf(RPAREN, true)) {
-			matchIf(SEMI);
+			ignorableLinebreak();
 		}
 		Stmt body = parseBody(location.getPos(), "Invalid while statemenet");
 		return locate(location, new Stmt.While(expr, body));
@@ -563,7 +582,7 @@ class CandyParser implements Parser {
 		match(IN);
 		Expr iterable = parseExpr();
 		if (matchIf(RPAREN, true)) {
-			matchIf(SEMI);
+			ignorableLinebreak();
 		}
 		Stmt.Block body = parseBody(location.getPos(), "Invalid for statement.");
 		return locate(location, new Stmt.For(iteratingVar, iterable, body));
@@ -621,8 +640,7 @@ class CandyParser implements Parser {
 			initializer = parseExprOrLambda();
 		}
 		matchSEMI();
-		return locate(
-			position, 
+		return locate(position, 
 			new Stmt.VarDef(identifier.getLiteral(), initializer)
 		);
 	}
@@ -633,7 +651,7 @@ class CandyParser implements Parser {
 	private Stmt.FuncDef parseFunDef() {
 		Token location = match(FUN);
 		String name = match(IDENTIFIER, "Expected function name.").getLiteral();
-		List<String> params = parseParams(true);
+		List<String> params = parseParams(false);
 		Stmt.Block body = toFuncBlock(parseBlock());
 		return locate(location, new Stmt.FuncDef(name, params, body));
 	}
@@ -642,26 +660,24 @@ class CandyParser implements Parser {
 	 * Params = ( ( "(" Parameters ")" ) | Parameters ) [ <SEMI> ]
 	 * Parameters = [ <IDENTIFIER> ( "." <IDENTIFIER> )*
 	 */
-	private List<String> parseParams(boolean forcibleParenthesis) {
+	private List<String> parseParams(boolean optionalParenthesis) {
 		ArrayList<String> params = new ArrayList<>(6);
-		boolean leftParenMatched = matchIf(LPAREN, forcibleParenthesis);
+		boolean leftParenMatched = matchIf(LPAREN, !optionalParenthesis);
 		if (leftParenMatched && matchIf(RPAREN)) {
-			matchIf(SEMI);
+			ignorableLinebreak();
 			return params;
-		}
+		}	
 		do {
 			Token nameTok = peek();
 			if (!matchIf(IDENTIFIER)) {
 				break;
 			}
 			params.add(nameTok.getLiteral());
-		} while (matchIf(COMMA));
-		
-		if (forcibleParenthesis || leftParenMatched) {
+		} while (matchIf(COMMA));	
+		if (!optionalParenthesis || leftParenMatched) {
 			matchIf(RPAREN, "Expected parameter declaration.");
 		}
-		// syntax: fun a()\n{
-		matchIf(SEMI);
+		ignorableLinebreak();
 		return params;
 	}
 	
@@ -689,35 +705,33 @@ class CandyParser implements Parser {
 	}
 
 	/**
-	 * Expr =  BinaryExpr [ AssignOp ExprOrLambda ]
-	 * AssignOp = "+=" | "-=" | "*=" | "/=" | "%=" | "="
+	 * Expr =  BinaryExpr [ Assignment ]
 	 */
 	private Expr parseExpr() {
 		Expr lhs = parseBinaryExpr(0);
 		if (!TokenKind.isAssignOperator(peek().getKind())) {
 			return lhs;
 		}
-		
+		return locate(lhs.pos, parseeAssignment(lhs));
+	}
+	
+	/**
+	 * Assignment = AssignOp ExprOrLambda
+	 * AssignOp = "+=" | "-=" | "*=" | "/=" | "%=" | "="
+	 */
+	private Expr parseeAssignment(Expr lhs) {
 		TokenKind assOperator = peek().getKind();
 		consume();
 		Expr rhs = parseExprOrLambda();
 		
-		if (lhs instanceof Expr.GetAttr) {
-			return locate(
-				lhs.pos, new Expr.SetAttr((Expr.GetAttr) lhs, assOperator, rhs)
-			);
-		}
-		
 		if (lhs instanceof Expr.VarRef) { 
-			return locate(
-				lhs.pos, new Expr.Assign(((Expr.VarRef) lhs).name, assOperator, rhs)
-			);
+			return new Expr.Assign(((Expr.VarRef) lhs).name, assOperator, rhs);
 		}
-		
+		if (lhs instanceof Expr.GetAttr) {
+			return new Expr.SetAttr((Expr.GetAttr) lhs, assOperator, rhs);
+		}
 		if (lhs instanceof Expr.GetItem) {
-			return locate(
-				lhs.pos, new Expr.SetItem((Expr.GetItem) lhs, assOperator, rhs)
-			);
+			return new Expr.SetItem((Expr.GetItem) lhs, assOperator, rhs);
 		}
 		
 		error(lhs.pos, "Invalid left hand side.");
@@ -867,7 +881,7 @@ class CandyParser implements Parser {
 			}
 			tuple.add(parseExprOrLambda());
 		} while (matchIf(COMMA));
-		matchIf(SEMI);
+		ignorableLinebreak();
 		return new Expr.Tuple(tuple);
 	}
 	
@@ -886,14 +900,14 @@ class CandyParser implements Parser {
 			}
 			elements.add(parseExprOrLambda());
 		} while (matchIf(COMMA));
-		matchIf(SEMI);
+		ignorableLinebreak();
 		matchIf(RBRACKET, true);
 		return locate(location, new Expr.Array(elements));
 	}
 
 	/**
 	 * ExprSuffix = ( Agruments | GetAttr | GetItem )*
-	 * GetAttr = "." <IDENTIFIER>
+	 * GetAttr = [ SEMI ] "." <IDENTIFIER>
 	 * GetItem = "[" Expr "]"
 	 */
 	@SuppressWarnings("fallthrough")
@@ -914,12 +928,16 @@ class CandyParser implements Parser {
 					continue;
 				
 				case SEMI:
-					// for supporting following chained syntax:
+					// chained method syntax:
 					//     stream()\n.filter()\n.map()\n.close()
 					if (peek(1).getKind() != DOT) {
 						break;
-					} 
-					consume(); /* down: parse dot. */
+					}
+					// consume '\n'
+					consume();
+					// reset position marker.
+					tok = peek();
+					// continue to parse down dot.
 				case DOT:
 					consume();
 					Token attr = match(IDENTIFIER, "Expected attribute name.");
@@ -945,7 +963,7 @@ class CandyParser implements Parser {
 			}
 			args.add(parseExprOrLambda());
 		} while (matchIf(COMMA));
-		matchIf(SEMI);
+		ignorableLinebreak();
 		matchIf(RPAREN, true);
 		return args;
 	}
@@ -966,17 +984,17 @@ class CandyParser implements Parser {
 	 */
 	private Expr.Lambda parseLambdaExpr() {
 		Token location = match(LAMBDA);
-		List<String> params = parseParams(false);
+		List<String> params = parseParams(true);
 		match(ARROW);
 		
-		boolean originalSingleLineLambda = singleLineLambda;
-		singleLineLambda = peekKind() != TokenKind.LBRACE;
+		boolean originalSingleLineLambda = inSingleLineLambda;
+		inSingleLineLambda = peekKind() != TokenKind.LBRACE;
 		
 		Stmt.Block body = toFuncBlock(
 			parseBody(location.getPos(), "Invalid lambda expression.")
 		);	
 		
-		singleLineLambda = originalSingleLineLambda;
+		inSingleLineLambda = originalSingleLineLambda;
 		Expr.Lambda lambda = new Expr.Lambda(params, body);
 		lambda.pos = location.getPos();
 		lambda.funcDef.pos = location.getPos();

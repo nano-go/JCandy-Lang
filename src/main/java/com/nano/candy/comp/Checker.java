@@ -32,7 +32,7 @@ public class Checker implements AstVisitor<Stmt, Expr> {
 		ASTreeNode.accept(node, new Checker());
 	}
 	
-	enum FunctionType {
+	private enum FunctionType {
 		NONE,
 		FUNCTION,
 		METHOD,

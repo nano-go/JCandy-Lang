@@ -1,5 +1,5 @@
 package com.nano.candy.std;
-import com.nano.common.text.StringUtils;
+
 
 public class Names {
 	
@@ -34,10 +34,5 @@ public class Names {
 	public static final String METHOD_OP_LT   = "_lt";
 	public static final String METHOD_OP_LTEQ = "_lteq";
 	
-	public static String methodName(String methodName) {
-		if (StringUtils.isEmpty(methodName)) {
-			return METHOD_INITALIZER;
-		}
-		return methodName;
-	}
+	private Names(){}
 }
