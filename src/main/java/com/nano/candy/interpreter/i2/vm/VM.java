@@ -88,7 +88,11 @@ public final class VM {
 		if (f.isDirectory()) {
 			return f.getAbsolutePath();
 		}
-		return f.getParentFile().getAbsolutePath();
+		File parent = f.getParentFile();
+		if (parent == null) {
+			return CandySystem.DEFAULT_USER_DIR;
+		}
+		return parent.getAbsolutePath();
 	}
 	
 	public MoudleManager getMoudleManager() {
