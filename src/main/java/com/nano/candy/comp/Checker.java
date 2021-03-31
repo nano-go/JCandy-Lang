@@ -44,10 +44,10 @@ public class Checker implements AstVisitor<Stmt, Expr> {
 	protected boolean inClass;
 	protected FunctionType curFunctionType = FunctionType.NONE;
 	
-	// This field is used to analyze the reachability of the statements.
+	// This field is used to analyze the reachability of a statement.
 	private boolean reachable = true;
 	
-	// This field is used to determina whether a while statement is infinite.
+	// This field is used to determine whether a while statement is infinite.
 	private boolean hadBreak = false;
 	private boolean returned = false;
 	
