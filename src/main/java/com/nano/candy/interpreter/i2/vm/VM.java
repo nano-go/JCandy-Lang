@@ -105,12 +105,12 @@ public final class VM {
 	}
 	
 	/**
-	 * VM needs to load one compiled file (only one at a time) to run.
+	 * VM needs to load a compiled file to run.
 	 * VM allows to load and run a compiled file at runtime.
 	 */
 	public void loadFile(CompiledFileInfo file) {
 		global.setFileScope(file);
-		pushFrame(new Frame(file.getChunk(), global.curFileScope()));
+		pushFrame(Frame.fetchFrame(file.getChunk(), global.curFileScope()));
 	}
 	
 	public FrameStack getFrameStack() {
@@ -130,7 +130,7 @@ public final class VM {
 	}
 	
 	public void popFrame() {
-		frameStack.popFrame().release();
+		frameStack.popFrame().recycleSelf();
 		if (frameStack.isEmpty()) {
 			resetFrameData();
 		} else {
@@ -143,7 +143,7 @@ public final class VM {
 		syncFrameData();
 		// push return value to operand stack.
 		push(top.pop());
-		top.release();
+		top.recycleSelf();
 	}
 	
 	private void syncFrameData() {
@@ -245,8 +245,10 @@ public final class VM {
 		return moudleObj;
 	}
 	
-	public void runFrame(boolean exitMethod) {	
-		Frame curFrame = frame();
+	public void runFrame(boolean exitMethodAtFrameEnd) {
+		if (exitMethodAtFrameEnd) {
+			frame().exitMethodAtReturn = true;
+		}
 		
 		loop: for (;;) {
 			if (DEBUG_TRACE_OPERAND_STACK) {
@@ -762,8 +764,8 @@ public final class VM {
 					break;
 				}
 				case OP_RETURN: {
-					if (exitMethod) {
-						if (frame() == curFrame) {
+					if (exitMethodAtFrameEnd) {
+						if (frame().exitMethodAtReturn) {
 							popFrameWithRet();
 							break loop;
 						}
@@ -773,8 +775,8 @@ public final class VM {
 				}
 				case OP_RETURN_NIL: {
 					push(NullPointer.nil());
-					if (exitMethod) {
-						if (frame() == curFrame) {
+					if (exitMethodAtFrameEnd) {
+						if (frame().exitMethodAtReturn) {
 							popFrameWithRet();
 							break loop;
 						}

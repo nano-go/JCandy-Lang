@@ -54,7 +54,7 @@ public class PrototypeFunctionObj extends CallableObj {
 	@Override
 	public void onCall(VM vm) {
 		Frame top = vm.frame();
-		Frame newFrame = new Frame(this);
+		Frame newFrame = Frame.fetchFrame(this);
 		for (int i = 0; i < arity; i ++) {
 			newFrame.store(i, top.pop());
 		}

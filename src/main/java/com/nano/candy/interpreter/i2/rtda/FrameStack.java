@@ -56,7 +56,7 @@ public final class FrameStack {
 	
 	public void clearFrame() {
 		for (int i = 1; i < sp; i ++) {
-			frameStack[i].release();
+			frameStack[i].recycleSelf();
 			frameStack[i] = null;
 		}
 		this.sp = 1;

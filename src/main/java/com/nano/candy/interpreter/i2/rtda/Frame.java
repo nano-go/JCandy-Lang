@@ -4,20 +4,39 @@ import com.nano.candy.interpreter.i2.builtin.type.PrototypeFunctionObj;
 import com.nano.candy.interpreter.i2.rtda.chunk.Chunk;
 import com.nano.candy.interpreter.i2.rtda.chunk.ChunkAttributes;
 import com.nano.candy.interpreter.i2.rtda.chunk.ConstantValue;
+import com.nano.candy.utils.objpool.GenericObjectPool;
+import com.nano.candy.utils.objpool.Recyclable;
 import java.util.LinkedList;
 import java.util.ListIterator;
 
-public final class Frame {
+public final class Frame implements Recyclable {
+	
+	private static final GenericObjectPool<Frame> FRAME_POOL =
+		new GenericObjectPool<Frame>(50, new Frame[0]);
+	
+	public static Frame fetchFrame(Chunk chunk, FileScope scope)  {
+		Frame f = FRAME_POOL.fetch();
+		if (f == null) {
+			f = new Frame();
+		}
+		return f.init(chunk, scope);
+	}
+	
+	public static Frame fetchFrame(PrototypeFunctionObj prototypeFunc) {
+		Frame f = FRAME_POOL.fetch();
+		if (f == null) {
+			f = new Frame();
+		}
+		return f.init(prototypeFunc);
+	}
 	
 	public String name;
 	public Chunk chunk;
 	public int pc;
 	
 	public OperandStack opStack;
+	public boolean exitMethodAtReturn;
 	
-	/**
-	 * Load/Store local variavles.
-	 */
 	public CandyObject[] slots;
 	
 	/**
@@ -33,32 +52,38 @@ public final class Frame {
 	
 	public FileScope fileScope;
 	
-	public Frame(Chunk chunk, FileScope scope) {
-		this.slots = new CandyObject[chunk.getAttrs().slots.slots];
+	private Frame() {}
+	
+	private Frame init(Chunk chunk, FileScope scope) {
+		adaptForSlots(chunk.getAttrs().slots.slots);
 		this.opStack = new DynamicOperandStack(8);
 		this.chunk = chunk;
 		this.pc = 0;
-		this.capturedUpvalues = null;
 		this.fileScope = scope;
 		
-		// the non-real file path may be a directory path.
 		if (scope.compiledFileInfo.isRealFile()) {
 			this.name = scope.compiledFileInfo.getSimpleName();
 		} else {
-			// if the simple name is used here, the stack info easyly mislead
-			// users when an error occurs.
 			this.name = chunk.getSourceFileName();
 		}
+		return this;
 	}
 	
-	public Frame(PrototypeFunctionObj prototypeFunc) {
-		this.slots = new CandyObject[prototypeFunc.slots];
+	private Frame init(PrototypeFunctionObj prototypeFunc) {
+		adaptForSlots(prototypeFunc.slots);
 		this.opStack = new FixedOperandStack(prototypeFunc.stackSize);
 		this.name = prototypeFunc.declredName();
 		this.chunk = prototypeFunc.chunk;
 		this.pc = prototypeFunc.pc;
 		this.capturedUpvalues = prototypeFunc.upvalues;
 		this.fileScope = prototypeFunc.fileScope;
+		return this;
+	}
+	
+	private void adaptForSlots(int minCapacity) {
+		if (this.slots == null || this.slots.length < minCapacity) {
+			this.slots = new CandyObject[minCapacity];
+		}
 	}
 	
 	public UpvalueObj[] makeUpvalueObjs(ConstantValue.MethodInfo methodInfo) {
@@ -66,21 +91,18 @@ public final class Frame {
 		UpvalueObj[] upvalueObjs = new UpvalueObj[COUNT];
 		for (int i = 0; i < COUNT; i ++) {
 			int index = methodInfo.upvalueIndex(i);
-			// checks the upvalue is in current frame.
+			// checks the upvalue is in this frame.
 			if (methodInfo.isLocal(i)) {
-				// captures the upvalue from current frame.
+				// derive the upvalue from this frame.
 				upvalueObjs[i] = captureUpvalue(index);
 			} else {
-				// gets the upvalue from upper frame.
+				// derive the upvalue from the upper frame.
 				upvalueObjs[i] = this.capturedUpvalues[index];
 			}
 		}
 		return upvalueObjs;
 	}
 	
-	/**
-	 * Try to find the same open upvalue.
-	 */
 	private UpvalueObj captureUpvalue(int index) {
 		if (openUpvalues == null) { /* lazy init */
 			openUpvalues = new LinkedList<>();
@@ -145,6 +167,12 @@ public final class Frame {
 		slots[slot] = value;
 	}
 	
+	public void resetAllSlots() {
+		for (int i = 0; i < slots.length; i ++) {
+			slots[i] = null;
+		}
+	}
+	
 	public CandyObject pop() {
 		return opStack.pop();
 	}
@@ -157,12 +185,20 @@ public final class Frame {
 		opStack.push(operand);
 	}
 	
-	public void release() {
-		closeAllUpvalues();
-		chunk = null;
-		opStack = null;
-		slots = null;
-		name = null;
+	public void recycleSelf() {
+		FRAME_POOL.recycle(this);
 	}
 
+	@Override
+	public void release() {
+		this.closeAllUpvalues();
+		this.resetAllSlots();
+		this.chunk = null;
+		this.name = null;
+		this.opStack = null;
+		this.capturedUpvalues = null;
+		this.fileScope = null;
+		this.pc = 0;
+		this.exitMethodAtReturn = false;
+	}
 }
