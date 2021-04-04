@@ -1,0 +1,30 @@
+class UnionFind {
+	init(N) {
+		this.arr = range(0, N).toArray()
+		this.count = N
+	}
+	
+	find(p) {
+		var q = this.arr[p]
+		if (p == q) return q
+		q = this.find(q)
+		this.arr[p] = q
+		return q
+	}
+	
+	connected(p, q) {
+		return this.find(p) == this.find(q)
+	}
+	
+	union(p, q) {
+		if (p == q) return true
+		var pRoot = this.find(p)
+		var qRoot = this.find(q)
+		if (pRoot == qRoot) {
+			return true
+		}
+		this.arr[pRoot] = qRoot
+		this.count -= 1
+		return false
+	}
+}

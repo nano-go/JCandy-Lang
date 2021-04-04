@@ -1,0 +1,51 @@
+class PriorityQueue {
+	init() {
+		this.heap = []
+	}
+	
+	_swim(i) {
+		var parent = (i-1)/2
+		var heap = this.heap
+		while (i != 0 && heap[i] < heap[parent]) {
+			heap.swap(i, parent)
+			i = parent
+			parent = (i-1)/2
+		}
+	}
+	
+	_sink(i) {
+		var heap = this.heap
+		var size = heap.size()
+		while (true) {
+			var child = i*2 + 1
+			if (child >= size) break
+			if (child + 1 < size && 
+			     heap[child + 1] < heap[child]) {
+				child += 1
+			}
+			if (heap[i] < heap[child]) break
+			heap.swap(i, child)
+			i = child
+		}
+	}
+	
+	offer(element) {
+		var heap = this.heap
+		var size = this.heap.size()
+		heap.append(element)
+		this._swim(size)
+	}
+	
+	poll() {
+		var heap = this.heap
+		var size = this.heap.size()
+		var last = heap.deleteAt(size-1)
+		if (size == 1) {
+			return last
+		}
+		var ret = heap[0]
+		heap[0] = last
+		this._sink(0)
+		return ret
+	}
+}
