@@ -7,10 +7,13 @@ import com.nano.candy.interpreter.i2.builtin.annotation.BuiltinMethod;
 import com.nano.candy.interpreter.i2.builtin.error.IndexError;
 import com.nano.candy.interpreter.i2.builtin.type.classes.BuiltinClassFactory;
 import com.nano.candy.interpreter.i2.builtin.type.classes.CandyClass;
+import com.nano.candy.interpreter.i2.builtin.utils.ArrayHelper;
 import com.nano.candy.interpreter.i2.builtin.utils.ObjectHelper;
 import com.nano.candy.interpreter.i2.error.ArgumentError;
 import com.nano.candy.interpreter.i2.error.NativeError;
+import com.nano.candy.interpreter.i2.error.TypeError;
 import com.nano.candy.interpreter.i2.vm.VM;
+import com.nano.candy.utils.ArrayUtils;
 import java.util.Arrays;
 
 @BuiltinClass("Array")
@@ -29,6 +32,8 @@ public final class ArrayObj extends BuiltinObject {
 	
 	private CandyObject[] elements;
 	private int size;
+	
+	private boolean isInProcessOfStr;
 	
 	public ArrayObj() {
 		super(ARRAY_CLASS);
@@ -72,7 +77,6 @@ public final class ArrayObj extends BuiltinObject {
 				return;
 			}
 			
-			// see java.lang.ArrayList source code.
 			int oldCapacity = elements.length;
 			int newCapacity = oldCapacity + (oldCapacity >> 1);
 			if (newCapacity - minCapacity < 0)
@@ -82,10 +86,7 @@ public final class ArrayObj extends BuiltinObject {
 			elements = Arrays.copyOf(elements, newCapacity);
 		}
 	}
-
-	/**
-	 * see java.lang.ArrayList source code.
-	 */
+	
 	private static int hugeCapacity(int minCapacity) {
         if (minCapacity < 0)
             throw new NativeError("Out of memory.");
@@ -181,8 +182,10 @@ public final class ArrayObj extends BuiltinObject {
 
 	@Override
 	public CandyObject add(VM vm, CandyObject operand) {
-		append(operand);
-		return this;
+		TypeError.checkTypeMatched(ARRAY_CLASS, operand);
+		return new ArrayObj(
+			ArrayUtils.mergeArray(elements, ((ArrayObj) operand).elements)
+		);
 	}
 	
 	@Override
@@ -192,18 +195,21 @@ public final class ArrayObj extends BuiltinObject {
 
 	@Override
 	public IntegerObj hashCode(VM vm) {
-		int hashcode = 1;
+		int hash = 0;
 		for (int i = 0; i < size; i ++) {
-			hashcode = hashcode*31 +
-				(int) get(i).hashCodeApiExeUser(vm).value;
+			hash = hash * 31 + 
+				(int) elements[i].hashCodeApiExeUser(vm).intValue();
 		}
-		return IntegerObj.valueOf(hashcode);
+		return IntegerObj.valueOf(hash);
 	}
 
 	@Override
 	public BoolObj equals(VM vm, CandyObject operand) {
+		if (this == operand) {
+			return BoolObj.TRUE;
+		}
 		if (!(operand instanceof ArrayObj)) {
-			return BoolObj.FALSE;
+			return super.equals(vm, operand);
 		}
 		ArrayObj arr = (ArrayObj) operand;
 		if (arr.size != size) {
@@ -225,18 +231,14 @@ public final class ArrayObj extends BuiltinObject {
 		if (size == 0) {
 			return StringObj.EMPTY_LIST;
 		}
-		StringBuilder builder = new StringBuilder("[");
-		int i = 0;
-		for (;;) {
-			StringObj obj = elements[i].strApiExeUser(vm);
-			builder.append(obj);
-			if (i >= size-1) {
-				break;
-			}
-			builder.append(", ");
-			i ++;
+		if (isInProcessOfStr) {
+			return StringObj.RECURSIVE_LIST;
 		}
+		isInProcessOfStr = true;
+		StringBuilder builder = new StringBuilder("[");
+		builder.append(ArrayHelper.toString(vm, elements, 0, size, ", "));
 		builder.append("]");
+		isInProcessOfStr = false;
 		return StringObj.valueOf(builder.toString());
 	}
 	
@@ -332,5 +334,43 @@ public final class ArrayObj extends BuiltinObject {
 		elements[i] = elements[j];
 		elements[j] = tmp;
 		vm.returnFromVM(this);
+	}
+	
+	@BuiltinMethod(name = "copy", argc = 0)
+	public void copy(VM vm) {
+		vm.returnFromVM(new ArrayObj(Arrays.copyOf(elements, size)));
+	}
+	
+	@BuiltinMethod(name = "copyRange", argc = 2)
+	public void copyRange(VM vm) {
+		int from = asIndex(vm.pop());
+		int to = asIndexForInsert(vm.pop());
+		vm.returnFromVM(new ArrayObj(Arrays.copyOfRange(elements, from, to)));
+	}
+	
+	@BuiltinMethod(name = "sort", argc = 0) 
+	public void sort(VM vm) {
+		Arrays.sort(elements, 0, size, ObjectHelper.newComparator(vm));
+		vm.returnFromVM(this);
+	}
+	
+	@BuiltinMethod(name = "reverse", argc = 0)
+	public void reverse(VM vm) {
+		int half = size/2;
+		for (int i = 0; i < half; i ++) {
+			CandyObject tmp = elements[i];
+			elements[i] = elements[size-1-i];
+			elements[size-1-i] = tmp;
+		}
+		vm.returnFromVM(this);
+	}
+	
+	@BuiltinMethod(name = "clear", argc = 0)
+	public void clear(VM vm) {
+		for (int i = 0; i < size; i ++) {
+			elements[i] = null;
+		}
+		size = 0;
+		vm.returnNilFromVM();
 	}
 }

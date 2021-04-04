@@ -20,7 +20,9 @@ public class StringObj extends BuiltinObject {
 
 	public static final CandyClass STRING_CLASS = BuiltinClassFactory.generate(StringObj.class);
 	public static final StringObj EMPTY_STR = new StringObj("");
+	public static final StringObj RECURSIVE_LIST = new StringObj("[...]");
 	public static final StringObj EMPTY_LIST = new StringObj("[]");
+	public static final StringObj EMPTY_TUPLE = new StringObj("()");
 	
 	public static StringObj valueOf(String val) {
 		return new StringObj(val);

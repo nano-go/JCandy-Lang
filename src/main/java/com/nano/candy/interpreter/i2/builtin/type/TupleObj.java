@@ -6,6 +6,7 @@ import com.nano.candy.interpreter.i2.builtin.annotation.BuiltinClass;
 import com.nano.candy.interpreter.i2.builtin.annotation.BuiltinMethod;
 import com.nano.candy.interpreter.i2.builtin.type.classes.BuiltinClassFactory;
 import com.nano.candy.interpreter.i2.builtin.type.classes.CandyClass;
+import com.nano.candy.interpreter.i2.builtin.utils.ArrayHelper;
 import com.nano.candy.interpreter.i2.builtin.utils.ObjectHelper;
 import com.nano.candy.interpreter.i2.error.TypeError;
 import com.nano.candy.interpreter.i2.vm.VM;
@@ -13,20 +14,23 @@ import com.nano.candy.utils.ArrayUtils;
 import java.util.Objects;
 
 @BuiltinClass("Tuple")
-public class TupleObj extends BuiltinObject {
+public final class TupleObj extends BuiltinObject {
 	public static final CandyClass TUPLE_CLASS = BuiltinClassFactory.generate(TupleObj.class);
 	public static final TupleObj EMPTY_TUPLE = new TupleObj(ArrayObj.EMPTY_ARRAY);
 	
-	private CandyObject[] elements;
+	private final CandyObject[] elements;
+	private IntegerObj hash;
 
 	public TupleObj() {
 		super(TUPLE_CLASS);
 		this.elements = ArrayObj.EMPTY_ARRAY;
+		this.hash = IntegerObj.valueOf(0);
 	}
 	
 	public TupleObj(CandyObject[] elements) {
 		super(TUPLE_CLASS);
 		this.elements = Objects.requireNonNull(elements);
+		this.hash = null;
 	}
 
 	@Override
@@ -45,6 +49,14 @@ public class TupleObj extends BuiltinObject {
 		return new TupleObj(ArrayUtils.mergeArray(
 			this.elements, ((TupleObj) operand).elements
 		));
+	}
+
+	@Override
+	public IntegerObj hashCode(VM vm) {
+		if (hash != null) return hash;
+		return hash = IntegerObj.valueOf(
+			ArrayHelper.hashCode(vm, elements, 0, elements.length)
+		);
 	}
 
 	@Override
@@ -72,14 +84,10 @@ public class TupleObj extends BuiltinObject {
 	@Override
 	public StringObj str(VM vm) {
 		if (elements.length == 0) {
-			return StringObj.valueOf("()");
+			return StringObj.EMPTY_TUPLE;
 		}
 		StringBuilder builder = new StringBuilder("(");
-		builder.append(elements[0].strApiExeUser(vm).value());
-		for (int i = 1; i < elements.length; i ++) {
-			builder.append(", ");
-			builder.append(elements[i].strApiExeUser(vm).value());
-		}
+		builder.append(ArrayHelper.toString(vm, elements, ", "));
 		builder.append(")");
 		return StringObj.valueOf(builder.toString());
 	}

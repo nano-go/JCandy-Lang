@@ -14,8 +14,26 @@ import com.nano.candy.interpreter.i2.error.ArgumentError;
 import com.nano.candy.interpreter.i2.error.NullPointerError;
 import com.nano.candy.interpreter.i2.error.TypeError;
 import com.nano.candy.interpreter.i2.vm.VM;
+import java.util.Comparator;
 
 public class ObjectHelper {
+	
+	private ObjectHelper() {}
+	
+	public static Comparator<CandyObject> newComparator(final VM vm) {
+		return new Comparator<CandyObject>() {
+			@Override
+			public int compare(CandyObject obj1, CandyObject obj2) {
+				if (obj1.equalsApiExeUser(vm, obj2).value()) {
+					return 0;
+				}
+				if (obj1.gteqApiExeUser(vm, obj2).value()) {
+					return 1;
+				}
+				return -1;
+			}
+		};
+	}
 	
 	public static void checkIsValidCallable(CandyObject callable, int actualArity) {
 		TypeError.checkIsCallable(callable);
