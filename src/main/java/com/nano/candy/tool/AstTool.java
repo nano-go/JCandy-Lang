@@ -13,9 +13,23 @@ import java.io.File;
 public class AstTool implements CandyTool {
 
 	@Override
+	public String groupName() {
+		return "Abstract-Tree-Printer";
+	}
+	
+	@Override
+	public String groupHelper() {
+		return "Print the AST of the specified source files.";
+	}
+
+	@Override
+	public String[] aliases() {
+		return new String[] {"ast"};
+	}
+	
+	@Override
 	public void defineOptions(Options options) {
-		options.newGroup("Ast")
-			.addOption("-f", true, 
+		options.addOption("-f", true, 
 				"Print AST in the specified format.\nFormats:" +
 				"\n    json/Json");
 	}

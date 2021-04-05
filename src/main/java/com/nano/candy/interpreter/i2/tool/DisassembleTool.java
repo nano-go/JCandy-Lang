@@ -20,11 +20,24 @@ import static com.nano.candy.interpreter.i2.instruction.Instructions.*;
 
 public class DisassembleTool implements CandyTool {
 	
-	public static final DisassembleTool DISASSEMBLE_TOOL = new DisassembleTool();
+	@Override
+	public String groupName() {
+		return "Disassembler";
+	}
 
 	@Override
+	public String groupHelper() {
+		return "Disassemble the specified source files.";
+	}
+
+	@Override
+	public String[] aliases() {
+		return new String[]{"dis"};
+	}
+	
+	@Override
 	public void defineOptions(Options options) {
-		options.newGroup("Disassemble");
+		
 	}
 	
 	@Override
@@ -52,10 +65,16 @@ public class DisassembleTool implements CandyTool {
 	// This is used in formating string for conatant pool index.
 	int maxDigitsOfCPIndex;
 	
-	private DisassembleTool() {}
+	public DisassembleTool() {}
 	
 	public DisassembleTool(Chunk chunk) {
 		loadChunk(chunk);
+	}
+
+	public void loadChunk(Chunk chunk) {
+		this.reader = new ChunkReader(chunk);
+		this.maxDigitsOfCPIndex = (int)(Math.log10(
+			reader.getConstants().length) + 1);
 	}
 	
 	public String disassemble() {
@@ -64,12 +83,6 @@ public class DisassembleTool implements CandyTool {
 		disassembleConstants();
 		disassembleCode();		
 		return builder.toString();
-	}
-
-	private void loadChunk(Chunk chunk) {
-		this.reader = new ChunkReader(chunk);
-		this.maxDigitsOfCPIndex = (int)(Math.log10(
-			reader.getConstants().length) + 1);
 	}
 
 	private void disassembleAttributes() {

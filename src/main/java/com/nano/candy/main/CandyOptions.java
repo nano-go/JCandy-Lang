@@ -7,7 +7,6 @@ import java.io.File;
 
 public class CandyOptions {
 	
-	
 	protected File[] srcFiles;
 	protected boolean printHelper;
 	protected CandyTool tool;
@@ -41,10 +40,7 @@ public class CandyOptions {
 	
 	public void printHelper() {
 		StringBuilder helper = new StringBuilder();
-		helper.append("candy [tool] [options] [source] args\nTools:\n");
-		for (String toolName : CandyToolFactory.names()) {
-			helper.append("    ").append(toolName).append("\n");
-		}
+		helper.append("candy [tool] [-options] [source files...]\n\n");
 		helper.append(options.helper());
 		System.out.print(helper.toString());
 	}

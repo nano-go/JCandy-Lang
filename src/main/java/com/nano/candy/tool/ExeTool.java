@@ -14,9 +14,22 @@ public class ExeTool implements CandyTool {
 	private static final Logger logger = Logger.getLogger();
 	
 	@Override
-	public void defineOptions(Options options) {
-		options.newGroup("Execute");
+	public String groupName() {
+		return "Executor";
 	}
+
+	@Override
+	public String groupHelper() {
+		return "Execute Candy source files.";
+	}
+
+	@Override
+	public String[] aliases() {
+		return new String[]{"exe", "ex"};
+	}
+	
+	@Override
+	public void defineOptions(Options options) {}
 
 	@Override
 	public void run(Interpreter interpreter, CandyOptions options) throws Exception {

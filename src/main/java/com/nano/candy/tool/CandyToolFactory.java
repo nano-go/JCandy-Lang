@@ -6,26 +6,20 @@ import java.util.Set;
 
 public class CandyToolFactory {
 	
+	private static final HashMap<String, CandyTool> TOOLS_WITHOUT_ALIASES = new HashMap<>();
 	private static final HashMap<String, CandyTool> TOOLS = new HashMap<>();
 	
 	static {
-		CandyToolFactory.register("perf", new PerformanceTool());
-		CandyToolFactory.register("exe", new ExeTool());
-		CandyToolFactory.register("ast", new AstTool());
-		
-		CandyToolFactory.register("dis", DisassembleTool.DISASSEMBLE_TOOL);
+		CandyToolFactory.register(new PerformanceTool());
+		CandyToolFactory.register(new ExeTool());
+		CandyToolFactory.register(new AstTool());	
+		CandyToolFactory.register(new DisassembleTool());
 	}
 	
-	public static Collection<CandyTool> tools() {
-		return TOOLS.values();
-	}
-	
-	public static Set<String> names() {
-		return TOOLS.keySet();
-	}
-	
-	public static void register(String name, CandyTool tool, String... aliases) {
-		TOOLS.put(name, tool);
+	public static void register(CandyTool tool) {
+		TOOLS_WITHOUT_ALIASES.put(tool.groupName(), tool);
+		TOOLS.put(tool.groupName(), tool);
+		String[] aliases = tool.aliases();
 		if (aliases == null) {
 			return;
 		}
@@ -37,11 +31,15 @@ public class CandyToolFactory {
 		}
 	}
 	
+	public static Collection<CandyTool> tools() {
+		return TOOLS_WITHOUT_ALIASES.values();
+	}
+	
 	public static boolean isTool(String name) {
 		return TOOLS.containsKey(name);
 	}
 	
-	public static CandyTool createCandyTool(String name) {
+	public static CandyTool getCandyTool(String name) {
 		CandyTool tool = TOOLS.get(name);
 		if (tool == null) {
 			return new ExeTool();

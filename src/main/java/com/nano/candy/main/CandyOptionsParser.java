@@ -14,28 +14,27 @@ public class CandyOptionsParser {
 
 	public static CandyOptions parse(String... args) {
 		CandyOptions candyOptions = new CandyOptions();
-		Options options = defineOptions();
+		Options options = defineOptions(new Options());
 		parseOptions(candyOptions, options, args);
 		return candyOptions;
 	}
 
-	private static Options defineOptions() {
-		return new Options()
-			.addOption("-h", false, "Print command line helper.");
+	private static Options defineOptions(Options options) {
+		return options
+			.addOption("-h", false, "Print command line helper.").build();
 	}
 	
-	private static CommandLine parseOptions(CandyOptions candyOptions, Options options, String[] args) {
-		CommandLine cmd = new CommandLine(options, args);
+	private static CommandLine parseOptions(CandyOptions candyOptions, Options cmdOptions, String[] args) {
+		CommandLine cmd = new CommandLine(cmdOptions, args);
 		if (cmd.hasOption("-h")) {
-			candyOptions.printHelper = true;
-			Options toolOps = new Options();
-			for (CandyTool tool : CandyToolFactory.tools()) {
-				tool.defineOptions(toolOps);
-			}
-			candyOptions.options = toolOps;
+			prepareHelper(candyOptions, cmdOptions);
 			return cmd;
 		}
-		
+		buildCandyOptions(candyOptions, args);
+		return cmd;
+	}
+	
+	private static void buildCandyOptions(CandyOptions candyOptions, String[] args) {
 		String toolName = "";
 		if (args.length > 0) {
 			toolName = args[0];
@@ -43,14 +42,35 @@ public class CandyOptionsParser {
 				args = Arrays.copyOfRange(args, 1, args.length);
 			}
 		}
-		candyOptions.tool = CandyToolFactory.createCandyTool(toolName);
+		candyOptions.tool = CandyToolFactory.getCandyTool(toolName);
 		Options toolOps = new Options();
-		candyOptions.tool.defineOptions(toolOps);
+		defineToolOptions(toolOps, candyOptions.tool);
 		candyOptions.cmdLine = new CommandLine(toolOps, args);
 		candyOptions.options = toolOps;
 		candyOptions.srcFiles = getInputFiles(
-			candyOptions.cmdLine.getArgs());
-		return cmd;
+			candyOptions.cmdLine.getArgs()
+		);
+	}
+
+	private static void prepareHelper(CandyOptions candyOptions, Options options) {
+		candyOptions.printHelper = true;
+		candyOptions.options = options;
+		for (CandyTool tool : CandyToolFactory.tools()) {
+			defineToolOptions(candyOptions.options, tool);
+		}
+		candyOptions.options.build();
+	}
+	
+	private static Options defineToolOptions(Options options, CandyTool tool) {
+		String groupHelper = tool.groupHelper();
+		String groupName = tool.groupName();
+		String[] aliases = tool.aliases();
+		if (aliases != null) {	
+			groupName += String.format("(%s)", String.join(", ", aliases));
+		}
+		options.newGroup(groupName, groupHelper);
+		tool.defineOptions(options);
+		return options;
 	}
 
 	private static File[] getInputFiles(String... args) {

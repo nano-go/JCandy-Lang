@@ -15,9 +15,22 @@ public class PerformanceTool implements CandyTool {
 	protected PerformanceTool() {}
 
 	@Override
-	public void defineOptions(Options options) {
-		options.newGroup("Performance");
+	public String groupName() {
+		return "Performance";
 	}
+	
+	@Override
+	public String groupHelper() {
+		return "Performance test tool.";
+	}
+
+	@Override
+	public String[] aliases() {
+		return new String[]{"perf"};
+	}
+	
+	@Override
+	public void defineOptions(Options options) {}
 	
 	@Override
 	public void run(Interpreter interpreter, CandyOptions options) throws Exception{
