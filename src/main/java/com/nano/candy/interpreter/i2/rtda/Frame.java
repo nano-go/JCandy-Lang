@@ -86,7 +86,7 @@ public final class Frame implements Recyclable {
 		}
 	}
 	
-	public UpvalueObj[] makeUpvalueObjs(ConstantValue.MethodInfo methodInfo) {
+	public UpvalueObj[] captureUpvalueObjs(ConstantValue.MethodInfo methodInfo) {
 		final int COUNT = methodInfo.upvalueCount();
 		UpvalueObj[] upvalueObjs = new UpvalueObj[COUNT];
 		for (int i = 0; i < COUNT; i ++) {

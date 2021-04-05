@@ -214,15 +214,56 @@ public final class VM {
 		return (code[pc ++] << 8) & 0xFFFF | code[pc ++] & 0xFF;
 	}
 	
+	
+	/**
+	 * Returns the super class by the specified class information.
+	 *
+	 * @return the non-null super class.
+	 */
+	private CandyClass getSuperClassOf(ConstantValue.ClassInfo classInfo) {
+		if (classInfo.hasSuperClass) {
+			CandyObject superObj = pop();
+			if (!(superObj instanceof CandyClass)) {
+				throw new TypeError(
+					"A class can't inherit a non-class: %s -> '%s'", 
+					classInfo.className, superObj.getCandyClassName()
+				);
+			}
+			return (CandyClass) superObj;
+		} 
+		return ObjectClass.getObjClass();
+	}
+	
+	private CandyClass createClass(CandyClass superClass, ConstantValue.ClassInfo classInfo) {
+		CandyClass clazz = new CandyClass(classInfo.className, superClass);
+		if (classInfo.initializer.isPresent()) {
+			ConstantValue.MethodInfo init = classInfo.initializer.get();
+			clazz.setInitalizer(createFunctionObj(clazz, init));
+			pc += init.codeBytes;
+		}
+		for (ConstantValue.MethodInfo methodInfo : classInfo.methods) {
+			clazz.defineMethod(methodInfo.name, createFunctionObj(clazz, methodInfo));
+			pc += methodInfo.codeBytes;
+		}
+		return clazz;
+	}
+	
+	/**
+	 * Creates a prototype function object.
+	 *
+	 * @param clazz The class that the method is defined in or null.
+	 * @param methodInfo The information of the prototype function.
+	 */
 	private PrototypeFunctionObj createFunctionObj(CandyClass clazz, ConstantValue.MethodInfo methodInfo) {
-		UpvalueObj[] upvalues = frame().makeUpvalueObjs(methodInfo);
+		UpvalueObj[] upvalues = frame().captureUpvalueObjs(methodInfo);
 		String tagName = methodInfo.name;
 		if (clazz != null) {
 			tagName = ObjectHelper.methodName(clazz, tagName);
 		}
 		return new PrototypeFunctionObj(
-			frame().chunk, pc, 
-			upvalues, tagName, methodInfo, global.curFileScope()
+			frame().chunk, pc, // Start pc.
+			upvalues, tagName, 
+			methodInfo, global.curFileScope()
 		);
 	}
 	
@@ -646,32 +687,9 @@ public final class VM {
 				 */
 				case OP_CLASS: {
 					ConstantValue.ClassInfo classInfo = cp.getClassInfo(readIndex());
-					CandyClass superClass;
-					if (classInfo.hasSuperClass) {
-						CandyObject superObj = pop();
-						if (!(superObj instanceof CandyClass)) {
-							throw new TypeError(
-								"A class can't inherti a non-class: %s -> '%s'", 
-								classInfo.className, superObj.getCandyClassName()
-							);
-						}
-						superClass = (CandyClass) superObj;
-					} else {
-						superClass = ObjectClass.getObjClass();
-					}
+					CandyClass superClass = getSuperClassOf(classInfo);
 					store(readUint8(), superClass);
-					
-					CandyClass clazz = new CandyClass(classInfo.className, superClass);
-					
-					if (classInfo.initializer.isPresent()) {
-						ConstantValue.MethodInfo init = classInfo.initializer.get();
-						clazz.setInitalizer(createFunctionObj(clazz, init));
-						pc += init.codeBytes;
-					}
-					for (ConstantValue.MethodInfo methodInfo : classInfo.methods) {
-						clazz.defineMethod(methodInfo.name, createFunctionObj(clazz, methodInfo));
-						pc += methodInfo.codeBytes;
-					}
+					CandyClass clazz = createClass(superClass, classInfo);
 					push(clazz);
 					break;
 				}
@@ -689,17 +707,17 @@ public final class VM {
 				 */
 				case OP_SUPER_INVOKE: {
 					int arity = readUint8();
-					CandyClass clazz = (CandyClass) pop();
+					CandyClass superClass = (CandyClass) pop();
 					CandyObject instance = pop();
 					String methodName = cp.getString(readIndex());
-					CallableObj method= clazz.getBoundMethod(
+					CallableObj method= superClass.getBoundMethod(
 						methodName, instance
 					);
 					if (method == null) {
 						throw new CandyRuntimeError(
 							"'%s->%s' class has no method '%s'.",
 							instance.getCandyClass().getClassName(),
-							clazz.getClassName(), methodName
+							superClass.getClassName(), methodName
 						);
 					}
 					ObjectHelper.checkIsValidCallable(method, arity);
