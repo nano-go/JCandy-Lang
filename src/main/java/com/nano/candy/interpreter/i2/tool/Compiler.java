@@ -16,6 +16,12 @@ import java.io.StringWriter;
 
 public class Compiler {
 	
+	private static boolean debugMode = false;
+	
+	public static void debugMode() {
+		debugMode = true;
+	}
+	
 	private static void checkLogger(boolean clearMsg) {
 		Logger logger = Logger.getLogger();
 		if (logger.hadErrors()) {
@@ -34,34 +40,42 @@ public class Compiler {
 		}
 	}
 
-	public static Chunk compileTree(ASTreeNode tree, boolean isInteractive, 
+	public static Chunk compileTree(ASTreeNode tree, boolean isInteractive, boolean debug,
 	                                boolean clearMsg) throws CompilerError {
 		Checker.check(tree);
 		checkLogger(clearMsg);
-		return new CodeGenerator(isInteractive).genCode(tree);
+		return new CodeGenerator(isInteractive, debug).genCode(tree);
 	}
 	
-	public static Chunk compileChunk(String filePath, boolean clearMsg) throws CompilerError {
-		return compileChunk(new File(filePath), clearMsg);
+	public static Chunk compileChunk(String filePath, boolean debug, boolean clearMsg) throws CompilerError {
+		return compileChunk(new File(filePath), debug, clearMsg);
 	}
 	
-	public static Chunk compileChunk(File file, boolean clearMsg) throws CompilerError {
+	public static Chunk compileChunk(File file, boolean debug, boolean clearMsg) throws CompilerError {
 		try {	
 			Parser parser = ParserFactory.newParser(file);
 			Program program = parser.parse();
 			checkLogger(clearMsg);
-			return compileTree(program, false, clearMsg);
+			return compileTree(program, false, debug, clearMsg);
 		} catch (IOException e) {
 			throw new FileError(file);
 		}
 	}
 	
 	public static CompiledFileInfo compile(String filePath, boolean clearMsg) throws CompilerError {
-		return compile(new File(filePath), clearMsg);
+		return compile(filePath, Compiler.debugMode, clearMsg);
+	}
+	
+	public static CompiledFileInfo compile(String filePath, boolean debug, boolean clearMsg) throws CompilerError {
+		return compile(new File(filePath), debug, clearMsg);
 	}
 	
 	public static CompiledFileInfo compile(File file, boolean clearMsg) throws CompilerError {
-		Chunk chunk = compileChunk(file, clearMsg);
+		return compile(file, Compiler.debugMode, clearMsg);
+	}
+	
+	public static CompiledFileInfo compile(File file, boolean debug, boolean clearMsg) throws CompilerError {
+		Chunk chunk = compileChunk(file, debug, clearMsg);
 		return new CompiledFileInfo(
 			file.getAbsolutePath(), chunk);
 	}

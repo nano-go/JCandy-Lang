@@ -65,17 +65,24 @@ public class CodeGenerator implements AstVisitor<Void, Void> {
 	private LocalTable locals;
 	
 	private boolean isInteractionMode;
-	private boolean isInInitializer;
+	private boolean isDebugMode;
 	
+	private boolean isInInitializer;
 	private LinkedList<LoopMarker> loopMarkers;
 	private HashMap<String, LoopMarker> lableTable;
 	
+	
 	public CodeGenerator(boolean isInteractionMode) {
+		this(isInteractionMode, false);
+	}
+
+	public CodeGenerator(boolean isInteractionMode, boolean debugMode) {
 		this.builder = new ChunkBuilder();
 		this.locals = new LocalTable();
 		this.loopMarkers = new LinkedList<>();
 		this.lableTable = new HashMap<>();
 		this.isInteractionMode = isInteractionMode;
+		this.isDebugMode = debugMode;
 	}
 	
 	public Chunk genCode(ASTreeNode node) {
@@ -86,9 +93,12 @@ public class CodeGenerator implements AstVisitor<Void, Void> {
 		return builder.build();
 	}
 	
-	private void walkStatements(List<Stmt> stmts) {
-		for (Stmt stmt : stmts) {
+	private void walkBlock(Stmt.Block block) {
+		for (Stmt stmt : block.stmts) {
 			stmt.accept(this);
+		}
+		if (isDebugMode && block.endPos.isPresent()) {
+			builder.emitop(OP_NOP, block.endPos.get().getLine());
 		}
 	}
 	
@@ -294,31 +304,39 @@ public class CodeGenerator implements AstVisitor<Void, Void> {
 		MethodInfo methodInfo = new MethodInfo();
 		builder.emitop(OP_FUN, line(node));
 		builder.emitConstant(methodInfo);
-		makeMethodInfo(methodInfo, name, node, false);
+		makeMethodInfo(methodInfo, name, node, null);
 		
 		this.isInInitializer = originalIsInInit;
 	}
 	
-	private MethodInfo makeMethodInfo(Stmt.FuncDef node, boolean isMethod) {
-		return makeMethodInfo(new MethodInfo(), node.name.get(), node, isMethod);
+	private MethodInfo makeMethodInfo(Stmt.FuncDef node, ClassInfo classDefinedIn) {
+		return makeMethodInfo(new MethodInfo(), node.name.get(), node, classDefinedIn);
 	}
 	
 	private MethodInfo makeMethodInfo(MethodInfo methodInfo, String name, 
-	                                  Stmt.FuncDef node, boolean definedInClass) {	
+	                                  Stmt.FuncDef node, ClassInfo classDefinedIn) {	
 		enterFunctionScope();
 		
 		int arity = node.params.size();
-		if (definedInClass) {
+		if (classDefinedIn != null) {
+			methodInfo.classDefinedIn = classDefinedIn;
 			declrVariable("this");
 			arity ++;
 		}
-
+		
 		for (String param : node.params) {
 			locals.addLocal(param);
 		}
 		int bodyBegainningPos = builder.curCp();
-		walkStatements(node.body.stmts);
-
+		methodInfo.fromPc = bodyBegainningPos;
+		
+		// locate the beginning of the method for debug.
+		if (isDebugMode && classDefinedIn != null) {
+			builder.emitop(OP_NOP, node.pos.getLine());
+		}
+		
+		walkBlock(node.body);
+		
 		methodInfo.name = name;	
 		methodInfo.arity = arity;
 		methodInfo.codeBytes = builder.curCp() - bodyBegainningPos;
@@ -355,7 +373,7 @@ public class CodeGenerator implements AstVisitor<Void, Void> {
 	
 	@Override
 	public void visit(Program node) {	
-		walkStatements(node.block.stmts);
+		walkBlock(node.block);
 	}
 	
 	/**
@@ -388,30 +406,33 @@ public class CodeGenerator implements AstVisitor<Void, Void> {
 		builder.emit1((byte) declrVariable("super"));
 		
 		classInfo.className = node.name;
-		classInfo.initializer = initalizer(node);
-		classInfo.methods = methods(node);
+		classInfo.initializer = initalizer(node, classInfo);
+		classInfo.methods = methods(node, classInfo);
 		
+		if (isDebugMode && node.endPos.isPresent()) {
+			builder.emitop(OP_NOT, node.endPos.get().getLine());
+		}
 		closeScope(true);
 		defineVariable(node.name, -1);
 		return null;
 	}
 
-	private Optional<MethodInfo> initalizer(Stmt.ClassDef node) {
+	private Optional<MethodInfo> initalizer(Stmt.ClassDef node, ClassInfo classDefinedIn) {
 		if (!node.initializer.isPresent()) {
 			return Optional.empty();
 		} 
 		this.isInInitializer = true;
 		Stmt.FuncDef initalizer = node.initializer.get();
-		MethodInfo methodInfo = makeMethodInfo(initalizer, true);
+		MethodInfo methodInfo = makeMethodInfo(initalizer, classDefinedIn);
 		this.isInInitializer = false;
 		return Optional.of(methodInfo);
 	}
 
-	private MethodInfo[] methods(Stmt.ClassDef node) {
+	private MethodInfo[] methods(Stmt.ClassDef node, ClassInfo classDefinedIn) {
 		MethodInfo[] methodInfos = new MethodInfo[node.methods.size()];
 		for (int i = 0; i < methodInfos.length; i ++) {
 			Stmt.FuncDef funcDef = node.methods.get(i);
-			methodInfos[i] = makeMethodInfo(funcDef, true);
+			methodInfos[i] = makeMethodInfo(funcDef, classDefinedIn);
 		}
 		return methodInfos;
 	}
@@ -444,7 +465,7 @@ public class CodeGenerator implements AstVisitor<Void, Void> {
 	@Override
 	public Void visit(Stmt.Block node) {
 		enterScope();
-		walkStatements(node.stmts);
+		walkBlock(node);
 		closeScope(true);
 		return null;
 	}
@@ -506,7 +527,7 @@ public class CodeGenerator implements AstVisitor<Void, Void> {
 		
 		callLocalVar(nextSlot, 0, -1);
 		builder.emitopWithArg(OP_POP_STORE, iteratingSlot);
-		walkStatements(node.body.stmts);
+		walkBlock(node.body);
 		
 		builder.emitLoop(begainning, -1);
 		builder.backpatch(jumpOutLabel);

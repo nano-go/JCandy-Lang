@@ -205,6 +205,8 @@ public abstract class Stmt extends ASTreeNode {
 		public Optional<Expr.VarRef> superClassName;
 		public Optional<Stmt.FuncDef> initializer;
 		public List<Stmt.FuncDef> methods;
+		
+		public Optional<Position> endPos;
 
 		public ClassDef(String name, Expr.VarRef superClassName, 
 		                List<Stmt.FuncDef> methods) {
@@ -212,6 +214,7 @@ public abstract class Stmt extends ASTreeNode {
 			this.methods = methods;
 			this.superClassName = Optional.ofNullable(superClassName);
 			this.initializer = Optional.empty();
+			this.endPos = Optional.ofNullable(null);
 		}
 
 		public int constructorParamNumber() {
@@ -240,9 +243,11 @@ public abstract class Stmt extends ASTreeNode {
 	
 	public static class Block extends Stmt {
 		public List<Stmt> stmts;
+		public Optional<Position> endPos;
 		
 		public Block() {
 			this(new LinkedList<Stmt>());
+			endPos = Optional.empty();
 		}
 
 		public Block(List<Stmt> stmts) {

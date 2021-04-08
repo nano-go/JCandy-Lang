@@ -1,3 +1,5 @@
+OP_NOP nop
+
 OP_POP pop
 OP_DUP dup
 OP_DUP_2 dup_2

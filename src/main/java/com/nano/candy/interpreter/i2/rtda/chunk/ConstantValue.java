@@ -1,7 +1,6 @@
 package com.nano.candy.interpreter.i2.rtda.chunk;
 import java.util.Optional;
 
-
 public abstract class ConstantValue {
 	
 	public abstract String headName();
@@ -75,8 +74,11 @@ public abstract class ConstantValue {
 		public int arity;
 		public byte slots;
 		public int stackSize;
+		public int fromPc;
 		public int codeBytes;
 		public byte[] upvalues;
+		
+		public ClassInfo classDefinedIn;
 		
 		public MethodInfo() {}
 		

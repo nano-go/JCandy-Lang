@@ -8,6 +8,10 @@ public class ConstantPool {
 		this.cp = cp;
 	}
 	
+	public int size() {
+		return cp.length;
+	}
+	
 	public ConstantValue[] getConstants() {
 		return cp;
 	}
