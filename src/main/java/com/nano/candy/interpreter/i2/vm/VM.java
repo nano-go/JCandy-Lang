@@ -28,8 +28,7 @@ import com.nano.candy.interpreter.i2.rtda.chunk.ConstantValue;
 import com.nano.candy.interpreter.i2.rtda.moudle.CompiledFileInfo;
 import com.nano.candy.interpreter.i2.rtda.moudle.MoudleManager;
 import com.nano.candy.interpreter.i2.rtda.moudle.SourceFileInfo;
-import com.nano.candy.interpreter.i2.vm.debug.DebugHelper;
-import com.nano.candy.interpreter.i2.vm.debug.InstructionBenchmarking;
+import com.nano.candy.interpreter.i2.vm.monitor.MonitorManager;
 import com.nano.candy.sys.CandySystem;
 import java.io.File;
 
@@ -37,20 +36,24 @@ import static com.nano.candy.interpreter.i2.instruction.Instructions.*;
 
 public final class VM {
 	
-	public static final boolean DEBUG = false;
-	
-	private static final boolean DEBUG_TRACE_OPERAND_STACK = false;
-	private static final boolean DEBUG_TRACE_SLOTS = false;
-	private static final boolean DEBUG_TRACE_INSTRUCTION = false;
-	private static final boolean DEBUG_TRACE_OPEN_UPVALUE = false;
-	private static final boolean DEBUG_TRACE_FRAME_STACK = false;
+	public static final boolean DEBUG = true;
 	
 	private static final byte WIDE_INDEX_MARK = (byte) 0xFF;
 	
 	private int maxStackDeepth = CandySystem.DEFAULT_MAX_STACK;
 	
 	private GlobalEnvironment global;
+	
+	/**
+	 * This is used to import source files as moudle to manage.
+	 */
 	private MoudleManager moudleManager;
+	
+	/**
+	 * Monitor code execution and the change of stack. Lazily initalized
+	 * upon needed.
+	 */
+	private MonitorManager monitorManager;
 	
 	private FrameStack frameStack;
 	
@@ -66,6 +69,7 @@ public final class VM {
 		this.global = new GlobalEnvironment();
 		this.moudleManager = new MoudleManager();
 		this.frameStack = new FrameStack(maxStackDeepth);
+		this.monitorManager = null;
 	}
 	
 	public CompiledFileInfo getCurRunningFile() {
@@ -99,9 +103,22 @@ public final class VM {
 		return moudleManager;
 	}
 	
+	public MonitorManager getMonitorManager() {
+		if (monitorManager == null) {
+			monitorManager = new MonitorManager();
+		}
+		return monitorManager;
+	}
+	
 	public void loadChunk(Chunk chunk) {
-		loadFile(new CompiledFileInfo(
-			CandySystem.DEFAULT_USER_DIR, chunk, false));
+		File f = new File(chunk.getSourceFileName());
+		if (f.isFile()) {
+			loadFile(new CompiledFileInfo(f.getPath(), chunk, true));
+		} else {
+			loadFile(new CompiledFileInfo(
+				CandySystem.DEFAULT_USER_DIR, chunk, false
+			));
+		}
 	}
 	
 	/**
@@ -127,23 +144,30 @@ public final class VM {
 		syncPcToTopFrame();
 		frameStack.pushFrame(frame);
 		syncFrameData();
+		if (monitorManager != null)
+			monitorManager.noticeStackPushed(this, frameStack);
 	}
 	
 	public void popFrame() {
-		frameStack.popFrame().recycleSelf();
+		Frame old = frameStack.popFrame();
 		if (frameStack.isEmpty()) {
 			resetFrameData();
 		} else {
 			syncFrameData();
 		}
+		if (monitorManager != null)
+			monitorManager.noticeStackPoped(this, old, frameStack);
+		old.recycleSelf();
 	}
 	
 	public void popFrameWithRet() {
-		Frame top = frameStack.popFrame();
+		Frame old = frameStack.popFrame();
 		syncFrameData();
 		// push return value to operand stack.
-		push(top.pop());
-		top.recycleSelf();
+		push(old.pop());
+		if (monitorManager != null)
+			monitorManager.noticeStackPoped(this, old, frameStack);
+		old.recycleSelf();
 	}
 	
 	private void syncFrameData() {
@@ -173,9 +197,11 @@ public final class VM {
 		frameStack.peek().push(NullPointer.nil());
 	}
 	
-	public Frame frame() {
+	public  Frame frame() {
 		return frameStack.peek();
 	}
+
+	/* -------------------- Execution Helper -------------------- */
 	
 	public CandyObject pop() {
 		return opStack.pop();
@@ -188,11 +214,11 @@ public final class VM {
 	public void push(CandyObject obj) {
 		opStack.push(obj);
 	}
-	
+
 	private CandyObject load(int slot) {
 		return slots[slot];
 	}
-	
+
 	private void store(int slot, CandyObject value) {
 		slots[slot] = value;
 	}
@@ -200,11 +226,11 @@ public final class VM {
 	private int readJumpOffset() {
 		return (code[pc] << 8) & 0xFFFF | code[pc + 1] & 0xFF;
 	}
-	
+
 	private int readUint8() {
 		return code[pc ++] & 0xFF;
 	}
-	
+
 	private int readIndex(){
 		if (code[pc] != WIDE_INDEX_MARK) {
 			return code[pc ++] & 0xFF;
@@ -213,7 +239,6 @@ public final class VM {
 		pc ++;
 		return (code[pc ++] << 8) & 0xFFFF | code[pc ++] & 0xFF;
 	}
-	
 	
 	/**
 	 * Returns the super class by the specified class information.
@@ -234,6 +259,9 @@ public final class VM {
 		return ObjectClass.getObjClass();
 	}
 	
+	/**
+	 * Returns a new class.
+	 */
 	private CandyClass createClass(CandyClass superClass, ConstantValue.ClassInfo classInfo) {
 		CandyClass clazz = new CandyClass(classInfo.className, superClass);
 		if (classInfo.initializer.isPresent()) {
@@ -242,7 +270,8 @@ public final class VM {
 			pc += init.codeBytes;
 		}
 		for (ConstantValue.MethodInfo methodInfo : classInfo.methods) {
-			clazz.defineMethod(methodInfo.name, createFunctionObj(clazz, methodInfo));
+			PrototypeFunctionObj prototypefunc = createFunctionObj(clazz, methodInfo);
+			clazz.defineMethod(methodInfo.name, prototypefunc);
 			pc += methodInfo.codeBytes;
 		}
 		return clazz;
@@ -267,7 +296,84 @@ public final class VM {
 		);
 	}
 	
+	/**
+	 * Instruction: OP_APPEND
+	 *
+	 * Append {readUint8()} elements to the bottom array object.
+	 */
+	private void evalOpAppned() {
+		int elements = readUint8();
+		ArrayObj arr = (ArrayObj) peek(elements);
+		for (int i = 0; i < elements; i ++) {
+			arr.append(pop());
+		}
+	}
+	
+	/**
+	 * Instruction: OP_BUILT_TUPLE
+	 *
+	 * Build a tuple to stack-top.
+	 */
+	private void evalOpBuiltTuple() {
+		int size = readUint8();
+		if (size == 0) {
+			push(TupleObj.EMPTY_TUPLE);
+			return;
+		}
+		CandyObject[] elements = new CandyObject[size];
+		for (int i = 0; i < size; i ++) {
+			elements[i] = pop();
+		}
+		push(new TupleObj(elements));
+	}
+	
+	/**
+	 * Instruction: OP_SUPER_INVOKE
+	 *
+	 * Call the specified name of the method of the specified class.
+	 */
+	private void evalOpSuperInvoke() {
+		int arity = readUint8();
+		CandyClass superClass = (CandyClass) pop();
+		CandyObject instance = pop();
+		String methodName = cp.getString(readIndex());
+		CallableObj method= superClass.getBoundMethod(
+			methodName, instance
+		);
+		if (method == null) {
+			throw new CandyRuntimeError(
+				"'%s->%s' class has no method '%s'.",
+				instance.getCandyClass().getClassName(),
+				superClass.getClassName(), methodName
+			);
+		}
+		ObjectHelper.checkIsValidCallable(method, arity);
+		method.onCall(this);
+	}
+	
+	private CandyObject getGlobalVariable(String name, boolean throwsErrorIfNotFound) {
+		CandyObject obj = global.getVar(name);
+		if (obj == null && throwsErrorIfNotFound) {
+			throw new CandyRuntimeError("the variable '%s' not found.", name);
+		}
+		return obj;
+	}
+	
+	private boolean setGlobalVariable(String name, CandyObject val, boolean throwsErrorIfNotFound) {
+		if (global.getVar(name) == null) {
+			if (throwsErrorIfNotFound) {
+				throw new CandyRuntimeError("the variable '%s' not found.", name);
+			}
+			return false;
+		}
+		global.setVar(name, val);
+		return true;
+	}
+	
+	/* -------------------- Execution --------------------*/
+	 
 	public MoudleObj run() {
+		// Mark the current source file with running state.
 		SourceFileInfo srcFileInfo = getCurSourceFileInfo();
 		if (srcFileInfo != null) {
 			srcFileInfo.markRunning();
@@ -275,10 +381,12 @@ public final class VM {
 		
 		runFrame(false);
 		
+		// This running is over.
 		if (srcFileInfo != null) {
 			srcFileInfo.unmarkRunning();
 		}
 		
+		// Create a moudle object to return.
 		FileScope fs = global.curFileScope();
 		MoudleObj moudleObj = new MoudleObj(
 			fs.compiledFileInfo.getAbsPath(), fs.vars);
@@ -292,32 +400,10 @@ public final class VM {
 		}
 		
 		loop: for (;;) {
-			if (DEBUG_TRACE_OPERAND_STACK) {
-				DebugHelper.traceOperandStack(frame().opStack);
-			}
-			
-			if (DEBUG_TRACE_SLOTS) {
-				DebugHelper.traceSlots(frame());
-			}
-			
-			if (DEBUG_TRACE_OPEN_UPVALUE) {
-				DebugHelper.traceOpenUpvalues(frame().openUpvalues);
-			}
-			
-			if (DEBUG_TRACE_FRAME_STACK) {
-				DebugHelper.traceFrameStack(frameStack);
-			}
-			
-			if (DEBUG_TRACE_INSTRUCTION) {
-				DebugHelper.traceInstruction(pc, code);
-				System.out.println();
-			}
-			
-			if (InstructionBenchmarking.DEBUG) {
-				InstructionBenchmarking.getInstance().startExeInstructoon(code[pc]);
-			}
-			
+			if (monitorManager != null)
+				monitorManager.noticeInsStarted(this, pc);
 			switch (code[pc ++]) {
+				case OP_NOP: break;
 				case OP_POP: {
 					pop();
 					break;
@@ -520,11 +606,7 @@ public final class VM {
 					break;
 				}
 				case OP_APPEND: {
-					int elements = readUint8();
-					ArrayObj arr = (ArrayObj) peek(elements);
-					for (int i = 0; i < elements; i ++) {
-						arr.append(pop());
-					}
+					evalOpAppned();
 					break;
 				}
 				
@@ -532,16 +614,7 @@ public final class VM {
 				 * Tuple
 				 */
 				case OP_BUILT_TUPLE: {
-					int size = readUint8();
-					if (size == 0) {
-						push(TupleObj.EMPTY_TUPLE);
-						return;
-					}
-					CandyObject[] elements = new CandyObject[size];
-					for (int i = 0; i < size; i ++) {
-						elements[i] = pop();
-					}
-					push(new TupleObj(elements));
+					evalOpBuiltTuple();
 					break;
 				}
 				
@@ -549,25 +622,24 @@ public final class VM {
 				 * Global Operarions.
 				 */
 				case OP_GLOBAL_DEFINE: {
-					String name = cp.getString(readIndex());
-					global.setVar(name, pop());
+					global.setVar(
+						cp.getString(readIndex()), /* name */
+						pop()                      /* value */
+					);
 					break;
 				}		
 				case OP_GLOBAL_SET: {
-					String name = cp.getString(readIndex());
-					if (global.getVar(name) == null) {
-						throw new CandyRuntimeError("the variable '%s' not found.", name);
-					}
-					global.setVar(name, peek(0));					
+					setGlobalVariable(
+						cp.getString(readIndex()), /* name */
+						peek(0),                   /* value */
+						false
+					);					
 					break;
 				}		
 				case OP_GLOBAL_GET: {
-					String name = cp.getString(readIndex());
-					CandyObject value = global.getVar(name);
-					if (value == null) {
-						throw new CandyRuntimeError("the variable '%s' not found.", name);
-					}
-					push(value);
+					push(getGlobalVariable(
+						cp.getString(readIndex()), false
+					));
 					break;
 				}
 				
@@ -706,22 +778,7 @@ public final class VM {
 				 * Call Operations.
 				 */
 				case OP_SUPER_INVOKE: {
-					int arity = readUint8();
-					CandyClass superClass = (CandyClass) pop();
-					CandyObject instance = pop();
-					String methodName = cp.getString(readIndex());
-					CallableObj method= superClass.getBoundMethod(
-						methodName, instance
-					);
-					if (method == null) {
-						throw new CandyRuntimeError(
-							"'%s->%s' class has no method '%s'.",
-							instance.getCandyClass().getClassName(),
-							superClass.getClassName(), methodName
-						);
-					}
-					ObjectHelper.checkIsValidCallable(method, arity);
-					method.onCall(this);
+					evalOpSuperInvoke();
 					break;
 				}
 				case OP_INVOKE: {
@@ -742,10 +799,7 @@ public final class VM {
 				case OP_CALL_GLOBAL: {
 					int arity = readUint8();
 					String name = cp.getString(readIndex());
-					CandyObject function = global.getVar(name);
-					if (function == null) {
-						throw new CandyRuntimeError("the variable '%s' not found.", name);
-					}
+					CandyObject function = getGlobalVariable(name, false);
 					ObjectHelper.checkIsValidCallable(function, arity);
 					function.onCall(this);
 					break;
@@ -806,10 +860,8 @@ public final class VM {
 					break loop;
 				}
 			}
-			if (InstructionBenchmarking.DEBUG) {
-				InstructionBenchmarking.getInstance().endExeInstruction();
-			}
-		}		
+			if (monitorManager != null)
+				monitorManager.noticeInsEnd(this);
+		}
 	}
-	
 }
