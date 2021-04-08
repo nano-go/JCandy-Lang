@@ -319,7 +319,10 @@ class CandyParser implements Parser {
 		Token location = match(LBRACE);
 		block = new Stmt.Block();
 		parseStmts(block.stmts);
-		matchIf(RBRACE, true);
+		Token endPos = peek();
+		if (matchIf(RBRACE, true)) {
+			block.endPos = Optional.of(endPos.getPos());
+		}
 		return locate(location, block);
 	}
 	
@@ -429,7 +432,10 @@ class CandyParser implements Parser {
 			name.getLiteral(), superClass, new ArrayList<Stmt.FuncDef>()
 		);
 		parseMethods(classDef);
-		matchIf(RBRACE, true);
+		Token endPos = peek();
+		if (matchIf(RBRACE, true)) {
+			classDef.endPos = Optional.of(endPos.getPos());
+		}
 		return locate(location, classDef);
 	}
 	
