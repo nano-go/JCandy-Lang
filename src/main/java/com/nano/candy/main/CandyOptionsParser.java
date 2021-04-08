@@ -70,6 +70,7 @@ public class CandyOptionsParser {
 		}
 		options.newGroup(groupName, groupHelper);
 		tool.defineOptions(options);
+		options.build();
 		return options;
 	}
 
