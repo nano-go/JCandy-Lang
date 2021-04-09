@@ -1,8 +1,8 @@
 package com.nano.candy.tool;
 import com.nano.candy.interpreter.i2.tool.DisassembleTool;
+import com.nano.candy.interpreter.i2.tool.debug.DebugerTool;
 import java.util.Collection;
 import java.util.HashMap;
-import java.util.Set;
 
 public class CandyToolFactory {
 	
@@ -14,6 +14,7 @@ public class CandyToolFactory {
 		CandyToolFactory.register(new ExeTool());
 		CandyToolFactory.register(new AstTool());	
 		CandyToolFactory.register(new DisassembleTool());
+		CandyToolFactory.register(new DebugerTool());
 	}
 	
 	public static void register(CandyTool tool) {
