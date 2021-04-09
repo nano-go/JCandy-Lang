@@ -10,11 +10,14 @@ import com.nano.candy.interpreter.i2.rtda.chunk.Chunk;
 import com.nano.candy.interpreter.i2.rtda.moudle.CompiledFileInfo;
 import com.nano.candy.interpreter.i2.tool.Compiler;
 import com.nano.candy.interpreter.i2.vm.VM;
-import com.nano.candy.interpreter.i2.vm.debug.InstructionBenchmarking;
 
 public class InterpreterImpl implements Interpreter {
 
-	private VM vm = new VM();
+	private static final VM vm = new VM();
+	
+	public VM getVM() {
+		return vm;
+	}
 	
 	@Override
 	public void initOrReset() {
@@ -22,20 +25,20 @@ public class InterpreterImpl implements Interpreter {
 	}
 
 	@Override
-	public void onExit() {
-		if (InstructionBenchmarking.DEBUG) {
-			InstructionBenchmarking.getInstance().printResult();
-		}
-	}
+	public void onExit() {}
 	
 	@Override
 	public void load(ASTreeNode node, boolean isInteractionMode) {
 		Chunk chunk;
 		try {
-			chunk = Compiler.compileTree(node, isInteractionMode, false);
+			chunk = Compiler.compileTree(node, isInteractionMode, false, false);
 		} catch (CompilerError e) {
 			return;
 		}
+		loadChunk(chunk, isInteractionMode);
+	}
+	
+	public void loadChunk(Chunk chunk, boolean isInteractionMode) {
 		if (isInteractionMode) {
 			vm.loadChunk(chunk);
 		} else {
