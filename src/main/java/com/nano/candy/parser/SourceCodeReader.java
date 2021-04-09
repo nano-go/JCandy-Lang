@@ -59,8 +59,8 @@ public class SourceCodeReader {
 		} else {
 			curLineStr = String.valueOf(buf, lineStart, lineLength - 1);
 		}
-		line ++ ;
-		col = 0 ;
+		line ++;
+		col = 0;
 	}
 	
 	public void error(String message, Object... args) {

@@ -6,7 +6,7 @@ public class OperatorInstructionMap {
 	
 	private static final byte[] OPERATOR_INSTRUCTION_MAP = 
 		new byte[TokenKind.values().length];
-		
+	
 	static {
 		map(TokenKind.PLUS, Instructions.OP_ADD);
 		map(TokenKind.PLUS_ASSIGN, Instructions.OP_ADD);
