@@ -410,7 +410,7 @@ public class CodeGenerator implements AstVisitor<Void, Void> {
 		classInfo.methods = methods(node, classInfo);
 		
 		if (isDebugMode && node.endPos.isPresent()) {
-			builder.emitop(OP_NOT, node.endPos.get().getLine());
+			builder.emitop(OP_NOP, node.endPos.get().getLine());
 		}
 		closeScope(true);
 		defineVariable(node.name, -1);
