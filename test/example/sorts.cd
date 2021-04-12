@@ -1,9 +1,10 @@
 fun bubbleSort(arr) {
 	var size = arr.size()
+	var swap = arr.swap
 	for (i in range(0, size-1)) {
 		for (j in range(0, size-1-i)) {
 			if (arr[j + 1] < arr[j]) {
-				arr.swap(j + 1, j)
+				swap(j + 1, j)
 			}
 		}
 	}
@@ -118,13 +119,17 @@ fun sorts_test() {
 		mergeSort, quickSort
 	]
 	var ans = sample.copy().sort()
-	for (i in range(0, sorts.size())) {
+	for (sort in sorts) {
+		sort(sample.copy())
+		sort(sample.copy())
+	}
+	for (sort in sorts) {
 		var cpy = sample.copy()
 		var s = clock()
-		sorts[i](cpy)
+		sort(cpy)
 		assert cpy == ans : 
 			"Expected: " + ans + "\nAcutal: " + cpy
-		println(sorts[i].name() + ": " +
+		println(sort.name() + ": " +
 			(clock() - s) + " ms")
 	}
 }

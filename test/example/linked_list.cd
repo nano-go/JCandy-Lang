@@ -159,14 +159,6 @@ class LinkedList {
 		}
 	}
 	
-	forEachReversely(f) {
-		var n = this.endMarker.prev
-		while (n != this.beginMarker) {
-			f(n.value)
-			n = n.prev
-		}
-	}
-	
 	/**
 	 * Returns an iterator over all the elements in this list.
 	 */
