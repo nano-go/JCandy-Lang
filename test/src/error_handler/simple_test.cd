@@ -1,0 +1,256 @@
+fun expectedError1(fn, err) {
+	try {
+		fun tmp() {
+			fn()
+		}
+		tmp()
+	} intercept err as e {
+		assert e._class() == err
+		return
+	}
+	assert false
+}
+
+fun expectedError2(fn, err1, err2) {
+	try {
+		fn()
+	} intercept err1 as e {
+		assert e._class() == err1
+		return;
+	} intercept err2 as e {
+		assert e._class() == err2
+		return;
+	}
+	assert false
+}
+
+fun tryIntercept_test() {
+	expectedError1(lambda -> null.good, AttributeError)
+	expectedError1(lambda -> [][0], RangeError)
+	expectedError1(lambda -> println(0, 2), ArgumentError)
+	expectedError1(lambda -> a.b, NameError)
+	expectedError1(lambda -> "".substr("", ""), TypeError)
+	expectedError1(lambda -> importFile(" %&*()"), IOError)
+	expectedError1(lambda -> assert false, AssertionError)
+	
+	expectedError2(lambda -> null.good, NativeError, AttributeError)
+	expectedError2(lambda -> [][0], NativeError, RangeError)
+	expectedError2(lambda -> println(0, 2), NativeError, ArgumentError)
+	expectedError2(lambda -> a.b, NativeError, NameError)
+	expectedError2(lambda -> "".substr("", ""), NativeError, TypeError)
+	expectedError2(lambda -> importFile(" %&*()"), NativeError, IOError)
+	expectedError2(lambda -> assert false, NativeError, AssertionError)
+	
+	fun sample1() {
+		try {
+			null.b
+		} intercept RangeError {
+			assert false
+		}
+	}
+	
+	fun sample2() {
+		fun innerFn() {
+			try {
+				raise AttributeError("")
+			} intercept RangeError {}
+		}
+		innerFn()
+	}
+	
+	fun sample3() {
+		fun innerFn() {
+			raise NativeError("")
+		}
+		innerFn()
+	}
+	expectedError1(sample1, AttributeError)
+	expectedError1(sample2, AttributeError)
+	expectedError1(sample3, NativeError)
+}
+
+fun tryFinally_test() {
+	fun sample1() {
+		try {
+			[][1]
+		} finally {
+			return
+		}
+		assert false
+	}
+	
+	fun sample2() {
+		try {
+			[][1]
+		} intercept RangeError as e {
+		} finally {
+			return
+		}
+		assert false
+	}
+	
+	sample1()
+	sample2()
+}
+
+fun directlyRaise_test() {
+	fun sample1() {
+		try {
+			raise AttributeError("")
+		} intercept AttributeError {
+			return
+		}
+		assert false
+	}
+	sample1()
+}
+
+fun tryElse_test() {
+	fun sample1() {
+		try {
+			var a = null
+			a /= 2
+		} else {
+			assert false
+		}
+	}
+	
+	fun sample2() {
+		try {
+			var a = null
+			a = 0
+			a *= 2
+		} else {
+			return
+		}
+		assert false
+	}
+	
+	fun sample3() {
+		try {
+		} else {
+			return
+		}
+		assert false
+	}
+	
+	var flag = false
+	fun sample4() {
+		try {
+		} else {
+			flag = false
+		} finally {
+			flag = true
+		}
+	}
+	sample1()
+	sample2()
+	sample3()
+	sample4(); assert flag
+}
+
+fun nestedTryInterception() {
+	fun sample1() {
+		try {
+			try {
+				var a = null
+				a.good
+			} intercept RangeError {
+				assert false
+			}
+		} intercept RangeError, AttributeError {
+			return
+		}
+		assert false
+	}
+	
+	var flag = false
+	fun sample2() {
+		try {
+			raise NativeError("")
+		} intercept NativeError {
+			try {
+				var a = importFile(" &&&**")
+			} intercept RangeError {
+				assert false
+			} intercept IOError {
+				flag = true
+				raise IOError("")
+			}
+		} intercept IOError {
+			assert false
+		}
+	}
+	
+	fun sample3() {
+		try {
+			try {
+				raise IOError("")
+			} intercept RangeError {
+				assert false
+			}
+		} intercept IOError {
+			return
+		}
+		assert false
+	}
+	
+	fun sample4() {
+		try {
+			try {
+				raise IOError("")
+			} intercept IOError {
+				return
+			}
+		} intercept IOError {
+			assert false
+		}
+		assert false
+	}
+	
+	fun sample5() {
+		try {
+			try {}
+			raise AttributeError("")
+		} intercept AttributeError {
+			return
+		}
+		assert false
+	}
+	
+	fun sample6() {
+		try {
+			raise AttributeError("")
+			try {}
+		} intercept AttributeError {
+			return
+		}
+		assert false
+	}
+	
+	sample1()
+	expectedError1(sample2, IOError); assert flag
+	sample3()
+	sample4()
+	sample5()
+	sample6()
+}
+
+fun stackOverflow_test() {
+	fun recursion() {
+		recursion()
+	}
+	try {
+		recursion()
+	} intercept StackOverflowError {
+		return
+	}
+	assert false
+}
+
+tryIntercept_test()
+tryFinally_test()
+directlyRaise_test()
+tryElse_test()
+nestedTryInterception()
+stackOverflow_test()

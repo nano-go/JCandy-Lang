@@ -1,0 +1,39 @@
+fun testErr(errClass, msg) {
+	try {
+		raise errClass(msg)
+	} intercept errClass as e {
+		assert e.getMessage() == msg
+		e.setMessage("msg")
+		assert e.getMessage() == "msg"
+		
+		var ste = e.getStackTraceElements()
+		assert ste[0].getFrameName() == "testErr"
+		assert ste[0].getLineNumber() == 3
+		assert ste[0].getFileName().endWith("errors.cd")
+	}
+}
+
+fun test() {
+	testErr(Error, "err msg")
+	testErr(ArgumentError, "err msg")
+	testErr(AssertionError, "err msg")
+	testErr(AttributeError, "err msg")
+	testErr(CompilerError, "err msg")
+	testErr(IOError, "err msg")
+	testErr(NameError, "err msg")
+	testErr(NativeError, "err msg")
+	testErr(RangeError, "err msg")
+	testErr(StackOverflowError, "err msg")
+	testErr(TypeError, "err msg")
+	
+	fun raiseRaise(errClass) {
+		try {
+			raise errClass
+		} intercept TypeError { return; }
+		assert false
+	}
+	raiseRaise(Error)
+	raiseRaise(AssertionError)
+}
+
+test()
