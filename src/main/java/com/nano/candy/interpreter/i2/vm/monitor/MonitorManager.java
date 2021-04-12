@@ -30,7 +30,7 @@ public final class MonitorManager {
 		this.stackMonitors.remove(stackMonitor);
 	}
 	
-	public final void noticeStackPushed(VM vm, FrameStack frameStack) {
+	public final void notifyStackPushed(VM vm, FrameStack frameStack) {
 		if (stackMonitors.isEmpty()) {
 			return;
 		}
@@ -39,7 +39,7 @@ public final class MonitorManager {
 		}
 	}
 	
-	public final void noticeStackPoped(VM vm, Frame oldFrame, FrameStack stack) {
+	public final void notifyStackPoped(VM vm, Frame oldFrame, FrameStack stack) {
 		if (stackMonitors.isEmpty()) {
 			return;
 		}
@@ -48,7 +48,7 @@ public final class MonitorManager {
 		}
 	}
 	
-	public final void noticeInsStarted(VM vm, int pc) {
+	public final void notifyInsStarted(VM vm, int pc) {
 		if (codeMonitors.isEmpty()) {
 			return;
 		}
@@ -57,7 +57,7 @@ public final class MonitorManager {
 		}
 	}
 	
-	public final void noticeInsEnd(VM vm) {
+	public final void notifyInsEnd(VM vm) {
 		if (codeMonitors.isEmpty()) {
 			return;
 		}
