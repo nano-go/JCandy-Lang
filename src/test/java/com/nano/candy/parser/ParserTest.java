@@ -33,6 +33,18 @@ public class ParserTest {
 		"while (true) \n break",
 		"while (true) { break; }",
 		"while (false) \n {var a = 66\nif (a) \n { break ; }}",
+		"try {\n\n} \n",
+		"try {}",
+		"try {} intercept e1 {} intercept IOException as e2 {}",
+		"try {} intercept as e1 {} intercept IOException as e2 {}",
+		"try {} intercept e1 + 5, 6 as n {} intercept IOException as e2 {}",
+		"try {} intercept IOException, Exception, Erroe as e1 {}",
+		"try {\n\n} intercept IOException as e {} intercept e { if(true) {}} else {}",
+		"try {\n\n} \n intercept IOException as e \n {}",
+		"try {\n\n} \n intercept IOException as e \n {} else {}",
+		"try {\n\n} \n intercept IOException as e \n {} else {} finally {}",
+		"raise Exception(4,3)",
+		"raise AnyException() + 5",
 		"for (i in range(0, 7)) break",
 		"for (i in b) { b; }",
 		"for (i in b) \n b;",
@@ -95,6 +107,7 @@ public class ParserTest {
 		newPECase("class ", loc(1, 7)),
 		newPECase("class a :", loc(1, 10)),
 		newPECase("lable1:\nvar a = ", loc(1, 7), loc(2, 9)),
+		newPECase("raise lambda e -> e", loc(1, 7)),
 	};
 	 
 	public static ParserErrorCase newPECase(String input, SimulationPositions.Location... expectedLocations) {
