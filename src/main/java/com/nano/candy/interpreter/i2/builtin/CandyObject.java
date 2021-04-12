@@ -6,10 +6,9 @@ import com.nano.candy.interpreter.i2.builtin.type.BoolObj;
 import com.nano.candy.interpreter.i2.builtin.type.IntegerObj;
 import com.nano.candy.interpreter.i2.builtin.type.StringObj;
 import com.nano.candy.interpreter.i2.builtin.type.classes.CandyClass;
+import com.nano.candy.interpreter.i2.builtin.type.error.AttributeError;
+import com.nano.candy.interpreter.i2.builtin.type.error.TypeError;
 import com.nano.candy.interpreter.i2.builtin.utils.ObjectHelper;
-import com.nano.candy.interpreter.i2.error.AttributeError;
-import com.nano.candy.interpreter.i2.error.TypeError;
-import com.nano.candy.interpreter.i2.error.UnsupportedOperatorError;
 import com.nano.candy.interpreter.i2.vm.VM;
 import com.nano.candy.std.Names;
 
@@ -27,6 +26,10 @@ public abstract class CandyObject {
 		return clazz;
 	}
 	
+	public boolean isCandyClass() {
+		return getCandyClass() == this;
+	}
+	
 	public String getCandyClassName() {
 		return getCandyClass().getCandyClassName();
 	}
@@ -40,10 +43,10 @@ public abstract class CandyObject {
 	}
 
 	protected void throwFrozenObjError(String attr) {
-		throw new AttributeError(
+		new AttributeError(
 			"The frozen object can't be changed: %s.%s = someValue", 
 			getCandyClass(), attr
-		);
+		).throwSelfNative();
 	}
 
 	public final void checkIsFrozen(String attr) {
@@ -61,7 +64,7 @@ public abstract class CandyObject {
 	}
 	
 	public void onCall(VM vm) {
-		throw new TypeError("The object is not callable.");
+		new TypeError("The object is not callable.").throwSelfNative();
 	}
 	
 	public abstract void setAttrApi(VM vm, String attr, CandyObject value);
@@ -78,19 +81,21 @@ public abstract class CandyObject {
 	
 	public abstract void setItemApi(VM vm);
 	public CandyObject setItem(CandyObject key, CandyObject value) {
-		throw new UnsupportedOperatorError(
+		new TypeError(
 			"'%s'['%s'] = '%s'", 
 			getCandyClassName(),
 			key.getCandyClassName(),
 			value.getCandyClassName()
-		);
+		).throwSelfNative();
+		return null;
 	}
 	
 	public abstract void getItemApi(VM vm);
 	public CandyObject getItem(CandyObject key) {
-		throw new UnsupportedOperatorError(
+		new TypeError(
 			"'%s'['%s']", getCandyClassName(), key.getCandyClassName()
-		);
+		).throwSelfNative();
+		return null;
 	}
 
 	public BoolObj not(VM vm) { 
@@ -119,7 +124,9 @@ public abstract class CandyObject {
 	}
 
 	public CandyObject iterator() {
-		throw new TypeError("the object is not iterable.");
+		new TypeError("the object is not iterable.")
+			.throwSelfNative();
+		return null;
 	}
 	
 	@Override
@@ -209,7 +216,8 @@ public abstract class CandyObject {
 	public abstract void positiveApi(VM vm);
 	public abstract CandyObject positiveApiExeUser(VM vm);
 	public CandyObject positive(VM vm) {
-		throw new UnsupportedOperatorError("+");
+		new TypeError("+").throwSelfNative();
+		return null;
 	}
 	@BuiltinMethod(name = Names.METHOD_OP_POSITIVE, argc = 0)
 	public void positiveMethod(VM vm) {
@@ -219,7 +227,8 @@ public abstract class CandyObject {
 	public abstract void negativeApi(VM vm);
 	public abstract CandyObject negativeApiExeUser(VM vm);
 	public CandyObject negative(VM vm) {
-		throw new UnsupportedOperatorError("-");
+		new TypeError("-").throwSelfNative();
+		return null;
 	}
 	@BuiltinMethod(name = Names.METHOD_OP_NEGATIVE, argc = 0)
 	public void negativeMethod(VM vm) {
@@ -232,7 +241,8 @@ public abstract class CandyObject {
 		if (operand instanceof StringObj || this instanceof StringObj) {
 			return strApiExeUser(vm).add(vm, operand);
 		}
-		throw new UnsupportedOperatorError("+");
+		new TypeError("+").throwSelfNative();
+		return null;
 	}
 	@BuiltinMethod(name = Names.METHOD_OP_ADD, argc = 1)
 	public void addMethod(VM vm) {
@@ -242,7 +252,8 @@ public abstract class CandyObject {
 	public abstract void subApi(VM vm, CandyObject operand);
 	public abstract CandyObject subApiExeUser(VM vm, CandyObject operand);
 	public CandyObject sub(VM vm, CandyObject operand) {
-		throw new UnsupportedOperatorError("-");
+		new TypeError("-").throwSelfNative();
+		return null;
 	}
 	@BuiltinMethod(name = Names.METHOD_OP_SUB, argc = 1)
 	public void subMethod(VM vm) {
@@ -252,7 +263,8 @@ public abstract class CandyObject {
 	public abstract void mulApi(VM vm, CandyObject operand);
 	public abstract CandyObject mulApiExeUser(VM vm, CandyObject operand);
 	public CandyObject mul(VM vm, CandyObject operand) {
-		throw new UnsupportedOperatorError("*");
+		new TypeError("*").throwSelfNative();
+		return null;
 	}
 	@BuiltinMethod(name = Names.METHOD_OP_MUL, argc = 1)
 	public void mulMethod(VM vm) {
@@ -262,7 +274,8 @@ public abstract class CandyObject {
 	public abstract void divApi(VM vm, CandyObject operand);
 	public abstract CandyObject divApiExeUser(VM vm, CandyObject operand);
 	public CandyObject div(VM vm, CandyObject operand) {
-		throw new UnsupportedOperatorError("/");
+		new TypeError("/").throwSelfNative();
+		return null;
 	}
 	@BuiltinMethod(name = Names.METHOD_OP_DIV, argc = 1)
 	public void divMethod(VM vm) {
@@ -272,7 +285,8 @@ public abstract class CandyObject {
 	public abstract void modApi(VM vm, CandyObject operand);
 	public abstract CandyObject modApiExeUser(VM vm, CandyObject operand);
 	public CandyObject mod(VM vm, CandyObject operand) {
-		throw new UnsupportedOperatorError("%");
+		new TypeError("%").throwSelfNative();
+		return null;
 	}
 	@BuiltinMethod(name = Names.METHOD_OP_MOD, argc = 1)
 	public void modMethod(VM vm) {
@@ -282,7 +296,8 @@ public abstract class CandyObject {
 	public abstract void gtApi(VM vm, CandyObject operand);
 	public abstract BoolObj gtApiExeUser(VM vm, CandyObject operand);
 	public BoolObj gt(VM vm, CandyObject operand) {
-		throw new UnsupportedOperatorError(">");
+		new TypeError(">").throwSelfNative();
+		return null;
 	}
 	@BuiltinMethod(name = Names.METHOD_OP_GT, argc = 1)
 	public void gtMethod(VM vm) {
@@ -292,7 +307,8 @@ public abstract class CandyObject {
 	public abstract void gteqApi(VM vm, CandyObject operand);
 	public abstract BoolObj gteqApiExeUser(VM vm, CandyObject operand);
 	public BoolObj gteq(VM vm, CandyObject operand) {
-		throw new UnsupportedOperatorError(">=");
+		new TypeError(">=").throwSelfNative();
+		return null;
 	}
 	@BuiltinMethod(name = Names.METHOD_OP_GTEQ, argc = 1)
 	public void gteqMethod(VM vm) {
@@ -302,7 +318,8 @@ public abstract class CandyObject {
 	public abstract void ltApi(VM vm, CandyObject operand);
 	public abstract BoolObj ltApiExeUser(VM vm, CandyObject operand);
 	public BoolObj lt(VM vm, CandyObject operand) {
-		throw new UnsupportedOperatorError("<");
+		new TypeError("<").throwSelfNative();
+		return null;
 	}
 	@BuiltinMethod(name = Names.METHOD_OP_LT, argc = 1)
 	public void ltMethod(VM vm) {
@@ -312,7 +329,8 @@ public abstract class CandyObject {
 	public abstract void lteqApi(VM vm, CandyObject operand);
 	public abstract BoolObj lteqApiExeUser(VM vm, CandyObject operand);
 	public BoolObj lteq(VM vm, CandyObject operand) {
-		throw new UnsupportedOperatorError("<=");
+		new TypeError("<=").throwSelfNative();
+		return null;
 	}
 	@BuiltinMethod(name = Names.METHOD_OP_LTEQ, argc = 1)
 	public void lteqMethod(VM vm) {

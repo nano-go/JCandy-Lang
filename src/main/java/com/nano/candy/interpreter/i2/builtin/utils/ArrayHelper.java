@@ -20,7 +20,7 @@ public class ArrayHelper {
 	}
 	
 	public static String toString(VM vm, CandyObject[] arr, int from, int to,
-	                                 String separator) {
+	                              String separator) {
 		StringBuilder str = new StringBuilder();
 		int i = from;
 		int iMax = to-1;

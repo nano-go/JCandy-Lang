@@ -5,7 +5,6 @@ import com.nano.candy.interpreter.i2.builtin.CandyObject;
 import com.nano.candy.interpreter.i2.builtin.annotation.BuiltinClass;
 import com.nano.candy.interpreter.i2.builtin.type.classes.BuiltinClassFactory;
 import com.nano.candy.interpreter.i2.builtin.type.classes.CandyClass;
-import com.nano.candy.interpreter.i2.error.NullPointerError;
 import com.nano.candy.interpreter.i2.vm.VM;
 import com.nano.candy.std.StringFunctions;
 
@@ -22,11 +21,6 @@ public class NullPointer extends BuiltinObject {
 
 	private NullPointer() {
 		super(NULL_POINTER_CLASS);
-	}
-
-	@Override
-	protected void throwFrozenObjError(String attr) {
-		throw new NullPointerError("try to set null.%s;", attr);
 	}
 
 	@Override

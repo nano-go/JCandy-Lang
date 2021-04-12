@@ -4,14 +4,14 @@ import com.nano.candy.interpreter.i2.builtin.BuiltinObject;
 import com.nano.candy.interpreter.i2.builtin.CandyObject;
 import com.nano.candy.interpreter.i2.builtin.annotation.BuiltinClass;
 import com.nano.candy.interpreter.i2.builtin.annotation.BuiltinMethod;
-import com.nano.candy.interpreter.i2.builtin.error.IndexError;
 import com.nano.candy.interpreter.i2.builtin.type.classes.BuiltinClassFactory;
 import com.nano.candy.interpreter.i2.builtin.type.classes.CandyClass;
+import com.nano.candy.interpreter.i2.builtin.type.error.ArgumentError;
+import com.nano.candy.interpreter.i2.builtin.type.error.NativeError;
+import com.nano.candy.interpreter.i2.builtin.type.error.RangeError;
+import com.nano.candy.interpreter.i2.builtin.type.error.TypeError;
 import com.nano.candy.interpreter.i2.builtin.utils.ArrayHelper;
 import com.nano.candy.interpreter.i2.builtin.utils.ObjectHelper;
-import com.nano.candy.interpreter.i2.error.ArgumentError;
-import com.nano.candy.interpreter.i2.error.NativeError;
-import com.nano.candy.interpreter.i2.error.TypeError;
 import com.nano.candy.interpreter.i2.vm.VM;
 import com.nano.candy.utils.ArrayUtils;
 import java.util.Arrays;
@@ -26,7 +26,8 @@ public final class ArrayObj extends BuiltinObject {
 	
 	protected static void checkCapacity(long capacity) {
 		if (capacity > Integer.MAX_VALUE || capacity < 0) {
-			throw new ArgumentError("Illegal capacity: %d", capacity);
+			new ArgumentError("Illegal capacity: %d", capacity)
+				.throwSelfNative();
 		}
 	}
 	
@@ -44,24 +45,26 @@ public final class ArrayObj extends BuiltinObject {
 		initArray(n);
 	}
 	
-	protected ArrayObj(CandyObject[] elements) {
+	public ArrayObj(CandyObject[] elements) {
 		super(ARRAY_CLASS);
 		this.elements = elements;
 		this.size = elements.length;
 	}
 	
-	protected ArrayObj(CandyObject[] elements, int size) {
+	public ArrayObj(CandyObject[] elements, int size) {
 		super(ARRAY_CLASS);
 		this.elements = elements;
 		this.size = size;
 		if (size > elements.length) {
-			throw new ArgumentError("Illegal size: %d", size);
+			new ArgumentError("Illegal size: %d", size)
+				.throwSelfNative();
 		}
 	}
 	
 	private void initArray(long n) {
 		if (n > Integer.MAX_VALUE || n < 0) {
-			throw new ArgumentError("Illegal capacity: %d", n);
+			new ArgumentError("Illegal capacity: %d", n)
+				.throwSelfNative();
 		}
 		if (n == 0) {
 			elements = EMPTY_ARRAY;
@@ -89,7 +92,7 @@ public final class ArrayObj extends BuiltinObject {
 	
 	private static int hugeCapacity(int minCapacity) {
         if (minCapacity < 0)
-            throw new NativeError("Out of memory.");
+            new NativeError("Out of memory.").throwSelfNative();
         return (minCapacity > MAX_ARRAY_SIZE) ?
             Integer.MAX_VALUE :
             MAX_ARRAY_SIZE;
@@ -97,13 +100,13 @@ public final class ArrayObj extends BuiltinObject {
 	
 	private int asIndex(CandyObject index) {
 		long validIndex = ObjectHelper.asInteger(index);
-		IndexError.checkIndex(validIndex, size);
+		RangeError.checkIndex(validIndex, size);
 		return (int) validIndex;
 	}
 	
 	private int asIndexForInsert(CandyObject index) {
 		long validIndex = ObjectHelper.asInteger(index);
-		IndexError.checkIndex(validIndex, size + 1);
+		RangeError.checkIndex(validIndex, size + 1);
 		return (int) validIndex;
 	}
 	
@@ -113,7 +116,7 @@ public final class ArrayObj extends BuiltinObject {
 	}
 	
 	public CandyObject get(int index) {
-		IndexError.checkIndex(index, size);
+		RangeError.checkIndex(index, size);
 		return elements[index];
 	}
 	

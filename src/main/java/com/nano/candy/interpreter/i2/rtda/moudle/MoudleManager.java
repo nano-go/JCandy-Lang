@@ -1,6 +1,6 @@
 package com.nano.candy.interpreter.i2.rtda.moudle;
 import com.nano.candy.interpreter.i2.builtin.type.MoudleObj;
-import com.nano.candy.interpreter.i2.error.NativeError;
+import com.nano.candy.interpreter.i2.builtin.type.error.NativeError;
 import com.nano.candy.interpreter.i2.tool.Compiler;
 import com.nano.candy.interpreter.i2.vm.VM;
 import com.nano.candy.sys.CandySystem;
@@ -41,7 +41,7 @@ public class MoudleManager {
 	
 	private MoudleObj checkSrcFile(SourceFileInfo srcFile) {
 		if (srcFile.isRunning()) {
-			throw new NativeError("Cyclic import.");
+			new NativeError("Cyclic import.").throwSelfNative();
 		}
 		return importedMoudles.get(srcFile);
 	}

@@ -1,6 +1,7 @@
 package com.nano.candy.interpreter.i2.rtda.moudle;
 
-import com.nano.candy.interpreter.i2.error.FileError;
+import com.nano.candy.interpreter.i2.builtin.type.error.IOError;
+import com.nano.candy.interpreter.i2.vm.CarrierErrorException;
 import java.io.File;
 import java.io.IOException;
 import java.util.HashMap;
@@ -9,21 +10,37 @@ public class SourceFileInfo {
 	
 	private static final HashMap<String, SourceFileInfo> sourceFiles = new HashMap<>();
 	
+	public static boolean markRunning(String fileName) {
+		try {
+			get(new File(fileName)).markRunning();
+			return true;
+		} catch (CarrierErrorException e) {
+			return false;
+		}
+	}
+	
+	public static boolean unmarkRunning(String fileName) {
+		try {
+			get(new File(fileName)).unmarkRunning();
+			return true;
+		} catch (CarrierErrorException e) {
+			return false;
+		}
+	}
+	
 	/**
 	 * Returns the only source file info of the specified file.
 	 *
 	 * @return The source file info.
-	 *
-	 * @throws FileError
-	 *         If an I/O error occurs or the file is not a Candy source file.
 	 */
-	public static SourceFileInfo get(File file) throws FileError {
-		FileError.checkCandySourceFile(file);
+	public static SourceFileInfo get(File file) {
+		IOError.checkCandySourceFile(file);
 		try {
 			String canonicalPath = file.getCanonicalPath();
 			return getOnlyFile(canonicalPath);
 		} catch (IOException e) {
-			throw new FileError(file);
+			new IOError(file).throwSelfNative();
+			return null;
 		}
 	}
 	

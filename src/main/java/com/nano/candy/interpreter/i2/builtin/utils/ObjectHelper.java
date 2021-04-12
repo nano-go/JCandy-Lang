@@ -10,9 +10,9 @@ import com.nano.candy.interpreter.i2.builtin.type.StringObj;
 import com.nano.candy.interpreter.i2.builtin.type.classes.BoundBuiltinMethod;
 import com.nano.candy.interpreter.i2.builtin.type.classes.CandyClass;
 import com.nano.candy.interpreter.i2.builtin.type.classes.MethodCallback;
-import com.nano.candy.interpreter.i2.error.ArgumentError;
-import com.nano.candy.interpreter.i2.error.NullPointerError;
-import com.nano.candy.interpreter.i2.error.TypeError;
+import com.nano.candy.interpreter.i2.builtin.type.error.ArgumentError;
+import com.nano.candy.interpreter.i2.builtin.type.error.AttributeError;
+import com.nano.candy.interpreter.i2.builtin.type.error.TypeError;
 import com.nano.candy.interpreter.i2.vm.VM;
 import java.util.Comparator;
 
@@ -42,7 +42,7 @@ public class ObjectHelper {
 	
 	public static void checkNullObject(CandyObject obj, String msg, Object... args) {
 		if (obj == null) {
-			throw new NullPointerError(String.format(msg, args));
+			new AttributeError(String.format(msg, args)).throwSelfNative();
 		}
 	}
 	

@@ -1,5 +1,4 @@
 package com.nano.candy.interpreter.i2.codegen;
-import com.nano.candy.interpreter.i2.error.CandyRuntimeError;
 import com.nano.candy.utils.ArrayUtils;
 import java.util.ArrayList;
 import java.util.List;
@@ -65,7 +64,7 @@ public class LocalTable {
 	
 	public int addLocal(String name) {
 		if (curLocalCount >= Byte.MAX_VALUE) {
-			throw new CandyRuntimeError("Too many local variables.");
+			throw new RuntimeException("Too many local variables.");
 		}
 		locals = ArrayUtils.growCapacity(locals, curLocalCount);
 		locals[curLocalCount ++] = new Local(name, deepth);

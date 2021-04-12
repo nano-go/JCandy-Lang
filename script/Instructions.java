@@ -82,19 +82,22 @@ public class Instructions {
 	public static final byte OP_SUPER_INVOKE      = (byte)65;
 	public static final byte OP_FUN               = (byte)66;
 
-	public static final byte OP_IMPORT            = (byte)67;
+	public static final byte OP_RAISE             = (byte)67;
+	public static final byte OP_MATCH_ERRORS      = (byte)68;
 
-	public static final byte OP_NEW_ARRAY         = (byte)68;
-	public static final byte OP_BUILT_TUPLE       = (byte)69;
-	public static final byte OP_APPEND            = (byte)70;
-	public static final byte OP_ASSERT            = (byte)71;
-	public static final byte OP_PRINT             = (byte)72;
+	public static final byte OP_IMPORT            = (byte)69;
 
-	public static final byte OP_EXIT              = (byte)73;
+	public static final byte OP_NEW_ARRAY         = (byte)70;
+	public static final byte OP_BUILT_TUPLE       = (byte)71;
+	public static final byte OP_APPEND            = (byte)72;
+	public static final byte OP_ASSERT            = (byte)73;
+	public static final byte OP_PRINT             = (byte)74;
 
-	public static final byte INSTRUCTION_NUMBER = 74;
+	public static final byte OP_EXIT              = (byte)75;
 
-	public static final String[] INSTRUCTION_NAMES = new String[74];
+	public static final byte INSTRUCTION_NUMBER = 76;
+
+	public static final String[] INSTRUCTION_NAMES = new String[76];
 	static {
 		INSTRUCTION_NAMES[OP_NOP]               = "nop";
 		INSTRUCTION_NAMES[OP_POP]               = "pop";
@@ -163,6 +166,8 @@ public class Instructions {
 		INSTRUCTION_NAMES[OP_SUPER_GET]         = "super_get";
 		INSTRUCTION_NAMES[OP_SUPER_INVOKE]      = "super_invoke";
 		INSTRUCTION_NAMES[OP_FUN]               = "fun";
+		INSTRUCTION_NAMES[OP_RAISE]             = "raise";
+		INSTRUCTION_NAMES[OP_MATCH_ERRORS]      = "match_errors";
 		INSTRUCTION_NAMES[OP_IMPORT]            = "import";
 		INSTRUCTION_NAMES[OP_NEW_ARRAY]         = "new_array";
 		INSTRUCTION_NAMES[OP_BUILT_TUPLE]       = "built_tuple";

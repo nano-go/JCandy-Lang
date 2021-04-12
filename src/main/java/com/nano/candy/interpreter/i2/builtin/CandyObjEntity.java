@@ -6,14 +6,14 @@ import com.nano.candy.interpreter.i2.builtin.type.IntegerObj;
 import com.nano.candy.interpreter.i2.builtin.type.MethodObj;
 import com.nano.candy.interpreter.i2.builtin.type.StringObj;
 import com.nano.candy.interpreter.i2.builtin.type.classes.CandyClass;
+import com.nano.candy.interpreter.i2.builtin.type.error.ArgumentError;
+import com.nano.candy.interpreter.i2.builtin.type.error.TypeError;
 import com.nano.candy.interpreter.i2.builtin.utils.ObjectHelper;
-import com.nano.candy.interpreter.i2.error.ArgumentError;
-import com.nano.candy.interpreter.i2.error.TypeError;
 import com.nano.candy.interpreter.i2.vm.VM;
 import com.nano.candy.std.Names;
 import java.util.HashMap;
 
-public final class CandyObjEntity extends CandyObject {
+public class CandyObjEntity extends CandyObject {
 
 	protected HashMap<String, CandyObject> attrs;
 	

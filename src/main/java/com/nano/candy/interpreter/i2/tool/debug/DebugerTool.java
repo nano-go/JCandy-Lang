@@ -2,9 +2,10 @@ package com.nano.candy.interpreter.i2.tool.debug;
 
 import com.nano.candy.interpreter.Interpreter;
 import com.nano.candy.interpreter.i2.InterpreterImpl;
-import com.nano.candy.interpreter.i2.error.CompilerError;
+import com.nano.candy.interpreter.i2.builtin.type.error.CompilerError;
 import com.nano.candy.interpreter.i2.rtda.chunk.Chunk;
 import com.nano.candy.interpreter.i2.tool.Compiler;
+import com.nano.candy.interpreter.i2.vm.CarrierErrorException;
 import com.nano.candy.interpreter.i2.vm.VM;
 import com.nano.candy.main.CandyOptions;
 import com.nano.candy.tool.CandyTool;
@@ -53,11 +54,14 @@ public class DebugerTool implements CandyTool {
 		try {
 			Compiler.debugMode();
 			return Compiler.compileChunk(file, true, false);
-		} catch (CompilerError e) {
-			try {
-				Logger.getLogger().printAllMessage(true);
-			} catch (IOException el) {}
-			return null;
+		} catch (CarrierErrorException e) {
+			if (e.getErrorObj() instanceof CompilerError) {	
+				try {
+					Logger.getLogger().printAllMessage(true);
+				} catch (IOException el) {}
+				return null;
+			}
+			throw e;
 		}
 	}
 

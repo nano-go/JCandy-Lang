@@ -1,4 +1,5 @@
 package com.nano.candy.interpreter.i2.rtda.chunk;
+import com.nano.candy.interpreter.i2.rtda.chunk.attrs.CodeAttribute;
 import java.util.Optional;
 
 public abstract class ConstantValue {
@@ -72,15 +73,27 @@ public abstract class ConstantValue {
 
 		public String name;
 		public int arity;
-		public byte slots;
-		public int stackSize;
-		public int fromPc;
-		public int codeBytes;
 		public byte[] upvalues;
-		
 		public ClassInfo classDefinedIn;
+		public CodeAttribute attrs;
 		
 		public MethodInfo() {}
+		
+		public int getFromPC() {
+			return attrs.fromPc;
+		}
+		
+		public int getLength() {
+			return attrs.length;
+		}
+		
+		public int getMaxStack() {
+			return attrs.maxStack;
+		}
+		
+		public int getMaxLocal() {
+			return attrs.maxLocal;
+		}
 		
 		public int upvalueCount() {
 			return upvalues.length / 2;
@@ -103,7 +116,7 @@ public abstract class ConstantValue {
 		public String toString() {
 			return String.format(
 				"(Name: %s, Arity: %d, Slots: %d, Length %d)",
-				name, arity, slots, codeBytes
+				name, arity, attrs.maxLocal, attrs.length
 			);
 		}
 	}

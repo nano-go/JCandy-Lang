@@ -1,6 +1,7 @@
 package com.nano.candy.interpreter.i2.builtin.type.classes;
 import com.nano.candy.interpreter.i2.builtin.CandyObject;
-import com.nano.candy.interpreter.i2.error.CandyRuntimeError;
+import com.nano.candy.interpreter.i2.builtin.type.error.NativeError;
+import com.nano.candy.interpreter.i2.vm.CarrierErrorException;
 import com.nano.candy.interpreter.i2.vm.VM;
 import java.lang.reflect.Constructor;
 
@@ -24,10 +25,10 @@ public class BuiltinClassEntity extends CandyClass {
 				vm.push(instance);
 				initializer.onCall(vm);
 			}
-		} catch (CandyRuntimeError e) {
+		} catch (CarrierErrorException e) {
 			throw e;
 		} catch (Exception e) {
-			throw new CandyRuntimeError(e.getMessage());
+			new NativeError(e).throwSelfNative();
 		}
 	}
 }

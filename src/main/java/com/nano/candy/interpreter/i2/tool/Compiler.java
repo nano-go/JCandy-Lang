@@ -2,9 +2,9 @@ package com.nano.candy.interpreter.i2.tool;
 import com.nano.candy.ast.ASTreeNode;
 import com.nano.candy.ast.Program;
 import com.nano.candy.comp.Checker;
+import com.nano.candy.interpreter.i2.builtin.type.error.CompilerError;
+import com.nano.candy.interpreter.i2.builtin.type.error.IOError;
 import com.nano.candy.interpreter.i2.codegen.CodeGenerator;
-import com.nano.candy.interpreter.i2.error.CompilerError;
-import com.nano.candy.interpreter.i2.error.FileError;
 import com.nano.candy.interpreter.i2.rtda.chunk.Chunk;
 import com.nano.candy.interpreter.i2.rtda.moudle.CompiledFileInfo;
 import com.nano.candy.parser.Parser;
@@ -33,48 +33,51 @@ public class Compiler {
 				}
 				String msg = writer.toString().trim();
 				writer.close();
-				throw new CompilerError(String.format("\n%s\n", msg));
+				new CompilerError(String.format("\n%s\n", msg))
+					.throwSelfNative();
 			} catch (IOException e) {
-				throw new CompilerError(e.getMessage());
+				new CompilerError(e.getMessage())
+					.throwSelfNative();
 			}
 		}
 	}
 
 	public static Chunk compileTree(ASTreeNode tree, boolean isInteractive, boolean debug,
-	                                boolean clearMsg) throws CompilerError {
+	                                boolean clearMsg) {
 		Checker.check(tree);
 		checkLogger(clearMsg);
 		return new CodeGenerator(isInteractive, debug).genCode(tree);
 	}
 	
-	public static Chunk compileChunk(String filePath, boolean debug, boolean clearMsg) throws CompilerError {
+	public static Chunk compileChunk(String filePath, boolean debug, boolean clearMsg) {
 		return compileChunk(new File(filePath), debug, clearMsg);
 	}
 	
-	public static Chunk compileChunk(File file, boolean debug, boolean clearMsg) throws CompilerError {
+	public static Chunk compileChunk(File file, boolean debug, boolean clearMsg) {
 		try {	
 			Parser parser = ParserFactory.newParser(file);
 			Program program = parser.parse();
 			checkLogger(clearMsg);
 			return compileTree(program, false, debug, clearMsg);
 		} catch (IOException e) {
-			throw new FileError(file);
+			new IOError(file).throwSelfNative();
+			return null;
 		}
 	}
 	
-	public static CompiledFileInfo compile(String filePath, boolean clearMsg) throws CompilerError {
+	public static CompiledFileInfo compile(String filePath, boolean clearMsg) {
 		return compile(filePath, Compiler.debugMode, clearMsg);
 	}
 	
-	public static CompiledFileInfo compile(String filePath, boolean debug, boolean clearMsg) throws CompilerError {
+	public static CompiledFileInfo compile(String filePath, boolean debug, boolean clearMsg) {
 		return compile(new File(filePath), debug, clearMsg);
 	}
 	
-	public static CompiledFileInfo compile(File file, boolean clearMsg) throws CompilerError {
+	public static CompiledFileInfo compile(File file, boolean clearMsg) {
 		return compile(file, Compiler.debugMode, clearMsg);
 	}
 	
-	public static CompiledFileInfo compile(File file, boolean debug, boolean clearMsg) throws CompilerError {
+	public static CompiledFileInfo compile(File file, boolean debug, boolean clearMsg) {
 		Chunk chunk = compileChunk(file, debug, clearMsg);
 		return new CompiledFileInfo(
 			file.getAbsolutePath(), chunk);

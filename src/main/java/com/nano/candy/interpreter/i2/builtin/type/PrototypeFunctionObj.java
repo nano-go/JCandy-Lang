@@ -6,17 +6,17 @@ import com.nano.candy.interpreter.i2.rtda.Frame;
 import com.nano.candy.interpreter.i2.rtda.UpvalueObj;
 import com.nano.candy.interpreter.i2.rtda.chunk.Chunk;
 import com.nano.candy.interpreter.i2.rtda.chunk.ConstantValue;
+import com.nano.candy.interpreter.i2.rtda.chunk.attrs.CodeAttribute;
 import com.nano.candy.interpreter.i2.vm.VM;
 
 public class PrototypeFunctionObj extends CallableObj {
 
 	public Chunk chunk;
+	public ConstantValue.MethodInfo metInfo;
 	public int pc;
 	
 	public FileScope fileScope;
 	public UpvalueObj[] upvalues;
-	public int slots;
-	public int stackSize;
 	
 	public PrototypeFunctionObj(Chunk chunk, int pc, UpvalueObj[] upvalues, 
 		                        String name, ConstantValue.MethodInfo methodInfo, 
@@ -25,8 +25,7 @@ public class PrototypeFunctionObj extends CallableObj {
 		this.chunk = chunk;
 		this.pc = pc;
 		this.upvalues = upvalues;
-		this.slots = methodInfo.slots;
-		this.stackSize = methodInfo.stackSize;
+		this.metInfo = methodInfo;
 		this.fileScope = fileScope;
 	}
 
@@ -42,8 +41,20 @@ public class PrototypeFunctionObj extends CallableObj {
 		return upvalues;
 	}
 
-	public int getSlots() {
-		return slots;
+	public int getMaxLocal() {
+		return metInfo.attrs.maxLocal;
+	}
+	
+	public int getMaxStack() {
+		return metInfo.attrs.maxStack;
+	}
+	
+	public int getCodeLength() {
+		return metInfo.attrs.length;
+	}
+	
+	public CodeAttribute getCodeAttr() {
+		return metInfo.attrs;
 	}
 
 	@Override

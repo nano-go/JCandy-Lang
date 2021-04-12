@@ -79,6 +79,9 @@ OP_SUPER_GET super_get
 OP_SUPER_INVOKE super_invoke
 OP_FUN fun
 
+OP_RAISE raise
+OP_MATCH_ERRORS match_errors
+
 OP_IMPORT import
 
 OP_NEW_ARRAY new_array

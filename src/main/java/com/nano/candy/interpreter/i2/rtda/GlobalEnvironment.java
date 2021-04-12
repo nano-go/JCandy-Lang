@@ -13,6 +13,18 @@ import com.nano.candy.interpreter.i2.builtin.type.StringObj;
 import com.nano.candy.interpreter.i2.builtin.type.TupleObj;
 import com.nano.candy.interpreter.i2.builtin.type.classes.CandyClass;
 import com.nano.candy.interpreter.i2.builtin.type.classes.ObjectClass;
+import com.nano.candy.interpreter.i2.builtin.type.error.ArgumentError;
+import com.nano.candy.interpreter.i2.builtin.type.error.AssertionError;
+import com.nano.candy.interpreter.i2.builtin.type.error.AttributeError;
+import com.nano.candy.interpreter.i2.builtin.type.error.CompilerError;
+import com.nano.candy.interpreter.i2.builtin.type.error.ErrorObj;
+import com.nano.candy.interpreter.i2.builtin.type.error.IOError;
+import com.nano.candy.interpreter.i2.builtin.type.error.NameError;
+import com.nano.candy.interpreter.i2.builtin.type.error.NativeError;
+import com.nano.candy.interpreter.i2.builtin.type.error.RangeError;
+import com.nano.candy.interpreter.i2.builtin.type.error.StackOverflowError;
+import com.nano.candy.interpreter.i2.builtin.type.error.StackTraceElementObj;
+import com.nano.candy.interpreter.i2.builtin.type.error.TypeError;
 import com.nano.candy.interpreter.i2.rtda.moudle.CompiledFileInfo;
 import com.nano.candy.interpreter.i2.rtda.moudle.SourceFileInfo;
 import java.lang.reflect.Field;
@@ -29,6 +41,7 @@ public class GlobalEnvironment {
 	
 	private static void init() {
 		defineBuiltinFunctions();
+		defineBuiltinErrorClasses();
 		defineClass(Range.RANGE_CLASS);
 		defineClass(ArrayObj.ARRAY_CLASS);
 		defineClass(IntegerObj.INTEGER_CLASS);
@@ -38,6 +51,22 @@ public class GlobalEnvironment {
 		defineClass(BoolObj.BOOL_CLASS);
 		defineClass(TupleObj.TUPLE_CLASS);
 		defineClass(ObjectClass.getObjClass());
+	}
+
+	private static void defineBuiltinErrorClasses() {
+		defineClass(ErrorObj.ERROR_CLASS);
+		defineClass(ArgumentError.ARGUMENT_ERROR_CLASS);
+		defineClass(AssertionError.ASSERTION_ERROR_CLASS);
+		defineClass(AttributeError.ATTR_ERROR_CLASS);
+		defineClass(CompilerError.COMPILER_ERROR_CLASS);
+		defineClass(IOError.IO_ERROR_CLASS);
+		defineClass(NameError.NAME_ERROR_CLASS);
+		defineClass(NativeError.NATIVE_ERROR_CLASS);
+		defineClass(RangeError.RANGE_ERROR_CLASS);
+		defineClass(StackOverflowError.SOF_ERROR_CLASS);
+		defineClass(TypeError.TYPE_ERROR_CLASS);
+		
+		defineClass(StackTraceElementObj.STACK_TRACE_ELEMENT_CLASS);
 	}
 
 	private static void defineBuiltinFunctions() {

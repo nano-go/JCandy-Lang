@@ -2,8 +2,9 @@ package com.nano.candy.interpreter.i2.rtda;
 import com.nano.candy.interpreter.i2.builtin.CandyObject;
 import com.nano.candy.interpreter.i2.builtin.type.PrototypeFunctionObj;
 import com.nano.candy.interpreter.i2.rtda.chunk.Chunk;
-import com.nano.candy.interpreter.i2.rtda.chunk.ChunkAttributes;
 import com.nano.candy.interpreter.i2.rtda.chunk.ConstantValue;
+import com.nano.candy.interpreter.i2.rtda.chunk.attrs.CodeAttribute;
+import com.nano.candy.interpreter.i2.rtda.chunk.attrs.ErrorHandlerTable;
 import com.nano.candy.utils.objpool.GenericObjectPool;
 import com.nano.candy.utils.objpool.Recyclable;
 import java.util.LinkedList;
@@ -30,14 +31,21 @@ public final class Frame implements Recyclable {
 		return f.init(prototypeFunc);
 	}
 	
-	public String name;
-	public Chunk chunk;
-	public int pc;
+	private String name;
+	private CodeAttribute codeAttr;
+	private boolean isTopFrame;
 	
-	public OperandStack opStack;
+	/**
+	 * see VM.runFrame(boolean)
+	 */
 	public boolean exitMethodAtReturn;
 	
+	public Chunk chunk;
+	public int pc;
+	public OperandStack opStack;
 	public CandyObject[] slots;
+	
+	public FileScope fileScope;
 	
 	/**
 	 * Captured upvalues from the upper frame.
@@ -45,38 +53,35 @@ public final class Frame implements Recyclable {
 	public UpvalueObj[] capturedUpvalues;
 	
 	/**
-	 * The open upvalues are captured by other frame in current
+	 * The open upvalues are captured by other frame in the current
 	 * frame.
 	 */
-	public LinkedList<UpvalueObj> openUpvalues;
-	
-	public FileScope fileScope;
+	private LinkedList<UpvalueObj> openUpvalues;
 	
 	private Frame() {}
 	
 	private Frame init(Chunk chunk, FileScope scope) {
-		adaptForSlots(chunk.getAttrs().slots.slots);
-		this.opStack = new DynamicOperandStack(8);
+		adaptForSlots(chunk.getMaxLocal());
+		this.opStack = new FixedOperandStack(chunk.getMaxStack());
+		this.name = chunk.getSimpleName();
 		this.chunk = chunk;
+		this.codeAttr = chunk.getCodeAttr();
 		this.pc = 0;
 		this.fileScope = scope;
-		
-		if (scope.compiledFileInfo.isRealFile()) {
-			this.name = scope.compiledFileInfo.getSimpleName();
-		} else {
-			this.name = chunk.getSourceFileName();
-		}
+		this.isTopFrame = true;
 		return this;
 	}
 	
 	private Frame init(PrototypeFunctionObj prototypeFunc) {
-		adaptForSlots(prototypeFunc.slots);
-		this.opStack = new FixedOperandStack(prototypeFunc.stackSize);
+		adaptForSlots(prototypeFunc.getMaxLocal());
+		this.opStack = new FixedOperandStack(prototypeFunc.getMaxStack());
 		this.name = prototypeFunc.declredName();
 		this.chunk = prototypeFunc.chunk;
+		this.codeAttr = prototypeFunc.metInfo.attrs;
 		this.pc = prototypeFunc.pc;
-		this.capturedUpvalues = prototypeFunc.upvalues;
 		this.fileScope = prototypeFunc.fileScope;
+		this.capturedUpvalues = prototypeFunc.upvalues;
+		this.isTopFrame = false;
 		return this;
 	}
 	
@@ -92,8 +97,7 @@ public final class Frame implements Recyclable {
 		for (int i = 0; i < COUNT; i ++) {
 			int index = methodInfo.upvalueIndex(i);
 			// checks the upvalue is in this frame.
-			if (methodInfo.isLocal(i)) {
-				// derive the upvalue from this frame.
+			if (methodInfo.isLocal(i)) {		
 				upvalueObjs[i] = captureUpvalue(index);
 			} else {
 				// derive the upvalue from the upper frame.
@@ -103,11 +107,15 @@ public final class Frame implements Recyclable {
 		return upvalueObjs;
 	}
 	
+	/**
+	 * Derive the upvalue from this frame.
+	 */
 	private UpvalueObj captureUpvalue(int index) {
 		if (openUpvalues == null) { /* lazy init */
 			openUpvalues = new LinkedList<>();
 		}
-
+		
+		// Find the same upvalue.
 		UpvalueObj openUpvalue = null;
 		for (int i = openUpvalues.size()-1; i >= 0; i --) {
 			openUpvalue = openUpvalues.get(i);
@@ -146,13 +154,36 @@ public final class Frame implements Recyclable {
 		}
 	}
 	
+	public String getName() {
+		return name;
+	}
+	
+	public String getSourceFileName() {
+		return chunk.getSourceFileName();
+	}
+	
+	public CodeAttribute getCodeAttr() {
+		return codeAttr;
+	}
+	
+	public ErrorHandlerTable getErrorHandlerTable() {
+		return codeAttr.errorHandlerTable;
+	}
+	
+	public int getMaxLocal() {
+		return codeAttr.maxLocal;
+	}
+	
+	public int getMaxStack() {
+		return codeAttr.maxStack;
+	}
+	
+	public boolean isTopFrame() {
+		return isTopFrame;
+	}
+	
 	public int currentLine() {
-		ChunkAttributes.LineNumberTable lineNumberTable =
-			chunk.getAttrs().lineNumberTable;
-		if (lineNumberTable == null) {
-			return -1;
-		}
-		return lineNumberTable.findLineNumber(pc-1);
+		return chunk.getLineNumber(pc-1);
 	}
 	
 	public int slotCount() {
@@ -198,7 +229,9 @@ public final class Frame implements Recyclable {
 		this.opStack = null;
 		this.capturedUpvalues = null;
 		this.fileScope = null;
+		this.codeAttr = null;	
 		this.pc = 0;
+		this.isTopFrame = false;
 		this.exitMethodAtReturn = false;
 	}
 }

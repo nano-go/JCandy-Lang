@@ -13,9 +13,11 @@ import com.nano.candy.interpreter.i2.builtin.type.StringObj;
 import com.nano.candy.interpreter.i2.builtin.type.TupleObj;
 import com.nano.candy.interpreter.i2.builtin.type.classes.CandyClass;
 import com.nano.candy.interpreter.i2.builtin.type.classes.ObjectClass;
+import com.nano.candy.interpreter.i2.builtin.type.error.ErrorObj;
+import com.nano.candy.interpreter.i2.builtin.type.error.NameError;
+import com.nano.candy.interpreter.i2.builtin.type.error.NativeError;
+import com.nano.candy.interpreter.i2.builtin.type.error.TypeError;
 import com.nano.candy.interpreter.i2.builtin.utils.ObjectHelper;
-import com.nano.candy.interpreter.i2.error.CandyRuntimeError;
-import com.nano.candy.interpreter.i2.error.TypeError;
 import com.nano.candy.interpreter.i2.rtda.FileScope;
 import com.nano.candy.interpreter.i2.rtda.Frame;
 import com.nano.candy.interpreter.i2.rtda.FrameStack;
@@ -25,6 +27,7 @@ import com.nano.candy.interpreter.i2.rtda.UpvalueObj;
 import com.nano.candy.interpreter.i2.rtda.chunk.Chunk;
 import com.nano.candy.interpreter.i2.rtda.chunk.ConstantPool;
 import com.nano.candy.interpreter.i2.rtda.chunk.ConstantValue;
+import com.nano.candy.interpreter.i2.rtda.chunk.attrs.ErrorHandlerTable;
 import com.nano.candy.interpreter.i2.rtda.moudle.CompiledFileInfo;
 import com.nano.candy.interpreter.i2.rtda.moudle.MoudleManager;
 import com.nano.candy.interpreter.i2.rtda.moudle.SourceFileInfo;
@@ -36,7 +39,7 @@ import static com.nano.candy.interpreter.i2.instruction.Instructions.*;
 
 public final class VM {
 	
-	public static final boolean DEBUG = true;
+	public static final boolean DEBUG = false;
 	
 	private static final byte WIDE_INDEX_MARK = (byte) 0xFF;
 	
@@ -145,29 +148,44 @@ public final class VM {
 		frameStack.pushFrame(frame);
 		syncFrameData();
 		if (monitorManager != null)
-			monitorManager.noticeStackPushed(this, frameStack);
+			monitorManager.notifyStackPushed(this, frameStack);
 	}
 	
 	public void popFrame() {
-		Frame old = frameStack.popFrame();
+		Frame old = fastPopFrame();
 		if (frameStack.isEmpty()) {
 			resetFrameData();
 		} else {
 			syncFrameData();
 		}
 		if (monitorManager != null)
-			monitorManager.noticeStackPoped(this, old, frameStack);
+			monitorManager.notifyStackPoped(this, old, frameStack);
 		old.recycleSelf();
 	}
 	
 	public void popFrameWithRet() {
-		Frame old = frameStack.popFrame();
+		Frame old = fastPopFrame();
 		syncFrameData();
 		// push return value to operand stack.
 		push(old.pop());
 		if (monitorManager != null)
-			monitorManager.noticeStackPoped(this, old, frameStack);
+			monitorManager.notifyStackPoped(this, old, frameStack);
 		old.recycleSelf();
+	}
+	
+	public void clearStack() {
+		while (!frameStack.isEmpty()) {
+			fastPopFrame();
+		}
+		resetFrameData();
+	}
+	
+	private final Frame fastPopFrame() {
+		Frame old = frameStack.popFrame();
+		if (old.isTopFrame()) {
+			SourceFileInfo.unmarkRunning(old.chunk.getSourceFileName());
+		}
+		return old;
 	}
 	
 	private void syncFrameData() {
@@ -240,6 +258,44 @@ public final class VM {
 		return (code[pc ++] << 8) & 0xFFFF | code[pc ++] & 0xFF;
 	}
 	
+	public boolean tryToHandleError(ErrorObj err, boolean printError) {
+		syncPcToTopFrame();
+		if (err.getStackTraceElements() == null) {
+			err.setStackTraceElements(frameStack);
+		}
+		ErrorHandlerTable. ErrorHandler handler = findExceptionHandler();
+		if (handler != null) {
+			handleError(err, handler);
+			return true;
+		}	
+		if (printError) {
+			System.err.print(err.sprintStackTrace(24));
+		}
+		resetFrameData();
+		return false;
+	}
+	
+	private ErrorHandlerTable.ErrorHandler findExceptionHandler() {
+		while (!frameStack.isEmpty()) {
+			Frame frame = frameStack.peek(0);
+			ErrorHandlerTable.ErrorHandler handler = null;
+			ErrorHandlerTable table = frame.getErrorHandlerTable();
+			if (table == null || 
+				(handler = table.findExceptionHandler(frame.pc)) == null) {
+				popFrame();
+				continue;
+			}
+			return handler;
+		}
+		return null;
+	}
+
+	public void handleError(ErrorObj err, ErrorHandlerTable.ErrorHandler handler) {	
+		opStack.clear();
+		pc = handler.handlerPc;
+		push(err);
+	}
+	
 	/**
 	 * Returns the super class by the specified class information.
 	 *
@@ -249,30 +305,27 @@ public final class VM {
 		if (classInfo.hasSuperClass) {
 			CandyObject superObj = pop();
 			if (!(superObj instanceof CandyClass)) {
-				throw new TypeError(
+				new TypeError(
 					"A class can't inherit a non-class: %s -> '%s'", 
 					classInfo.className, superObj.getCandyClassName()
-				);
+				).throwSelfNative();
 			}
 			return (CandyClass) superObj;
 		} 
 		return ObjectClass.getObjClass();
 	}
 	
-	/**
-	 * Returns a new class.
-	 */
 	private CandyClass createClass(CandyClass superClass, ConstantValue.ClassInfo classInfo) {
 		CandyClass clazz = new CandyClass(classInfo.className, superClass);
 		if (classInfo.initializer.isPresent()) {
 			ConstantValue.MethodInfo init = classInfo.initializer.get();
 			clazz.setInitalizer(createFunctionObj(clazz, init));
-			pc += init.codeBytes;
+			pc += init.getLength();
 		}
 		for (ConstantValue.MethodInfo methodInfo : classInfo.methods) {
 			PrototypeFunctionObj prototypefunc = createFunctionObj(clazz, methodInfo);
 			clazz.defineMethod(methodInfo.name, prototypefunc);
-			pc += methodInfo.codeBytes;
+			pc += methodInfo.getLength();
 		}
 		return clazz;
 	}
@@ -341,11 +394,11 @@ public final class VM {
 			methodName, instance
 		);
 		if (method == null) {
-			throw new CandyRuntimeError(
+			new TypeError(
 				"'%s->%s' class has no method '%s'.",
 				instance.getCandyClass().getClassName(),
 				superClass.getClassName(), methodName
-			);
+			).throwSelfNative();
 		}
 		ObjectHelper.checkIsValidCallable(method, arity);
 		method.onCall(this);
@@ -354,7 +407,8 @@ public final class VM {
 	private CandyObject getGlobalVariable(String name, boolean throwsErrorIfNotFound) {
 		CandyObject obj = global.getVar(name);
 		if (obj == null && throwsErrorIfNotFound) {
-			throw new CandyRuntimeError("the variable '%s' not found.", name);
+			new NameError("the variable '%s' not found.", name)
+				.throwSelfNative();
 		}
 		return obj;
 	}
@@ -362,7 +416,8 @@ public final class VM {
 	private boolean setGlobalVariable(String name, CandyObject val, boolean throwsErrorIfNotFound) {
 		if (global.getVar(name) == null) {
 			if (throwsErrorIfNotFound) {
-				throw new CandyRuntimeError("the variable '%s' not found.", name);
+				new NameError("the variable '%s' not found.", name)
+					.throwSelfNative();
 			}
 			return false;
 		}
@@ -371,25 +426,45 @@ public final class VM {
 	}
 	
 	/* -------------------- Execution --------------------*/
-	 
+	
+	public int runHandleError() {
+		int code = 0;
+		while (true) {
+			try {
+				run();
+				break;
+			} catch (VMExitException e){
+				code = e.code;
+				break;
+			} catch (Throwable e) {
+				ErrorObj err;
+				if (e instanceof CarrierErrorException) {
+					err = ((CarrierErrorException) e).getErrorObj();
+				} else {
+					err = new NativeError(e.getMessage());
+				}
+				if (DEBUG) e.printStackTrace();
+				if (tryToHandleError(err, true)) continue;
+				code = 1;
+				break;
+			}
+		}
+		clearStack();
+		return code;
+	}
+	
 	public MoudleObj run() {
-		// Mark the current source file with running state.
 		SourceFileInfo srcFileInfo = getCurSourceFileInfo();
 		if (srcFileInfo != null) {
 			srcFileInfo.markRunning();
 		}
-		
+		// OP_EXIT will help VM to exit runFrame method.
 		runFrame(false);
 		
-		// This running is over.
-		if (srcFileInfo != null) {
-			srcFileInfo.unmarkRunning();
-		}
-		
-		// Create a moudle object to return.
 		FileScope fs = global.curFileScope();
 		MoudleObj moudleObj = new MoudleObj(
-			fs.compiledFileInfo.getAbsPath(), fs.vars);
+			fs.compiledFileInfo.getAbsPath(), fs.vars
+		);
 		popFrame();
 		return moudleObj;
 	}
@@ -401,7 +476,7 @@ public final class VM {
 		
 		loop: for (;;) {
 			if (monitorManager != null)
-				monitorManager.noticeInsStarted(this, pc);
+				monitorManager.notifyInsStarted(this, pc);
 			switch (code[pc ++]) {
 				case OP_NOP: break;
 				case OP_POP: {
@@ -632,14 +707,13 @@ public final class VM {
 					setGlobalVariable(
 						cp.getString(readIndex()), /* name */
 						peek(0),                   /* value */
-						false
+						true
 					);					
 					break;
 				}		
 				case OP_GLOBAL_GET: {
 					push(getGlobalVariable(
-						cp.getString(readIndex()), false
-					));
+						cp.getString(readIndex()), true));
 					break;
 				}
 				
@@ -700,8 +774,8 @@ public final class VM {
 				}
 				case OP_CLOSE_SLOT: {
 					final int lastIndex = readUint8();
-					for (int i = frame().slots.length-1; i >= lastIndex; i --) {
-						frame().slots[i] = null;
+					for (int i = slots.length-1; i >= lastIndex; i --) {
+						slots[i] = null;
 					}
 					break;
 				}		
@@ -750,7 +824,7 @@ public final class VM {
 				case OP_FUN: {
 					ConstantValue.MethodInfo methodInfo = cp.getMethodInfo(readIndex());
 					push(createFunctionObj(null, methodInfo));
-					pc += methodInfo.codeBytes;
+					pc += methodInfo.getLength();
 					break;
 				}
 				
@@ -799,7 +873,7 @@ public final class VM {
 				case OP_CALL_GLOBAL: {
 					int arity = readUint8();
 					String name = cp.getString(readIndex());
-					CandyObject function = getGlobalVariable(name, false);
+					CandyObject function = getGlobalVariable(name, true);
 					ObjectHelper.checkIsValidCallable(function, arity);
 					function.onCall(this);
 					break;
@@ -812,6 +886,35 @@ public final class VM {
 					break;
 				}
 				
+				/**
+				 * Error Handler.
+				 */
+				case OP_RAISE: {
+					CandyObject err = pop();
+					TypeError.checkTypeMatched(ErrorObj.ERROR_CLASS, err);
+					if (!tryToHandleError((ErrorObj) err, true)) {
+						throw new VMExitException(1);
+					}
+					break;
+				}
+				case OP_MATCH_ERRORS: {
+					int offset = readJumpOffset();
+					pc += 2;
+					int count = readUint8();
+					CandyObject error = peek(count);
+					boolean matched = false;
+					for (int i = 0; i < count; i ++) {
+						CandyObject obj = pop();
+						if (!matched && error.getCandyClass()
+							.isSubClassOf(obj.getCandyClass())) {
+							matched = true;
+						}
+					}
+					if (!matched) {
+						pc += offset-3;
+					}
+					break;
+				}	
 				
 				/**
 				 * Other.
@@ -824,8 +927,9 @@ public final class VM {
 					break;
 				}
 				case OP_ASSERT: {
-					throw new com.nano.candy.interpreter.i2.error.
-						AssertionError(pop().strApiExeUser(this).value());
+					new com.nano.candy.interpreter.i2.builtin.type.error.
+						AssertionError(pop().strApiExeUser(this).value()).throwSelfNative();
+					break;
 				}
 				case OP_PRINT: {
 					CandyObject obj = pop();
@@ -836,23 +940,19 @@ public final class VM {
 					break;
 				}
 				case OP_RETURN: {
-					if (exitMethodAtFrameEnd) {
-						if (frame().exitMethodAtReturn) {
-							popFrameWithRet();
-							break loop;
-						}
-					} 
+					if (frame().exitMethodAtReturn) {
+						popFrameWithRet();
+						break loop;
+					}
 					popFrameWithRet(); 
 					break;
 				}
 				case OP_RETURN_NIL: {
 					push(NullPointer.nil());
-					if (exitMethodAtFrameEnd) {
-						if (frame().exitMethodAtReturn) {
-							popFrameWithRet();
-							break loop;
-						}
-					} 
+					if (frame().exitMethodAtReturn) {
+						popFrameWithRet();
+						break loop;
+					}
 					popFrameWithRet(); 
 					break;
 				}
@@ -861,7 +961,7 @@ public final class VM {
 				}
 			}
 			if (monitorManager != null)
-				monitorManager.noticeInsEnd(this);
+				monitorManager.notifyInsEnd(this);
 		}
 	}
 }

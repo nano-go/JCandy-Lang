@@ -56,9 +56,9 @@ public class InfoStack extends AbstractCommand {
 	private void printFrame(Console console, FrameStack fs, String funcName) {
 		StringBuilder builder = new StringBuilder();
 		int i = 0;
-		for (int sp = fs.sp()-1; sp > 0; sp --) {
-			Frame frame = fs.getAt(sp);
-			if (funcName.equals(frame.name)) {
+		for (int sp = 0; sp < fs.frameCount(); sp ++) {
+			Frame frame = fs.peek(sp);
+			if (funcName.equals(frame.getName())) {
 				if (i != 0) {
 					builder.append("\n");
 				}
@@ -89,7 +89,7 @@ public class InfoStack extends AbstractCommand {
 	}
 
 	public static void printFrame(StringBuilder builder, Frame frame) {
-		String frameName = StyleCode.render(frame.name, 
+		String frameName = StyleCode.render(frame.getName(), 
 			StyleCode.YELLOW, StyleCode.BOLD);
 		String srcFileName = StandardStyle.namesOrNumber(
 			frame.chunk.getSourceFileName()
@@ -99,7 +99,7 @@ public class InfoStack extends AbstractCommand {
 			"%s \n    at %s:%d\n", frameName, srcFileName, lineNum
 		));
 		builder.append(String.format(
-			"stack size: %d, ", frame.opStack.size())
+			"current stack size: %d, ", frame.opStack.size())
 		);
 		builder.append("slots: ")
 			.append(frame.slots.length).append("\n");

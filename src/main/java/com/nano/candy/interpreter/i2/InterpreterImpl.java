@@ -2,13 +2,10 @@ package com.nano.candy.interpreter.i2;
 
 import com.nano.candy.ast.ASTreeNode;
 import com.nano.candy.interpreter.Interpreter;
-import com.nano.candy.interpreter.i2.error.CandyRuntimeError;
-import com.nano.candy.interpreter.i2.error.CompilerError;
-import com.nano.candy.interpreter.i2.error.NativeError;
-import com.nano.candy.interpreter.i2.rtda.FrameStack;
 import com.nano.candy.interpreter.i2.rtda.chunk.Chunk;
 import com.nano.candy.interpreter.i2.rtda.moudle.CompiledFileInfo;
 import com.nano.candy.interpreter.i2.tool.Compiler;
+import com.nano.candy.interpreter.i2.vm.CarrierErrorException;
 import com.nano.candy.interpreter.i2.vm.VM;
 
 public class InterpreterImpl implements Interpreter {
@@ -32,7 +29,7 @@ public class InterpreterImpl implements Interpreter {
 		Chunk chunk;
 		try {
 			chunk = Compiler.compileTree(node, isInteractionMode, false, false);
-		} catch (CompilerError e) {
+		} catch (CarrierErrorException e) {
 			return;
 		}
 		loadChunk(chunk, isInteractionMode);
@@ -49,29 +46,8 @@ public class InterpreterImpl implements Interpreter {
 
 	@Override
 	public boolean run() {
-		try {
-			vm.run();
-		} catch (CandyRuntimeError e) {
-			if (VM.DEBUG) {
-				e.printStackTrace();
-			}
-			reportError(e);
-			return false;
-		} catch (Throwable t) {
-			if (VM.DEBUG) {
-				t.printStackTrace();
-			}
-			reportError(new NativeError(t));
-			return false;
-		}
-		return true;
-	}
-
-	private void reportError(CandyRuntimeError e) {
-		vm.syncPcToTopFrame();
-		FrameStack stack = vm.getFrameStack();
-		e.printStackTrace(stack, "    ", 24, System.out);
-		stack.clearFrame();
+		int code = vm.runHandleError();
+		return code == 0;
 	}
 
 }

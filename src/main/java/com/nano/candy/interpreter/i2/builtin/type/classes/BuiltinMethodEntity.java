@@ -3,9 +3,9 @@ package com.nano.candy.interpreter.i2.builtin.type.classes;
 import com.nano.candy.interpreter.i2.builtin.CandyObject;
 import com.nano.candy.interpreter.i2.builtin.annotation.BuiltinMethod;
 import com.nano.candy.interpreter.i2.builtin.type.CallableObj;
+import com.nano.candy.interpreter.i2.builtin.type.error.NativeError;
 import com.nano.candy.interpreter.i2.builtin.utils.ObjectHelper;
-import com.nano.candy.interpreter.i2.error.CandyRuntimeError;
-import com.nano.candy.interpreter.i2.error.NativeError;
+import com.nano.candy.interpreter.i2.vm.CarrierErrorException;
 import com.nano.candy.interpreter.i2.vm.VM;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
@@ -53,14 +53,14 @@ public class BuiltinMethodEntity extends CallableObj {
 			method.invoke(instance, vm);
 		} catch (InvocationTargetException e) {
 			Throwable cause = e.getCause();
-			if (cause instanceof CandyRuntimeError) {
-				throw (CandyRuntimeError) cause;
+			if (cause instanceof CarrierErrorException) {
+				throw (CarrierErrorException) cause;
 			}
-			throw new NativeError(cause);
-		} catch (CandyRuntimeError e) {
+			new NativeError(cause).throwSelfNative();
+		} catch (CarrierErrorException e) {
 			throw e;
 		} catch (Exception e) {
-			throw new NativeError(e);
+			new NativeError(e).throwSelfNative();
 		}
 	}
 

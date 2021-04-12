@@ -1,13 +1,17 @@
 package com.nano.candy.interpreter.i2.codegen;
 
+import com.nano.candy.interpreter.i2.instruction.Instructions;
 import com.nano.candy.interpreter.i2.rtda.chunk.Chunk;
-import com.nano.candy.interpreter.i2.rtda.chunk.ChunkAttributes;
 import com.nano.candy.interpreter.i2.rtda.chunk.ConstantValue;
+import com.nano.candy.interpreter.i2.rtda.chunk.attrs.CodeAttribute;
+import com.nano.candy.interpreter.i2.rtda.chunk.attrs.ErrorHandlerTable;
+import com.nano.candy.interpreter.i2.rtda.chunk.attrs.LineNumberTable;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
+import java.util.LinkedList;
 
 import static com.nano.candy.interpreter.i2.instruction.Instructions.*;
-import static com.nano.candy.interpreter.i2.rtda.chunk.ChunkAttributes.*;
 import static com.nano.candy.interpreter.i2.rtda.chunk.ConstantValue.*;
 
 public class ChunkBuilder {
@@ -22,6 +26,9 @@ public class ChunkBuilder {
 		OP_STORE0, OP_STORE1, OP_STORE2, OP_STORE3, OP_STORE4 
 	};
 	
+	public static final ErrorHandlerTable.ErrorHandler[] EMPTY_ERROR_HANDLER_ARR =
+		new ErrorHandlerTable.ErrorHandler[0];
+	
 	private static class LineNumberInfo {
 		short startPc;
 		short lineNumber;
@@ -31,15 +38,40 @@ public class ChunkBuilder {
 		}
 	}
 	
+	protected static class CodeAttr {
+		protected LinkedList<ErrorHandlerTable.ErrorHandler> errorHandler;
+		protected int fromPC;
+		protected int length;
+		protected int maxLocal;
+		protected int maxStack;
+		
+		public CodeAttr() {
+			this.errorHandler = new LinkedList<>();
+		}
+		
+		public CodeAttribute genCodeAttr() {
+			Collections.reverse(errorHandler);
+			ErrorHandlerTable handlerTable = new ErrorHandlerTable(
+				errorHandler.toArray(EMPTY_ERROR_HANDLER_ARR));
+			return new CodeAttribute(
+				fromPC, length, maxStack, maxLocal,
+				handlerTable
+			);
+		}
+	}
+	
 	protected static class State {
 		public int stackSize;
 		public int curStackSize;
+		public CodeAttr codeAttr;
 		
 		public State enclosing;
 
-		public State(State enclosing) {
+		public State(State enclosing, int pc) {
 			this.enclosing = enclosing;
 			this.stackSize = 1;
+			this.codeAttr = new CodeAttr();
+			this.codeAttr.fromPC = pc;
 		}
 	
 		public void push(int s) {
@@ -56,13 +88,11 @@ public class ChunkBuilder {
 	}
 
 	private ArrayList<LineNumberInfo> lineNumberTable;
-	private short globalSlots;
 	private String sourceFileName;
 	
 	protected ConstantPool constantPool;
 	
 	private byte[] code = new byte[64];
-	
 	/**
 	 * Code Pointer.
 	 */
@@ -73,11 +103,7 @@ public class ChunkBuilder {
 	public ChunkBuilder() {
 		this.lineNumberTable = new ArrayList<>();
 		this.constantPool = new ConstantPool();
-		this.state = new State(null);
-	}
-
-	public void setGlobalSlots(int slots) {
-		this.globalSlots = (short)slots;
+		this.state = new State(null, 0);
 	}
 	
 	public void setSourceFileName(String fileName) {
@@ -97,6 +123,10 @@ public class ChunkBuilder {
 		lineNumberTable.add(new LineNumberInfo((short) startPc, (short) lineNumber));
 	}
 	
+	public void addErrorHandler(int startPc, int endPc, int handlerPc) {
+		state().codeAttr.errorHandler.add(
+			new ErrorHandlerTable.ErrorHandler(startPc, endPc, handlerPc));
+	}
 
 	public int curCp() {
 		return cp;
@@ -122,7 +152,7 @@ public class ChunkBuilder {
 	}
 	
 	public void newState() {
-		this.state = new State(state);
+		this.state = new State(state, cp);
 	}
 	
 	public void closeState() {
@@ -131,9 +161,9 @@ public class ChunkBuilder {
 	
 	public void updateState(byte opcode) {
 		if (DEBUG) {
-			/*System.out.printf(
+			System.out.printf(
 				"%s: %d-> ", Instructions.getName(opcode), state.curStackSize
-			);*/
+			);
 		}
 		switch (opcode) {
 			case OP_LOAD:
@@ -143,6 +173,7 @@ public class ChunkBuilder {
 			case OP_LOAD3:
 			case OP_LOAD4:
 			case OP_FUN:
+			case OP_CLASS:
 			case OP_LOAD_UPVALUE:
 			case OP_ICONST:
 			case OP_DCONST:
@@ -183,16 +214,15 @@ public class ChunkBuilder {
 			case OP_IMPORT:
 			case OP_SET_ATTR:
 			case OP_SUPER_GET:
-			case OP_SUPER_INVOKE:	
-			// This opcode is only appear in top frame(global scope).
-			// case OP_PRINT:
+			case OP_SUPER_INVOKE:
+			case OP_RAISE:
 				state.pop(1);
 				break;
 		}
 		if (DEBUG) {
-			/*System.out.printf(
+			System.out.printf(
 				"%d\n", state.curStackSize
-			);*/
+			);
 		}
 	}
 	
@@ -259,6 +289,12 @@ public class ChunkBuilder {
 		code[position + 1] = (byte) offset;
 	}
 	
+	public void backpatch(int position, int extraOffset) {
+		int offset = cp - position + extraOffset;
+		code[position]     = (byte) (offset >> 8);
+		code[position + 1] = (byte) offset;
+	}
+	
 	/**
 	 * Emit a byte to store the stack-top operand to the specified slot.
 	 */
@@ -319,20 +355,6 @@ public class ChunkBuilder {
 		emitIndex(constantPool.addString(constVal));
 	}
 	
-	private Slots buildSlots() {
-		if (globalSlots == -1) {
-			return null;
-		}
-		return new Slots(globalSlots);
-	}
-
-	private SourceFileName buildSourceFileName() {
-		if (sourceFileName == null) {
-			return null;
-		}
-		return new SourceFileName(sourceFileName);
-	}
-	
 	private LineNumberTable buildLineNumberTable() {
 		byte[] bytes = new byte[lineNumberTable.size()*4];
 		int offset = 0;
@@ -345,14 +367,20 @@ public class ChunkBuilder {
 		}
 		return new LineNumberTable(bytes);
 	}
+	
+	public CodeAttribute buildCodeAttr(int maxLocal) {
+		CodeAttr attr = state.codeAttr;
+		attr.length = curCp() - attr.fromPC;
+		attr.maxStack = state.stackSize;
+		attr.maxLocal = maxLocal;
+		return attr.genCodeAttr();
+	}
 
-	public Chunk build() {
-		ChunkAttributes attrs = new ChunkAttributes(
-			buildSourceFileName(),
-			buildLineNumberTable(),
-			buildSlots()
-		);
-		return new Chunk(Arrays.copyOf(code, cp), 
-			constantPool.toConstants(), attrs);
+	public Chunk build(int maxLocal) {
+		return new Chunk.Builder(sourceFileName, Arrays.copyOf(code, cp))
+			.setLineNumberTable(buildLineNumberTable())
+			.setConstantPool(constantPool.toConstants())
+			.setCodeAttr(buildCodeAttr(maxLocal))
+			.build();
 	}
 }

@@ -4,12 +4,13 @@ import com.nano.candy.interpreter.i2.builtin.BuiltinObject;
 import com.nano.candy.interpreter.i2.builtin.CandyObject;
 import com.nano.candy.interpreter.i2.builtin.annotation.BuiltinClass;
 import com.nano.candy.interpreter.i2.builtin.annotation.BuiltinMethod;
-import com.nano.candy.interpreter.i2.builtin.error.IndexError;
+import com.nano.candy.interpreter.i2.builtin.type.ArrayObj;
 import com.nano.candy.interpreter.i2.builtin.type.StringObj;
 import com.nano.candy.interpreter.i2.builtin.type.classes.BuiltinClassFactory;
 import com.nano.candy.interpreter.i2.builtin.type.classes.CandyClass;
+import com.nano.candy.interpreter.i2.builtin.type.error.RangeError;
+import com.nano.candy.interpreter.i2.builtin.type.error.TypeError;
 import com.nano.candy.interpreter.i2.builtin.utils.ObjectHelper;
-import com.nano.candy.interpreter.i2.error.TypeError;
 import com.nano.candy.interpreter.i2.vm.VM;
 import com.nano.candy.std.StringFunctions;
 import com.nano.candy.utils.ArrayUtils;
@@ -101,8 +102,8 @@ public class StringObj extends BuiltinObject {
 		long beginIndex = ObjectHelper.asInteger(vm.pop());
 		long endIndex = ObjectHelper.asInteger(vm.pop());
 		final int size = value.length();
-		IndexError.checkIndex(beginIndex, size);
-		IndexError.checkIndex(endIndex, size+1);
+		RangeError.checkIndex(beginIndex, size);
+		RangeError.checkIndexForAdd(endIndex, size);
 		if (beginIndex > endIndex) {
 			vm.returnFromVM(EMPTY_STR);
 			return;

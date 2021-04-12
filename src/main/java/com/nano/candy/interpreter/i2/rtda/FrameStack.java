@@ -1,5 +1,6 @@
 package com.nano.candy.interpreter.i2.rtda;
 
+import com.nano.candy.interpreter.i2.builtin.type.error.StackOverflowError;
 import java.util.Arrays;
 
 public final class FrameStack {
@@ -33,13 +34,17 @@ public final class FrameStack {
 		return frameStack[index + 1];
 	}
 	
+	public Frame peek(int k) {
+		return frameStack[sp-k-1];
+	}
+	
 	public Frame peek() {
 		return frame;
 	}
 	
 	public void pushFrame(Frame frame) {
 		if (sp > maxStackDeepth) {
-			throw new StackOverflowError();
+			new StackOverflowError().throwSelfNative();
 		}
 		if (sp >= frameStack.length) {
 			frameStack = Arrays.copyOf(frameStack, frameStack.length*2);

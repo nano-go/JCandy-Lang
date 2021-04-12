@@ -6,8 +6,8 @@ import com.nano.candy.interpreter.i2.builtin.annotation.BuiltinClass;
 import com.nano.candy.interpreter.i2.builtin.annotation.BuiltinMethod;
 import com.nano.candy.interpreter.i2.builtin.type.classes.BuiltinClassFactory;
 import com.nano.candy.interpreter.i2.builtin.type.classes.CandyClass;
+import com.nano.candy.interpreter.i2.builtin.type.error.TypeError;
 import com.nano.candy.interpreter.i2.builtin.utils.ObjectHelper;
-import com.nano.candy.interpreter.i2.error.CandyRuntimeError;
 import com.nano.candy.interpreter.i2.vm.VM;
 import java.util.Objects;
 
@@ -114,7 +114,7 @@ public class Range extends BuiltinObject {
 	@BuiltinMethod(name = "rand")
 	public void rand(VM vm) {
 		if (left == right) {
-			throw new CandyRuntimeError("Empty set: %s", toString());
+			new TypeError("Empty set: %s", toString()).throwSelfNative();
 		}
 		long rand = left + (long) (Math.random() * (right - left)) ;
 		vm.returnFromVM(IntegerObj.valueOf(rand));

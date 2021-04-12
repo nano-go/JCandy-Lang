@@ -1,8 +1,8 @@
 package com.nano.candy.interpreter.i2.tool;
 
 import com.nano.candy.interpreter.Interpreter;
-import com.nano.candy.interpreter.i2.error.CompilerError;
 import com.nano.candy.interpreter.i2.rtda.chunk.Chunk;
+import com.nano.candy.interpreter.i2.vm.CarrierErrorException;
 import com.nano.candy.main.CandyOptions;
 import com.nano.candy.tool.CandyTool;
 import com.nano.candy.utils.BlockView;
@@ -43,7 +43,7 @@ public class DisassembleTool implements CandyTool {
 			Chunk chunk;
 			try {
 				chunk = Compiler.compileChunk(src, false, false);
-			} catch (CompilerError e) {
+			} catch (CarrierErrorException e) {
 				continue;
 			}
 			disassember.loadChunk(chunk);

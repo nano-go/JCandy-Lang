@@ -2,8 +2,8 @@ package com.nano.candy.interpreter.i2.tool;
 
 import com.nano.candy.interpreter.i2.instruction.Instructions;
 import com.nano.candy.interpreter.i2.rtda.chunk.Chunk;
-import com.nano.candy.interpreter.i2.rtda.chunk.ChunkAttributes;
 import com.nano.candy.interpreter.i2.rtda.chunk.ConstantValue;
+import com.nano.candy.interpreter.i2.rtda.chunk.attrs.LineNumberTable;
 
 import static com.nano.candy.interpreter.i2.instruction.Instructions.*;
 
@@ -67,7 +67,7 @@ public class Disassembler {
 		builder.endBlock();
 	}
 
-	private void disassembleLineNumberTable(ChunkAttributes.LineNumberTable lineNumberTable) {
+	private void disassembleLineNumberTable(LineNumberTable lineNumberTable) {
 		builder.enterBlock("LineNumberTable");
 		final int LEN = lineNumberTable.tableBytes.length;
 		for (int i = 0; i < LEN; i += 4) {
@@ -154,6 +154,9 @@ public class Disassembler {
 			case OP_LOOP:
 				simpleJumpInstruction(opcode);
 				break;
+			case OP_MATCH_ERRORS:
+				macthErrorsInstruction(opcode);
+				break;
 			default:
 				simpleInstruction(opcode);
 				break;
@@ -193,9 +196,9 @@ public class Disassembler {
 		);
 		builder.appendIndent()
 			.appendf("Slots: %d, Stack Size: %d\n",
-					 methodInfo.slots, methodInfo.stackSize);
+					 methodInfo.getMaxLocal(), methodInfo.getMaxStack());
 		disUpvalues(methodInfo);
-		int endPc = reader.pc + methodInfo.codeBytes;
+		int endPc = reader.pc + methodInfo.getLength();
 		while (reader.pc != endPc) {
 			disassembleIns();
 		}
@@ -237,6 +240,13 @@ public class Disassembler {
 		int arity = reader.readUint8();
 		String global = reader.readConstant().toString();
 		builder.appendf("global %s(%d)", global, arity);
+	}
+	
+	private void macthErrorsInstruction(byte opcode) {	
+		simpleInstruction(opcode);
+		int offset = reader.readInt16();
+		int errorCount = reader.readByte();
+		builder.appendf("%d, %d", offset, errorCount);
 	}
 
 	private void simpleInstructionWithConst(byte opcode) {

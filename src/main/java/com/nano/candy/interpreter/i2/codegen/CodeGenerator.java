@@ -71,7 +71,6 @@ public class CodeGenerator implements AstVisitor<Void, Void> {
 	private LinkedList<LoopMarker> loopMarkers;
 	private HashMap<String, LoopMarker> lableTable;
 	
-	
 	public CodeGenerator(boolean isInteractionMode) {
 		this(isInteractionMode, false);
 	}
@@ -88,9 +87,8 @@ public class CodeGenerator implements AstVisitor<Void, Void> {
 	public Chunk genCode(ASTreeNode node) {
 		ASTreeNode.accept(node, this);
 		builder.emitop(OP_EXIT);
-		builder.setGlobalSlots(locals.maxSlotCount());
 		builder.setSourceFileName(node.pos.getFileName());
-		return builder.build();
+		return builder.build(locals.maxSlotCount());
 	}
 	
 	private void walkBlock(Stmt.Block block) {
@@ -327,8 +325,6 @@ public class CodeGenerator implements AstVisitor<Void, Void> {
 		for (String param : node.params) {
 			locals.addLocal(param);
 		}
-		int bodyBegainningPos = builder.curCp();
-		methodInfo.fromPc = bodyBegainningPos;
 		
 		// locate the beginning of the method for debug.
 		if (isDebugMode && classDefinedIn != null) {
@@ -339,10 +335,8 @@ public class CodeGenerator implements AstVisitor<Void, Void> {
 		
 		methodInfo.name = name;	
 		methodInfo.arity = arity;
-		methodInfo.codeBytes = builder.curCp() - bodyBegainningPos;
-		methodInfo.slots = (byte) locals.maxSlotCount();
-		methodInfo.stackSize = builder.state().stackSize;
-		methodInfo.upvalues = genUpvalueBytes(locals.upvalues());	
+		methodInfo.upvalues = genUpvalueBytes(locals.upvalues());
+		methodInfo.attrs = builder.buildCodeAttr(locals.maxSlotCount());
 		
 		closeFunctionScope();
 		return methodInfo;
@@ -592,6 +586,107 @@ public class CodeGenerator implements AstVisitor<Void, Void> {
 		node.errorInfo.accept(this);
 		builder.emitop(OP_ASSERT, line(node));
 		builder.backpatch(lable);
+		return null;
+	}
+
+	@Override
+	public Void visit(Stmt.TryIntercept node) {
+		int jOutOfInterceptions = genErrorHandler(node.tryBlock);
+		// interception-block lables 
+		// jump out of interceptions and the else-block.
+		int[] lablesJumpOutOfIAE = genInterceptions(node);
+		
+		builder.backpatch(jOutOfInterceptions);
+		if (node.elseBlock.isPresent()) {
+			node.elseBlock.get().accept(this);
+		}
+		for (int lable : lablesJumpOutOfIAE) {
+			builder.backpatch(lable);
+		}
+		if (node.finallyBlock.isPresent()) {
+			node.finallyBlock.get().accept(this);
+		}	
+		return null;
+	}
+	
+	/**
+	 * Visits try-block and generates a new error handler.
+	 *
+	 * @return Return a lable used to jump out of interception blocks
+	 *         if no error occurs in try-block.
+	 */
+	private int genErrorHandler(Stmt.Block tryBlock) {
+		int startPc = builder.curCp()+1;
+		tryBlock.accept(this);
+		int endPc = builder.curCp();
+		int jOutOfInterceptions = builder.emitLabel(OP_JUMP, -1);
+		int handlerPc = builder.curCp();
+		builder.addErrorHandler(startPc, endPc, handlerPc);
+		return jOutOfInterceptions;
+	}
+	
+
+	/**
+	 * Generates interception blocks.
+	 *
+	 * If an error ocurrs in a try...intercept statements, the operand-stack will
+	 * be cleared and the error is pushed.
+	 */
+	private int[] genInterceptions(Stmt.TryIntercept node) {
+		int[] lablesJumpOutOfIAE;
+		// Push Error, Change the state.
+		builder.state().push(1);
+		if (!node.interceptionBlocks.isEmpty()) {
+			lablesJumpOutOfIAE = new int[node.interceptionBlocks.size()];
+			int i = 0;		
+			for (Stmt.Interception interception : node.interceptionBlocks) {
+				interception.accept(this);
+				lablesJumpOutOfIAE[i ++] = builder.emitLabel(OP_JUMP, -1);
+			}
+			// Raise the error if fail to intercept.
+			builder.emit1(OP_RAISE);
+		} else {
+			// If the list of interception block is empty, any error is intercepted.
+			// Pop Error
+			builder.emitop(OP_POP);
+			lablesJumpOutOfIAE = new int[]{ builder.emitLabel(OP_JUMP, -1) };
+		}
+		return lablesJumpOutOfIAE;
+	}
+
+	@Override
+	public Void visit(Stmt.Interception node) {
+		int JToErrorOrNextInterception = -1;
+		enterScope();
+		for (Expr exception : node.exceptions) {
+			exception.accept(this);
+		}
+		JToErrorOrNextInterception = builder.emitLabel(OP_MATCH_ERRORS, -1);
+		builder.emit1((byte) node.exceptions.size());
+		builder.state().pop(node.exceptions.size());
+		
+		if (node.name.isPresent()) {
+			String name = node.name.get();
+			declrVariable(name);
+			defineVariable(name, -1);
+		} else {
+			// Consume the error at the top of the operand stack.
+			builder.emitop(OP_POP);
+		}
+		
+		walkBlock(node.block);
+		closeScope(true);
+		// jump over lable used to jump out of interception blocks.
+		// see genInterceptions(Stmt.TryIntercept)
+		// 3 is the length of a lable.
+		builder.backpatch(JToErrorOrNextInterception, 3);	
+		return null;
+	}
+
+	@Override
+	public Void visit(Stmt.Raise node) {
+		node.exceptionExpr.accept(this);
+		builder.emitop(OP_RAISE, line(node));
 		return null;
 	}
 

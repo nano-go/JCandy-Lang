@@ -84,16 +84,17 @@ public class ShowLines extends AbstractCommand {
 	private void showFunction(VmMonitor monitor, ConstantValue.MethodInfo met) {
 		Chunk chunk = monitor.getVM().frame().chunk;
 		int from,to;
+		int fromPc = met.getFromPC(), len = met.getLength();
 		if (met.classDefinedIn != null) {
 			// The method defined in a class has no OP_FUN opcode (can't locate),
 			// but the line number table records the starting position of 
 			// this method by the opcode (OP_NOP) that the met.fromPc is pointed.
-			from = chunk.getLineNumber(met.fromPc);
+			from = chunk.getLineNumber(fromPc);
 		} else {
 			// Get the OP_FUN opcode position.
-			from = chunk.getLineNumber(met.fromPc - 2);
+			from = chunk.getLineNumber(fromPc - 2);
 		}
-		to = chunk.getLineNumber(met.fromPc + met.codeBytes-1);
+		to = chunk.getLineNumber(fromPc + len-1);
 		showLines(monitor.getConsole(), chunk.getSourceFileName(), from, to);
 	}
 

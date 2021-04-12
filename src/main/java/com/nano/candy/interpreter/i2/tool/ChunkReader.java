@@ -1,9 +1,9 @@
 package com.nano.candy.interpreter.i2.tool;
 
 import com.nano.candy.interpreter.i2.rtda.chunk.Chunk;
-import com.nano.candy.interpreter.i2.rtda.chunk.ChunkAttributes;
 import com.nano.candy.interpreter.i2.rtda.chunk.ConstantPool;
 import com.nano.candy.interpreter.i2.rtda.chunk.ConstantValue;
+import com.nano.candy.interpreter.i2.rtda.chunk.attrs.LineNumberTable;
 
 public class ChunkReader {
 	
@@ -12,13 +12,11 @@ public class ChunkReader {
 	
 	private byte[] code;
 	private ConstantValue[] cp;
-	private ChunkAttributes attrs;
-
+	
 	public ChunkReader(Chunk chunk) {
 		this.chunk = chunk;
 		this.code = chunk.getByteCode();
 		this.cp = chunk.getConstantPool().getConstants();
-		this.attrs = chunk.getAttrs();
 	}
 	
 	public boolean readAtEnd() {
@@ -49,19 +47,19 @@ public class ChunkReader {
 	}
 	
 	public String getFileName() {
-		return attrs.getSourceFileName();
+		return chunk.getSourceFileName();
 	}
 	
 	public short getSlots() {
-		return attrs.getSlots();
+		return (short) chunk.getCodeAttr().maxLocal;
 	}
 	
 	public boolean isLineNumberTablePresent() {
-		return getLineNumberTable() != null;
+		return chunk.getLineNumberTable() != null;
 	}
 	
-	public ChunkAttributes.LineNumberTable getLineNumberTable(){
-		return attrs.lineNumberTable;
+	public LineNumberTable getLineNumberTable(){
+		return chunk.getLineNumberTable();
 	}
 	
 	public ConstantValue readConstant() {
