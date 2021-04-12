@@ -45,4 +45,12 @@ public final class FixedOperandStack implements OperandStack {
 	public int size() {
 		return sp;
 	}
+	
+	@Override
+	public void clear() {
+		for (int i = 0; i < sp; i ++) {
+			opStack[i] = null;
+		}
+		sp = 0;
+	}
 }

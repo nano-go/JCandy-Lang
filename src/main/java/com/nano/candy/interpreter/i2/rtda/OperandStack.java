@@ -19,4 +19,5 @@ public interface OperandStack {
 	public void rotThree();
 	
 	public int size();
+	public void clear();
 }
