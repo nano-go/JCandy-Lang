@@ -12,6 +12,9 @@ public interface AstVisitor<S, E> {
 	public S visit(Stmt.Break node);
 	public S visit(Stmt.While node);
 	public S visit(Stmt.Assert node);
+	public S visit(Stmt.Raise node);
+	public S visit(Stmt.TryIntercept node);
+	public S visit(Stmt.Interception node);
 	public S visit(Stmt.If node);
 	public S visit(Stmt.For node);
 	public S visit(Stmt.ExprS node);

@@ -1,4 +1,5 @@
 package com.nano.candy.parser;
+
 import com.nano.candy.ast.ASTreeNode;
 import com.nano.candy.ast.Expr;
 import com.nano.candy.ast.Program;
@@ -36,7 +37,7 @@ class CandyParser implements Parser {
 	 * 
 	 * E.g: var f = lambda e -> println(e);;
 	 * The first ';' is the end of the 'println' and the second ';' is the end of
-	 * the assignment statement. That's ugly.
+	 * the assignment statement.
 	 */
 	private boolean inSingleLineLambda;
 
@@ -211,6 +212,9 @@ class CandyParser implements Parser {
 				case ASSERT:
 				case VAR:
 				case CLASS:
+				case IMPORT:
+				case RAISE:
+				case TRY:
 					break loop;
 				case SEMI:
 					consume();
@@ -349,6 +353,7 @@ class CandyParser implements Parser {
 	 *        | Break | Continue | Return
 	 *        | BreakStmt | ContinueStmt| ReturnStmt
 	 *        | VarDef | FunDef
+	 *        | TryInterceptStmt | RaiseStmt
 	 *        | AssertStmt | ExprStmt
 	 *        | ( <SEMI> Stmt )
 	 *        ]
@@ -376,6 +381,10 @@ class CandyParser implements Parser {
 					return parseReturn();
 				case ASSERT:
 					return parseAssertStmt();
+				case TRY:
+					return parseTryInterceptStmt();
+				case RAISE:
+					return parseRaiseStmt();
 				case VAR:
 					return parseVarDef();
 				case FUN:
@@ -385,7 +394,7 @@ class CandyParser implements Parser {
 				case IMPORT:
 					return parseImports();
 				case LBRACE:
-					return parseBlock();			
+					return parseBlock();		
 				case SEMI:
 					consume();
 					continue loop;
@@ -397,7 +406,7 @@ class CandyParser implements Parser {
 			}
 		}
 	}
-	
+
 	/**
 	 * Body = Stmt
 	 *
@@ -666,9 +675,9 @@ class CandyParser implements Parser {
 	 * Params = ( ( "(" Parameters ")" ) | Parameters ) [ <SEMI> ]
 	 * Parameters = [ <IDENTIFIER> ( "." <IDENTIFIER> )*
 	 */
-	private List<String> parseParams(boolean optionalParenthesis) {
+	private List<String> parseParams(boolean optionalParentheses) {
 		ArrayList<String> params = new ArrayList<>(6);
-		boolean leftParenMatched = matchIf(LPAREN, !optionalParenthesis);
+		boolean leftParenMatched = matchIf(LPAREN, !optionalParentheses);
 		if (leftParenMatched && matchIf(RPAREN)) {
 			ignorableLinebreak();
 			return params;
@@ -680,11 +689,80 @@ class CandyParser implements Parser {
 			}
 			params.add(nameTok.getLiteral());
 		} while (matchIf(COMMA));	
-		if (!optionalParenthesis || leftParenMatched) {
+		if (!optionalParentheses || leftParenMatched) {
 			matchIf(RPAREN, "Expected parameter declaration.");
 		}
 		ignorableLinebreak();
 		return params;
+	}
+	
+	/**
+	 * RaiseStmt = "raise" Expr
+	 */
+	private Stmt.Raise parseRaiseStmt() {
+		Token location = match(RAISE);
+		return locate(location, new Stmt.Raise(parseExpr()));
+	}
+
+	/**
+	 * TryInterceptStmt = "try" Block [ InterceptionStmts ] 
+	 *                    [ ElseStmt ] [ FinallyStmt ]
+	 */
+	private Stmt.TryIntercept parseTryInterceptStmt() {
+		Token location = match(TRY);
+		Stmt.Block tryBlock = parseBlock();
+		List<Stmt.Interception> interceptionStmts = null;
+		Stmt.Block elseBlock = null;
+		Stmt.Block finallyBlock = null;
+		if (matchIf(INTERCEPT)) {
+			interceptionStmts = parseInterceptionStmts();
+		}
+		if (matchIf(ELSE)) {
+			elseBlock = parseBlock();
+		}
+		if (matchIf(FINALLY)) {
+			finallyBlock = parseBlock();
+		}
+		return locate(location, new Stmt.TryIntercept(
+			tryBlock, interceptionStmts, elseBlock, finallyBlock
+		));
+	}
+
+	/**
+	 * InterceptionStmts = ( InterceptionStmt )*
+	 */
+	private List<Stmt.Interception> parseInterceptionStmts() {
+		List<Stmt.Interception> stmts = new ArrayList<>(4);
+		do {
+			stmts.add(parseInterceptionStmt());
+		} while (matchIf(INTERCEPT));
+		return stmts;
+	}
+
+	/**
+	 * InterceptionStmt = "intercept" [ Expr ( "," Expr )* ]
+	 *                    [ "as" <IDENTIFIER> ] Block
+	 */
+	private Stmt.Interception parseInterceptionStmt() {
+		Token location = previous();
+		String exceptionIdentifier = null;
+		List<Expr> exceptions = new ArrayList<>();
+		if (isFirstSetOfExpr(peekKind())) {
+			do {
+				exceptions.add(parseExpr());
+			} while (matchIf(COMMA));
+		}
+		if (exceptions.size() > 255) {
+			error(location, "Can't declare exceptions more than 255.");
+		}
+		if (matchIf(AS)) {
+			exceptionIdentifier = match(IDENTIFIER).getLiteral();
+		}
+		ignorableLinebreak();
+		Stmt.Block block = parseBlock();
+		return locate(location, new Stmt.Interception(
+			exceptions, exceptionIdentifier, block
+		));
 	}
 	
 	/**

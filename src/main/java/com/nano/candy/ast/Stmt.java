@@ -2,6 +2,7 @@ package com.nano.candy.ast;
 
 import com.nano.candy.ast.printer.FieldName;
 import com.nano.candy.utils.Position;
+import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Optional;
@@ -20,7 +21,7 @@ public abstract class Stmt extends ASTreeNode {
 	public static class ImportList extends Stmt {
 
 		public List<Import> importStmts;
-
+		
 		public ImportList(List<Import> importStmts) {
 			this.importStmts = importStmts;
 		}
@@ -77,6 +78,63 @@ public abstract class Stmt extends ASTreeNode {
 		public <R> R accept(AstVisitor<R, ?> visitor) {
 			return visitor.visit(this);
 		}
+	}
+		
+	public static class TryIntercept extends Stmt {
+
+		public Block tryBlock;
+		public Optional<Block> elseBlock;
+		public Optional<Block> finallyBlock;
+		public List<Interception> interceptionBlocks;
+
+		public TryIntercept(Block tryBlock, List<Interception> interceptBlocks, 
+		                    Block elseBlock, Block finallyBlock) {
+			this.tryBlock = tryBlock;
+			this.elseBlock = Optional.ofNullable(elseBlock);
+			this.finallyBlock = Optional.ofNullable(finallyBlock);
+			if (interceptBlocks == null) {
+				this.interceptionBlocks = Collections.emptyList();
+			} else {
+				this.interceptionBlocks = interceptBlocks;
+			}
+		}
+		
+		@Override
+		public <S extends Object> S accept(AstVisitor<S, ?> visitor) {
+			return visitor.visit(this);
+		}
+	}
+	
+	public static class Interception extends Stmt {
+
+		public List<Expr> exceptions;
+		public Optional<String> name;
+		public Block block;
+
+		public Interception(List<Expr> exceptions, String name, Block block) {
+			this.exceptions = exceptions == null ? 
+				Collections.emptyList() : exceptions;
+			this.name = Optional.ofNullable(name);
+			this.block = block;
+		}
+		
+		@Override
+		public <S extends Object> S accept(AstVisitor<S, ?> visitor) {
+			return visitor.visit(this);
+		}	
+	}
+	
+	public static class Raise extends Stmt {
+		public Expr exceptionExpr;
+
+		public Raise(Expr exceptionExpr) {
+			this.exceptionExpr = exceptionExpr;
+		}
+		
+		@Override
+		public <S extends Object> S accept(AstVisitor<S, ?> visitor) {
+			return visitor.visit(this);
+		}	
 	}
 	
 	public static abstract class Loop extends Stmt {
@@ -172,7 +230,7 @@ public abstract class Stmt extends ASTreeNode {
 			this.params = params;
 			this.body = body;
 		}
-
+		
 		@Override
 		public <R> R accept(AstVisitor<R, ?> visitor) {
 			return visitor.visit(this);

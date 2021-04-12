@@ -44,13 +44,6 @@ public class Checker implements AstVisitor<Stmt, Expr> {
 	protected boolean inClass;
 	protected FunctionType curFunctionType = FunctionType.NONE;
 	
-	// This field is used to analyze the reachability of a statement.
-	private boolean reachable = true;
-	
-	// This field is used to determine whether a while statement is infinite.
-	private boolean hadBreak = false;
-	private boolean returned = false;
-	
 	private HashSet<String> lableTable = new HashSet<>();
 	
 	private boolean isEmtpy(Stmt stmt) {
@@ -74,13 +67,17 @@ public class Checker implements AstVisitor<Stmt, Expr> {
 		}
 	}
 	
-	private Stmt visitStmt(Stmt stmt) {
-		boolean reachable = this.reachable;
-		if (!reachable) {
-			warn(stmt, "Unreachable.");
+	private <T extends Expr> void visitExprs(List<T> stmts) {
+		ListIterator<T> i = stmts.listIterator();
+		while (i.hasNext()) {
+			T expr = i.next();
+			expr = (T) visitExpr(expr);
+			i.set(expr);
 		}
-		stmt = stmt.accept(this);
-		return reachable ? stmt : null;
+	}
+	
+	private Stmt visitStmt(Stmt stmt) {
+		return stmt.accept(this);
 	}
 	
 	private Expr visitExpr(Expr expr) {
@@ -130,31 +127,17 @@ public class Checker implements AstVisitor<Stmt, Expr> {
 	public Stmt visit(Stmt.While node) {
 		boolean newLable = addLable(node);
 		boolean originalInLoop = inLoop;
-		boolean originalHadBreak = hadBreak;
-		boolean originalReachable = reachable;
-		boolean originalReturned = returned;
-		this.hadBreak = false;
 		this.inLoop = true;
-		
-		boolean isConstantTrue = false;
 		
 		node.condition = visitExpr(node.condition);
 		node.body = visitStmt(node.body);
 		if (node.condition.isConstant()) {
 			if (node.condition.isFalsely()) {
 				node = null;
-			} else {
-				isConstantTrue = true;
 			}
 		}
 		
-		boolean isInfiniteLoop = isConstantTrue && !hadBreak;
-		
 		this.inLoop = originalInLoop;
-		this.hadBreak = originalHadBreak;
-		this.reachable = originalReachable && !isInfiniteLoop;
-		this.returned = originalReturned;
-		
 		removeLable(newLable, node);
 		return node;
 	}
@@ -163,20 +146,13 @@ public class Checker implements AstVisitor<Stmt, Expr> {
 	public Stmt visit(Stmt.For node) {	
 		boolean newLable = addLable(node);
 		boolean originalInLoop = inLoop;
-		boolean originalHadBreak = hadBreak;
-		boolean originalReachable = reachable;
-		boolean originalReturned = returned;
 		this.inLoop = true;
-		this.hadBreak = false;
 		
 		node.iterable = visitExpr(node.iterable);
 		checkIterable(node.iterable);
 		visitStmts(node.body.stmts);
 		
 		this.inLoop = originalInLoop;
-		this.hadBreak = originalHadBreak;
-		this.reachable = originalReachable;
-		this.returned = originalReturned;
 		removeLable(newLable, node);
 		return node;
 	}
@@ -206,7 +182,6 @@ public class Checker implements AstVisitor<Stmt, Expr> {
 		} else if (node.lableName.isPresent()) {
 			referenceLable(node.lableName.get(), node);
 		}
-		reachable = false;
 		return node;
 	}
 
@@ -217,37 +192,18 @@ public class Checker implements AstVisitor<Stmt, Expr> {
 		} else if (node.lableName.isPresent()) {
 			referenceLable(node.lableName.get(), node);
 		}
-		hadBreak = true;
-		reachable = false;
 		return node;
 	}
 
 	@Override
 	public Stmt visit(Stmt.If node) {
 		node.condition = visitExpr(node.condition);
-		
-		boolean originalReachable = reachable;
-		boolean originalReturned = returned;
-		
-		boolean thenBodyReachable;
-		boolean elseBodyReachable = true;
-		
 		Stmt thenBody = visitStmt(node.thenBody);
-		thenBodyReachable = this.reachable;
 		
 		Stmt elseBody = null;
 		if (node.elseBody.isPresent()) {
-			this.reachable = originalReachable;
-			this.returned = originalReturned;
 			elseBody = visitStmt(node.elseBody.get());
-			elseBodyReachable = this.reachable;
 		}
-		
-		// All the following statements are unreachable if the then-body and the 
-		// else-body are both unreachable.
-		this.reachable = originalReachable && 
-			(thenBodyReachable || elseBodyReachable);
-		this.returned = originalReturned;
 		
 		// Pruning
 		if (node.condition.isConstant()) {
@@ -289,6 +245,32 @@ public class Checker implements AstVisitor<Stmt, Expr> {
 			return null;
 		}
 		node.errorInfo = visitExpr(node.errorInfo);
+		return node;
+	}
+	
+	@Override
+	public Stmt visit(Stmt.TryIntercept node) {
+		visitStmt(node.tryBlock);
+		visitStmts(node.interceptionBlocks);
+		if (node.elseBlock.isPresent()) {
+			visitStmt(node.elseBlock.get());
+		}
+		if (node.finallyBlock.isPresent()) {
+			visitStmt(node.finallyBlock.get());
+		}
+		return node;
+	}
+
+	@Override
+	public Stmt visit(Stmt.Interception node) {
+		visitExprs(node.exceptions);
+		visitStmt(node.block);
+		return node;
+	}
+
+	@Override
+	public Stmt visit(Stmt.Raise node) {
+		node.exceptionExpr = visitExpr(node.exceptionExpr);
 		return node;
 	}
 
@@ -343,12 +325,9 @@ public class Checker implements AstVisitor<Stmt, Expr> {
 	
 	@Override
 	public Stmt visit(Stmt.FuncDef node) {
-		boolean originalReachable = reachable;
-		boolean originalReturned = returned;
 		HashSet<String> originalLableTable = lableTable;
 		FunctionType originalFuncType = curFunctionType;
 		this.curFunctionType = getFuncType(node);
-		this.returned = false;
 		this.lableTable = new HashSet<>();
 		
 		checkParams(node);	
@@ -356,8 +335,6 @@ public class Checker implements AstVisitor<Stmt, Expr> {
 		insertReturnStmt(node);
 		
 		this.curFunctionType = originalFuncType;
-		this.reachable = originalReachable;
-		this.returned = originalReturned;
 		this.lableTable = originalLableTable;
 		return node;
 	}
@@ -387,16 +364,12 @@ public class Checker implements AstVisitor<Stmt, Expr> {
 		}
 
 		if (node.params.size() > MAX_PARAMETER_NUMBER) {
-			error(node, "Can't have more than %d in the function '%s'.",
+			error(node, "Can't have parameters more than %d in the function '%s'.",
 				  MAX_PARAMETER_NUMBER, funcName);
 		}
 	}
 
 	private void insertReturnStmt(Stmt.FuncDef node) {
-		if (!reachable || returned) {
-			return;
-		}
-		
 		Stmt.Return returnStmt = new Stmt.Return(null);
 		returnStmt.pos = Position.PREVIOUS_POSITION;
 		node.body.stmts.add(returnStmt);
@@ -407,8 +380,6 @@ public class Checker implements AstVisitor<Stmt, Expr> {
 		if (node.expr.isPresent()) {
 			node.expr = Optional.of(visitExpr(node.expr.get()));
 		}
-		this.reachable = false;
-		this.returned = true;
 		switch (curFunctionType) {
 			case NONE:
 				error(node, "The 'return' outside function.");
