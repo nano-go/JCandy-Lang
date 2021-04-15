@@ -21,15 +21,15 @@ public class LineNumberTable {
 		int r = tableBytes.length / 4 - 1;
 		int offset=0;
 		while (l <= r) {
-			int mid = ((l + r) / 2);
-			int ix = mid*4;
-			int startPc = startPc(ix);
+			int mid = ((l + r) >> 1);
+			int midOffset = mid*4;
+			int startPc = startPc(midOffset);
 			if (pc >= startPc) {
-				offset = ix;
+				offset = midOffset;
 				l = mid + 1;
 			} else if (pc < startPc) {
 				r = mid - 1;
-			} 
+			}
 		}
 		return lineNumber(offset);
 	}

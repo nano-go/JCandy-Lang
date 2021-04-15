@@ -4,9 +4,8 @@ import com.nano.candy.interpreter.i2.rtda.chunk.ConstantValue;
 import com.nano.candy.interpreter.i2.rtda.chunk.attrs.CodeAttribute;
 import com.nano.candy.interpreter.i2.rtda.chunk.attrs.ErrorHandlerTable;
 import com.nano.candy.interpreter.i2.rtda.chunk.attrs.LineNumberTable;
-import java.util.Objects;
 import com.nano.common.text.StringUtils;
-import com.nano.candy.interpreter.i2.rtda.chunk.ConstantValue.MethodInfo;
+import java.util.Objects;
 
 public class DefaultDisassDumper implements DisassInsDumper {
 
