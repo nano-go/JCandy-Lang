@@ -2,6 +2,9 @@ package com.nano.candy.interpreter.i2.tool;
 
 import com.nano.candy.interpreter.Interpreter;
 import com.nano.candy.interpreter.i2.rtda.chunk.Chunk;
+import com.nano.candy.interpreter.i2.tool.dis.DefaultDisassDumper;
+import com.nano.candy.interpreter.i2.tool.dis.DisassInsDumper;
+import com.nano.candy.interpreter.i2.tool.dis.Disassembler;
 import com.nano.candy.interpreter.i2.vm.CarrierErrorException;
 import com.nano.candy.main.CandyOptions;
 import com.nano.candy.tool.CandyTool;
@@ -28,29 +31,41 @@ public class DisassembleTool implements CandyTool {
 	
 	@Override
 	public void defineOptions(Options options) {
-		options.addOption("-da", false, "Disassemble attributes.")
-			.addOption("-dcp", false, "Disassemble the constantpool.");
+		options.addOption("-c", false, "Disassemble the function code.")
+			.addOption("-v", false, "Disassemble the additional information.");
 	}
 	
 	@Override
 	public void run(Interpreter interpreter, CandyOptions options) throws Exception {
 		options.checkSrc();
-		BlockView blockView = new BlockView();
+		boolean printAdditionalInfo = options.getCmd().hasOption("-v");
+		boolean printFunctionCode = options.getCmd().hasOption("-c");
+			
+		DefaultDisassDumper dumper = new DefaultDisassDumper();
+		
+		dumper.setIsDisassCodeAttr(printAdditionalInfo);
+		dumper.setIsDisassConstantPool(printAdditionalInfo);
+		dumper.setIsDisassLineNumberTable(printAdditionalInfo);
+		dumper.setIsDisassFunctions(printFunctionCode || printAdditionalInfo);
+		
+		printDiss(dumper, options.getFiles());
+	}
+
+	private void printDiss(DisassInsDumper dumper, File[] files) {
 		Disassembler disassember = new Disassembler();
-		disassember.setDisAttr(options.getCmd().hasOption("-da"));
-		disassember.setDisConstantPool(options.getCmd().hasOption("-dcp"));
-		for (File src : options.getFiles()) {
+		BlockView blockView = new BlockView();
+		for (File src : files) {
 			Chunk chunk;
 			try {
 				chunk = Compiler.compileChunk(src, false, false);
 			} catch (CarrierErrorException e) {
 				continue;
 			}
-			disassember.loadChunk(chunk);
+			disassember.setChunk(chunk);
 			blockView.addBlock(
 				src.getName(),
 				src.getName(),
-				disassember.disassemble()
+				dumper.dump(disassember.disassChunk())
 			);
 		}
 		System.out.println(blockView.toString());
