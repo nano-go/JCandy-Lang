@@ -27,7 +27,7 @@ public class ObjectHelper {
 				if (obj1.equalsApiExeUser(vm, obj2).value()) {
 					return 0;
 				}
-				if (obj1.gteqApiExeUser(vm, obj2).value()) {
+				if (obj1.gtApiExeUser(vm, obj2).value()) {
 					return 1;
 				}
 				return -1;
