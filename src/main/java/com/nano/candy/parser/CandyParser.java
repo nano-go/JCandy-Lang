@@ -349,7 +349,7 @@ class CandyParser implements Parser {
 	
 	/**
 	 * Stmt = [ Block | ClassDef | Imports
-	 *        | IfStmt | Lable | WhileStmt | ForStmt
+	 *        | IfStmt | WhileStmt | ForStmt
 	 *        | Break | Continue | Return
 	 *        | BreakStmt | ContinueStmt| ReturnStmt
 	 *        | VarDef | FunDef
@@ -368,11 +368,6 @@ class CandyParser implements Parser {
 					return parseWhileStmt();
 				case FOR:
 					return parseForStmt();
-				case IDENTIFIER:
-					if (peek(1).getKind() == COLON) {
-						return parseLable();
-					}
-					return parseExprStmt();
 				case BREAK:
 					return parseBreak();
 				case CONTINUE:
@@ -554,26 +549,6 @@ class CandyParser implements Parser {
 	}
 	
 	/**
-	 * Lable = <IDENTIGIER> ":" ( ForStmt | WhileStmt)
-	 */
-	private Stmt parseLable() {
-		Token name = match(IDENTIFIER);
-		match(COLON);
-		Stmt.Loop loop = null;
-		TokenKind kind = peekKind();
-		if (kind == WHILE) {
-			loop = parseWhileStmt();
-		} else if (kind == FOR) {
-			loop = parseForStmt();
-		} else {
-			error(previous(), "Expected loop statement after lable.");
-			return new Stmt.ErrorStmt();
-		}
-		loop.setLableName(name.getLiteral(), name.getPos());
-		return loop;
-	}
-	
-	/**
 	 * WhileStmt = "while" "(" Expr ")" [ <SEMI> ] Body
 	 */
 	private Stmt.While parseWhileStmt() {
@@ -604,29 +579,21 @@ class CandyParser implements Parser {
 	}
 
 	/**
-	 * Break = "break" [ <IDENTIFIER> ] <SEMI>
+	 * Break = "break" <SEMI>
 	 */
 	private Stmt.Break parseBreak() {
 		Token location = match(BREAK);
 		Stmt.Break breakStmt = new Stmt.Break();
-		if (peekKind() == IDENTIFIER) {
-			breakStmt.lableName = Optional.of(peek().getLiteral());
-			consume();
-		}
 		matchSEMI();
 		return locate(location, breakStmt);
 	}
 	
 	/**
-	 * Continue = "continue" [ <IDENTIFIER> ] <SEMI>
+	 * Continue = "continue" <SEMI>
 	 */
 	private Stmt.Continue parseContinue() {
 		Token location = match(CONTINUE);
 		Stmt.Continue continueStmt = new Stmt.Continue();
-		if (peekKind() == IDENTIFIER) {
-			continueStmt.lableName = Optional.of(peek().getLiteral());
-			consume();
-		}
 		matchSEMI();
 		return locate(location, continueStmt);
 	}

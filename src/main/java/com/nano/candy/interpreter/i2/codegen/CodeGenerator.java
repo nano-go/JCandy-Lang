@@ -69,7 +69,6 @@ public class CodeGenerator implements AstVisitor<Void, Void> {
 	
 	private boolean isInInitializer;
 	private LinkedList<LoopMarker> loopMarkers;
-	private HashMap<String, LoopMarker> lableTable;
 	
 	public CodeGenerator(boolean isInteractionMode) {
 		this(isInteractionMode, false);
@@ -79,7 +78,6 @@ public class CodeGenerator implements AstVisitor<Void, Void> {
 		this.builder = new ChunkBuilder();
 		this.locals = new LocalTable();
 		this.loopMarkers = new LinkedList<>();
-		this.lableTable = new HashMap<>();
 		this.isInteractionMode = isInteractionMode;
 		this.isDebugMode = debugMode;
 	}
@@ -466,30 +464,24 @@ public class CodeGenerator implements AstVisitor<Void, Void> {
 		return null;
 	}
 	
-	private void enterLoop(Stmt.Loop node, LoopMarker loopMarker) {
+	private void enterLoop(LoopMarker loopMarker) {
 		loopMarkers.push(loopMarker);
-		if (node.lableName.isPresent()) {
-			lableTable.put(node.lableName.get(), loopMarker);
-		}
 	}
 
-	private void exitLoop(Stmt.Loop node) {
+	private void exitLoop() {
 		loopMarkers.pop().concatsLableForBreak(builder);
-		if (node.lableName.isPresent()) {
-			lableTable.remove(node.lableName.get());
-		}
 	}
 	
 	@Override
 	public Void visit(Stmt.While node) {
 		int beginningPos = builder.curCp();
-		enterLoop(node, new LoopMarker(beginningPos));
+		enterLoop(new LoopMarker(beginningPos));
 				
 		// Optimize 'while (true)'
 		if (node.condition.isConstant() && !node.condition.isFalsely()) {
 			node.body.accept(this);
 			builder.emitLoop(beginningPos, -1);
-			exitLoop(node);
+			exitLoop();
 			return null;
 		}
 		
@@ -499,7 +491,7 @@ public class CodeGenerator implements AstVisitor<Void, Void> {
 		builder.emitLoop(beginningPos, -1);
 		builder.backpatch(jumpOutLable);
 		
-		exitLoop(node);
+		exitLoop();
 		return null;
 	}
 
@@ -510,14 +502,13 @@ public class CodeGenerator implements AstVisitor<Void, Void> {
 		
 		enterScope();
 		int iteratorSlot = invokeIterator(line(node));
-		int nextSlot = cacheAttrToLocal(Names.METHOD_ITERATOR_NEXT, 
-			"hidden$i_next");
-		int hasNextSlot = cacheAttrToLocal(Names.METHOD_ITERATOR_HAS_NEXT,
+		int nextSlot = cacheAttrToLocal(Names.METHOD_ITERATOR_NEXT, "hidden$i_next");
+		int hasNextSlot = cacheAttrToLocal(Names.METHOD_ITERATOR_HAS_NEXT, 
 			"hidden$i_has_next", iteratorSlot);
 		int iteratingSlot = locals.addLocal(node.iteratingVar);
 		
 		int begainning = builder.curCp();
-		enterLoop(node, new LoopMarker(begainning));
+		enterLoop(new LoopMarker(begainning));
 		callLocalVar(hasNextSlot, 0, -1);
 		int jumpOutLabel = builder.emitLabel(OP_POP_JUMP_IF_FALSE, -1);
 		
@@ -527,7 +518,7 @@ public class CodeGenerator implements AstVisitor<Void, Void> {
 		
 		builder.emitLoop(begainning, -1);
 		builder.backpatch(jumpOutLabel);
-		exitLoop(node);
+		exitLoop();
 		
 		closeScope(true);
 		return null;
@@ -543,9 +534,6 @@ public class CodeGenerator implements AstVisitor<Void, Void> {
 	@Override
 	public Void visit(Stmt.Continue node) {
 		LoopMarker loopMarker = loopMarkers.peek();
-		if (node.lableName.isPresent()) {
-			loopMarker = lableTable.get(node.lableName.get());
-		}
 		builder.emitLoop(loopMarker.beginningPc, line(node));
 		return null;
 	}
@@ -553,9 +541,6 @@ public class CodeGenerator implements AstVisitor<Void, Void> {
 	@Override
 	public Void visit(Stmt.Break node) {
 		LoopMarker loopMarker = loopMarkers.peek();
-		if (node.lableName.isPresent()) {
-			loopMarker = lableTable.get(node.lableName.get());
-		}
 		loopMarker.addLableForBreak(
 			builder.emitLabel(OP_JUMP, line(node))
 		);

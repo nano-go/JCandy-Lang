@@ -47,10 +47,6 @@ public abstract class Stmt extends ASTreeNode {
 	}
 	
 	public static class Continue extends Stmt {
-		public Optional<String> lableName;
-		public Continue() {
-			lableName = Optional.empty();
-		}
 		@Override
 		public <R> R accept(AstVisitor<R, ?> visitor) {
 			return visitor.visit(this);
@@ -58,10 +54,6 @@ public abstract class Stmt extends ASTreeNode {
 	}
 	
 	public static class Break extends Stmt {
-		public Optional<String> lableName;
-		public Break() {
-			lableName = Optional.empty();
-		}
 		@Override
 		public <R> R accept(AstVisitor<R, ?> visitor) {
 			return visitor.visit(this);
@@ -70,7 +62,6 @@ public abstract class Stmt extends ASTreeNode {
 	
 	public static class Return extends Stmt {
 		public Optional<Expr> expr;
-
 		public Return(Expr expr) {
 			this.expr = Optional.ofNullable(expr);
 		}
@@ -106,7 +97,6 @@ public abstract class Stmt extends ASTreeNode {
 	}
 	
 	public static class Interception extends Stmt {
-
 		public List<Expr> exceptions;
 		public Optional<String> name;
 		public Block block;
@@ -137,21 +127,7 @@ public abstract class Stmt extends ASTreeNode {
 		}	
 	}
 	
-	public static abstract class Loop extends Stmt {
-		public Optional<String> lableName;
-		public Optional<Position> lablePos;
-		public Loop() {
-			this.lableName = Optional.empty();
-			this.lablePos = Optional.empty();
-		}
-		
-		public void setLableName(String name, Position pos) {
-			this.lableName = Optional.of(name);
-			this.lablePos = Optional.of(pos);
-		}
-	}
-	
-	public static class While extends Loop {
+	public static class While extends Stmt {
 		public Expr condition;
 		public Stmt body;
 
@@ -166,7 +142,7 @@ public abstract class Stmt extends ASTreeNode {
 		}
 	}
 	
-	public static class For extends Loop {
+	public static class For extends Stmt {
 		public String iteratingVar;
 		public Expr iterable;
 		public Stmt.Block body;

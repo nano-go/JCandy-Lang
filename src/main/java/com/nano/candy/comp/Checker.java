@@ -44,8 +44,6 @@ public class Checker implements AstVisitor<Stmt, Expr> {
 	protected boolean inClass;
 	protected FunctionType curFunctionType = FunctionType.NONE;
 	
-	private HashSet<String> lableTable = new HashSet<>();
-	
 	private boolean isEmtpy(Stmt stmt) {
 		if (stmt == null) return true;
 		if (stmt instanceof Stmt.Block) {
@@ -99,61 +97,30 @@ public class Checker implements AstVisitor<Stmt, Expr> {
 		visitStmts(node.stmts);
 		return node;
 	}
-	
-	private boolean addLable(Stmt.Loop loop) {
-		if (loop.lableName.isPresent()) {
-			if (lableTable.add(loop.lableName.get())) {
-				return true;
-			}
-			logger.error(loop.lablePos.get(), "the lable is defined.");
-			return false;
-		}
-		return false;
-	}
-	
-	private void removeLable(boolean newLable, Stmt.Loop loop) {
-		if (newLable) {
-			lableTable.remove(loop.lableName.get());
-		}
-	}
-	
-	private void referenceLable(String name, ASTreeNode node) {
-		if (!lableTable.contains(name)) {
-			error(node, "the lable '%s' is undefined.", name);
-		}
-	}
 
 	@Override
 	public Stmt visit(Stmt.While node) {
-		boolean newLable = addLable(node);
 		boolean originalInLoop = inLoop;
-		this.inLoop = true;
-		
+		this.inLoop = true;	
 		node.condition = visitExpr(node.condition);
 		node.body = visitStmt(node.body);
 		if (node.condition.isConstant()) {
 			if (node.condition.isFalsely()) {
 				node = null;
 			}
-		}
-		
+		}	
 		this.inLoop = originalInLoop;
-		removeLable(newLable, node);
 		return node;
 	}
 
 	@Override
 	public Stmt visit(Stmt.For node) {	
-		boolean newLable = addLable(node);
 		boolean originalInLoop = inLoop;
-		this.inLoop = true;
-		
+		this.inLoop = true;	
 		node.iterable = visitExpr(node.iterable);
 		checkIterable(node.iterable);
-		visitStmts(node.body.stmts);
-		
+		visitStmts(node.body.stmts);	
 		this.inLoop = originalInLoop;
-		removeLable(newLable, node);
 		return node;
 	}
 	
@@ -179,8 +146,6 @@ public class Checker implements AstVisitor<Stmt, Expr> {
 	public Stmt visit(Stmt.Continue node) {
 		if (!inLoop) {
 			error(node, "The 'continue' outside loop.");
-		} else if (node.lableName.isPresent()) {
-			referenceLable(node.lableName.get(), node);
 		}
 		return node;
 	}
@@ -189,8 +154,6 @@ public class Checker implements AstVisitor<Stmt, Expr> {
 	public Stmt visit(Stmt.Break node) {
 		if (!inLoop) {
 			error(node, "The 'break' outside loop.");
-		} else if (node.lableName.isPresent()) {
-			referenceLable(node.lableName.get(), node);
 		}
 		return node;
 	}
@@ -212,7 +175,6 @@ public class Checker implements AstVisitor<Stmt, Expr> {
 			}
 			return isEmtpy(thenBody) ? null : thenBody;
 		}
-		
 		
 		if (isEmtpy(thenBody)) {
 			// if (a) {} else {} -> a
@@ -291,7 +253,7 @@ public class Checker implements AstVisitor<Stmt, Expr> {
 	@Override
 	public Stmt visit(Stmt.ClassDef node) {
 		if (curFunctionType != FunctionType.NONE) {
-			error(node, "Can't define the class in a function.");
+			error(node, "Can't define a class in a function.");
 		}
 		
 		if (node.superClassName.isPresent()) {
@@ -325,17 +287,12 @@ public class Checker implements AstVisitor<Stmt, Expr> {
 	
 	@Override
 	public Stmt visit(Stmt.FuncDef node) {
-		HashSet<String> originalLableTable = lableTable;
 		FunctionType originalFuncType = curFunctionType;
 		this.curFunctionType = getFuncType(node);
-		this.lableTable = new HashSet<>();
-		
 		checkParams(node);	
 		visitStmts(node.body.stmts);
-		insertReturnStmt(node);
-		
+		insertReturnStmt(node);	
 		this.curFunctionType = originalFuncType;
-		this.lableTable = originalLableTable;
 		return node;
 	}
 	
