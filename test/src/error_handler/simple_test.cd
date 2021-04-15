@@ -228,12 +228,25 @@ fun nestedTryInterception() {
 		assert false
 	}
 	
+	fun sample7() {
+		try {
+			try {
+				a.b
+			} intercept NameError {
+				return
+			}
+		} intercept NameError {
+			assert false
+		}
+	}
+	
 	sample1()
 	expectedError1(sample2, IOError); assert flag
 	sample3()
 	sample4()
 	sample5()
 	sample6()
+	sample7()
 }
 
 fun stackOverflow_test() {

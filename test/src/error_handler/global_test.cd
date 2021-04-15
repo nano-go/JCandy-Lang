@@ -1,0 +1,53 @@
+var flag = false
+try {
+	a.b
+} intercept NameError {
+	flag = true
+}
+assert flag
+
+var flag = false
+try {
+	try{}
+	a.b
+} intercept NameError {
+	flag = true
+}
+assert flag
+
+var flag = false
+try {
+	a.b
+	try{}
+} intercept NameError {
+	flag = true
+}
+assert flag
+
+var flag = false
+try {
+	try {
+		a.b
+	} intercept NameError {
+		flag = true
+	}
+} intercept NameError {
+	flag = falas
+}
+assert flag
+
+var flag = false
+try {
+	a.b
+} intercept NameError {
+	flag = true
+} else { flag = false; }
+assert flag
+
+var flag = false
+try {
+	flag
+} intercept NameError {
+	flag = false
+} else { flag = true; }
+assert flag
