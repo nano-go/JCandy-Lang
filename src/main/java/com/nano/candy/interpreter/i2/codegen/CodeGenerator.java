@@ -395,6 +395,8 @@ public class CodeGenerator implements AstVisitor<Void, Void> {
 		declrVariable(node.name);
 		enterScope();
 		
+		classInfo.fromPC = builder.curCp();
+		
 		builder.emitop(OP_CLASS, line(node));
 		builder.emitConstant(classInfo);
 		builder.emit1((byte) declrVariable("super"));

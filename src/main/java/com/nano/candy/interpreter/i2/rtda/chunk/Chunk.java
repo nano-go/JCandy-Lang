@@ -48,6 +48,21 @@ public class Chunk {
 		}
 		return lineNumberTable.findLineNumber(pc);
 	}
+	
+	public ConstantValue.MethodInfo findMethodInfoByPC(int pc) {
+		for (ConstantValue val : getConstants()){
+			if (!(val instanceof ConstantValue.MethodInfo)) {
+				continue;
+			}
+			ConstantValue.MethodInfo methodInfo = (ConstantValue.MethodInfo) val;
+			int from = methodInfo.getFromPC();
+			int to = from + methodInfo.getLength();
+			if (pc >= from && pc < to) {
+				return methodInfo;
+			}
+		}
+		return null;
+	}
 
 	public CodeAttribute getCodeAttr() {
 		return codeAttr;

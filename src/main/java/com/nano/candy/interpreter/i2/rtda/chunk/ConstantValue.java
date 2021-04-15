@@ -123,10 +123,27 @@ public abstract class ConstantValue {
 	
 	public static class ClassInfo extends ConstantValue {
 		
+		public int fromPC;
 		public String className;
 		public boolean hasSuperClass;
 		public Optional<MethodInfo> initializer;
 		public MethodInfo[] methods;
+		
+		private int length;
+		
+		public int getLength() {
+			if (this.length != 0) {
+				return this.length;
+			}
+			int length = 0;
+			if (initializer.isPresent()) {
+				length += initializer.get().getLength();
+			}
+			for (MethodInfo method : methods) {
+				length += method.getLength();
+			}
+			return this.length = length;
+		}
 		
 		@Override
 		public String headName() {

@@ -1,4 +1,5 @@
 package com.nano.candy.interpreter.i2.rtda.chunk;
+import com.nano.candy.interpreter.i2.vm.VM;
 
 public class ConstantPool {
 	
@@ -6,6 +7,13 @@ public class ConstantPool {
 
 	public ConstantPool(ConstantValue[] cp) {
 		this.cp = cp;
+	}
+	
+	/**
+	 * Returns the length of the given constant value index in the byte code.
+	 */
+	public static int indexLength(int index) {
+		return index >= 255 ? 3 : 1;
 	}
 	
 	public int size() {
