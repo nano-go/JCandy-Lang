@@ -183,7 +183,7 @@ public final class Frame implements Recyclable {
 	}
 	
 	public int currentLine() {
-		return chunk.getLineNumber(pc-1);
+		return chunk.getLineNumber(pc);
 	}
 	
 	public int slotCount() {
