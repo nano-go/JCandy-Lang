@@ -1,14 +1,28 @@
 package com.nano.candy.interpreter.i2.tool.debug.cmds.dis;
 
-import com.nano.candy.interpreter.i2.tool.Disassembler;
 import com.nano.candy.interpreter.i2.tool.debug.Command;
 import com.nano.candy.interpreter.i2.tool.debug.CommandLine;
 import com.nano.candy.interpreter.i2.tool.debug.Group;
 import com.nano.candy.interpreter.i2.tool.debug.VmMonitor;
+import com.nano.candy.interpreter.i2.tool.dis.DefaultDisassDumper;
+import com.nano.candy.interpreter.i2.tool.dis.DisassChunk;
+import com.nano.candy.interpreter.i2.tool.dis.DisassInsDumper;
+import com.nano.candy.interpreter.i2.tool.dis.Disassembler;
 import java.util.Set;
 
 public class DisassembleCmd extends Group {
 
+	private Disassembler disassembler;
+	private DisassInsDumper dumper;
+	
+	public DisassembleCmd() {
+		disassembler = new Disassembler();
+		dumper = new DefaultDisassDumper()
+			.setIsDisassCodeAttr(true)
+			.setIsDisassConstantPool(true)
+			.setIsDisassFunctions(true);
+	}
+	
 	@Override
 	public String name() {
 		return "disassemble";
@@ -32,12 +46,9 @@ public class DisassembleCmd extends Group {
 	@Override
 	public void startToExe(VmMonitor monitor, CommandLine cmdLine) throws CommandLine.ParserException {
 		if (cmdLine.getArgs().length == 0) {
-			Disassembler disr = new Disassembler();
-			disr.setDisAttr(true);
-			disr.setDisConstantPool(true);
-			disr.loadChunk(monitor.getVM().frame().chunk);
-			String disassembledChunk = disr.disassemble();
-			monitor.getConsole().getPrinter().print(disassembledChunk);
+			disassembler.setChunk(monitor.getVM().frame().chunk);
+			DisassChunk disassembledChunk = disassembler.disassChunk();
+			monitor.getConsole().getPrinter().print(dumper.dump(disassembledChunk));
 			return;
 		}
 		super.startToExe(monitor, cmdLine);
