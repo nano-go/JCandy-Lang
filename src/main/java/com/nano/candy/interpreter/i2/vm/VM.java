@@ -277,7 +277,7 @@ public final class VM {
 	
 	private ErrorHandlerTable.ErrorHandler findExceptionHandler() {
 		while (!frameStack.isEmpty()) {
-			Frame frame = frameStack.peek(0);
+			Frame frame = frameStack.peek();
 			ErrorHandlerTable.ErrorHandler handler = null;
 			ErrorHandlerTable table = frame.getErrorHandlerTable();
 			if (table == null || 
@@ -308,6 +308,13 @@ public final class VM {
 				new TypeError(
 					"A class can't inherit a non-class: %s -> '%s'", 
 					classInfo.className, superObj.getCandyClassName()
+				).throwSelfNative();
+			}
+			CandyClass superClass = (CandyClass) superObj;
+			if (!superClass.isInheritable()) {
+				new TypeError(
+					"The '%s' is a non-inheritable class.", 
+					superClass.getCandyClassName()
 				).throwSelfNative();
 			}
 			return (CandyClass) superObj;
