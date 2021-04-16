@@ -7,6 +7,7 @@ import com.nano.candy.interpreter.i2.builtin.type.ArrayObj;
 import com.nano.candy.interpreter.i2.builtin.type.BoolObj;
 import com.nano.candy.interpreter.i2.builtin.type.DoubleObj;
 import com.nano.candy.interpreter.i2.builtin.type.IntegerObj;
+import com.nano.candy.interpreter.i2.builtin.type.MoudleObj;
 import com.nano.candy.interpreter.i2.builtin.type.NumberObj;
 import com.nano.candy.interpreter.i2.builtin.type.Range;
 import com.nano.candy.interpreter.i2.builtin.type.StringObj;
@@ -50,6 +51,7 @@ public class GlobalEnvironment {
 		defineClass(StringObj.STRING_CLASS);
 		defineClass(BoolObj.BOOL_CLASS);
 		defineClass(TupleObj.TUPLE_CLASS);
+		defineClass(MoudleObj.MOUDLE_CLASS);
 		defineClass(ObjectClass.getObjClass());
 	}
 
