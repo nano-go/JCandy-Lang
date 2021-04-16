@@ -72,6 +72,10 @@ public class LocalTable {
 		return curLocalCount - 1;
 	}
 	
+	public void addLocals(List<String> names) {
+		for (String name : names) addLocal(name);
+	}
+	
 	/**
 	 * Resolve the given named variable in the current scope.
 	 *

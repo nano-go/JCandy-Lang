@@ -10,7 +10,6 @@ import com.nano.candy.parser.TokenKind;
 import com.nano.candy.std.Names;
 import com.nano.candy.utils.ArrayUtils;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Optional;
@@ -143,7 +142,8 @@ public class CodeGenerator implements AstVisitor<Void, Void> {
 	}
 	
 	/**
-	 * Generates code to define a declared or global variable.
+	 * Generates code to define a declared or global variable with the 
+	 * stack top element.
 	 */
 	private void defineVariable(String name, int line) {
 		if (locals.isInGlobal()) {
@@ -189,6 +189,15 @@ public class CodeGenerator implements AstVisitor<Void, Void> {
 		}
 	}
 	
+	/**
+	 * Caches the attribute of the given object to the local variable.
+	 *
+	 * @param attrName the name of the attribute.
+	 * @param localVarName the name of the target local variable.
+	 * @param objSlot the slot of the object.
+	 *
+	 * @return the slot of the given local variable.
+	 */
 	private int cacheAttrToLocal(String attrName, String localVarName, int objSlot) {
 		builder.emitLoad(objSlot, -1);
 		return cacheAttrToLocal(attrName, localVarName);
@@ -215,9 +224,7 @@ public class CodeGenerator implements AstVisitor<Void, Void> {
 		if (isCompoundAssignment) {
 			loadLeftValue(lhs);
 		}
-		
 		rhs.accept(this);
-		
 		if (isCompoundAssignment) {
 			byte opcode = OperatorInstructionMap.lookupOperatorIns(operator);		
 			builder.emitop(opcode, line(lhs));
@@ -257,52 +264,53 @@ public class CodeGenerator implements AstVisitor<Void, Void> {
 		if (leftNode instanceof Expr.Assign) {
 			storeVariable(((Expr.Assign)leftNode).name, line(leftNode));
 			return;
-		}
-		
+		}	
 		if (leftNode instanceof Expr.SetAttr) {
-			Expr.SetAttr node = ((Expr.SetAttr)leftNode);
-			if (!isCompoundAssignment) {
-				node.objExpr.accept(this);
-			} else {
-				// operand stack: obj, value
-				// rotate ->      value, obj
-				builder.emitop(OP_ROT_2);
-			}
-			builder.emitop(OP_SET_ATTR, line(leftNode));
-			builder.emitStringConstant(node.attr);
+			assignTo((Expr.SetAttr) leftNode, isCompoundAssignment);
 			return;
 		}
-		
 		if (leftNode instanceof Expr.SetItem) {
-			Expr.SetItem node = ((Expr.SetItem)leftNode);
-			if (!isCompoundAssignment) {
-				node.key.accept(this);
-				node.objExpr.accept(this);
-			} else {
-				// operand stack: key, obj, value
-				// rotate ->      value, key, obj
-				builder.emitop(OP_ROT_3);
-			}
-			builder.emitop(OP_SET_ITEM);
+			assignTo((Expr.SetItem) leftNode, isCompoundAssignment);
 			return;
 		}
-		
 		throw new Error("Unknown Expr Type: " + leftNode.getClass().getName());
+	}
+
+	private void assignTo(Expr.SetAttr node, boolean isCompoundAssignment) {
+		if (!isCompoundAssignment) {
+			node.objExpr.accept(this);
+		} else {
+			// operand stack: obj, value
+			// rotate ->      value, obj
+			builder.emitop(OP_ROT_2);
+		}
+		builder.emitop(OP_SET_ATTR, line(node));
+		builder.emitStringConstant(node.attr);
+	}
+	
+	private void assignTo(Expr.SetItem node, boolean isCompoundAssignment) {
+		if (!isCompoundAssignment) {
+			node.key.accept(this);
+			node.objExpr.accept(this);
+		} else {
+			// operand stack: key, obj, value
+			// rotate ->      value, key, obj
+			builder.emitop(OP_ROT_3);
+		}
+		builder.emitop(OP_SET_ITEM);
 	}
 	
 	/**
 	 * Generates code to load the speficied function to stack top.
 	 */
 	private void loadFunction(String name, Stmt.FuncDef node) {
-		boolean originalIsInInit = isInInitializer;
+		boolean prevIsInInit = isInInitializer;
 		this.isInInitializer = false;
-		
 		MethodInfo methodInfo = new MethodInfo();
 		builder.emitop(OP_FUN, line(node));
 		builder.emitConstant(methodInfo);
 		makeMethodInfo(methodInfo, name, node, null);
-		
-		this.isInInitializer = originalIsInInit;
+		this.isInInitializer = prevIsInInit;
 	}
 	
 	private MethodInfo makeMethodInfo(Stmt.FuncDef node, ClassInfo classDefinedIn) {
@@ -312,30 +320,22 @@ public class CodeGenerator implements AstVisitor<Void, Void> {
 	private MethodInfo makeMethodInfo(MethodInfo methodInfo, String name, 
 	                                  Stmt.FuncDef node, ClassInfo classDefinedIn) {	
 		enterFunctionScope();
-		
 		int arity = node.params.size();
 		if (classDefinedIn != null) {
 			methodInfo.classDefinedIn = classDefinedIn;
 			declrVariable("this");
 			arity ++;
-		}
-		
-		for (String param : node.params) {
-			locals.addLocal(param);
-		}
-		
-		// locate the beginning of the method for debug.
+		}	
+		locals.addLocals(node.params);
+		// locate the beginning of the method for debugger.
 		if (isDebugMode && classDefinedIn != null) {
 			builder.emitop(OP_NOP, node.pos.getLine());
 		}
-		
 		walkBlock(node.body);
-		
 		methodInfo.name = name;	
 		methodInfo.arity = arity;
 		methodInfo.upvalues = genUpvalueBytes(locals.upvalues());
 		methodInfo.attrs = builder.buildCodeAttr(locals.maxSlotCount());
-		
 		closeFunctionScope();
 		return methodInfo;
 	}
@@ -368,14 +368,6 @@ public class CodeGenerator implements AstVisitor<Void, Void> {
 		walkBlock(node.block);
 	}
 	
-	/**
-	 * Generates code to store a class.
-	 *
-	 * Byte code layout (push a class to stack top):
-	 *     1. OP_CLASS
-	 *     2. Class Constant (constant index)
-	 *     3. Super Class Slot (unsigned byte)
-	 */
 	@Override
 	public Void visit(Stmt.ClassDef node) {
 		ClassInfo classInfo = new ClassInfo();
@@ -387,28 +379,41 @@ public class CodeGenerator implements AstVisitor<Void, Void> {
 			// If true, VM will fetch the super class from the operand stack top.
 			classInfo.hasSuperClass = true;
 		} else {
+			// OP_CLASS will push a class created by the class-info
+			// to stack top.
+			// Operand stack does not change if this class has no 'super class'.
 			builder.state().push(1);
 		}
 		
 		declrVariable(node.name);
 		enterScope();
 		
-		classInfo.fromPC = builder.curCp();
-		
-		builder.emitop(OP_CLASS, line(node));
-		builder.emitConstant(classInfo);
-		builder.emit1((byte) declrVariable("super"));
-		
+		classInfo.fromPC = builder.curCp();	
+		emitClass(classInfo, line(node));	
 		classInfo.className = node.name;
 		classInfo.initializer = initalizer(node, classInfo);
 		classInfo.methods = methods(node, classInfo);
-		
 		if (isDebugMode && node.endPos.isPresent()) {
 			builder.emitop(OP_NOP, node.endPos.get().getLine());
 		}
+		
 		closeScope(true);
 		defineVariable(node.name, -1);
 		return null;
+	}
+
+	/**
+	 * Generates code to store a class.
+	 *
+	 * Byte code layout (push a class to stack top):
+	 *     1. OP_CLASS
+	 *     2. Class Constant (constant index)
+	 *     3. Super Class Slot (unsigned byte)
+	 */
+	private void emitClass(ClassInfo classInfo, int line) {
+		builder.emitop(OP_CLASS, line);
+		builder.emitConstant(classInfo);
+		builder.emit1((byte) declrVariable("super"));
 	}
 
 	private Optional<MethodInfo> initalizer(Stmt.ClassDef node, ClassInfo classDefinedIn) {
@@ -824,8 +829,7 @@ public class CodeGenerator implements AstVisitor<Void, Void> {
 		}
 		
 		if (node.expr instanceof Expr.VarRef) {
-			Expr.VarRef varRef = (Expr.VarRef) node.expr;
-			
+			Expr.VarRef varRef = (Expr.VarRef) node.expr;		
 			int slot = locals.resolveLocal(varRef.name);	
 			if (slot != -1) {
 				callLocalVar(slot, ARGC, LINE);
