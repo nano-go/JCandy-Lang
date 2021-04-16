@@ -98,7 +98,8 @@ public class ErrorObj extends CandyObjEntity {
 	
 	@BuiltinMethod(name = "", argc = 1)
 	protected void init(VM vm) {
-		if (this.stackTraceElements != null) {
+		if (this.stackTraceElements != null && 
+		     this.stackTraceElements.length != 0 ) {
 			vm.returnFromVM(this);
 			return;
 		}
