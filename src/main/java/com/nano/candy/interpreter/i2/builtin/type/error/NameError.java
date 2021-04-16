@@ -4,7 +4,7 @@ import com.nano.candy.interpreter.i2.builtin.annotation.BuiltinClass;
 import com.nano.candy.interpreter.i2.builtin.type.classes.BuiltinClassFactory;
 import com.nano.candy.interpreter.i2.builtin.type.classes.CandyClass;
 
-@BuiltinClass("NameError")
+@BuiltinClass(value = "NameError", isInheritable = true)
 public class NameError extends ErrorObj {
 	public static final CandyClass NAME_ERROR_CLASS = 
 		BuiltinClassFactory.generate(NameError.class, ERROR_CLASS);

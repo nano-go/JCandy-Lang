@@ -13,7 +13,7 @@ import com.nano.candy.interpreter.i2.vm.CarrierErrorException;
 import com.nano.candy.interpreter.i2.vm.VM;
 import java.util.Arrays;
 
-@BuiltinClass("Error")
+@BuiltinClass(value = "Error", isInheritable = true)
 public class ErrorObj extends CandyObjEntity {
 	
 	public static final CandyClass ERROR_CLASS = 

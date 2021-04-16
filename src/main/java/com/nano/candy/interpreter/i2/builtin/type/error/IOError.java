@@ -7,7 +7,7 @@ import com.nano.candy.sys.CandySystem;
 import java.io.File;
 import java.io.IOException;
 
-@BuiltinClass("IOError")
+@BuiltinClass(value = "IOError", isInheritable = true)
 public class IOError extends ErrorObj {
 	public static final CandyClass IO_ERROR_CLASS = 
 		BuiltinClassFactory.generate(IOError.class, ERROR_CLASS);

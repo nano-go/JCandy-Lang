@@ -4,7 +4,7 @@ import com.nano.candy.interpreter.i2.builtin.annotation.BuiltinClass;
 import com.nano.candy.interpreter.i2.builtin.type.classes.BuiltinClassFactory;
 import com.nano.candy.interpreter.i2.builtin.type.classes.CandyClass;
 
-@BuiltinClass("AssertionError")
+@BuiltinClass(value = "AssertionError", isInheritable = true)
 public class AssertionError extends ErrorObj {
 	public static final CandyClass ASSERTION_ERROR_CLASS = 
 		BuiltinClassFactory.generate(AssertionError.class, ERROR_CLASS);

@@ -6,7 +6,7 @@ import com.nano.candy.interpreter.i2.builtin.type.CallableObj;
 import com.nano.candy.interpreter.i2.builtin.type.classes.BuiltinClassFactory;
 import com.nano.candy.interpreter.i2.builtin.type.classes.CandyClass;
 
-@BuiltinClass("ArgumentError")
+@BuiltinClass(value = "ArgumentError", isInheritable = true)
 public class ArgumentError extends ErrorObj {
 
 	public static final CandyClass ARGUMENT_ERROR_CLASS = 

@@ -6,7 +6,7 @@ import com.nano.candy.interpreter.i2.builtin.type.classes.BuiltinClassFactory;
 import com.nano.candy.interpreter.i2.builtin.type.classes.CandyClass;
 import com.nano.candy.interpreter.i2.builtin.type.error.ErrorObj;
 
-@BuiltinClass("TypeError")
+@BuiltinClass(value = "TypeError", isInheritable = true)
 public class TypeError extends ErrorObj {
 	public static final CandyClass TYPE_ERROR_CLASS = 
 		BuiltinClassFactory.generate(TypeError.class, ERROR_CLASS);

@@ -5,7 +5,7 @@ import com.nano.candy.interpreter.i2.builtin.type.classes.BuiltinClassFactory;
 import com.nano.candy.interpreter.i2.builtin.type.classes.CandyClass;
 import com.nano.candy.interpreter.i2.builtin.type.error.RangeError;
 
-@BuiltinClass("RangeError")
+@BuiltinClass(value = "RangeError", isInheritable = true)
 public class RangeError extends ErrorObj {
 	public static final CandyClass RANGE_ERROR_CLASS = 
 		BuiltinClassFactory.generate(RangeError.class, ERROR_CLASS);

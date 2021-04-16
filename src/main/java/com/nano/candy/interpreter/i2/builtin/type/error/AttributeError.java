@@ -5,7 +5,7 @@ import com.nano.candy.interpreter.i2.builtin.annotation.BuiltinClass;
 import com.nano.candy.interpreter.i2.builtin.type.classes.BuiltinClassFactory;
 import com.nano.candy.interpreter.i2.builtin.type.classes.CandyClass;
 
-@BuiltinClass("AttributeError")
+@BuiltinClass(value = "AttributeError", isInheritable = true)
 public class AttributeError extends ErrorObj {
 	public static final CandyClass ATTR_ERROR_CLASS = 
 		BuiltinClassFactory.generate(AttributeError.class, ERROR_CLASS);
@@ -21,7 +21,7 @@ public class AttributeError extends ErrorObj {
 	public AttributeError() {
 		super(ATTR_ERROR_CLASS);
 	}
-
+	
 	public AttributeError(String errmsg) {
 		super(ATTR_ERROR_CLASS, errmsg);
 	}
