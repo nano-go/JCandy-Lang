@@ -18,10 +18,14 @@ public class StackTraceElementObj extends BuiltinObject {
 		BuiltinClassFactory.generate(StackTraceElementObj.class);
 	
 	public static StackTraceElementObj[] getStackTraceElements(FrameStack stack) {
+		return getStackTraceElements(stack, 0);
+	}
+		
+	public static StackTraceElementObj[] getStackTraceElements(FrameStack stack, int offset) {
 		StackTraceElementObj[] stackTraceElements =
-			new StackTraceElementObj[stack.frameCount()];
-		for (int i = 0; i < stack.frameCount(); i ++) {
-			stackTraceElements[i] = new StackTraceElementObj(stack.peek(i));
+			new StackTraceElementObj[stack.frameCount()-offset];
+		for (int i = 0; offset < stack.frameCount(); i ++, offset ++) {
+			stackTraceElements[i] = new StackTraceElementObj(stack.peek(offset));
 		}
 		return stackTraceElements;
 	}

@@ -98,10 +98,18 @@ public class ErrorObj extends CandyObjEntity {
 	
 	@BuiltinMethod(name = "", argc = 1)
 	protected void init(VM vm) {
+		if (this.stackTraceElements != null) {
+			vm.returnFromVM(this);
+			return;
+		}
 		vm.syncPcToTopFrame();
-		message = ObjectHelper.asString(vm.pop());
-		stackTraceElements = StackTraceElementObj
-			.getStackTraceElements(vm.getFrameStack());
+		int offset = 0;
+		if (!getCandyClass().getInitializer().isBuiltin()) {
+			offset = 1;
+		}
+		this.stackTraceElements = 
+			StackTraceElementObj.getStackTraceElements(vm.getFrameStack(), offset);	
+		this.message = ObjectHelper.asString(vm.pop());
 		vm.returnFromVM(this);
 	}
 	
