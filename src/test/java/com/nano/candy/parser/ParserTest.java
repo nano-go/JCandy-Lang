@@ -50,8 +50,6 @@ public class ParserTest {
 		"for (i in b) \n b;",
 		"for (i in b) \n { b; }",
 		"for (i in a = lambda a,b -> a*b) {\nprintln(i);}",
-		"lable1: for(i in a) {\nlable2: while(true) {continue lable1; break lable2;}}",
-		"l1: while(true) {\nbreak l1;}",
 		"fun test(a, b, c) { return 0 ; }",
 		"fun test(a, b, c) { a * b * c ; }",
 		"fun test(a, b, c) \n { a * b * c ; }",
