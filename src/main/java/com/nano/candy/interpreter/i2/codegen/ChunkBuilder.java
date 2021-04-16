@@ -97,7 +97,6 @@ public class ChunkBuilder {
 	 * Code Pointer.
 	 */
 	private int cp;
-	
 	private State state;
 
 	public ChunkBuilder() {
@@ -173,7 +172,6 @@ public class ChunkBuilder {
 			case OP_LOAD3:
 			case OP_LOAD4:
 			case OP_FUN:
-			case OP_CLASS:
 			case OP_LOAD_UPVALUE:
 			case OP_ICONST:
 			case OP_DCONST:
@@ -238,8 +236,7 @@ public class ChunkBuilder {
 	}
 	
 	public void emitop(byte opcode) {
-		updateState(opcode);
-		emit1(opcode);
+		emitop(opcode, -1);
 	}
 	
 	/**
@@ -371,7 +368,7 @@ public class ChunkBuilder {
 	public CodeAttribute buildCodeAttr(int maxLocal) {
 		CodeAttr attr = state.codeAttr;
 		attr.length = curCp() - attr.fromPC;
-		attr.maxStack = state.stackSize;
+		attr.maxStack = state.stackSize+1;
 		attr.maxLocal = maxLocal;
 		return attr.genCodeAttr();
 	}
