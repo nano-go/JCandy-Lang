@@ -1,0 +1,23 @@
+fun noninheritable_test(noninheritable) {
+	try {
+		class Tmp : noninheritable {}
+	} intercept TypeError {
+		return
+	}
+	assert false
+}
+
+fun noninheritableClasses_test() {
+	noninheritable_test(String)
+	noninheritable_test(Bool)
+	noninheritable_test(Integer)
+	noninheritable_test(Double)
+	noninheritable_test(Number)
+	noninheritable_test(Array)
+	noninheritable_test(Moudle)
+	noninheritable_test(Tuple)
+	noninheritable_test(null._class())
+	noninheritable_test(Range)
+}
+
+noninheritableClasses_test()

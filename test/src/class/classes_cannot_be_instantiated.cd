@@ -1,0 +1,18 @@
+fun test(clazz) {
+	try {
+		clazz()
+	} intercept NativeError as e {
+		assert e.getMessage() == 
+			"The built-in class can't be instantiated: " + clazz.name
+	}
+}
+
+test(Integer)
+test(Double)
+test(Number)
+test(Moudle)
+test(String)
+test(Bool)
+
+test(test._class())
+test(null._class())

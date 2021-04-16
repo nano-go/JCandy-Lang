@@ -1,0 +1,36 @@
+
+fun genClassInheritanceOf(builtinClass, arg) {
+	class A : builtinClass {
+		fun init() { super.init(arg); }
+	}
+	return A
+}
+
+fun test_myError(errClass, errMsg) {
+	var myErrClass
+	fun raiseRaise() {
+		myErrClass = genClassInheritanceOf(errClass, errMsg)
+		raise myErrClass()
+	}
+	try {
+		raiseRaise()
+	} intercept myErrClass as e {
+		assert errMsg == e.getMessage()
+		assert e._class().superClass == errClass
+		assert e.getStackTraceElements()[0].getFrameName() == "raiseRaise"
+		return
+	}
+	assert false
+}
+
+test_myError(Error, "err msg")
+test_myError(ArgumentError, "err msg")
+test_myError(AssertionError, "err msg")
+test_myError(AttributeError, "err msg")
+test_myError(CompilerError, "err msg")
+test_myError(IOError, "err msg")
+test_myError(NameError, "err msg")
+test_myError(NativeError, "err msg")
+test_myError(RangeError, "err msg")
+test_myError(StackOverflowError, "err msg")
+test_myError(TypeError, "err msg")
