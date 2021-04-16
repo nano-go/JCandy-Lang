@@ -8,6 +8,7 @@ import com.nano.candy.ast.Stmt;
 import com.nano.candy.parser.TokenKind;
 import com.nano.candy.utils.Logger;
 import com.nano.candy.utils.Position;
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.ListIterator;
@@ -26,6 +27,11 @@ public class Checker implements AstVisitor<Stmt, Expr> {
 
 	protected static void warn(ASTreeNode node, String msg, Object... args) {
 		logger.warn(node.pos, msg, args);
+	}
+	
+	private static <T extends ASTreeNode> T locate(Position pos, T t) {
+		t.pos = pos;
+		return t;
 	}
 	
 	public static void check(ASTreeNode node){
@@ -253,7 +259,7 @@ public class Checker implements AstVisitor<Stmt, Expr> {
 	@Override
 	public Stmt visit(Stmt.ClassDef node) {
 		if (curFunctionType != FunctionType.NONE) {
-			error(node, "Can't define a class in a function.");
+			// error(node, "Can't define a class in a function.");
 		}
 		
 		if (node.superClassName.isPresent()) {
@@ -266,7 +272,9 @@ public class Checker implements AstVisitor<Stmt, Expr> {
 		boolean origin = inClass;
 		inClass = true;
 		if (node.initializer.isPresent()) {
-			node.initializer.get().accept(this);
+			Stmt.FuncDef initialzier = node.initializer.get();
+			insertSuperCall(initialzier.pos, initialzier.body.stmts);
+			initialzier.accept(this);
 		}
 		checkMethodNames(node);
 		inClass = origin;
@@ -289,11 +297,39 @@ public class Checker implements AstVisitor<Stmt, Expr> {
 	public Stmt visit(Stmt.FuncDef node) {
 		FunctionType originalFuncType = curFunctionType;
 		this.curFunctionType = getFuncType(node);
-		checkParams(node);	
+		checkParams(node);
 		visitStmts(node.body.stmts);
 		insertReturnStmt(node);	
 		this.curFunctionType = originalFuncType;
 		return node;
+	}
+
+	private void insertSuperCall(Position pos, List<Stmt> stmts) {
+		if (stmts.isEmpty() || !isSuperCallInit(stmts.get(0))) {
+			stmts.add(0, newSuperCall(pos));
+		}
+	}
+
+	private Stmt.ExprS newSuperCall(Position pos) {
+		Expr.Super superExpr = locate(pos, new Expr.Super(INITIALIZER_NAME));
+		Expr.CallFunc callSuperExpr =
+			locate(pos, new Expr.CallFunc(superExpr, new ArrayList<Expr>()));
+		return locate(pos, new Stmt.ExprS(callSuperExpr));
+	}
+
+	private boolean isSuperCallInit(Stmt stmt) {
+		if (!(stmt instanceof Stmt.ExprS)) {
+			return false;
+		}
+		Expr expr = ((Stmt.ExprS) stmt).expr;
+		if (expr instanceof Expr.CallFunc) {
+			Expr.CallFunc callFunc = (Expr.CallFunc) expr;
+			if (callFunc.expr instanceof Expr.Super) {
+				return ((Expr.Super) callFunc.expr)
+					.reference.equals(INITIALIZER_NAME);
+			}
+		}
+		return false;
 	}
 	
 	private FunctionType getFuncType(Stmt.FuncDef node) {
