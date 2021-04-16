@@ -16,7 +16,7 @@ public class ObjectClass extends CandyClass {
 		BuiltinMethodEntity[] methods = BuiltinMethodEntity.
 			createMethodEntities(this, CandyObject.class);
 		for (BuiltinMethodEntity method : methods) {
-			if ("".equals(method)) {
+			if ("".equals(method.declredName())) {
 				setInitalizer(method);
 			} else {
 				defineMethod(method.declredName(), method);
