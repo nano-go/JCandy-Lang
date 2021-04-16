@@ -27,13 +27,13 @@ public class BuiltinClassFactory {
 	}
 	
 	private static CandyClass generateCandyClass(Class<? extends CandyObject> clazz, BuiltinClass builtinClass, 
-	                                   CandyClass superClass) {
+	                                             CandyClass superClass) {
 		String className = builtinClass.value();
 		if (superClass == null) {
 			superClass = ObjectClass.getObjClass();
 		}
-		BuiltinClassEntity candyClass = new BuiltinClassEntity(
-			clazz, className, superClass);
+		CandyClass candyClass = new CandyClass(className, superClass, builtinClass.isInheritable());
+		candyClass.setObjectEntityClass(clazz);
 		return candyClass;
 	}
 	

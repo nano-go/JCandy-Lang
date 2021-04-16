@@ -7,6 +7,7 @@ import com.nano.candy.interpreter.i2.builtin.type.IntegerObj;
 import com.nano.candy.interpreter.i2.builtin.type.StringObj;
 import com.nano.candy.interpreter.i2.builtin.type.classes.CandyClass;
 import com.nano.candy.interpreter.i2.builtin.type.error.AttributeError;
+import com.nano.candy.interpreter.i2.builtin.type.error.NativeError;
 import com.nano.candy.interpreter.i2.builtin.type.error.TypeError;
 import com.nano.candy.interpreter.i2.builtin.utils.ObjectHelper;
 import com.nano.candy.interpreter.i2.vm.VM;
@@ -15,10 +16,21 @@ import com.nano.candy.std.Names;
 @BuiltinClass("Object")
 public abstract class CandyObject {
 	
+	public static final boolean DEBUG = false;
+	
 	private CandyClass clazz;
 	private boolean frozen;
 	
 	public CandyObject(CandyClass clazz) {
+		this.clazz = clazz;
+	}
+	
+	public void setCandyClass(CandyClass clazz) {
+		if (this.clazz != null && DEBUG) {
+			if (!clazz.isSubClassOf(this.clazz)) {
+				new NativeError("Error Type.").throwSelfNative();
+			}
+		}
 		this.clazz = clazz;
 	}
 	
@@ -135,6 +147,9 @@ public abstract class CandyObject {
 			getCandyClassName(), "at " + Integer.toHexString(hashCode())
 		);
 	}
+	
+	@BuiltinMethod() 
+	public void objDefaultInitializer(VM vm) { vm.returnFromVM(this); }
 	
 	@BuiltinMethod(name = "_class")
 	public void getClass(VM vm) {
