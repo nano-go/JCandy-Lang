@@ -173,12 +173,7 @@ public class DefaultDisassDumper implements DisassInsDumper {
 	
 	protected String dumpClass(DisassClass ins, boolean expand) {
 		StringBuilder builder = new StringBuilder();
-		builder.append(String.format("class %s",ins.getClassName()));
-		if (ins.hasSuperClass()) {
-			builder.append(" : ")
-				.append(ins.getSuperClassName());
-		} 
-		builder.append(" {");
+		builder.append(String.format("class %s {",ins.getClassName()));
 		
 		if (!expand) {
 			builder.append("...}");

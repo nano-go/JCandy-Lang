@@ -26,10 +26,6 @@ public class DisassClass implements DisassInstruction {
 		return clazzInfo.className;
 	}
 	
-	public String getSuperClassName() {
-		return clazzInfo.className;
-	}
-	
 	public boolean hasSuperClass() {
 		return clazzInfo.hasSuperClass;
 	}
