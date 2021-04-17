@@ -186,6 +186,14 @@ public final class Frame implements Recyclable {
 		return chunk.getLineNumber(pc);
 	}
 	
+	/**
+	 * Returns the current line number, assuming the instruction that
+	 * want to locate has executed already.
+	 */
+	public int currentLineExecuted() {
+		return chunk.getLineNumber(pc-1);
+	}
+	
 	public int slotCount() {
 		return slots.length;
 	}

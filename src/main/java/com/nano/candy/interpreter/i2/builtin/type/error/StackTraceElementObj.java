@@ -45,7 +45,7 @@ public class StackTraceElementObj extends BuiltinObject {
 		super(STACK_TRACE_ELEMENT_CLASS);
 		frameName = frame.getName();
 		fileName = frame.getSourceFileName();
-		lineNumber = frame.currentLine();
+		lineNumber = frame.currentLineExecuted();
 	}
 
 	public String getFrameName() {
