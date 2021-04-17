@@ -17,8 +17,7 @@ import java.util.ArrayList;
  */
 public class BuiltinMethodEntity extends CallableObj {
 
-	public static BuiltinMethodEntity[] createMethodEntities(CandyClass candyClass, 
-															 Class<?> clazz) {
+	public static BuiltinMethodEntity[] createMethodEntities(String className, Class<?> clazz) {
 		Method[] methods = clazz.getDeclaredMethods();
 		ArrayList<BuiltinMethodEntity> builtinMethods = new ArrayList<>();
 		for (Method method : methods) {
@@ -29,7 +28,7 @@ public class BuiltinMethodEntity extends CallableObj {
 				method.setAccessible(true);
 			}
 			BuiltinMethod signature = method.getAnnotation(BuiltinMethod.class);
-			String tagName = ObjectHelper.methodName(candyClass, signature.name());
+			String tagName = ObjectHelper.methodName(className, signature.name());
 			builtinMethods.add(new BuiltinMethodEntity(method, tagName,
 			                   signature.name(), signature.argc()));
 		}

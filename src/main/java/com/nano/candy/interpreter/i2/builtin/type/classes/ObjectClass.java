@@ -1,31 +1,30 @@
 package com.nano.candy.interpreter.i2.builtin.type.classes;
 import com.nano.candy.interpreter.i2.builtin.CandyObject;
 
-public class ObjectClass extends CandyClass {
+public class ObjectClass {
 	
-	public static ObjectClass objClass;
-	public static final ObjectClass getObjClass() {
+	public static CandyClass objClass;
+	public static final CandyClass getObjClass() {
 		if (objClass == null) {
-			objClass = new ObjectClass();
+			objClass = new CandyClass(getObjectClassSignature());
 		}
 		return objClass;
 	}
 	
-	public ObjectClass() {
-		super("Object", null);
+	private static ClassSignature getObjectClassSignature() {
 		BuiltinMethodEntity[] methods = BuiltinMethodEntity.
-			createMethodEntities(this, CandyObject.class);
+			createMethodEntities("Object", CandyObject.class);
+		ClassSignature signature = new ClassSignature("Object", null);
 		for (BuiltinMethodEntity method : methods) {
 			if ("".equals(method.declredName())) {
-				setInitalizer(method);
+				signature.setInitializer(method);
 			} else {
-				defineMethod(method.declredName(), method);
+				signature.defineMethod(method);
 			}
 		}
+		return signature;
 	}
-
-	@Override
-	public CandyClass getSuperClass() {
-		return null;
-	}
+	
+	private ObjectClass() {}
+	
 }

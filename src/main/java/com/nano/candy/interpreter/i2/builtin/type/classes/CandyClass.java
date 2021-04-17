@@ -5,6 +5,7 @@ import com.nano.candy.interpreter.i2.builtin.CandyObjEntity;
 import com.nano.candy.interpreter.i2.builtin.CandyObject;
 import com.nano.candy.interpreter.i2.builtin.type.CallableObj;
 import com.nano.candy.interpreter.i2.builtin.type.MethodObj;
+import com.nano.candy.interpreter.i2.builtin.type.NullPointer;
 import com.nano.candy.interpreter.i2.builtin.type.StringObj;
 import com.nano.candy.interpreter.i2.builtin.type.error.NativeError;
 import com.nano.candy.interpreter.i2.builtin.utils.ObjectHelper;
@@ -23,45 +24,25 @@ public class CandyClass extends BuiltinObject {
 	 * An instance is created by reflection of the entity class when
 	 * this class is called.
 	 */
-	private Class<? extends CandyObject> objEntityClass;
+	protected final Class<? extends CandyObject> objEntityClass;
 	
-	private CandyClass superClass;
-	private String className;
-	private boolean isInheritable;
+	protected final CandyClass superClass;
+	protected final String className;
+	protected final boolean isInheritable;
 	
-	private HashMap<String, CallableObj> methods;
-	private CallableObj initializer;
+	protected final HashMap<String, CallableObj> methods;
+	protected final CallableObj initializer;
 	
-	public CandyClass(String name) {
-		this(name, ObjectClass.getObjClass(), true);
-	}
-	
-	public CandyClass(String name, CandyClass superClass) {
-		this(name, superClass, true);
-	}
-	
-	/**
-	 * If the super class is non-null, this class will inherit all the methods and
-	 * the initializer of the super class.
-	 */
-	public CandyClass(String name, CandyClass superClass, boolean isInheritable) {
+	protected CandyClass(ClassSignature signature) {
 		super(null);
-		this.className = name;
-		this.superClass = superClass;
-		this.isInheritable = isInheritable;
-		if (superClass != null) {
-			this.methods = new HashMap<String, CallableObj>(superClass.methods);
-			this.initializer = superClass.initializer;
-			this.objEntityClass = superClass.getObjEntityClass();
-		} else {
-			this.methods = new HashMap<>();
-		}
+		this.objEntityClass = signature.objEntityClass;
+		this.superClass = signature.superClass;
+		this.className = signature.className;
+		this.isInheritable = signature.isInheritable;
+		this.methods = signature.methods;
+		this.initializer = signature.initializer;
 	}
-	
-	protected void setObjectEntityClass(Class<? extends CandyObject> objEntityClass) {
-		this.objEntityClass = objEntityClass;
-	}
-	
+
 	public Class<? extends CandyObject> getObjEntityClass() {
 		return objEntityClass;
 	}
@@ -72,10 +53,6 @@ public class CandyClass extends BuiltinObject {
 	
 	public boolean isInheritable() {
 		return isInheritable;
-	}
-	
-	public void setInitalizer(CallableObj initalizer) {
-		this.initializer = initalizer;
 	}
 	
 	public CallableObj getInitializer() {
@@ -107,10 +84,6 @@ public class CandyClass extends BuiltinObject {
 			return new MethodObj(instance, method);
 		}
 		return null;
-	}
-	
-	public final void defineMethod(String name, CallableObj obj) {
-		methods.put(name, obj);
 	}
 	
 	public final String getClassName() {
@@ -151,7 +124,8 @@ public class CandyClass extends BuiltinObject {
 			case "name":
 				return StringObj.valueOf(getCandyClassName());
 			case "superClass":
-				return superClass;
+				return superClass == null ?
+					NullPointer.nil() : superClass;
 		}
 		return super.getAttr(vm, attr);
 	}

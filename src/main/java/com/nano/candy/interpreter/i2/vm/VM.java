@@ -13,6 +13,7 @@ import com.nano.candy.interpreter.i2.builtin.type.PrototypeFunctionObj;
 import com.nano.candy.interpreter.i2.builtin.type.StringObj;
 import com.nano.candy.interpreter.i2.builtin.type.TupleObj;
 import com.nano.candy.interpreter.i2.builtin.type.classes.CandyClass;
+import com.nano.candy.interpreter.i2.builtin.type.classes.ClassSignature;
 import com.nano.candy.interpreter.i2.builtin.type.classes.ObjectClass;
 import com.nano.candy.interpreter.i2.builtin.type.error.ErrorObj;
 import com.nano.candy.interpreter.i2.builtin.type.error.NameError;
@@ -313,15 +314,13 @@ public final class VM {
 		if (classInfo.hasSuperClass) {
 			CandyObject superObj = pop();
 			if (!(superObj instanceof CandyClass)) {
-				new TypeError(
-					"A class can't inherit a non-class: %s -> '%s'", 
+				new TypeError("A class can't inherit a non-class: %s -> '%s'", 
 					classInfo.className, superObj.getCandyClassName()
 				).throwSelfNative();
 			}
 			CandyClass superClass = (CandyClass) superObj;
 			if (!superClass.isInheritable()) {
-				new TypeError(
-					"The '%s' is a non-inheritable class.", 
+				new TypeError("The '%s' is a non-inheritable class.", 
 					superClass.getCandyClassName()
 				).throwSelfNative();
 			}
@@ -331,31 +330,32 @@ public final class VM {
 	}
 	
 	private CandyClass createClass(CandyClass superClass, ConstantValue.ClassInfo classInfo) {
-		CandyClass clazz = new CandyClass(classInfo.className, superClass);
+		ClassSignature signature = new ClassSignature(classInfo.className, superClass);
 		if (classInfo.initializer.isPresent()) {
 			ConstantValue.MethodInfo init = classInfo.initializer.get();
-			clazz.setInitalizer(createFunctionObj(clazz, init));
+			signature.setInitializer(createFunctionObj(classInfo.className, init));
 			pc += init.getLength();
 		}
 		for (ConstantValue.MethodInfo methodInfo : classInfo.methods) {
-			PrototypeFunctionObj prototypefunc = createFunctionObj(clazz, methodInfo);
-			clazz.defineMethod(methodInfo.name, prototypefunc);
+			PrototypeFunctionObj prototypefunc = 
+				createFunctionObj(classInfo.className, methodInfo);
+			signature.defineMethod(methodInfo.name, prototypefunc);
 			pc += methodInfo.getLength();
 		}
-		return clazz;
+		return signature.setIsInheritable(true).build();
 	}
 	
 	/**
 	 * Creates a prototype function object.
 	 *
-	 * @param clazz The class that the method is defined in or null.
+	 * @param className The name of the class that the method is defined in or null.
 	 * @param methodInfo The information of the prototype function.
 	 */
-	private PrototypeFunctionObj createFunctionObj(CandyClass clazz, ConstantValue.MethodInfo methodInfo) {
+	private PrototypeFunctionObj createFunctionObj(String className, ConstantValue.MethodInfo methodInfo) {
 		UpvalueObj[] upvalues = frame().captureUpvalueObjs(methodInfo);
 		String tagName = methodInfo.name;
-		if (clazz != null) {
-			tagName = ObjectHelper.methodName(clazz, tagName);
+		if (className != null) {
+			tagName = ObjectHelper.methodName(className, tagName);
 		}
 		return new PrototypeFunctionObj(
 			frame().chunk, pc, // Start pc.
