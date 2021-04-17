@@ -4,12 +4,12 @@ import com.nano.candy.interpreter.i2.tool.debug.Command;
 import com.nano.candy.interpreter.i2.tool.debug.CommandLine;
 import com.nano.candy.interpreter.i2.tool.debug.CommandOptions;
 import com.nano.candy.interpreter.i2.tool.debug.Group;
-import com.nano.candy.interpreter.i2.tool.debug.VmMonitor;
+import com.nano.candy.interpreter.i2.tool.debug.VMTracer;
 
 public class Help extends AbstractCommand {
 	
-	public static void printHelp(VmMonitor monitor, Command command) {
-		monitor.getConsole().getPrinter().print(printHelp(command));
+	public static void printHelp(VMTracer tracer, Command command) {
+		tracer.getConsole().getPrinter().print(printHelp(command));
 	}
 	
 	public static String printHelp(Command command) {
@@ -51,8 +51,8 @@ public class Help extends AbstractCommand {
 		return builder.toString();
 	}
 	
-	public static String sprintListOfCommands(VmMonitor monitor) {
-		return sprintCmdList(monitor.getCommandManager().getCommands());
+	public static String sprintListOfCommands(VMTracer tracer) {
+		return sprintCmdList(tracer.getCommandManager().getCommands());
 	}
 	
 	@Override
@@ -66,15 +66,15 @@ public class Help extends AbstractCommand {
 	}
 
 	@Override
-	public void startToExe(VmMonitor monitor, CommandLine cmdLine) throws CommandLine.ParserException {
+	public void startToExe(VMTracer tracer, CommandLine cmdLine) throws CommandLine.ParserException {
 		String[] args = cmdLine.getArgs();
-		Command cmd = CmdHelper.findCommand(monitor.getCommandManager(), args);
+		Command cmd = CmdHelper.findCommand(tracer.getCommandManager(), args);
 		if (cmd == null) {
-			monitor.getConsole().getPrinter().print(
-				sprintListOfCommands(monitor)
+			tracer.getConsole().getPrinter().print(
+				sprintListOfCommands(tracer)
 			);
 			return;
 		}	
-		printHelp(monitor, cmd);
+		printHelp(tracer, cmd);
 	}
 }

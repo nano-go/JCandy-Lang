@@ -32,7 +32,7 @@ import com.nano.candy.interpreter.i2.rtda.chunk.attrs.ErrorHandlerTable;
 import com.nano.candy.interpreter.i2.rtda.moudle.CompiledFileInfo;
 import com.nano.candy.interpreter.i2.rtda.moudle.MoudleManager;
 import com.nano.candy.interpreter.i2.rtda.moudle.SourceFileInfo;
-import com.nano.candy.interpreter.i2.vm.monitor.MonitorManager;
+import com.nano.candy.interpreter.i2.vm.tracer.TracerManager;
 import com.nano.candy.sys.CandySystem;
 import java.io.File;
 
@@ -54,10 +54,10 @@ public final class VM {
 	private MoudleManager moudleManager;
 	
 	/**
-	 * Monitor code execution and the change of stack. Lazily initalized
+	 * Trace code execution and the change of stack. Lazily initalized
 	 * upon needed.
 	 */
-	private MonitorManager monitorManager;
+	private TracerManager tracerManager;
 	
 	private FrameStack frameStack;
 	
@@ -76,7 +76,7 @@ public final class VM {
 		this.moudleManager = new MoudleManager();
 		this.frameStack = new FrameStack(maxStackDeepth);
 		this.options = options;
-		this.monitorManager = null;
+		this.tracerManager = null;
 	}
 	
 	public InterpreterOptions getOptions() {
@@ -114,11 +114,11 @@ public final class VM {
 		return moudleManager;
 	}
 	
-	public MonitorManager getMonitorManager() {
-		if (monitorManager == null) {
-			monitorManager = new MonitorManager();
+	public TracerManager getTracerManager() {
+		if (tracerManager == null) {
+			tracerManager = new TracerManager();
 		}
-		return monitorManager;
+		return tracerManager;
 	}
 	
 	public void loadChunk(Chunk chunk) {
@@ -155,8 +155,8 @@ public final class VM {
 		syncPcToTopFrame();
 		frameStack.pushFrame(frame);
 		syncFrameData();
-		if (monitorManager != null)
-			monitorManager.notifyStackPushed(this, frameStack);
+		if (tracerManager != null)
+			tracerManager.notifyStackPushed(this, frameStack);
 	}
 	
 	public void popFrame() {
@@ -166,8 +166,8 @@ public final class VM {
 		} else {
 			syncFrameData();
 		}
-		if (monitorManager != null)
-			monitorManager.notifyStackPoped(this, old, frameStack);
+		if (tracerManager != null)
+			tracerManager.notifyStackPoped(this, old, frameStack);
 		old.recycleSelf();
 	}
 	
@@ -176,8 +176,8 @@ public final class VM {
 		syncFrameData();
 		// push return value to operand stack.
 		push(old.pop());
-		if (monitorManager != null)
-			monitorManager.notifyStackPoped(this, old, frameStack);
+		if (tracerManager != null)
+			tracerManager.notifyStackPoped(this, old, frameStack);
 		old.recycleSelf();
 	}
 	
@@ -490,8 +490,8 @@ public final class VM {
 		}
 		
 		loop: for (;;) {
-			if (monitorManager != null)
-				monitorManager.notifyInsStarted(this, pc);
+			if (tracerManager != null)
+				tracerManager.notifyInsStarted(this, pc);
 			switch (code[pc ++]) {
 				case OP_NOP: break;
 				case OP_POP: {
@@ -975,8 +975,8 @@ public final class VM {
 					break loop;
 				}
 			}
-			if (monitorManager != null)
-				monitorManager.notifyInsEnd(this);
+			if (tracerManager != null)
+				tracerManager.notifyInsEnd(this);
 		}
 	}
 }

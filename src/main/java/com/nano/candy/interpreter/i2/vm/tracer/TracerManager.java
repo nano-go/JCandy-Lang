@@ -1,32 +1,32 @@
-package com.nano.candy.interpreter.i2.vm.monitor;
+package com.nano.candy.interpreter.i2.vm.tracer;
 import com.nano.candy.interpreter.i2.rtda.Frame;
 import com.nano.candy.interpreter.i2.rtda.FrameStack;
 import com.nano.candy.interpreter.i2.vm.VM;
 import java.util.HashSet;
 
-public final class MonitorManager {
+public final class TracerManager {
 	
-	private HashSet<CodeMonitor> codeMonitors;
-	private HashSet<StackMonitor> stackMonitors;
+	private HashSet<CodeTracer> codeMonitors;
+	private HashSet<StackTracer> stackMonitors;
 	
-	public MonitorManager() {
+	public TracerManager() {
 		this.codeMonitors = new HashSet<>();
 		this.stackMonitors = new HashSet<>();
 	}
 	
-	public void registerCodeMonitor(CodeMonitor codeMonitor) {
+	public void registerCodeMonitor(CodeTracer codeMonitor) {
 		this.codeMonitors.add(codeMonitor);
 	}
 	
-	public void unregisterCodeMonitor(CodeMonitor codeMonitor) {
+	public void unregisterCodeMonitor(CodeTracer codeMonitor) {
 		this.codeMonitors.remove(codeMonitor);
 	}
 	
-	public void registerStackMonitor(StackMonitor stackMonitor) {
+	public void registerStackMonitor(StackTracer stackMonitor) {
 		this.stackMonitors.add(stackMonitor);
 	}
 	
-	public void unregisterStackMonitor(StackMonitor stackMonitor) {
+	public void unregisterStackMonitor(StackTracer stackMonitor) {
 		this.stackMonitors.remove(stackMonitor);
 	}
 	
@@ -34,7 +34,7 @@ public final class MonitorManager {
 		if (stackMonitors.isEmpty()) {
 			return;
 		}
-		for (StackMonitor monitor : stackMonitors) {
+		for (StackTracer monitor : stackMonitors) {
 			monitor.newFramePushed(vm, frameStack);
 		}
 	}
@@ -43,7 +43,7 @@ public final class MonitorManager {
 		if (stackMonitors.isEmpty()) {
 			return;
 		}
-		for (StackMonitor monitor : stackMonitors) {
+		for (StackTracer monitor : stackMonitors) {
 			monitor.oldFramePoped(vm, oldFrame, stack);
 		}
 	}
@@ -52,7 +52,7 @@ public final class MonitorManager {
 		if (codeMonitors.isEmpty()) {
 			return;
 		}
-		for (CodeMonitor monitor : codeMonitors) {
+		for (CodeTracer monitor : codeMonitors) {
 			monitor.beforeIns(vm, pc);
 		}
 	}
@@ -61,16 +61,16 @@ public final class MonitorManager {
 		if (codeMonitors.isEmpty()) {
 			return;
 		}
-		for (CodeMonitor monitor : codeMonitors) {
+		for (CodeTracer monitor : codeMonitors) {
 			monitor.afterIns(vm);
 		}
 	}
 	
-	public HashSet<StackMonitor> getStackMonitors() {
+	public HashSet<StackTracer> getStackMonitors() {
 		return stackMonitors;
 	}
 	
-	public HashSet<CodeMonitor> getCodeMonitors() {
+	public HashSet<CodeTracer> getCodeMonitors() {
 		return codeMonitors;
 	}
 	

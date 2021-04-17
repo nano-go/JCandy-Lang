@@ -6,7 +6,7 @@ public interface Command extends Comparable<Command> {
 	public String description();
 	public CommandOptions options();
 	
-	public void startToExe(VmMonitor monitor, CommandLine cmdLine) 
+	public void startToExe(VMTracer tracer, CommandLine cmdLine) 
 		throws CommandLine.ParserException;
-	public void run(VmMonitor monitor);
+	public void run(VMTracer tracer);
 }

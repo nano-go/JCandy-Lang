@@ -36,24 +36,24 @@ public abstract class Group extends AbstractCommand {
 	public abstract void defindSubcommands(Set<Command> subcommands);
 
 	@Override
-	public void startToExe(VmMonitor monitor, CommandLine cmdLine) 
+	public void startToExe(VMTracer tracer, CommandLine cmdLine) 
 		throws CommandLine.ParserException {
 		String[] args = cmdLine.getArgs();
 		if (args.length == 0) {
-			Help.printHelp(monitor, this);
+			Help.printHelp(tracer, this);
 			return;
 		}
 		Command subCommand = subcommands.get(args[0]);
 		if (subCommand == null) {
-			monitor.getConsole().getPrinter().printf(
+			tracer.getConsole().getPrinter().printf(
 				"The subcommand '%s' not found.\n\n", args[0]
 			);
-			Help.printHelp(monitor, this);
+			Help.printHelp(tracer, this);
 			return;
 		}
-		monitor.exeCmd(subCommand, Arrays.copyOfRange(args, 1, args.length));
+		tracer.exeCmd(subCommand, Arrays.copyOfRange(args, 1, args.length));
 	}
 
 	@Override
-	public void run(VmMonitor monitor) {}
+	public void run(VMTracer monitor) {}
 }

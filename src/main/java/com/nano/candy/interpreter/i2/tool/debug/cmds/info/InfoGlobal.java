@@ -2,7 +2,7 @@ package com.nano.candy.interpreter.i2.tool.debug.cmds.info;
 
 import com.nano.candy.interpreter.i2.tool.debug.AbstractCommand;
 import com.nano.candy.interpreter.i2.tool.debug.CommandLine;
-import com.nano.candy.interpreter.i2.tool.debug.VmMonitor;
+import com.nano.candy.interpreter.i2.tool.debug.VMTracer;
 import com.nano.candy.interpreter.i2.tool.debug.cmds.CmdHelper;
 import com.nano.candy.interpreter.i2.vm.VM;
 
@@ -24,10 +24,10 @@ public class InfoGlobal extends AbstractCommand {
 	}
 
 	@Override
-	public void startToExe(VmMonitor monitor, CommandLine cmdLine) throws CommandLine.ParserException {
-		VM vm = monitor.getVM();
+	public void startToExe(VMTracer tracer, CommandLine cmdLine) throws CommandLine.ParserException {
+		VM vm = tracer.getVM();
 		CmdHelper.printVariables(
-			monitor.getConsole(), vm.getFrameStack().peek().fileScope.vars
+			tracer.getConsole(), vm.getFrameStack().peek().fileScope.vars
 		);
 	}
 }

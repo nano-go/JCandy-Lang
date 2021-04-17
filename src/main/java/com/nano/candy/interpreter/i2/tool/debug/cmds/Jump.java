@@ -4,7 +4,7 @@ import com.nano.candy.interpreter.i2.rtda.chunk.Chunk;
 import com.nano.candy.interpreter.i2.tool.debug.AbstractCommand;
 import com.nano.candy.interpreter.i2.tool.debug.CommandLine;
 import com.nano.candy.interpreter.i2.tool.debug.CommandOptions;
-import com.nano.candy.interpreter.i2.tool.debug.VmMonitor;
+import com.nano.candy.interpreter.i2.tool.debug.VMTracer;
 
 public class Jump extends AbstractCommand {
 
@@ -30,18 +30,18 @@ public class Jump extends AbstractCommand {
 	}
 
 	@Override
-	public void startToExe(VmMonitor monitor, CommandLine cmdLine) throws CommandLine.ParserException {
+	public void startToExe(VMTracer tracer, CommandLine cmdLine) throws CommandLine.ParserException {
 		this.toPc = cmdLine.getInteger("pc");
-		this.chunk = monitor.getVM().getFrameStack().peek().chunk;
-		monitor.runCommand(this);
+		this.chunk = tracer.getVM().getFrameStack().peek().chunk;
+		tracer.runCommand(this);
 	}
 
 	@Override
-	public void run(VmMonitor monitor) {
-		if (toPc == monitor.getPc() && chunk == 
-		    monitor.getVM().getFrameStack().peek().chunk) {
+	public void run(VMTracer tracer) {
+		if (toPc == tracer.getPc() && chunk == 
+		    tracer.getVM().getFrameStack().peek().chunk) {
 			chunk = null;
-			monitor.endCommand();
+			tracer.endCommand();
 		}
 	}
 }

@@ -4,7 +4,7 @@ import com.nano.candy.interpreter.i2.rtda.chunk.Chunk;
 import com.nano.candy.interpreter.i2.rtda.chunk.ConstantValue;
 import com.nano.candy.interpreter.i2.tool.debug.AbstractCommand;
 import com.nano.candy.interpreter.i2.tool.debug.CommandLine;
-import com.nano.candy.interpreter.i2.tool.debug.VmMonitor;
+import com.nano.candy.interpreter.i2.tool.debug.VMTracer;
 import com.nano.candy.interpreter.i2.tool.dis.DisassChunk;
 import com.nano.candy.interpreter.i2.tool.dis.DisassInstruction;
 import com.nano.candy.interpreter.i2.tool.dis.Disassembler;
@@ -36,11 +36,11 @@ public class DiassembleCurInsCmd extends AbstractCommand {
 	}
 
 	@Override
-	public void startToExe(VmMonitor monitor, CommandLine cmdLine) throws CommandLine.ParserException {
-		VM vm = monitor.getVM();
+	public void startToExe(VMTracer tracer, CommandLine cmdLine) throws CommandLine.ParserException {
+		VM vm = tracer.getVM();
 		vm.syncPcToTopFrame();
 		Chunk chunk = vm.frame().chunk;
-		Console console = monitor.getConsole();
+		Console console = tracer.getConsole();
 		int pc = vm.frame().pc;
 		
 		dumper.setHighlightPc(pc);

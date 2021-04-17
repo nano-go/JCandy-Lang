@@ -7,7 +7,7 @@ import com.nano.candy.interpreter.i2.rtda.chunk.ConstantValue.MethodInfo;
 import com.nano.candy.interpreter.i2.tool.debug.AbstractCommand;
 import com.nano.candy.interpreter.i2.tool.debug.CommandLine;
 import com.nano.candy.interpreter.i2.tool.debug.CommandOptions;
-import com.nano.candy.interpreter.i2.tool.debug.VmMonitor;
+import com.nano.candy.interpreter.i2.tool.debug.VMTracer;
 import com.nano.candy.interpreter.i2.tool.debug.cmds.StandardStyle;
 import com.nano.candy.interpreter.i2.vm.VM;
 import com.nano.candy.std.Names;
@@ -42,26 +42,26 @@ public class ShowLines extends AbstractCommand {
 	}
 
 	@Override
-	public void startToExe(VmMonitor monitor, CommandLine cmdLine) throws CommandLine.ParserException {
+	public void startToExe(VMTracer tracer, CommandLine cmdLine) throws CommandLine.ParserException {
 		if (cmdLine.hasOption("funcName")) {
-			showFunction(monitor.getVM(), monitor, cmdLine.getString("funcName"));
+			showFunction(tracer.getVM(), tracer, cmdLine.getString("funcName"));
 		} else if (cmdLine.hasOption("lineNumber")) {
-			showLines(monitor.getVM(), monitor, cmdLine.getInteger("lineNumber"));
+			showLines(tracer.getVM(), tracer, cmdLine.getInteger("lineNumber"));
 		} else {
-			showLines(monitor.getVM(), monitor);
+			showLines(tracer.getVM(), tracer);
 		}
 	}
 
-	private void showLines(VM vm, VmMonitor monitor) {
+	private void showLines(VM vm, VMTracer tracer) {
 		vm.syncPcToTopFrame();
 		int line = vm.frame().currentLine();
-		showLines(vm, monitor, line);
+		showLines(vm, tracer, line);
 	}
 	
-	private void showLines(VM vm, VmMonitor monitor, int line) {
+	private void showLines(VM vm, VMTracer tracer, int line) {
 		vm.syncPcToTopFrame();
 		String srcFileName = vm.frame().chunk.getSourceFileName();
-		showLines(monitor.getConsole(), srcFileName, 
+		showLines(tracer.getConsole(), srcFileName, 
 		          Math.max(line-4, 0), line+5, line);
 	}
 	
@@ -70,19 +70,19 @@ public class ShowLines extends AbstractCommand {
 	 *
 	 * @param functionName Format[class_name#name or name]
 	 */
-	private void showFunction(VM vm, VmMonitor monitor, String name) {
-		ConstantValue.MethodInfo met = findMethodInfo(monitor, name);
+	private void showFunction(VM vm, VMTracer tracer, String name) {
+		ConstantValue.MethodInfo met = findMethodInfo(tracer, name);
 		if (met == null) {
-			monitor.getConsole().getPrinter().printf(
+			tracer.getConsole().getPrinter().printf(
 				"Undefined function: %s\n", name
 			);
 			return;
 		}
-		showFunction(monitor, met);
+		showFunction(tracer, met);
 	}
 
-	private void showFunction(VmMonitor monitor, ConstantValue.MethodInfo met) {
-		Chunk chunk = monitor.getVM().frame().chunk;
+	private void showFunction(VMTracer tracer, ConstantValue.MethodInfo met) {
+		Chunk chunk = tracer.getVM().frame().chunk;
 		int from,to;
 		int fromPc = met.getFromPC(), len = met.getLength();
 		if (met.classDefinedIn != null) {
@@ -95,17 +95,17 @@ public class ShowLines extends AbstractCommand {
 			from = chunk.getLineNumber(fromPc - 2);
 		}
 		to = chunk.getLineNumber(fromPc + len-1);
-		showLines(monitor.getConsole(), chunk.getSourceFileName(), from, to);
+		showLines(tracer.getConsole(), chunk.getSourceFileName(), from, to);
 	}
 
-	private MethodInfo findMethodInfo(VmMonitor monitor, String name) {
+	private MethodInfo findMethodInfo(VMTracer tracer, String name) {
 		String[] classAndFunc = name.split("#", 2);
 		if (classAndFunc.length == 2) {
 			return findMetInfoFromClass(
-				monitor.getConstantPool(), classAndFunc[0], classAndFunc[1]
+				tracer.getConstantPool(), classAndFunc[0], classAndFunc[1]
 			);
 		} 
-		return findMetInfoFromCP(monitor.getConstantPool(), classAndFunc[0]);
+		return findMetInfoFromCP(tracer.getConstantPool(), classAndFunc[0]);
 	}
 	
 	private ConstantValue.MethodInfo findMetInfoFromClass(ConstantPool cp, String className, String funcName) {

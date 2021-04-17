@@ -68,13 +68,13 @@ public class DebugerTool implements CandyTool {
 
 	private void run(InterpreterImpl i2Interpreter, Chunk chunk) {
 		VM vm = i2Interpreter.getVM();
-		VmMonitor vmMonitor = new VmMonitor(vm);
+		VMTracer vmTracer = new VMTracer(vm);
 		while (true) {
 			i2Interpreter.initOrReset();
-			vm.getMonitorManager().registerCodeMonitor(vmMonitor);
+			vm.getTracerManager().registerCodeMonitor(vmTracer);
 			vm.loadChunk(chunk);
 			i2Interpreter.run();
-			vmMonitor.endCommand();
+			vmTracer.endCommand();
 		}
 	}
 

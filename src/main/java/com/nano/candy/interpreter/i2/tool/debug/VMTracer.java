@@ -5,19 +5,19 @@ import com.nano.candy.interpreter.i2.rtda.FrameStack;
 import com.nano.candy.interpreter.i2.rtda.chunk.Chunk;
 import com.nano.candy.interpreter.i2.rtda.chunk.ConstantPool;
 import com.nano.candy.interpreter.i2.vm.VM;
-import com.nano.candy.interpreter.i2.vm.monitor.CodeMonitor;
-import com.nano.candy.interpreter.i2.vm.monitor.StackMonitor;
+import com.nano.candy.interpreter.i2.vm.tracer.CodeTracer;
+import com.nano.candy.interpreter.i2.vm.tracer.StackTracer;
 import com.nano.candy.utils.Console;
 import java.util.Arrays;
 
-public class VmMonitor implements StackMonitor, CodeMonitor {
+public class VMTracer implements StackTracer, CodeTracer {
 
 	private VM vm;
 	private CommandManager cmdManager;
 	private Command runningCommand;
 	private Console console;
 
-	public VmMonitor(VM vm) {
+	public VMTracer(VM vm) {
 		this.vm = vm;
 		this.cmdManager = new CommandManager();
 		this.console = new Console(System.in, System.out);

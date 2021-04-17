@@ -2,7 +2,7 @@ package com.nano.candy.interpreter.i2.tool.debug.cmds;
 
 import com.nano.candy.interpreter.i2.tool.debug.AbstractCommand;
 import com.nano.candy.interpreter.i2.tool.debug.CommandLine;
-import com.nano.candy.interpreter.i2.tool.debug.VmMonitor;
+import com.nano.candy.interpreter.i2.tool.debug.VMTracer;
 
 public class Next extends AbstractCommand {
 
@@ -22,12 +22,12 @@ public class Next extends AbstractCommand {
 	}
 
 	@Override
-	public void startToExe(VmMonitor monitor, CommandLine cmdLine) throws CommandLine.ParserException {
-		monitor.runCommand(this);
+	public void startToExe(VMTracer tracer, CommandLine cmdLine) throws CommandLine.ParserException {
+		tracer.runCommand(this);
 	}
 
 	@Override
-	public void run(VmMonitor monitor) {
-		monitor.endCommand();
+	public void run(VMTracer tracer) {
+		tracer.endCommand();
 	}
 }

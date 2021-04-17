@@ -5,7 +5,7 @@ import com.nano.candy.interpreter.i2.rtda.FrameStack;
 import com.nano.candy.interpreter.i2.tool.debug.AbstractCommand;
 import com.nano.candy.interpreter.i2.tool.debug.CommandLine;
 import com.nano.candy.interpreter.i2.tool.debug.CommandOptions;
-import com.nano.candy.interpreter.i2.tool.debug.VmMonitor;
+import com.nano.candy.interpreter.i2.tool.debug.VMTracer;
 import com.nano.candy.interpreter.i2.tool.debug.cmds.StandardStyle;
 import com.nano.candy.interpreter.i2.vm.VM;
 import com.nano.candy.utils.Console;
@@ -37,20 +37,20 @@ public class InfoStack extends AbstractCommand {
 	}
 
 	@Override
-	public void startToExe(VmMonitor monitor, CommandLine cmdline) {
-		VM vm = monitor.getVM();
+	public void startToExe(VMTracer tracer, CommandLine cmdline) {
+		VM vm = tracer.getVM();
 		FrameStack fs = vm.getFrameStack();
 		if (fs.frameCount() == 0) {
-			monitor.getConsole().getPrinter().println("No stack frame.");
+			tracer.getConsole().getPrinter().println("No stack frame.");
 			return;
 		}
 		vm.syncPcToTopFrame();
 		if (cmdline.hasOption("FuncName")) {
 			String funcName = cmdline.getString("FuncName");
-			printFrame(monitor.getConsole(), fs, funcName);
+			printFrame(tracer.getConsole(), fs, funcName);
 			return;
 		}
-		printAllFrames(monitor.getConsole(), fs);
+		printAllFrames(tracer.getConsole(), fs);
 	}
 
 	private void printFrame(Console console, FrameStack fs, String funcName) {

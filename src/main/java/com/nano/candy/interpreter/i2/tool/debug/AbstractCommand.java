@@ -14,5 +14,5 @@ public abstract class AbstractCommand implements Command {
 	public CommandOptions options() { return null; }
 
 	@Override
-	public void run(VmMonitor monitor) {}
+	public void run(VMTracer tracer) {}
 }

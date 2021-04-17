@@ -1,7 +1,7 @@
 package com.nano.candy.interpreter.i2.tool.debug.cmds;
 import com.nano.candy.interpreter.i2.tool.debug.AbstractCommand;
 import com.nano.candy.interpreter.i2.tool.debug.CommandLine;
-import com.nano.candy.interpreter.i2.tool.debug.VmMonitor;
+import com.nano.candy.interpreter.i2.tool.debug.VMTracer;
 
 public class Quit extends AbstractCommand {
 
@@ -16,7 +16,7 @@ public class Quit extends AbstractCommand {
 	}
 
 	@Override
-	public void startToExe(VmMonitor monitor, CommandLine cmdLine) throws CommandLine.ParserException {
+	public void startToExe(VMTracer tracer, CommandLine cmdLine) throws CommandLine.ParserException {
 		System.exit(0);
 	}
 }
