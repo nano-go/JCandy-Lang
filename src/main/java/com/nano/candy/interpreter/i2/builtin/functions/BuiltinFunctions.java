@@ -2,11 +2,12 @@ package com.nano.candy.interpreter.i2.builtin.functions;
 
 import com.nano.candy.interpreter.i2.builtin.CandyObject;
 import com.nano.candy.interpreter.i2.builtin.functions.BuiltinFunctions;
+import com.nano.candy.interpreter.i2.builtin.type.ArrayObj;
 import com.nano.candy.interpreter.i2.builtin.type.IntegerObj;
 import com.nano.candy.interpreter.i2.builtin.type.NullPointer;
 import com.nano.candy.interpreter.i2.builtin.type.Range;
+import com.nano.candy.interpreter.i2.builtin.type.StringObj;
 import com.nano.candy.interpreter.i2.builtin.utils.ObjectHelper;
-import com.nano.candy.interpreter.i2.rtda.moudle.MoudleManager;
 import com.nano.candy.interpreter.i2.vm.VM;
 
 public class BuiltinFunctions {
@@ -75,5 +76,16 @@ public class BuiltinFunctions {
 	public static void importFile(VM vm) {
 		String filePath = ObjectHelper.asString(vm.pop());
 		vm.returnFromVM(vm.getMoudleManager().importFile(vm, filePath));
+	}
+	
+	public static final BuiltinFunctionEntity CMD_ARGS = 
+		new BuiltinFunctionEntity("cmd_args", 0, BuiltinFunctions::cmd_args);
+	public static void cmd_args(VM vm) {
+		CandyObject[] args = new CandyObject[vm.getOptions().getArgs().length];
+		int i = 0;
+		for (String arg : vm.getOptions().getArgs()) {
+			args[i ++] = StringObj.valueOf(arg);
+		}
+		vm.returnFromVM(new ArrayObj(args));
 	}
 }

@@ -39,14 +39,13 @@ public class PerformanceTool implements CandyTool {
 		long runDuration = 0;
 		for (File src : options.getFiles()) {
 			interpreter.initOrReset();
-			
 			long startTimeMillis = System.currentTimeMillis();
 			ASTreeNode node = ParserFactory.newParser(src).parse();
 			logger.printAllMessage(true);
 			parserDuration += System.currentTimeMillis() - startTimeMillis;
 			
 			startTimeMillis = System.currentTimeMillis();
-			interpreter.load(node, false);
+			interpreter.load(node);
 			logger.printAllMessage(true);
 			loadDuration += System.currentTimeMillis() - startTimeMillis;
 			

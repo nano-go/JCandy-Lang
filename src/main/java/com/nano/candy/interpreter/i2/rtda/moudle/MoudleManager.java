@@ -47,7 +47,8 @@ public class MoudleManager {
 	}
 
 	private MoudleObj runFile(VM vm, SourceFileInfo srcFile) {
-		CompiledFileInfo compiledFile = Compiler.compile(srcFile.getFile(), true);
+		CompiledFileInfo compiledFile = Compiler.compile(
+			srcFile.getFile(), vm.getOptions(), true);
 		vm.loadFile(compiledFile);
 		return vm.run();
 	}

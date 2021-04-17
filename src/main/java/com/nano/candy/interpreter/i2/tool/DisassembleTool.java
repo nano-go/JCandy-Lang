@@ -1,6 +1,7 @@
 package com.nano.candy.interpreter.i2.tool;
 
 import com.nano.candy.interpreter.Interpreter;
+import com.nano.candy.interpreter.InterpreterOptions;
 import com.nano.candy.interpreter.i2.rtda.chunk.Chunk;
 import com.nano.candy.interpreter.i2.tool.dis.DefaultDisassDumper;
 import com.nano.candy.interpreter.i2.tool.dis.DisassInsDumper;
@@ -48,16 +49,16 @@ public class DisassembleTool implements CandyTool {
 		dumper.setIsDisassLineNumberTable(printAdditionalInfo);
 		dumper.setIsDisassFunctions(printFunctionCode || printAdditionalInfo);
 		
-		printDiss(dumper, options.getFiles());
+		printDiss(options.getInterpreterOptions(), dumper, options.getFiles());
 	}
 
-	private void printDiss(DisassInsDumper dumper, File[] files) {
+	private void printDiss(InterpreterOptions options, DisassInsDumper dumper, File[] files) {
 		Disassembler disassember = new Disassembler();
 		BlockView blockView = new BlockView();
 		for (File src : files) {
 			Chunk chunk;
 			try {
-				chunk = Compiler.compileChunk(src, false, false);
+				chunk = Compiler.compileChunk(src, options, false);
 			} catch (CarrierErrorException e) {
 				continue;
 			}

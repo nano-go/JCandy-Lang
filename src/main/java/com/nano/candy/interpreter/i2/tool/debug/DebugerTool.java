@@ -1,6 +1,7 @@
 package com.nano.candy.interpreter.i2.tool.debug;
 
 import com.nano.candy.interpreter.Interpreter;
+import com.nano.candy.interpreter.InterpreterOptions;
 import com.nano.candy.interpreter.i2.InterpreterImpl;
 import com.nano.candy.interpreter.i2.builtin.type.error.CompilerError;
 import com.nano.candy.interpreter.i2.rtda.chunk.Chunk;
@@ -44,16 +45,16 @@ public class DebugerTool implements CandyTool {
 		if (options.getFiles().length == 0) {
 			throw new ToolException("Debugger requires at least one source file.");
 		}
+		options.getInterpreterOptions().setIsDebugMode(true);
 		InterpreterImpl i2Interpreter = (InterpreterImpl) interpreter;
-		Chunk chunk = compile(options.getFiles()[0]);
+		Chunk chunk = compile(options.getFiles()[0], options.getInterpreterOptions());
 		if (chunk == null) System.exit(1);
 		run(i2Interpreter, chunk);
 	}
 
-	private Chunk compile(File file) {
+	private Chunk compile(File file, InterpreterOptions options) {
 		try {
-			Compiler.debugMode();
-			return Compiler.compileChunk(file, true, false);
+			return Compiler.compileChunk(file, options, false);
 		} catch (CarrierErrorException e) {
 			if (e.getErrorObj() instanceof CompilerError) {	
 				try {
@@ -71,7 +72,7 @@ public class DebugerTool implements CandyTool {
 		while (true) {
 			i2Interpreter.initOrReset();
 			vm.getMonitorManager().registerCodeMonitor(vmMonitor);
-			i2Interpreter.loadChunk(chunk, false);
+			vm.loadChunk(chunk);
 			i2Interpreter.run();
 			vmMonitor.endCommand();
 		}

@@ -2,6 +2,7 @@ package com.nano.candy.interpreter.i2.tool;
 import com.nano.candy.ast.ASTreeNode;
 import com.nano.candy.ast.Program;
 import com.nano.candy.comp.Checker;
+import com.nano.candy.interpreter.InterpreterOptions;
 import com.nano.candy.interpreter.i2.builtin.type.error.CompilerError;
 import com.nano.candy.interpreter.i2.builtin.type.error.IOError;
 import com.nano.candy.interpreter.i2.codegen.CodeGenerator;
@@ -15,12 +16,6 @@ import java.io.IOException;
 import java.io.StringWriter;
 
 public class Compiler {
-	
-	private static boolean debugMode = false;
-	
-	public static void debugMode() {
-		debugMode = true;
-	}
 	
 	private static void checkLogger(boolean clearMsg) {
 		Logger logger = Logger.getLogger();
@@ -42,44 +37,44 @@ public class Compiler {
 		}
 	}
 
-	public static Chunk compileTree(ASTreeNode tree, boolean isInteractive, boolean debug,
-	                                boolean clearMsg) {
+	public static Chunk compileTree(ASTreeNode tree, InterpreterOptions options, boolean clearMsg) {
 		Checker.check(tree);
 		checkLogger(clearMsg);
-		return new CodeGenerator(isInteractive, debug).genCode(tree);
+		return new CodeGenerator(options.isInteractionMode(), 
+			options.isDebugMode()).genCode(tree);
 	}
 	
-	public static Chunk compileChunk(String filePath, boolean debug, boolean clearMsg) {
-		return compileChunk(new File(filePath), debug, clearMsg);
+	public static Chunk compileChunk(String filePath, InterpreterOptions options, boolean clearMsg) {
+		return compileChunk(new File(filePath), options, clearMsg);
 	}
 	
-	public static Chunk compileChunk(File file, boolean debug, boolean clearMsg) {
+	public static Chunk compileChunk(File file, InterpreterOptions options, boolean clearMsg) {
 		try {	
 			Parser parser = ParserFactory.newParser(file);
 			Program program = parser.parse();
 			checkLogger(clearMsg);
-			return compileTree(program, false, debug, clearMsg);
+			return compileTree(program, options, clearMsg);
 		} catch (IOException e) {
 			new IOError(file).throwSelfNative();
 			return null;
 		}
 	}
 	
-	public static CompiledFileInfo compile(String filePath, boolean clearMsg) {
-		return compile(filePath, Compiler.debugMode, clearMsg);
+	public static CompiledFileInfo compile(String filePath, InterpreterOptions options, boolean clearMsg) {
+		return compile(new File(filePath), options, clearMsg);
 	}
 	
-	public static CompiledFileInfo compile(String filePath, boolean debug, boolean clearMsg) {
-		return compile(new File(filePath), debug, clearMsg);
-	}
-	
-	public static CompiledFileInfo compile(File file, boolean clearMsg) {
-		return compile(file, Compiler.debugMode, clearMsg);
-	}
-	
-	public static CompiledFileInfo compile(File file, boolean debug, boolean clearMsg) {
-		Chunk chunk = compileChunk(file, debug, clearMsg);
+	public static CompiledFileInfo compile(File file, InterpreterOptions options,
+										   boolean clearMsg) {
+		Chunk chunk = compileChunk(file, options, clearMsg);
 		return new CompiledFileInfo(
 			file.getAbsolutePath(), chunk);
+	}
+	
+	public static Chunk compileText(String text, InterpreterOptions options) {
+		Parser parser = ParserFactory.newParser("Temp", text);
+		Program program = parser.parse();
+		checkLogger(false);
+		return compileTree(program, options, false);
 	}
 }

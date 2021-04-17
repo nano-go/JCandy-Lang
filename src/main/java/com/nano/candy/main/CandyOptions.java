@@ -1,6 +1,6 @@
 package com.nano.candy.main;
+import com.nano.candy.interpreter.InterpreterOptions;
 import com.nano.candy.tool.CandyTool;
-import com.nano.candy.tool.CandyToolFactory;
 import com.nano.candy.utils.CommandLine;
 import com.nano.candy.utils.Options;
 import java.io.File;
@@ -13,9 +13,10 @@ public class CandyOptions {
 	
 	protected CommandLine cmdLine;
 	protected Options options;
+	protected InterpreterOptions interpreterOptions;
 	
 	protected CandyOptions() {}
-	
+
 	public void checkSrc() {
 		if (srcFiles == null || srcFiles.length == 0) {
 			throw new Options.ParseException("Missing source files.");
@@ -32,6 +33,10 @@ public class CandyOptions {
 	
 	public CommandLine getCmd() {
 		return cmdLine;
+	}
+	
+	public InterpreterOptions getInterpreterOptions() {
+		return interpreterOptions;
 	}
 	
 	public boolean isPrintHelper() {

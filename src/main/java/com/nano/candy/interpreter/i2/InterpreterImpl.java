@@ -2,8 +2,8 @@ package com.nano.candy.interpreter.i2;
 
 import com.nano.candy.ast.ASTreeNode;
 import com.nano.candy.interpreter.Interpreter;
+import com.nano.candy.interpreter.InterpreterOptions;
 import com.nano.candy.interpreter.i2.rtda.chunk.Chunk;
-import com.nano.candy.interpreter.i2.rtda.moudle.CompiledFileInfo;
 import com.nano.candy.interpreter.i2.tool.Compiler;
 import com.nano.candy.interpreter.i2.vm.CarrierErrorException;
 import com.nano.candy.interpreter.i2.vm.VM;
@@ -11,37 +11,42 @@ import com.nano.candy.interpreter.i2.vm.VM;
 public class InterpreterImpl implements Interpreter {
 
 	private static final VM vm = new VM();
+	private InterpreterOptions options;
 	
 	public VM getVM() {
 		return vm;
 	}
+
+	@Override
+	public void enter(InterpreterOptions options) {
+		this.options = options;
+	}
 	
 	@Override
 	public void initOrReset() {
-		vm.reset();	
+		vm.reset(options);	
 	}
 
 	@Override
-	public void onExit() {}
-	
-	@Override
-	public void load(ASTreeNode node, boolean isInteractionMode) {
+	public void load(String text) {
 		Chunk chunk;
 		try {
-			chunk = Compiler.compileTree(node, isInteractionMode, false, false);
+			chunk = Compiler.compileText(text, options);
 		} catch (CarrierErrorException e) {
 			return;
 		}
-		loadChunk(chunk, isInteractionMode);
+		vm.loadChunk(chunk);
 	}
 	
-	public void loadChunk(Chunk chunk, boolean isInteractionMode) {
-		if (isInteractionMode) {
-			vm.loadChunk(chunk);
-		} else {
-			vm.loadFile(new CompiledFileInfo(
-				chunk.getSourceFileName(), chunk));
+	@Override
+	public void load(ASTreeNode node) {
+		Chunk chunk;
+		try {
+			chunk = Compiler.compileTree(node, options, false);
+		} catch (CarrierErrorException e) {
+			return;
 		}
+		vm.loadChunk(chunk);
 	}
 
 	@Override

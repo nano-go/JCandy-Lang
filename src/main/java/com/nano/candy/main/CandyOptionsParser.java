@@ -1,5 +1,6 @@
 package com.nano.candy.main;
 
+import com.nano.candy.interpreter.InterpreterOptions;
 import com.nano.candy.tool.CandyTool;
 import com.nano.candy.tool.CandyToolFactory;
 import com.nano.candy.utils.CandyFileFilter;
@@ -50,6 +51,32 @@ public class CandyOptionsParser {
 		candyOptions.srcFiles = getInputFiles(
 			candyOptions.cmdLine.getArgs()
 		);
+		String[] defaultArgs = candyOptions.cmdLine.getArgs();
+		candyOptions.interpreterOptions = new InterpreterOptions(
+			defaultArgs.length == 0 ? defaultArgs :
+				Arrays.copyOfRange(defaultArgs, 1, defaultArgs.length)
+		);
+	}
+	
+	private static File[] getInputFiles(String... args) {
+		if (args.length == 0) {
+			return new File[0];
+		}
+		File f = new File(args[0]);
+		if (!f.exists()) {
+			throw new Options.ParseException(
+				"Can't open file: " + f.getAbsolutePath());
+		}
+		ArrayList<File> inputFiles = new ArrayList<>();
+		inputFiles.addAll(FilePathUtils.getFilesByBfsOrder(
+			new File(args[0]), 
+			CandyFileFilter.CANDY_FILE_FILTER
+		));
+		if (inputFiles.size() == 0) {
+			throw new Options.ParseException(
+				"Missing source files: " + f.getAbsolutePath());
+		}
+		return inputFiles.toArray(new File[0]);
 	}
 
 	private static void prepareHelper(CandyOptions candyOptions, Options options) {
@@ -72,26 +99,5 @@ public class CandyOptionsParser {
 		tool.defineOptions(options);
 		options.build();
 		return options;
-	}
-
-	private static File[] getInputFiles(String... args) {
-		if (args.length == 0) {
-			return new File[0];
-		}
-		File f = new File(args[0]);
-		if (!f.exists()) {
-			throw new Options.ParseException(
-				"Can't open file: " + f.getAbsolutePath());
-		}
-		ArrayList<File> inputFiles = new ArrayList<>();
-		inputFiles.addAll(FilePathUtils.getFilesByBfsOrder(
-			new File(args[0]), 
-			CandyFileFilter.CANDY_FILE_FILTER
-		));
-		if (inputFiles.size() == 0) {
-			throw new Options.ParseException(
-				"Missing source files: " + f.getAbsolutePath());
-		}
-		return inputFiles.toArray(new File[0]);
 	}
 }

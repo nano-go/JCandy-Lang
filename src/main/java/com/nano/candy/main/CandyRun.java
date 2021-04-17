@@ -17,6 +17,7 @@ public class CandyRun {
 			options.printHelper();
 			return;
 		}
+		interpreter.enter(options.interpreterOptions);
 		options.tool.run(interpreter, options);
 	}
 

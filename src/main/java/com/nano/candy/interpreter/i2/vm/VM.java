@@ -1,5 +1,6 @@
 package com.nano.candy.interpreter.i2.vm;
 
+import com.nano.candy.interpreter.InterpreterOptions;
 import com.nano.candy.interpreter.i2.builtin.CandyObject;
 import com.nano.candy.interpreter.i2.builtin.type.ArrayObj;
 import com.nano.candy.interpreter.i2.builtin.type.BoolObj;
@@ -66,13 +67,20 @@ public final class VM {
 	private CandyObject[] slots;
 	private OperandStack opStack;
 	
+	private InterpreterOptions options;
+	
 	public VM() {}
 	
-	public void reset() {
+	public void reset(InterpreterOptions options) {
 		this.global = new GlobalEnvironment();
 		this.moudleManager = new MoudleManager();
 		this.frameStack = new FrameStack(maxStackDeepth);
+		this.options = options;
 		this.monitorManager = null;
+	}
+	
+	public InterpreterOptions getOptions() {
+		return options;
 	}
 	
 	public CompiledFileInfo getCurRunningFile() {

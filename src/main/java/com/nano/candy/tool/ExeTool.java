@@ -35,6 +35,7 @@ public class ExeTool implements CandyTool {
 	public void run(Interpreter interpreter, CandyOptions options) throws Exception {
 		File[] srcFiles = options.getFiles();
 		if (srcFiles == null || srcFiles.length == 0) {
+			options.getInterpreterOptions().setIsInteractionMode(true);
 			interactivelyInterpret(interpreter);
 			return;
 		}
@@ -51,7 +52,6 @@ public class ExeTool implements CandyTool {
 		if (isFailed) {
 			System.exit(1);
 		}
-		interpreter.onExit();
 	}
 
 	private void interactivelyInterpret(Interpreter interpreter) throws IOException {
@@ -71,7 +71,7 @@ public class ExeTool implements CandyTool {
 			}
 			input.append(line).append("\n");
 			if (!inMultiLineMode) {
-				run(interpreter, "command line", input.toString(), false, true);
+				run(interpreter, "command line", input.toString(), false);
 				// clear saved input
 				input.delete(0, input.length());
 			}
@@ -84,22 +84,20 @@ public class ExeTool implements CandyTool {
 		return run(interpreter,
 			sourceFile.getPath(), 
 			FileUtils.readText(sourceFile), 
-			exitIfError, 
-			false
+			exitIfError
 		);
 	}
 	
 	public static boolean run(Interpreter interpreter, 
 	                          String fileName, 
 	                          String content, 
-	                          boolean exitIfError, 
-	                          boolean interactively) throws IOException
+	                          boolean exitIfError) throws IOException
 	{
 		Program program = ParserFactory.newParser(fileName, content).parse();
 		if (!logger.printAllMessage(exitIfError)) {
 			return false;
 		}
-		interpreter.load(program, interactively);
+		interpreter.load(program);
 		if (!logger.printAllMessage(exitIfError)) {
 			return false;
 		}
