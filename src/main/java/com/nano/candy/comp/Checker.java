@@ -5,7 +5,7 @@ import com.nano.candy.ast.AstVisitor;
 import com.nano.candy.ast.Expr;
 import com.nano.candy.ast.Program;
 import com.nano.candy.ast.Stmt;
-import com.nano.candy.parser.TokenKind;
+import com.nano.candy.std.Names;
 import com.nano.candy.utils.Logger;
 import com.nano.candy.utils.Position;
 import java.util.ArrayList;
@@ -16,7 +16,7 @@ import java.util.Optional;
 
 public class Checker implements AstVisitor<Stmt, Expr> {
 	
-	private static final String INITIALIZER_NAME = "init";
+	private static final String INITIALIZER_NAME = Names.METHOD_INITALIZER;
 	private static final int MAX_PARAMETER_NUMBER = 255;
 	
 	protected static final Logger logger = Logger.getLogger();
@@ -174,7 +174,6 @@ public class Checker implements AstVisitor<Stmt, Expr> {
 			elseBody = visitStmt(node.elseBody.get());
 		}
 		
-		// Pruning
 		if (node.condition.isConstant()) {
 			if (node.condition.isFalsely()) {
 				return isEmtpy(elseBody) ? null : elseBody;
@@ -182,27 +181,8 @@ public class Checker implements AstVisitor<Stmt, Expr> {
 			return isEmtpy(thenBody) ? null : thenBody;
 		}
 		
-		if (isEmtpy(thenBody)) {
-			// if (a) {} else {} -> a
-			if (isEmtpy(elseBody)) {
-				Stmt.ExprS exprs = new Stmt.ExprS(node.condition);
-				exprs.pos = node.condition.pos;
-				return exprs;
-			}
-			
-			// if (a) {} else print(a); -> if (!a) print(a);
-			Position conditionPos = node.condition.pos;
-			node.condition = new Expr.Unary(TokenKind.NOT, node.condition);
-			node.condition.pos = conditionPos;
-			node.thenBody = elseBody;
-			node.elseBody = Optional.empty();
-		} else {
-			node.thenBody = thenBody;
-			if (elseBody != null) {
-				node.elseBody = Optional.of(elseBody);
-			}
-		}
-		
+		node.thenBody = thenBody;
+		node.elseBody = Optional.ofNullable(elseBody);
 		return node;
 	}
 
@@ -258,10 +238,6 @@ public class Checker implements AstVisitor<Stmt, Expr> {
 
 	@Override
 	public Stmt visit(Stmt.ClassDef node) {
-		if (curFunctionType != FunctionType.NONE) {
-			// error(node, "Can't define a class in a function.");
-		}
-		
 		if (node.superClassName.isPresent()) {
 			String superClassName = node.superClassName.get().name;
 			if (superClassName.equals(node.name)) {
@@ -318,16 +294,21 @@ public class Checker implements AstVisitor<Stmt, Expr> {
 	}
 
 	private boolean isSuperCallInit(Stmt stmt) {
-		if (!(stmt instanceof Stmt.ExprS)) {
-			return false;
-		}
-		Expr expr = ((Stmt.ExprS) stmt).expr;
-		if (expr instanceof Expr.CallFunc) {
-			Expr.CallFunc callFunc = (Expr.CallFunc) expr;
-			if (callFunc.expr instanceof Expr.Super) {
-				return ((Expr.Super) callFunc.expr)
-					.reference.equals(INITIALIZER_NAME);
+		if (stmt instanceof Stmt.ExprS) {
+			Expr expr = ((Stmt.ExprS) stmt).expr;
+			if (!(expr instanceof Expr.CallFunc)) {
+				return false;
 			}
+			Expr.CallFunc callFunc = (Expr.CallFunc) expr;
+			if (!(callFunc.expr instanceof Expr.Super)) {
+				return false;
+			}
+			return ((Expr.Super) callFunc.expr)
+				.reference.equals(INITIALIZER_NAME);
+		}
+		if (stmt instanceof Stmt.StmtList) {
+			Stmt.StmtList stmts = (Stmt.StmtList)stmt;
+			return !stmts.isEmpty() && isSuperCallInit(stmts.getFirstStmt());
 		}
 		return false;
 	}
@@ -355,7 +336,6 @@ public class Checker implements AstVisitor<Stmt, Expr> {
 				duplicatedNameHelper.add(param);
 			}
 		}
-
 		if (node.params.size() > MAX_PARAMETER_NUMBER) {
 			error(node, "Can't have parameters more than %d in the function '%s'.",
 				  MAX_PARAMETER_NUMBER, funcName);
@@ -363,9 +343,22 @@ public class Checker implements AstVisitor<Stmt, Expr> {
 	}
 
 	private void insertReturnStmt(Stmt.FuncDef node) {
-		Stmt.Return returnStmt = new Stmt.Return(null);
-		returnStmt.pos = Position.PREVIOUS_POSITION;
-		node.body.stmts.add(returnStmt);
+		if (!isReturnStmt(node.body.getLastStmt())) {
+			Stmt.Return returnStmt = new Stmt.Return(null);
+			returnStmt.pos = Position.PREVIOUS_POSITION;
+			node.body.stmts.add(returnStmt);
+		}
+	}
+	
+	private boolean isReturnStmt(Stmt stmt) {
+		if (stmt instanceof Stmt.Return) {
+			return true;
+		}
+		if (stmt instanceof Stmt.StmtList) {
+			Stmt.StmtList stmts = (Stmt.StmtList) stmt;
+			return !stmts.isEmpty() && isReturnStmt(stmts.getLastStmt());
+		}
+		return false;
 	}
 
 	@Override

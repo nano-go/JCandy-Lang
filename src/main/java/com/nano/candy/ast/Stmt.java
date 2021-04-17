@@ -18,6 +18,37 @@ public abstract class Stmt extends ASTreeNode {
 		}
 	}
 	
+	public static abstract class StmtList extends Stmt {	
+		public List<Stmt> stmts;
+
+		public StmtList(List<Stmt> list) {
+			this.stmts = list;
+		}
+		
+		public int size() {
+			return stmts.size();
+		}
+		
+		public boolean isEmpty() {
+			return stmts.isEmpty();
+		}
+		
+		public Stmt getFirstStmt() {
+			return stmts.get(0);
+		}
+		
+		public Stmt getLastStmt() {
+			if (stmts.isEmpty()) {
+				return null;
+			}
+			return stmts.get(stmts.size()-1);
+		}
+		
+		public Stmt getAt(int index) {
+			return stmts.get(index);
+		}
+	}
+	
 	public static class ImportList extends Stmt {
 
 		public List<Import> importStmts;
@@ -275,17 +306,16 @@ public abstract class Stmt extends ASTreeNode {
 		}
 	}
 	
-	public static class Block extends Stmt {
-		public List<Stmt> stmts;
+	public static class Block extends StmtList {
 		public Optional<Position> endPos;
 		
 		public Block() {
 			this(new LinkedList<Stmt>());
-			endPos = Optional.empty();
 		}
 
 		public Block(List<Stmt> stmts) {
-			this.stmts = stmts;
+			super(stmts);
+			endPos = Optional.empty();
 		}
 		
 		@Override
