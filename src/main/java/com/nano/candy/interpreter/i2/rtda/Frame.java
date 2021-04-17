@@ -142,6 +142,20 @@ public final class Frame implements Recyclable {
 		throw new Error();
 	}
 	
+	public void closeUpvalues(ConstantValue.CloseIndexes closeInfo) {
+		if (openUpvalues == null) {
+			return;
+		}
+		ListIterator<UpvalueObj> i = openUpvalues.listIterator();
+		while (i.hasNext()) {
+			UpvalueObj upvalue = i.next();
+			if (closeInfo.hasUpvalueIndex(upvalue.index())) {
+				upvalue.close();
+				i.remove();
+			}
+		}
+	}
+	
 	public void closeAllUpvalues() {
 		if (openUpvalues == null) {
 			return;

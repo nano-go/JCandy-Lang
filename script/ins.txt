@@ -59,8 +59,7 @@ OP_SET_ATTR set_attr
 OP_GET_ITEM get_item
 OP_SET_ITEM set_item
 
-OP_CLOSE_SLOT close_slot
-OP_CLOSE_UPVALUE close_upvalue
+OP_CLOSE close
 
 OP_GLOBAL_DEFINE global_define
 OP_GLOBAL_SET globalset

@@ -6,12 +6,12 @@ import com.nano.candy.ast.Expr;
 import com.nano.candy.ast.Program;
 import com.nano.candy.ast.Stmt;
 import com.nano.candy.interpreter.i2.rtda.chunk.Chunk;
+import com.nano.candy.interpreter.i2.rtda.chunk.ConstantValue;
 import com.nano.candy.parser.TokenKind;
 import com.nano.candy.std.Names;
 import com.nano.candy.utils.ArrayUtils;
 import java.util.Collections;
 import java.util.LinkedList;
-import java.util.List;
 import java.util.Optional;
 
 import static com.nano.candy.interpreter.i2.instruction.Instructions.*;
@@ -102,30 +102,30 @@ public class CodeGenerator implements AstVisitor<Void, Void> {
 		return locals;
 	}
 	
-	private LocalTable closeScope(boolean closeSlots) {
-		if (!closeSlots) {
+	/**
+	 * Exit the current scope and all local variables in this scope is removed.
+	 *
+	 * @param closeUpvalues If true, emit an instruction to close all upvalues in 
+	 *                      the current scope.
+	 */
+	private ConstantValue.CloseIndexes closeScope(boolean closeUpvalues) {
+		if (!closeUpvalues) {
 			locals.exitScope();
-			return locals;
+			return null;
 		}
-		int localCount = locals.curLocalCount();
-		int upvalueIndex = localCount-1;
-		List<LocalTable.Local> closedLocals = locals.exitScope();
-		if (closedLocals.isEmpty()) {
-			return locals;
-		}	
-		for (LocalTable.Local local : closedLocals) {
-			if (local.isCaptured) {
-				builder.emitop(OP_CLOSE_UPVALUE);
-				builder.emit1((byte) upvalueIndex);
-			}
-			upvalueIndex --;
+		ConstantValue.CloseIndexes close = locals.getCloseInfo(true);
+		emitCloseInstruction(close);
+		return close;
+	}
+
+	private void emitCloseInstruction(ConstantValue.CloseIndexes closeInfo) {
+		if (closeInfo != null) {
+			builder.emitopWithConst(OP_CLOSE, closeInfo);
 		}
-		builder.emitopWithArg(OP_CLOSE_SLOT, localCount);
-		return locals;
 	}
 	
 	/**
-	 * Declares a variable in the current local scope.
+	 * Declares a variable in the current scope.
 	 *
 	 * @return the slot of the given variable or -1 if the current scope 
 	 *         is the global.
@@ -143,7 +143,7 @@ public class CodeGenerator implements AstVisitor<Void, Void> {
 	
 	/**
 	 * Generates code to define a declared or global variable with the 
-	 * stack top element.
+	 * element at the stack top.
 	 */
 	private void defineVariable(String name, int line) {
 		if (locals.isInGlobal()) {
@@ -583,10 +583,11 @@ public class CodeGenerator implements AstVisitor<Void, Void> {
 
 	@Override
 	public Void visit(Stmt.TryIntercept node) {
-		int jOutOfInterceptions = genErrorHandler(node.tryBlock);
+		int jOutOfInterceptions = genTryBlockCode(node.tryBlock);
+		
 		// interception-block lables 
 		// jump out of interceptions and the else-block.
-		int[] lablesJumpOutOfIAE = genInterceptions(node);
+		int[] lablesJumpOutOfIAE = genInterceptionBlocks(node);
 		
 		builder.backpatch(jOutOfInterceptions);
 		if (node.elseBlock.isPresent()) {
@@ -602,29 +603,36 @@ public class CodeGenerator implements AstVisitor<Void, Void> {
 	}
 	
 	/**
-	 * Visits try-block and generates a new error handler.
+	 * Generates an error handler to intercept all errors that occurs in
+	 * Try-Block.
 	 *
-	 * @return Return a lable used to jump out of interception blocks
-	 *         if no error occurs in try-block.
+	 * @return Returns a lable used to jump out of the interception blocks.
 	 */
-	private int genErrorHandler(Stmt.Block tryBlock) {
+	private int genTryBlockCode(Stmt.Block tryBlock) {
 		int startPc = builder.curCp()+1;
-		tryBlock.accept(this);
+		enterScope();
+		walkBlock(tryBlock);
+		ConstantValue.CloseIndexes close = closeScope(true);
 		int endPc = builder.curCp();
+		// lable used to jump over interception blocks if the code in try-block
+		// can be executed successfully here.
 		int jOutOfInterceptions = builder.emitLabel(OP_JUMP, -1);
-		int handlerPc = builder.curCp();
+		
+		int handlerPc = builder.curCp();	
 		builder.addErrorHandler(startPc, endPc, handlerPc);
+		// VM will jump to here and close upvalues if an 
+		// error occurs (means that upvalues do not be correctly closed).
+		emitCloseInstruction(close);
 		return jOutOfInterceptions;
 	}
-	
 
 	/**
 	 * Generates interception blocks.
 	 *
-	 * If an error ocurrs in a try...intercept statements, the operand-stack will
-	 * be cleared and the error is pushed.
+	 * If an error ocurrs in the try-block, the operand-stack will be cleared
+	 * and the intercepted error is pushed to the stack top.
 	 */
-	private int[] genInterceptions(Stmt.TryIntercept node) {
+	private int[] genInterceptionBlocks(Stmt.TryIntercept node) {
 		int[] lablesJumpOutOfIAE;
 		// Push Error, Change the state.
 		builder.state().push(1);
@@ -635,10 +643,10 @@ public class CodeGenerator implements AstVisitor<Void, Void> {
 				interception.accept(this);
 				lablesJumpOutOfIAE[i ++] = builder.emitLabel(OP_JUMP, -1);
 			}
-			// Raise the error if fail to intercept.
+			// Reraise the error if fail to intercept.
 			builder.emit1(OP_RAISE);
 		} else {
-			// If the list of interception block is empty, any error is intercepted.
+			// If the list of the interception block is empty, any error is intercepted.
 			// Pop Error
 			builder.emitop(OP_POP);
 			lablesJumpOutOfIAE = new int[]{ builder.emitLabel(OP_JUMP, -1) };

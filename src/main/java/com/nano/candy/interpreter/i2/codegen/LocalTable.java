@@ -1,10 +1,12 @@
 package com.nano.candy.interpreter.i2.codegen;
+import com.nano.candy.interpreter.i2.rtda.chunk.ConstantValue;
 import com.nano.candy.utils.ArrayUtils;
+import com.nano.candy.utils.ByteArray;
 import java.util.ArrayList;
 import java.util.List;
 
 public class LocalTable {
-	
+
 	public final static class Local {
 		protected String name;
 		protected int deepth;
@@ -161,6 +163,41 @@ public class LocalTable {
 			locals[i] = null;
 		}
 		return discardedSlots;
+	}
+	
+	public List<Local> getCurrentDeepthLocals(final boolean exitLocal) {
+		ArrayList<Local> slots = new ArrayList<>();
+		int deepth = this.deepth - 1;
+		int curLocalCount = this.curLocalCount;
+		for (; curLocalCount > 0; curLocalCount --) {
+			int i = curLocalCount-1;
+			if (locals[i].deepth <= deepth) {
+				break;
+			}
+			slots.add(locals[i]);
+			if (exitLocal) locals[i] = null;
+		}
+		if (exitLocal) {
+			this.deepth = deepth;
+			this.curLocalCount = curLocalCount;
+		}
+		return slots;
+	}
+	
+	public ConstantValue.CloseIndexes getCloseInfo(boolean exitLocal) {
+		int upvalueIndex = curLocalCount()-1;
+		List<LocalTable.Local> closedLocals = getCurrentDeepthLocals(exitLocal);
+		if (closedLocals.isEmpty()) {
+			return null;
+		}
+		ByteArray byteArr = new ByteArray(8);
+		for (LocalTable.Local local : closedLocals) {
+			if (local.isCaptured) {
+				byteArr.addByte((byte) upvalueIndex);
+			}
+			upvalueIndex --;
+		}
+		return new ConstantValue.CloseIndexes(byteArr.getBytes());
 	}
 	
 }

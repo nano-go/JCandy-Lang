@@ -256,6 +256,18 @@ public class ChunkBuilder {
 	}
 	
 	/**
+	 * Emit an opcode with a constant value.
+	 */
+	public void emitopWithConst(byte opcode, ConstantValue constantValue, int line) {
+		emitop(opcode, line);
+		emitConstant(constantValue);
+	}
+	
+	public void emitopWithConst(byte opcode, ConstantValue constantValue) {
+		emitopWithConst(opcode, constantValue, -1);
+	}
+	
+	/**
 	 * Emit a lable opcode to be back patching.
 	 *
 	 * @return the lable pc.

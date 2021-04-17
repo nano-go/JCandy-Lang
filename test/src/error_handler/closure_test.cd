@@ -1,0 +1,44 @@
+fun closure_test() {
+	var getter
+	var setter
+	fun tmp() {
+		var slot0 = 0
+		setter(66)
+		assert getter() == 66
+		setter(75)
+		assert getter() == 75
+	}
+	fun inner() {
+		try {
+			var a = 66
+			getter = lambda -> a
+			setter = lambda val -> a = val
+			raise Error("")
+			var noCaptured
+			setter = lambda val -> noCaptured = setter
+		} intercept {
+			tmp()
+		} else { assert false; }
+		tmp()
+	}
+	inner()
+	
+	fun tmp() {
+		var slot0 = 0
+		assert getter() == 75
+		setter(99)
+		assert getter() == 99
+	}
+	tmp()
+	return (setter, getter)
+}
+
+fun test() {
+	var sg = closure_test()
+	var setter = sg[0]
+	var getter = sg[1]
+	assert getter() == 99
+	assert setter(108) == 108
+}
+
+test()

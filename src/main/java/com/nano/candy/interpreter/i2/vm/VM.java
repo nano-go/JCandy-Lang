@@ -779,11 +779,14 @@ public final class VM {
 					store(readUint8(), pop());
 					break;
 				}
-				case OP_CLOSE_SLOT: {
-					final int lastIndex = readUint8();
-					for (int i = slots.length-1; i >= lastIndex; i --) {
-						slots[i] = null;
-					}
+				
+				/**
+				 * Close Upvalues
+				 */
+				case OP_CLOSE: {
+					ConstantValue.CloseIndexes close =
+						(ConstantValue.CloseIndexes) cp.getConstants()[readIndex()];
+					frame().closeUpvalues(close);
 					break;
 				}		
 				
@@ -798,10 +801,7 @@ public final class VM {
 					frame().capturedUpvalues[readUint8()].store(peek(0));
 					break;
 				}
-				case OP_CLOSE_UPVALUE: {
-					frame().closeUpvalues(readUint8());
-					break;
-				}
+				
 				
 				/**
 				 * Object Operations.
@@ -909,7 +909,7 @@ public final class VM {
 					pc += 2;
 					int count = readUint8();
 					CandyObject error = peek(count);
-					boolean matched = false;
+					boolean matched = count == 0;
 					for (int i = 0; i < count; i ++) {
 						CandyObject obj = pop();
 						if (!matched && error.getCandyClass()

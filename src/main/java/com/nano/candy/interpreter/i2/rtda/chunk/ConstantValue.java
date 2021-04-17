@@ -1,5 +1,6 @@
 package com.nano.candy.interpreter.i2.rtda.chunk;
 import com.nano.candy.interpreter.i2.rtda.chunk.attrs.CodeAttribute;
+import java.util.Arrays;
 import java.util.Optional;
 
 public abstract class ConstantValue {
@@ -153,6 +154,42 @@ public abstract class ConstantValue {
 		@Override
 		public String toString() {
 			return className;
+		}
+	}
+	
+	/**
+	 * This is indexes of the slot pointed to by the upvalue that needs
+	 * to be close, when a close instruction is executed.
+	 */
+	public static class CloseIndexes extends ConstantValue {
+		
+		private boolean[] upvalueIndexesMarks;
+		private byte[] upvalueIndexes;
+
+		public CloseIndexes(byte[] upvalueIndexes) {
+			this.upvalueIndexesMarks = new boolean[256];
+			for (byte upvalue : upvalueIndexes) {
+				this.upvalueIndexesMarks[upvalue & 0xFF] = true;
+			}
+			this.upvalueIndexes = upvalueIndexes;
+		}
+
+		public boolean hasUpvalueIndex(int index) {
+			return upvalueIndexesMarks[index];
+		}
+		
+		@Override
+		public String headName() {
+			return "Close Info";
+		}
+
+		@Override
+		public String toString() {
+			StringBuilder builder = new StringBuilder();
+			builder.append(String.format(
+				"Upvalues: %s", Arrays.toString(upvalueIndexes)
+			));
+			return builder.toString();
 		}
 	}
 }
