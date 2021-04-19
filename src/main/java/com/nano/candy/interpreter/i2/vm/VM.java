@@ -41,7 +41,7 @@ import static com.nano.candy.interpreter.i2.instruction.Instructions.*;
 
 public final class VM {
 	
-	public static final boolean DEBUG = false;
+	public static final boolean DEBUG = true;
 	
 	private static final byte WIDE_INDEX_MARK = (byte) 0xFF;
 	
@@ -85,11 +85,11 @@ public final class VM {
 	}
 	
 	public CompiledFileInfo getCurRunningFile() {
-		return global.curFileScope().compiledFileInfo;
+		return global.curFileScope().getCompiledFileInfo();
 	}
 	
 	public SourceFileInfo getCurSourceFileInfo() {
-		CompiledFileInfo compiledFileInfo = global.curFileScope().compiledFileInfo;
+		CompiledFileInfo compiledFileInfo = global.curFileScope().getCompiledFileInfo();
 		if (compiledFileInfo.isRealFile()) {
 			return SourceFileInfo.get(compiledFileInfo.getFile());
 		}
@@ -109,6 +109,10 @@ public final class VM {
 			return CandySystem.DEFAULT_USER_DIR;
 		}
 		return parent.getAbsolutePath();
+	}
+	
+	public GlobalEnvironment getGlobalEnv() {
+		return global;
 	}
 	
 	public MoudleManager getMoudleManager() {
@@ -476,10 +480,8 @@ public final class VM {
 		// OP_EXIT will help VM to exit runFrame method.
 		runFrame(false);
 		
-		FileScope fs = global.curFileScope();
-		MoudleObj moudleObj = new MoudleObj(
-			fs.compiledFileInfo.getAbsPath(), fs.vars
-		);
+		MoudleObj moudleObj = 
+			global.curFileScope().generateMoudleObject();
 		popFrame();
 		return moudleObj;
 	}

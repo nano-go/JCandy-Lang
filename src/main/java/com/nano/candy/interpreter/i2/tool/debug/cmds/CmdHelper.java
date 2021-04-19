@@ -1,28 +1,28 @@
 package com.nano.candy.interpreter.i2.tool.debug.cmds;
 
 import com.nano.candy.interpreter.i2.builtin.CandyObject;
+import com.nano.candy.interpreter.i2.rtda.Variable;
 import com.nano.candy.interpreter.i2.tool.debug.Command;
 import com.nano.candy.interpreter.i2.tool.debug.CommandManager;
 import com.nano.candy.interpreter.i2.tool.debug.Group;
 import com.nano.candy.utils.Console;
 import com.nano.candy.utils.TableView;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.Collection;
 
 public class CmdHelper {
 	
-	public static void printVariables(Console console, HashMap<String, CandyObject> vars) {
+	public static void printVariables(Console console, Collection<Variable> vars) {
 		if (vars.size() == 0) {
 			return;
 		}
 		TableView tabView = new TableView();
 		tabView.setSpace(" ".repeat(3));
 		tabView.setHeaders("", "", "");
-		for (Map.Entry<String, CandyObject> e : vars.entrySet()) {
+		for (Variable variable : vars) {
 			tabView.addItem(
-				StandardStyle.namesOrNumber(e.getKey()), 
-				e.getValue().getCandyClassName(),
-				e.getValue().toString()
+				StandardStyle.namesOrNumber(variable.getName()), 
+				variable.getValue().getCandyClassName(),
+				variable.getValue().toString()
 			);
 		}
 		// trim '\033'

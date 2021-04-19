@@ -34,7 +34,7 @@ import java.util.HashMap;
 
 public class GlobalEnvironment {
 	
-	private static final HashMap<String, CandyObject> BUILTIN_VARS = new HashMap<>();
+	private static final HashMap<String, Variable> BUILTIN_VARS = new HashMap<>();
 	
 	static {
 		init();
@@ -89,11 +89,13 @@ public class GlobalEnvironment {
 	}
 
 	private static void defineBuiltinFunction(BuiltinFunctionEntity func) {
-		BUILTIN_VARS.put(func.declredName(), func);
+		BUILTIN_VARS.put(func.declredName(), 
+			Variable.getVariable(func.declredName(), func));
 	}
 
 	private static void defineClass(CandyClass clazz) {
-		BUILTIN_VARS.put(clazz.getClassName(), clazz);
+		BUILTIN_VARS.put(clazz.getClassName(),
+			Variable.getVariable(clazz.getClassName(), clazz));
 	}
 	
 	private HashMap<String, FileScope> fileScopePool;
@@ -104,19 +106,19 @@ public class GlobalEnvironment {
 		curFileScope = null;
 	}
 	
-	public FileScope getFileScope(CompiledFileInfo compiledFileInfo) {
+	private FileScope getFileScope(CompiledFileInfo compiledFileInfo) {
 		FileScope fs;
-		String onlyPath;
+		String absPath;
 		if (compiledFileInfo.isRealFile()) {
-			onlyPath = SourceFileInfo.get(compiledFileInfo.getFile())
+			absPath = SourceFileInfo.get(compiledFileInfo.getFile())
 				.getFile().getAbsolutePath();
 		} else {
-			onlyPath = compiledFileInfo.getAbsPath();
+			absPath = compiledFileInfo.getAbsPath();
 		}
-		fs = fileScopePool.get(onlyPath);
+		fs = fileScopePool.get(absPath);
 		if (fs == null) {
 			fs = new FileScope(compiledFileInfo);
-			fileScopePool.put(onlyPath, fs);
+			fileScopePool.put(absPath, fs);
 		}
 		return fs;
 	}
@@ -143,11 +145,20 @@ public class GlobalEnvironment {
 		if (obj != null) {
 			return obj;
 		}
+		Variable variable = BUILTIN_VARS.get(name);
+		if (variable != null) return variable.getValue();
+		return null;
+	}
+	
+	public Variable getVariable(String name) {
+		Variable v = curFileScope.getVariable(name);
+		if (v != null) {
+			return v;
+		}
 		return BUILTIN_VARS.get(name);
 	}
 	
 	public void setVar(String name, CandyObject value) {
 		curFileScope.setVar(name, value);
 	}
-	
 }

@@ -4,6 +4,7 @@ import com.nano.candy.interpreter.i2.builtin.CandyObject;
 import com.nano.candy.interpreter.i2.builtin.type.IteratorObj;
 import com.nano.candy.interpreter.i2.builtin.type.classes.ObjectClass;
 import com.nano.candy.interpreter.i2.builtin.utils.ObjectHelper;
+import com.nano.candy.interpreter.i2.rtda.Variable;
 import com.nano.candy.interpreter.i2.vm.VM;
 import com.nano.candy.std.Names;
 import java.util.Iterator;
@@ -27,6 +28,28 @@ public abstract class IteratorObj extends BuiltinObject {
 			Map.Entry<String, CandyObject> entry = iterator.next();
 			CandyObject[] kv = {
 				StringObj.valueOf(entry.getKey()), entry.getValue()
+			};
+			return new TupleObj(kv);
+		}
+	}
+	
+	public static class VarableIterator extends IteratorObj {
+		private Iterator<Variable> iterator;
+
+		public VarableIterator(Iterator<Variable> iterator) {
+			this.iterator = iterator;
+		}
+		
+		@Override
+		public boolean hasNext(VM vm) {
+			return iterator.hasNext();
+		}
+
+		@Override
+		public CandyObject next(VM vm) {
+			Variable variable = iterator.next();
+			CandyObject[] kv = {
+				StringObj.valueOf(variable.getName()), variable.getValue()
 			};
 			return new TupleObj(kv);
 		}

@@ -6,10 +6,9 @@ import com.nano.candy.interpreter.i2.builtin.annotation.BuiltinClass;
 import com.nano.candy.interpreter.i2.builtin.annotation.BuiltinMethod;
 import com.nano.candy.interpreter.i2.builtin.type.classes.BuiltinClassFactory;
 import com.nano.candy.interpreter.i2.builtin.type.classes.CandyClass;
+import com.nano.candy.interpreter.i2.rtda.Variable;
 import com.nano.candy.interpreter.i2.vm.VM;
 import java.util.HashMap;
-import java.util.Iterator;
-import java.util.Map;
 
 @BuiltinClass("Moudle")
 public class MoudleObj extends BuiltinObject {
@@ -17,8 +16,8 @@ public class MoudleObj extends BuiltinObject {
 	public static final CandyClass MOUDLE_CLASS = BuiltinClassFactory.generate(
 		MoudleObj.class);
 	private String name;
-	private HashMap<String, CandyObject> attrs;
-	public MoudleObj(String name, HashMap<String, CandyObject> attrs) {
+	private HashMap<String, Variable> attrs;
+	public MoudleObj(String name, HashMap<String, Variable> attrs) {
 		super(MOUDLE_CLASS);
 		this.name = name;
 		this.attrs = attrs;
@@ -26,7 +25,7 @@ public class MoudleObj extends BuiltinObject {
 
 	@Override
 	public CandyObject getAttr(VM vm, String attr) {
-		CandyObject obj = attrs.get(attr);
+		CandyObject obj = attrs.get(attr).getValue();
 		if (obj == null) {
 			return super.getAttr(vm, attr);
 		}
@@ -35,7 +34,7 @@ public class MoudleObj extends BuiltinObject {
 
 	@Override
 	public CandyObject iterator(VM vm) {
-		return new IteratorObj.MapIterator(attrs.entrySet().iterator());
+		return new IteratorObj.VarableIterator(attrs.values().iterator());
 	}
 	
 	public String getName() {
