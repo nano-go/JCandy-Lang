@@ -25,7 +25,7 @@ import com.nano.candy.interpreter.i2.rtda.Frame;
 import com.nano.candy.interpreter.i2.rtda.GlobalEnvironment;
 import com.nano.candy.interpreter.i2.rtda.OperandStack;
 import com.nano.candy.interpreter.i2.rtda.StackFrame;
-import com.nano.candy.interpreter.i2.rtda.UpvalueObj;
+import com.nano.candy.interpreter.i2.rtda.Upvalue;
 import com.nano.candy.interpreter.i2.rtda.chunk.Chunk;
 import com.nano.candy.interpreter.i2.rtda.chunk.ConstantPool;
 import com.nano.candy.interpreter.i2.rtda.chunk.ConstantValue;
@@ -352,7 +352,7 @@ public final class VM {
 	 * @param methodInfo The information of the prototype function.
 	 */
 	private PrototypeFunctionObj createFunctionObj(String className, ConstantValue.MethodInfo methodInfo) {
-		UpvalueObj[] upvalues = frame().captureUpvalueObjs(methodInfo);
+		Upvalue[] upvalues = frame().captureUpvalueObjs(methodInfo);
 		String tagName = methodInfo.name;
 		if (className != null) {
 			tagName = ObjectHelper.methodName(className, tagName);

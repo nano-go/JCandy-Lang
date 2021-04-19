@@ -3,7 +3,7 @@ package com.nano.candy.interpreter.i2.builtin.type;
 import com.nano.candy.interpreter.i2.builtin.type.CallableObj;
 import com.nano.candy.interpreter.i2.rtda.FileScope;
 import com.nano.candy.interpreter.i2.rtda.Frame;
-import com.nano.candy.interpreter.i2.rtda.UpvalueObj;
+import com.nano.candy.interpreter.i2.rtda.Upvalue;
 import com.nano.candy.interpreter.i2.rtda.chunk.Chunk;
 import com.nano.candy.interpreter.i2.rtda.chunk.ConstantValue;
 import com.nano.candy.interpreter.i2.rtda.chunk.attrs.CodeAttribute;
@@ -16,9 +16,9 @@ public class PrototypeFunctionObj extends CallableObj {
 	public int pc;
 	
 	public FileScope fileScope;
-	public UpvalueObj[] upvalues;
+	public Upvalue[] upvalues;
 	
-	public PrototypeFunctionObj(Chunk chunk, int pc, UpvalueObj[] upvalues, 
+	public PrototypeFunctionObj(Chunk chunk, int pc, Upvalue[] upvalues, 
 		                        String name, ConstantValue.MethodInfo methodInfo, 
 								FileScope fileScope) {
 		super(methodInfo.name, name, methodInfo.arity);
@@ -37,7 +37,7 @@ public class PrototypeFunctionObj extends CallableObj {
 		return pc;
 	}
 	
-	public UpvalueObj[] upvalues() {
+	public Upvalue[] upvalues() {
 		return upvalues;
 	}
 

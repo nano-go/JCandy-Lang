@@ -2,13 +2,13 @@ package com.nano.candy.interpreter.i2.rtda;
 
 import com.nano.candy.interpreter.i2.builtin.CandyObject;
 
-public class UpvalueObj {
+public class Upvalue {
 	
 	private CandyObject[] slots;
 	private int index;
 	private CandyObject ref;
 
-	public UpvalueObj(CandyObject[] slots, int index) {
+	public Upvalue(CandyObject[] slots, int index) {
 		this.slots = slots;
 		this.index = index;
 		this.ref = slots[index];

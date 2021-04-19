@@ -50,13 +50,13 @@ public final class Frame implements Recyclable {
 	/**
 	 * Captured upvalues from the upper frame.
 	 */
-	public UpvalueObj[] capturedUpvalues;
+	public Upvalue[] capturedUpvalues;
 	
 	/**
 	 * The open upvalues are captured by other frame in the current
 	 * frame.
 	 */
-	private LinkedList<UpvalueObj> openUpvalues;
+	private LinkedList<Upvalue> openUpvalues;
 	
 	private Frame() {}
 	
@@ -91,9 +91,9 @@ public final class Frame implements Recyclable {
 		}
 	}
 	
-	public UpvalueObj[] captureUpvalueObjs(ConstantValue.MethodInfo methodInfo) {
+	public Upvalue[] captureUpvalueObjs(ConstantValue.MethodInfo methodInfo) {
 		final int COUNT = methodInfo.upvalueCount();
-		UpvalueObj[] upvalueObjs = new UpvalueObj[COUNT];
+		Upvalue[] upvalueObjs = new Upvalue[COUNT];
 		for (int i = 0; i < COUNT; i ++) {
 			int index = methodInfo.upvalueIndex(i);
 			// checks the upvalue is in this frame.
@@ -110,13 +110,13 @@ public final class Frame implements Recyclable {
 	/**
 	 * Derive the upvalue from this frame.
 	 */
-	private UpvalueObj captureUpvalue(int index) {
+	private Upvalue captureUpvalue(int index) {
 		if (openUpvalues == null) { /* lazy init */
 			openUpvalues = new LinkedList<>();
 		}
 		
 		// Find the same upvalue.
-		UpvalueObj openUpvalue = null;
+		Upvalue openUpvalue = null;
 		for (int i = openUpvalues.size()-1; i >= 0; i --) {
 			openUpvalue = openUpvalues.get(i);
 			if (index == openUpvalue.index()) {
@@ -124,15 +124,15 @@ public final class Frame implements Recyclable {
 			}
 		}
 		
-		openUpvalue = new UpvalueObj(this.slots, index);
+		openUpvalue = new Upvalue(this.slots, index);
 		openUpvalues.add(openUpvalue);
 		return openUpvalue;
 	}
 	
 	public void closeUpvalues(int index) {
-		ListIterator<UpvalueObj> i = openUpvalues.listIterator();
+		ListIterator<Upvalue> i = openUpvalues.listIterator();
 		while (i.hasNext()) {
-			UpvalueObj upvalue = i.next();
+			Upvalue upvalue = i.next();
 			if (upvalue.index() == index) {
 				upvalue.close();
 				i.remove();
@@ -146,9 +146,9 @@ public final class Frame implements Recyclable {
 		if (openUpvalues == null) {
 			return;
 		}
-		ListIterator<UpvalueObj> i = openUpvalues.listIterator();
+		ListIterator<Upvalue> i = openUpvalues.listIterator();
 		while (i.hasNext()) {
-			UpvalueObj upvalue = i.next();
+			Upvalue upvalue = i.next();
 			if (closeInfo.hasUpvalueIndex(upvalue.index())) {
 				upvalue.close();
 				i.remove();
@@ -160,9 +160,9 @@ public final class Frame implements Recyclable {
 		if (openUpvalues == null) {
 			return;
 		}
-		ListIterator<UpvalueObj> i = openUpvalues.listIterator();
+		ListIterator<Upvalue> i = openUpvalues.listIterator();
 		while (i.hasNext()) {
-			UpvalueObj upvalue = i.next();
+			Upvalue upvalue = i.next();
 			upvalue.close();
 			i.remove();
 		}
