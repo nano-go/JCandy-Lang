@@ -173,12 +173,12 @@ public final class ArrayObj extends BuiltinObject {
 	}
 	
 	@Override
-	public CandyObject getItem(CandyObject key) {
+	public CandyObject getItem(VM vm, CandyObject key) {
 		return elements[asIndex(key)];
 	}
 
 	@Override
-	public CandyObject setItem(CandyObject key, CandyObject value) {
+	public CandyObject setItem(VM vm, CandyObject key, CandyObject value) {
 		elements[asIndex(key)] = value;
 		return value;
 	}
@@ -192,7 +192,7 @@ public final class ArrayObj extends BuiltinObject {
 	}
 	
 	@Override
-	public CandyObject iterator() {
+	public CandyObject iterator(VM vm) {
 		return new IteratorObj.ArrIterator(elements, size);
 	}
 

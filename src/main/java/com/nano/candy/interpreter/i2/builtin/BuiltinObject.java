@@ -2,16 +2,16 @@ package com.nano.candy.interpreter.i2.builtin;
 
 import com.nano.candy.interpreter.i2.builtin.type.BoolObj;
 import com.nano.candy.interpreter.i2.builtin.type.IntegerObj;
+import com.nano.candy.interpreter.i2.builtin.type.NullPointer;
 import com.nano.candy.interpreter.i2.builtin.type.StringObj;
 import com.nano.candy.interpreter.i2.builtin.type.classes.CandyClass;
 import com.nano.candy.interpreter.i2.builtin.type.error.AttributeError;
 import com.nano.candy.interpreter.i2.vm.VM;
 
 public class BuiltinObject extends CandyObject {
-
+	
 	public BuiltinObject(CandyClass clazz) {
 		super(clazz);
-		freeze();
 	}
 	
 	@Override
@@ -136,13 +136,19 @@ public class BuiltinObject extends CandyObject {
 	
 	@Override
 	public void setAttrApi(VM vm, String attr, CandyObject value) {
-		vm.returnFromVM(setAttr(vm, attr, value));
+		vm.returnFromVM(setAttrApiExeUser(vm, attr, value));
+	}
+
+	@Override
+	public CandyObject setAttrApiExeUser(VM vm, String attr, CandyObject value) {
+		checkIsFrozen();
+		return setAttr(vm, attr, value);
 	}
 	
 	@Override
 	public CandyObject setAttr(VM vm, String attr, CandyObject ref) {
-		throwFrozenObjError(attr);
-		return null;
+		AttributeError.checkAttributeNull(this, attr, null);
+		throw new Error();
 	}
 
 	@Override
@@ -154,8 +160,7 @@ public class BuiltinObject extends CandyObject {
 	public CandyObject getAttrApiExeUser(VM vm, String attr) {
 		CandyObject value = getAttr(vm, attr);
 		if (value == null) {
-			getUnknownAttr(vm, attr);
-			return null;
+			return getUnknownAttrApiExeUser(vm, attr);
 		}
 		return value;
 	}
@@ -164,12 +169,43 @@ public class BuiltinObject extends CandyObject {
 	public CandyObject getAttr(VM vm, String attr) {
 		return getCandyClass().getBoundMethod(attr, this);
 	}
-	
+
+	@Override
+	public void getUnknownAttrApi(VM vm, String attr) {
+		vm.returnFromVM(getUnknownAttrApiExeUser(vm, attr));
+	}
+
+	@Override
+	public CandyObject getUnknownAttrApiExeUser(VM vm, String attr) {
+		return getUnknownAttr(vm, attr);
+	}
+
 	@Override
 	public CandyObject getUnknownAttr(VM vm, String attr) {
 		AttributeError.checkAttributeNull(this, attr, null);
 		// Unreachable.
 		throw new Error();
+	}
+	
+	@Override
+	public CandyObject setItemApiExeUser(VM vm, CandyObject key, CandyObject value) {
+		checkIsFrozen();
+		return setItem(vm, key, value);
+	}
+
+	@Override
+	public void setItemApi(VM vm, CandyObject key, CandyObject value) {
+		vm.returnFromVM(setItemApiExeUser(vm, key, value));
+	}
+
+	@Override
+	public CandyObject getItemApiExeUser(VM vm, CandyObject key) {
+		return getItem(vm, key);
+	}
+
+	@Override
+	public void getItemApi(VM vm, CandyObject key) {
+		vm.returnFromVM(getItem(vm, key));
 	}
 
 	@Override
@@ -188,12 +224,8 @@ public class BuiltinObject extends CandyObject {
 	}
 	
 	@Override
-	public void setItemApi(VM vm) {
-		setItem(vm);
+	public CandyObject iteratorApiExeUser(VM vm) {
+		return iterator(vm);
 	}
-
-	@Override
-	public void getItemApi(VM vm) {
-		getItem(vm);
-	}
+	
 }

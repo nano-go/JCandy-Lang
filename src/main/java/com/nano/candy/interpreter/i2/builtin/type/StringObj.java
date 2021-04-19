@@ -40,16 +40,6 @@ public class StringObj extends BuiltinObject {
 	public String value() {
 		return value;
 	}
-
-	@Override
-	public CandyObject getItem(CandyObject key) {
-		return super.getItem(key);
-	}
-
-	@Override
-	public CandyObject setItem(CandyObject key, CandyObject value) {
-		return super.setItem(key, value);
-	}
 	
 	@Override
 	public CandyObject add(VM vm, CandyObject operand) {

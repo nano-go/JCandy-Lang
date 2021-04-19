@@ -64,7 +64,7 @@ public class Range extends BuiltinObject {
 	}
 
 	@Override
-	public CandyObject iterator() {
+	public CandyObject iterator(VM vm) {
 		return new RangeIterator(left, right);
 	}
 	

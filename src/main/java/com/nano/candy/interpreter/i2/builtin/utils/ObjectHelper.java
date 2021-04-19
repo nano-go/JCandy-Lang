@@ -92,16 +92,11 @@ public class ObjectHelper {
 		return vm.pop();
 	}
 	
-	public static void callFunction(VM vm, CallableObj callable) {
+	public static CandyObject callFunction(VM vm, CallableObj callable) {
 		callable.onCall(vm);
 		if (!callable.isBuiltin()) {
 			vm.runFrame(true);
 		}
-	}
-	
-	public static CandyObject callUserFunction(VM vm, CallableObj callable) {
-		callable.onCall(vm);
-		vm.runFrame(true);
 		return vm.pop();
 	}
 }

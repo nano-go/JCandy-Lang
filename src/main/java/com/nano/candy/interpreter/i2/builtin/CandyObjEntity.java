@@ -15,10 +15,14 @@ import java.util.HashMap;
 
 public class CandyObjEntity extends CandyObject {
 
-	protected HashMap<String, CandyObject> attrs;
+	private HashMap<String, CandyObject> attrs;
 	
+	/**
+	 * Cache.
+	 */
 	private CallableObj attrGetter;
 	private CallableObj attrSetter;
+	private CallableObj unknownAttrGetter;
 	private CallableObj itemGetter;
 	private CallableObj itemSetter;
 	private CallableObj equalTo;
@@ -30,29 +34,42 @@ public class CandyObjEntity extends CandyObject {
 		attrs = new HashMap<>();
 	}
 	
-	private CallableObj getBoundMethod(String name, int arity, CallableObj cache) {
+	protected static CandyObject invokeMethod(VM vm, CallableObj method) {
+		return invokeMethod(vm, method, null);
+	}
+	
+	protected static CandyObject invokeMethod(VM vm, CallableObj method, CandyClass expectedRetType) {
+		CandyObject retObj = ObjectHelper.callFunction(vm, method);
+		if (expectedRetType != null) {
+			TypeError.checkTypeMatched(
+				expectedRetType, retObj,
+				"'%s' must return '%s' (actual type %s).",
+				method.declredName(),
+				expectedRetType.getClassName(), retObj.getCandyClassName()
+			);
+		}
+		return retObj;
+	}
+	
+	protected CallableObj getBoundMethod(String name, int expectedArity) {
+		return getBoundMethod(name, expectedArity, null);
+	}
+	
+	protected CallableObj getBoundMethod(String name, int expectedArity, CallableObj cache) {
 		if (cache != null) {
 			return cache;
 		}
 		cache = getCandyClass().getBoundMethod(name, this);
 		if (cache != null) {
-			ArgumentError.checkArity(cache, arity);
+			ArgumentError.checkArity(cache, expectedArity);
 			return cache;
 		}
 		return null;
 	}
 	
-	private CandyObject invokeUserMethod(VM vm, CallableObj userMethod, CandyClass expectedRetType) {
-		CandyObject retObj = ObjectHelper.callUserFunction(vm, userMethod);
-		TypeError.checkTypeMatched(expectedRetType, retObj,
-			"'%s' must be return '%s' type.", 
-			userMethod.declredName(), expectedRetType.getClassName());
-		return retObj;
-	}
-	
 	@Override
-	public void setAttrApi(VM vm, String attr, CandyObject value) {
-		checkIsFrozen(attr);
+	public final void setAttrApi(VM vm, String attr, CandyObject value) {
+		checkIsFrozen();
 		attrSetter = getBoundMethod(Names.METHOD_SET_ATTR, 2, attrSetter);
 		if (!attrSetter.isBuiltin()) {		
 			vm.push(value);
@@ -62,43 +79,41 @@ public class CandyObjEntity extends CandyObject {
 			vm.returnFromVM(setAttr(vm, attr, value));
 		}
 	}
+
+	@Override
+	public final CandyObject setAttrApiExeUser(VM vm, String attr, CandyObject value) {
+		checkIsFrozen();
+		attrSetter = getBoundMethod(Names.METHOD_SET_ATTR, 2, attrSetter);
+		if (!attrSetter.isBuiltin()) {		
+			vm.push(value);
+			vm.push(StringObj.valueOf(attr));	
+			return invokeMethod(vm, attrGetter);
+		} 
+		return setAttr(vm, attr, value);
+	}
 	
 	@Override
 	public CandyObject setAttr(VM vm, String attr, CandyObject ref) {
 		attrs.put(attr, ref);
 		return ref;
 	}
-
+	
+	/**
+	 * @see #getAttr(VM, String)
+	 * @see CandyObject#getAttr(VM)
+	 */
 	@Override
-	public void getAttrApi(VM vm, String attr) {
-		CandyObject obj = getAttr(vm, attr);
-		if (obj == null) {
-			attrGetter = getBoundMethod(Names.METHOD_GET_ATTR, 1, attrGetter);
-			if (!attrGetter.isBuiltin()) {
-				vm.push(StringObj.valueOf(attr));
-				attrGetter.onCall(vm);
-				return;
-			}
-			// error
-			vm.returnFromVM(getUnknownAttr(vm, attr));
-			return;
-		}
-		vm.returnFromVM(obj);
+	public final void getAttrApi(VM vm, String attr) {
+		attrGetter = getBoundMethod(Names.METHOD_GET_ATTR, 1, attrGetter);
+		vm.push(StringObj.valueOf(attr));
+		attrGetter.onCall(vm);
 	}
-
+	
 	@Override
-	public CandyObject getAttrApiExeUser(VM vm, String attr) {
-		CandyObject obj = getAttr(vm, attr);
-		if (obj == null) {
-			attrGetter = getBoundMethod(Names.METHOD_GET_ATTR, 1, attrGetter);
-			if (!attrGetter.isBuiltin()) {
-				vm.push(StringObj.valueOf(attr));			
-				return ObjectHelper.callUserFunction(vm, attrGetter);
-			}
-			// error
-			return getUnknownAttr(vm, attr);
-		}
-		return obj;
+	public final CandyObject getAttrApiExeUser(VM vm, String attr) {
+		attrGetter = getBoundMethod(Names.METHOD_GET_ATTR, 1, attrGetter);
+		vm.push(StringObj.valueOf(attr));
+		return invokeMethod(vm, attrGetter);
 	}
 	
 	@Override
@@ -109,35 +124,88 @@ public class CandyObjEntity extends CandyObject {
 			if (method == null) {
 				return null;
 			}
+			// cache
 			attrs.put(attr, method);
 			return method;
 		}
 		return value;
 	}
-	
+
 	@Override
-	public void setItemApi(VM vm) {
+	public final CandyObject getUnknownAttrApiExeUser(VM vm, String attr) {
+		unknownAttrGetter = getBoundMethod(
+			Names.METHOD_GET_UNKNOWN_ATTR, 1, unknownAttrGetter);
+		if (!unknownAttrGetter.isBuiltin()) {
+			vm.push(StringObj.valueOf(attr));
+			return invokeMethod(vm, unknownAttrGetter);
+		} else {
+			return getUnknownAttr(vm, attr);
+		}
+	}
+
+	@Override
+	public final void getUnknownAttrApi(VM vm, String attr) {
+		unknownAttrGetter = getBoundMethod(
+			Names.METHOD_GET_UNKNOWN_ATTR, 1, unknownAttrGetter);
+		if (!unknownAttrGetter.isBuiltin()) {
+			vm.push(StringObj.valueOf(attr));
+			unknownAttrGetter.onCall(vm);
+		} else {
+			vm.returnFromVM(getUnknownAttr(vm, attr));
+		}
+	}
+
+	@Override
+	public final void setItemApi(VM vm, CandyObject key, CandyObject value) {
+		checkIsFrozen();
 		itemSetter = getBoundMethod(Names.METHOD_SET_ITEM, 2, itemSetter);
 		if (!itemSetter.isBuiltin()) {
+			vm.push(value);
+			vm.push(key);
 			itemSetter.onCall(vm);
 		} else {
-			super.setItem(vm);
+			vm.returnFromVM(setItem(vm, key, value));
 		}
 	}
 
 	@Override
-	public void getItemApi(VM vm) {
+	public final CandyObject setItemApiExeUser(VM vm, CandyObject key, CandyObject value) {
+		checkIsFrozen();
+		itemSetter = getBoundMethod(Names.METHOD_SET_ITEM, 2, itemSetter);
+		if (!itemSetter.isBuiltin()) {
+			vm.push(value);
+			vm.push(key);
+			return invokeMethod(vm, itemSetter);
+		} else {
+			 return setItem(vm, key, value);
+		}
+	}
+
+	@Override
+	public final void getItemApi(VM vm, CandyObject key) {
 		itemGetter = getBoundMethod(Names.METHOD_GET_ITEM, 1, itemGetter);
-		if (!itemGetter.isBuiltin()){
+		if (!itemGetter.isBuiltin()) {
+			vm.push(key);
 			itemGetter.onCall(vm);
 		} else {
-			super.getItem(vm);
+			vm.returnFromVM(getItem(vm, key));
 		}
 	}
 
 	@Override
-	public void equalsApi(VM vm, CandyObject operand) {
-		equalTo = getBoundMethod(Names.METHOD_EQUALS, 1, null);
+	public final CandyObject getItemApiExeUser(VM vm, CandyObject key) {
+		itemGetter = getBoundMethod(Names.METHOD_GET_ITEM, 1, itemGetter);
+		if (!itemGetter.isBuiltin()) {
+			vm.push(key);
+			return invokeMethod(vm, itemGetter);
+		} else {
+			return getItem(vm, key);
+		}
+	}
+
+	@Override
+	public final void equalsApi(VM vm, CandyObject operand) {
+		equalTo = getBoundMethod(Names.METHOD_EQUALS, 1, equalTo);
 		if (!equalTo.isBuiltin()) {
 			vm.push(operand);
 			equalTo.onCall(vm);
@@ -147,19 +215,19 @@ public class CandyObjEntity extends CandyObject {
 	}
 
 	@Override
-	public BoolObj equalsApiExeUser(VM vm, CandyObject operand) {
+	public final BoolObj equalsApiExeUser(VM vm, CandyObject operand) {
 		equalTo = getBoundMethod(Names.METHOD_EQUALS, 1, equalTo);
 		if (!equalTo.isBuiltin()) {
 			vm.push(operand);
 			return (BoolObj) 
-				invokeUserMethod(vm, equalTo, BoolObj.BOOL_CLASS);
+				invokeMethod(vm, equalTo, BoolObj.BOOL_CLASS);
 		} 
 		return equals(vm, operand);
 	}
 
 	@Override
-	public void hashCodeApi(VM vm) {
-		hashcode = getBoundMethod(Names.METHOD_HASH_CODE, 1, hashcode);
+	public final void hashCodeApi(VM vm) {
+		hashcode = getBoundMethod(Names.METHOD_HASH_CODE, 0, hashcode);
 		if (!hashcode.isBuiltin()) {
 			hashcode.onCall(vm);
 			return;
@@ -168,26 +236,33 @@ public class CandyObjEntity extends CandyObject {
 	}
 
 	@Override
-	public IntegerObj hashCodeApiExeUser(VM vm) {
-		hashcode = getBoundMethod(Names.METHOD_HASH_CODE, 1, hashcode);
+	public final IntegerObj hashCodeApiExeUser(VM vm) {
+		hashcode = getBoundMethod(Names.METHOD_HASH_CODE, 0, hashcode);
 		if (!hashcode.isBuiltin()) {
 			return (IntegerObj) 
-				invokeUserMethod(vm, hashcode, IntegerObj.INTEGER_CLASS);
+				invokeMethod(vm, hashcode, IntegerObj.INTEGER_CLASS);
 		}
 		return hashCode(vm);
 	}
-
+	
 	@Override
-	public StringObj strApiExeUser(VM vm) {
+	public final StringObj strApiExeUser(VM vm) {
 		stringVal = getBoundMethod(Names.METHOD_STR_VALUE, 0, stringVal);
 		if (!stringVal.isBuiltin()) {
 			return (StringObj) 
-				invokeUserMethod(vm, stringVal, StringObj.STRING_CLASS);
+				invokeMethod(vm, stringVal, StringObj.STRING_CLASS);
 		} 
 		return str(vm);
 	}
-	
-	
+
+	@Override
+	public final CandyObject iteratorApiExeUser(VM vm) {
+		CallableObj iterator = getBoundMethod(Names.METHOD_ITERATOR, 0, null);
+		if (!iterator.isBuiltin()) {
+			return invokeMethod(vm, iterator);
+		}
+		return iterator(vm);
+	}
 	
 	// Operator Methods
 	
@@ -196,6 +271,7 @@ public class CandyObjEntity extends CandyObject {
 		CallableObj callable = getCandyClass().getMethod(name);
 		if (!callable.isBuiltin()) {
 			MethodObj boundMet = new MethodObj(this, callable);
+			ArgumentError.checkArity(boundMet, 1);
 			vm.push(operand);
 			boundMet.onCall(vm);
 			return true;
@@ -203,15 +279,14 @@ public class CandyObjEntity extends CandyObject {
 		return false;
 	}
 	
-	private CandyObject binaryApiExeUser(VM vm, String name, CandyObject operand, CandyClass clazz) {
+	private CandyObject binaryApiExeUser(VM vm, String name, CandyObject operand, 
+	                                     CandyClass expextedReturnType) {
 		CallableObj callable = getCandyClass().getMethod(name);
 		if (!callable.isBuiltin()) {
 			MethodObj boundMet = new MethodObj(this, callable);
+			ArgumentError.checkArity(boundMet, 1);
 			vm.push(operand);
-			if (clazz == null) {
-				return ObjectHelper.callUserFunction(vm, boundMet);
-			}
-			return invokeUserMethod(vm, boundMet, clazz);
+			return invokeMethod(vm, boundMet, expextedReturnType);
 		}
 		return null;
 	}
@@ -220,6 +295,7 @@ public class CandyObjEntity extends CandyObject {
 		CallableObj callable = getCandyClass().getMethod(name);
 		if (!callable.isBuiltin()) {
 			MethodObj boundMet = new MethodObj(this, callable);
+			ArgumentError.checkArity(boundMet, 0);
 			boundMet.onCall(vm);
 			return true;
 		}
@@ -228,22 +304,24 @@ public class CandyObjEntity extends CandyObject {
 
 	private CandyObject unaryApiExeUser(VM vm, String name) {
 		CallableObj callable = getCandyClass().getMethod(name);
+		ArgumentError.checkArity(callable, 0);
 		if (!callable.isBuiltin()) {
 			MethodObj boundMet = new MethodObj(this, callable);
-			return ObjectHelper.callUserFunction(vm, boundMet);
+			ArgumentError.checkArity(boundMet, 0);
+			return invokeMethod(vm, boundMet);
 		}
 		return null;
 	}
 	
 	@Override
-	public void positiveApi(VM vm) {
+	public final void positiveApi(VM vm) {
 		if (!unaryApi(vm, Names.METHOD_OP_POSITIVE)) {
 			vm.returnFromVM(positive(vm));
 		}
 	}
 
 	@Override
-	public CandyObject positiveApiExeUser(VM vm) {
+	public final CandyObject positiveApiExeUser(VM vm) {
 		CandyObject obj = unaryApiExeUser(vm, Names.METHOD_OP_POSITIVE);
 		if (obj == null) {
 			return positive(vm);
@@ -252,14 +330,14 @@ public class CandyObjEntity extends CandyObject {
 	}
 
 	@Override
-	public void negativeApi(VM vm) {
+	public final void negativeApi(VM vm) {
 		if (!unaryApi(vm, Names.METHOD_OP_NEGATIVE)) {
 			vm.returnFromVM(negative(vm));
 		}
 	}
 
 	@Override
-	public CandyObject negativeApiExeUser(VM vm) {
+	public final CandyObject negativeApiExeUser(VM vm) {
 		CandyObject obj = unaryApiExeUser(vm, Names.METHOD_OP_NEGATIVE);
 		if (obj == null) {
 			return negative(vm);
@@ -268,14 +346,14 @@ public class CandyObjEntity extends CandyObject {
 	}
 
 	@Override
-	public void addApi(VM vm, CandyObject operand) {
+	public final void addApi(VM vm, CandyObject operand) {
 		if (!binaryApi(vm, Names.METHOD_OP_ADD, operand)) {
 			vm.returnFromVM(add(vm, operand));
 		}
 	}
 
 	@Override
-	public CandyObject addApiExeUser(VM vm, CandyObject operand) {
+	public final CandyObject addApiExeUser(VM vm, CandyObject operand) {
 		CandyObject obj = binaryApiExeUser(vm, Names.METHOD_OP_ADD, operand, null);
 		if (obj == null) {
 			return add(vm, operand);
@@ -284,14 +362,14 @@ public class CandyObjEntity extends CandyObject {
 	}
 
 	@Override
-	public void subApi(VM vm, CandyObject operand) {
+	public final void subApi(VM vm, CandyObject operand) {
 		if (!binaryApi(vm, Names.METHOD_OP_SUB, operand)) {
 			vm.returnFromVM(sub(vm, operand));
 		}
 	}
 
 	@Override
-	public CandyObject subApiExeUser(VM vm, CandyObject operand) {
+	public final CandyObject subApiExeUser(VM vm, CandyObject operand) {
 		CandyObject obj = binaryApiExeUser(vm, Names.METHOD_OP_SUB, operand, null);
 		if (obj == null) {
 			return sub(vm, operand);
@@ -300,14 +378,14 @@ public class CandyObjEntity extends CandyObject {
 	}
 
 	@Override
-	public void mulApi(VM vm, CandyObject operand) {
+	public final void mulApi(VM vm, CandyObject operand) {
 		if (!binaryApi(vm, Names.METHOD_OP_MUL, operand)) {
 			vm.returnFromVM(mul(vm, operand));
 		}
 	}
 
 	@Override
-	public CandyObject mulApiExeUser(VM vm, CandyObject operand) {
+	public final CandyObject mulApiExeUser(VM vm, CandyObject operand) {
 		CandyObject obj = binaryApiExeUser(vm, Names.METHOD_OP_MUL, operand, null);
 		if (obj == null) {
 			return mul(vm, operand);
@@ -316,14 +394,14 @@ public class CandyObjEntity extends CandyObject {
 	}
 
 	@Override
-	public void divApi(VM vm, CandyObject operand) {
+	public final void divApi(VM vm, CandyObject operand) {
 		if (!binaryApi(vm, Names.METHOD_OP_DIV, operand)) {
 			vm.returnFromVM(div(vm, operand));
 		}
 	}
 
 	@Override
-	public CandyObject divApiExeUser(VM vm, CandyObject operand) {
+	public final CandyObject divApiExeUser(VM vm, CandyObject operand) {
 		CandyObject obj = binaryApiExeUser(vm, Names.METHOD_OP_DIV, operand, null);
 		if (obj == null) {
 			return div(vm, operand);
@@ -332,14 +410,14 @@ public class CandyObjEntity extends CandyObject {
 	}
 
 	@Override
-	public void modApi(VM vm, CandyObject operand) {
+	public final void modApi(VM vm, CandyObject operand) {
 		if (!binaryApi(vm, Names.METHOD_OP_MOD, operand)) {
 			vm.returnFromVM(mod(vm, operand));
 		}
 	}
 
 	@Override
-	public CandyObject modApiExeUser(VM vm, CandyObject operand) {
+	public final CandyObject modApiExeUser(VM vm, CandyObject operand) {
 		CandyObject obj = binaryApiExeUser(vm, Names.METHOD_OP_MOD, operand, null);
 		if (obj == null) {
 			return mod(vm, operand);
@@ -349,14 +427,14 @@ public class CandyObjEntity extends CandyObject {
 
 	
 	@Override
-	public void gtApi(VM vm, CandyObject operand) {
+	public final void gtApi(VM vm, CandyObject operand) {
 		if (!binaryApi(vm, Names.METHOD_OP_GT, operand)) {
 			vm.returnFromVM(gt(vm, operand));
 		}
 	}
 
 	@Override
-	public BoolObj gtApiExeUser(VM vm, CandyObject operand) {
+	public final BoolObj gtApiExeUser(VM vm, CandyObject operand) {
 		CandyObject obj = binaryApiExeUser(vm, Names.METHOD_OP_GT, operand, BoolObj.BOOL_CLASS);
 		if (obj == null) {
 			return gt(vm, operand);
@@ -365,14 +443,14 @@ public class CandyObjEntity extends CandyObject {
 	}
 
 	@Override
-	public void gteqApi(VM vm, CandyObject operand) {
+	public final void gteqApi(VM vm, CandyObject operand) {
 		if (!binaryApi(vm, Names.METHOD_OP_GTEQ, operand)) {
 			vm.returnFromVM(gteq(vm, operand));
 		}
 	}
 
 	@Override
-	public BoolObj gteqApiExeUser(VM vm, CandyObject operand) {
+	public final BoolObj gteqApiExeUser(VM vm, CandyObject operand) {
 		CandyObject obj = binaryApiExeUser(vm, Names.METHOD_OP_GTEQ, operand, BoolObj.BOOL_CLASS);
 		if (obj == null) {
 			return gteq(vm, operand);
@@ -381,14 +459,14 @@ public class CandyObjEntity extends CandyObject {
 	}
 
 	@Override
-	public void ltApi(VM vm, CandyObject operand) {
+	public final void ltApi(VM vm, CandyObject operand) {
 		if (!binaryApi(vm, Names.METHOD_OP_LT, operand)) {
 			vm.returnFromVM(lt(vm, operand));
 		}
 	}
 
 	@Override
-	public BoolObj ltApiExeUser(VM vm, CandyObject operand) {
+	public final BoolObj ltApiExeUser(VM vm, CandyObject operand) {
 		CandyObject obj = binaryApiExeUser(vm, Names.METHOD_OP_LT, operand, BoolObj.BOOL_CLASS);
 		if (obj == null) {
 			return lt(vm, operand);
@@ -397,14 +475,14 @@ public class CandyObjEntity extends CandyObject {
 	}
 
 	@Override
-	public void lteqApi(VM vm, CandyObject operand) {
+	public final void lteqApi(VM vm, CandyObject operand) {
 		if (!binaryApi(vm, Names.METHOD_OP_LTEQ, operand)) {
 			vm.returnFromVM(lteq(vm, operand));
 		}
 	}
 
 	@Override
-	public BoolObj lteqApiExeUser(VM vm, CandyObject operand) {
+	public final BoolObj lteqApiExeUser(VM vm, CandyObject operand) {
 		CandyObject obj = binaryApiExeUser(vm, Names.METHOD_OP_LTEQ, operand, BoolObj.BOOL_CLASS);
 		if (obj == null) {
 			return lteq(vm, operand);

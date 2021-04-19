@@ -16,12 +16,13 @@ public class Names {
 	
 	public static final String METHOD_SET_ATTR = "_setAttr";
 	public static final String METHOD_GET_ATTR = "_getAttr";
+	public static final String METHOD_GET_UNKNOWN_ATTR = "_getUnknownAttr";
 	
 	public static final String METHOD_SET_ITEM = "_setItem";
 	public static final String METHOD_GET_ITEM = "_getItem";
 	
-	public static final String METHOD_OP_POSITIVE = "_postive";
-	public static final String METHOD_OP_NEGATIVE = "_neg";
+	public static final String METHOD_OP_POSITIVE = "_positive";
+	public static final String METHOD_OP_NEGATIVE = "_negative";
 	
 	public static final String METHOD_OP_ADD = "_add";
 	public static final String METHOD_OP_SUB = "_sub";

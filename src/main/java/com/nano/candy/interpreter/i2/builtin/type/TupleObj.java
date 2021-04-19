@@ -34,12 +34,12 @@ public final class TupleObj extends BuiltinObject {
 	}
 
 	@Override
-	public CandyObject iterator() {
+	public CandyObject iterator(VM vm) {
 		return new IteratorObj.ArrIterator(elements, elements.length);
 	}
 
 	@Override
-	public CandyObject getItem(CandyObject key) {
+	public CandyObject getItem(VM vm, CandyObject key) {
 		return elements[(int) ObjectHelper.asInteger(key)];
 	}
 	

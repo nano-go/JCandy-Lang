@@ -57,9 +57,9 @@ public class BuiltinFunctions {
 		new BuiltinFunctionEntity("setAttr", 3, BuiltinFunctions::setAttr);
 	public static void setAttr(VM vm) {
 		CandyObject obj = vm.pop();
+		obj.checkIsFrozen();
 		String attrStr = ObjectHelper.asString(vm.pop());
 		CandyObject value = vm.pop();
-		obj.checkIsFrozen(attrStr);
 		obj.setAttr(vm, attrStr, value);
 		vm.returnFromVM(value);
 	}

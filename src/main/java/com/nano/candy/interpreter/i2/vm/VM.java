@@ -458,8 +458,8 @@ public final class VM {
 				} else {
 					err = new NativeError(e.getMessage());
 				}
-				if (DEBUG) e.printStackTrace();
 				if (tryToHandleError(err, true)) continue;
+				if (DEBUG) e.printStackTrace();
 				code = 1;
 				break;
 			}
@@ -825,11 +825,14 @@ public final class VM {
 					break;
 				}
 				case OP_GET_ITEM: {
-					pop().getItemApi(this);
+					pop().getItemApi(this, pop());
 					break;
 				}
 				case OP_SET_ITEM: {
-					pop().setItemApi(this);
+					CandyObject obj = pop();
+					CandyObject key = pop();
+					CandyObject value = pop();
+					obj.setItemApi(this, key, value);
 					break;
 				}
 					

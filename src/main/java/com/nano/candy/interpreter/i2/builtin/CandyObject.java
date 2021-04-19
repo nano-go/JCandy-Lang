@@ -15,16 +15,16 @@ import com.nano.candy.std.Names;
 
 @BuiltinClass("Object")
 public abstract class CandyObject {
-	
+
 	public static final boolean DEBUG = false;
-	
+
 	private CandyClass clazz;
 	private boolean frozen;
-	
+
 	public CandyObject(CandyClass clazz) {
 		this.clazz = clazz;
 	}
-	
+
 	public void setCandyClass(CandyClass clazz) {
 		if (this.clazz != null && DEBUG) {
 			if (!clazz.isSubClassOf(this.clazz)) {
@@ -33,66 +33,148 @@ public abstract class CandyObject {
 		}
 		this.clazz = clazz;
 	}
-	
+
 	public CandyClass getCandyClass() {
 		return clazz;
 	}
-	
+
 	public boolean isCandyClass() {
 		return getCandyClass() == this;
 	}
-	
+
 	public String getCandyClassName() {
 		return getCandyClass().getCandyClassName();
-	}
-
-	public void freeze() {
-		this.frozen = true;
-	}
-
-	public boolean frozen() {
-		return frozen;
-	}
-
-	protected void throwFrozenObjError(String attr) {
-		new AttributeError(
-			"The frozen object can't be changed: %s.%s = someValue", 
-			getCandyClass(), attr
-		).throwSelfNative();
-	}
-
-	public final void checkIsFrozen(String attr) {
-		if (frozen) {
-			throwFrozenObjError(attr);
-		}
 	}
 	
 	public boolean isCallable() {
 		return false;
 	}
-	
+	@BuiltinMethod(name = "isCallable")
+	protected void isCallable(VM vm) {
+		vm.returnFromVM(BoolObj.valueOf(isCallable()));
+	}
 	public int arity() {
 		return 0;
 	}
-	
 	public void onCall(VM vm) {
 		new TypeError("The object is not callable.").throwSelfNative();
 	}
 	
-	public abstract void setAttrApi(VM vm, String attr, CandyObject value);
-	public abstract CandyObject setAttr(VM vm, String attr, CandyObject value);
+
+	/**
+	 * freeze() method prevents you from changing an object, thereby turning
+	 * an object into a constant.
+	 *
+	 * <pre>
+	 * After freeze an object, any attempt to modify its attributes results 
+	 * in AttributeError.
+	 * </pre>
+	 */
+	public void freeze() {
+		this.frozen = true;
+	}
+	@BuiltinMethod(name = "freeze")
+	protected void freeze(VM vm) {
+		freeze();
+		vm.returnNilFromVM();
+	}
+
 	
+	public boolean frozen() {
+		return frozen;
+	}
+	@BuiltinMethod(name = "frozen")
+	private void frozen(VM vm) {
+		vm.returnFromVM(BoolObj.valueOf(frozen()));
+	}
+	public final void checkIsFrozen() {
+		if (frozen) {
+			new AttributeError("The frozen object can't be changed.")
+				.throwSelfNative();
+		}
+	}
+
+	//  XXXApi: Usually call by VM. the method will not be executed 
+	//          if it's a prototype method.
+	//  XXXApiExeUser: The method will be executed if it's a prototype method.
+
+	/**
+	 * This is overloading method of the operator 'obj.attrName = value'.
+	 *
+	 * <pre>
+	 * _setAttr(attrName, value) associates an attribute name (must be a string) with 
+	 * an object.
+	 *
+	 * If this object is frozen, _setAttr(attrName, value) will raise an AttributeError
+	 * to warn users that the object is immutable.
+	 * </pre>
+	 */
+	public abstract void setAttrApi(VM vm, String attr, CandyObject value);
+	public abstract CandyObject setAttrApiExeUser(VM vm, String attr, CandyObject value);
+	public abstract CandyObject setAttr(VM vm, String attr, CandyObject value);
+	@BuiltinMethod(name = Names.METHOD_SET_ATTR, argc = 2)
+	private void setAttr(VM vm) {
+		String attr = ObjectHelper.asString(vm.pop());
+		checkIsFrozen();
+		CandyObject value = vm.pop();
+		vm.returnFromVM(setAttr(vm, attr, value));
+	}
+
+	/**
+	 * This is overloading method of the operator 'obj.attrName'.
+	 *
+	 * <pre>
+	 * _getAttr(attrName) returns the value to which the specified attribute
+	 * name is mapped.
+	 *
+	 * if the specified attribute is not found, the default implementation
+	 * of the _getAttr(attrName) will invoke _getUnknownAttr(name) and return its result.
+	 * </pre>
+	 *
+	 * @see #getAttr(VM)
+	 */
 	public abstract void getAttrApi(VM vm, String attr);
 	public abstract CandyObject getAttrApiExeUser(VM vm, String attr);
 	
+	/**
+	 * Returns the value to which the attribute name is mapped or null 
+	 * if the specified attribute is not found.
+	 */
 	public abstract CandyObject getAttr(VM vm, String attr);
+	
+	@BuiltinMethod(name = Names.METHOD_GET_ATTR, argc = 1)
+	private void getAttr(VM vm) {
+		String attr = ObjectHelper.asString(vm.pop());
+		CandyObject ret = getAttr(vm, attr);
+		if (ret != null) {
+			vm.returnFromVM(ret);
+			return;
+		}
+		getUnknownAttrApi(vm, attr);
+	}
+	
+	public abstract void getUnknownAttrApi(VM vm, String attr);
+	public abstract CandyObject getUnknownAttrApiExeUser(VM vm, String attr);
 	public CandyObject getUnknownAttr(VM vm, String attr) {
 		AttributeError.checkAttributeNull(this, attr, null);
 		throw new Error();
 	}
-	
-	public abstract void setItemApi(VM vm);
-	public CandyObject setItem(CandyObject key, CandyObject value) {
+	@BuiltinMethod(name = Names.METHOD_GET_UNKNOWN_ATTR, argc = 1)
+	private void getUnknownAttr(VM vm) {
+		vm.returnFromVM(getUnknownAttr(vm, ObjectHelper.asString(vm.pop())));
+	}
+
+	/**
+	 * This is overloading method of the operator 'obj[key] = value'.
+	 *
+	 * <pre>
+	 * _setItem(key, value) associates the specified key with the specified value.
+	 * the key and the value can be any object.
+	 * </pre>
+	 */
+	public abstract void setItemApi(VM vm, CandyObject key, CandyObject value);
+	public abstract CandyObject setItemApiExeUser(VM vm, CandyObject key, CandyObject value);
+	public CandyObject setItem(VM vm, CandyObject key, CandyObject value) {
 		new TypeError(
 			"'%s'['%s'] = '%s'", 
 			getCandyClassName(),
@@ -101,133 +183,108 @@ public abstract class CandyObject {
 		).throwSelfNative();
 		return null;
 	}
+	@BuiltinMethod(name = Names.METHOD_SET_ITEM, argc = 2)
+	private void setItem(VM vm) {
+		checkIsFrozen();
+		CandyObject key = vm.pop();
+		CandyObject value = vm.pop();
+		setItem(vm, key, value);
+		vm.returnFromVM(value);
+	}
+
 	
-	public abstract void getItemApi(VM vm);
-	public CandyObject getItem(CandyObject key) {
+	/**
+	 * This is overloading method of the operator 'obj[key]'.
+	 *
+	 * <pre>
+	 * _getItem(key) returns the value to which the key is mapped.
+	 * </pre>
+	 */
+	public abstract void getItemApi(VM vm, CandyObject key);
+	public abstract CandyObject getItemApiExeUser(VM vm, CandyObject key);
+	public CandyObject getItem(VM vm, CandyObject key) {
 		new TypeError(
 			"'%s'['%s']", getCandyClassName(), key.getCandyClassName()
 		).throwSelfNative();
 		return null;
 	}
-
-	public BoolObj not(VM vm) { 
-		return boolValue(vm).not(vm); 
+	@BuiltinMethod(name = Names.METHOD_GET_ITEM, argc = 1)
+	private void getItem(VM vm) {
+		vm.returnFromVM(getItem(vm, vm.pop()));
 	}
 
+	
 	public abstract void equalsApi(VM vm, CandyObject operand);
 	public abstract BoolObj equalsApiExeUser(VM vm, CandyObject operand);
 	public BoolObj equals(VM vm, CandyObject operand) {
 		return BoolObj.valueOf(this == operand);
 	}
+	@BuiltinMethod(name = Names.METHOD_EQUALS, argc = 1)
+	private void equals(VM vm) {
+		vm.returnFromVM(equals(vm, vm.pop()));
+	}
+
 	
 	public abstract void hashCodeApi(VM vm);
 	public abstract IntegerObj hashCodeApiExeUser(VM vm);
 	public IntegerObj hashCode(VM vm) {
 		return IntegerObj.valueOf(super.hashCode());
 	}
+	@BuiltinMethod(name = Names.METHOD_HASH_CODE)
+	private void hashCodeMethod(VM vm) {
+		vm.returnFromVM(hashCode(vm));
+	}
 
+
+	public BoolObj not(VM vm) { 
+		return boolValue(vm).not(vm); 
+	}
 	public BoolObj boolValue(VM vm) {	
 		return BoolObj.TRUE;
 	}
 
+
+	/**
+	 * _str() returns a string representation of an object.
+	 */
 	public abstract StringObj strApiExeUser(VM vm);
 	public StringObj str(VM vm) {
 		return StringObj.valueOf(this.toString());
 	}
-
-	public CandyObject iterator() {
-		new TypeError("the object is not iterable.")
-			.throwSelfNative();
-		return null;
+	@BuiltinMethod(name = Names.METHOD_STR_VALUE)
+	protected void stringValue(VM vm) {
+		vm.returnFromVM(str(vm));
 	}
 	
 	@Override
 	public String toString() {
 		return ObjectHelper.toString(
-			getCandyClassName(), "at " + Integer.toHexString(hashCode())
+			getCandyClassName(), "hash - " + Integer.toHexString(hashCode())
 		);
 	}
 	
-	@BuiltinMethod() 
-	public void objDefaultInitializer(VM vm) { vm.returnFromVM(this); }
 	
+	public abstract CandyObject iteratorApiExeUser(VM vm);
+	public CandyObject iterator(VM vm) {
+		new TypeError("the object is not iterable.")
+			.throwSelfNative();
+		return null;
+	}
+	@BuiltinMethod(name = Names.METHOD_ITERATOR)
+	private void iteratorMethod(VM vm) {
+		vm.returnFromVM(iterator(vm));
+	}
+	
+	
+	@BuiltinMethod() 
+	private void objDefaultInitializer(VM vm) { vm.returnFromVM(this); }
+
 	@BuiltinMethod(name = "_class")
-	public void getClass(VM vm) {
+	protected void getClass(VM vm) {
 		vm.returnFromVM(getCandyClass());
 	}
-	
-	@BuiltinMethod(name = "isCallable")
-	public void isCallable(VM vm) {
-		vm.returnFromVM(BoolObj.valueOf(isCallable()));
-	}
-	
-	@BuiltinMethod(name = Names.METHOD_HASH_CODE)
-	public void hashCodeMethod(VM vm) {
-		vm.returnFromVM(hashCode(vm));
-	}
-	
-	@BuiltinMethod(name = Names.METHOD_GET_ATTR, argc = 1)
-	public void getAttr(VM vm) {
-		String attr = ObjectHelper.asString(vm.pop());
-		CandyObject ret = getUnknownAttr(vm, attr);
-		if (ret == null) {
-			vm.returnNilFromVM();
-			return;
-		} 
-		vm.returnFromVM(ret);
-	}
 
-	@BuiltinMethod(name = Names.METHOD_SET_ATTR, argc = 2)
-	public void setAttr(VM vm) {
-		String attr = ObjectHelper.asString(vm.pop());
-		CandyObject value = vm.pop();
-		vm.returnFromVM(setAttr(vm, attr, value));
-	}
-	
-	@BuiltinMethod(name = Names.METHOD_GET_ITEM, argc = 1)
-	public void getItem(VM vm) {
-		vm.returnFromVM(getItem(vm.pop()));
-	}
-	
-	@BuiltinMethod(name = Names.METHOD_SET_ITEM, argc = 2)
-	public void setItem(VM vm) {
-		CandyObject key = vm.pop();
-		CandyObject value = vm.pop();
-		setItem(key, value);
-		vm.returnFromVM(value);
-	}
-	
-	@BuiltinMethod(name = Names.METHOD_EQUALS, argc = 1)
-	public void equals(VM vm){
-		vm.returnFromVM(equals(vm, vm.pop()));
-	}
-	
-	@BuiltinMethod(name = Names.METHOD_STR_VALUE)
-	public void stringValue(VM vm) {
-		vm.returnFromVM(str(vm));
-	}
-	
-	@BuiltinMethod(name = "freeze")
-	public void freeze(VM vm) {
-		freeze();
-		vm.returnNilFromVM();
-	}
-	
-	@BuiltinMethod(name = "frozen")
-	public void frozen(VM vm) {
-		vm.returnFromVM(BoolObj.valueOf(frozen()));
-	}
-	
-	@BuiltinMethod(name = Names.METHOD_ITERATOR)
-	public void iterator(VM vm) {
-		vm.returnFromVM(iterator());
-	}
-	
-	
-	// Operator Methods.
-	//     Api: Call by VM.
-	//     ApiExeUser: The method will be executed if it's override by user.
-	
+
 	public abstract void positiveApi(VM vm);
 	public abstract CandyObject positiveApiExeUser(VM vm);
 	public CandyObject positive(VM vm) {
@@ -235,7 +292,7 @@ public abstract class CandyObject {
 		return null;
 	}
 	@BuiltinMethod(name = Names.METHOD_OP_POSITIVE, argc = 0)
-	public void positiveMethod(VM vm) {
+	private void positiveMethod(VM vm) {
 		vm.returnFromVM(positive(vm));
 	}
 
@@ -246,7 +303,7 @@ public abstract class CandyObject {
 		return null;
 	}
 	@BuiltinMethod(name = Names.METHOD_OP_NEGATIVE, argc = 0)
-	public void negativeMethod(VM vm) {
+	private void negativeMethod(VM vm) {
 		vm.returnFromVM(negative(vm));
 	}
 
@@ -260,7 +317,7 @@ public abstract class CandyObject {
 		return null;
 	}
 	@BuiltinMethod(name = Names.METHOD_OP_ADD, argc = 1)
-	public void addMethod(VM vm) {
+	private void addMethod(VM vm) {
 		vm.returnFromVM(add(vm, vm.pop()));
 	}
 
@@ -271,7 +328,7 @@ public abstract class CandyObject {
 		return null;
 	}
 	@BuiltinMethod(name = Names.METHOD_OP_SUB, argc = 1)
-	public void subMethod(VM vm) {
+	private void subMethod(VM vm) {
 		vm.returnFromVM(sub(vm, vm.pop()));
 	}
 
@@ -282,7 +339,7 @@ public abstract class CandyObject {
 		return null;
 	}
 	@BuiltinMethod(name = Names.METHOD_OP_MUL, argc = 1)
-	public void mulMethod(VM vm) {
+	private void mulMethod(VM vm) {
 		vm.returnFromVM(mul(vm, vm.pop()));
 	}
 
@@ -293,7 +350,7 @@ public abstract class CandyObject {
 		return null;
 	}
 	@BuiltinMethod(name = Names.METHOD_OP_DIV, argc = 1)
-	public void divMethod(VM vm) {
+	private void divMethod(VM vm) {
 		vm.returnFromVM(div(vm, vm.pop()));
 	}
 
@@ -304,7 +361,7 @@ public abstract class CandyObject {
 		return null;
 	}
 	@BuiltinMethod(name = Names.METHOD_OP_MOD, argc = 1)
-	public void modMethod(VM vm) {
+	private void modMethod(VM vm) {
 		vm.returnFromVM(mod(vm, vm.pop()));
 	}
 
@@ -315,7 +372,7 @@ public abstract class CandyObject {
 		return null;
 	}
 	@BuiltinMethod(name = Names.METHOD_OP_GT, argc = 1)
-	public void gtMethod(VM vm) {
+	private void gtMethod(VM vm) {
 		vm.returnFromVM(gt(vm, vm.pop()));
 	}
 
@@ -326,7 +383,7 @@ public abstract class CandyObject {
 		return null;
 	}
 	@BuiltinMethod(name = Names.METHOD_OP_GTEQ, argc = 1)
-	public void gteqMethod(VM vm) {
+	private void gteqMethod(VM vm) {
 		vm.returnFromVM(gteq(vm, vm.pop()));
 	}
 
@@ -337,7 +394,7 @@ public abstract class CandyObject {
 		return null;
 	}
 	@BuiltinMethod(name = Names.METHOD_OP_LT, argc = 1)
-	public void ltMethod(VM vm) {
+	private void ltMethod(VM vm) {
 		vm.returnFromVM(lt(vm, vm.pop()));
 	}
 
@@ -348,8 +405,8 @@ public abstract class CandyObject {
 		return null;
 	}
 	@BuiltinMethod(name = Names.METHOD_OP_LTEQ, argc = 1)
-	public void lteqMethod(VM vm) {
+	private void lteqMethod(VM vm) {
 		vm.returnFromVM(lteq(vm, vm.pop()));
 	}
-	
+
 }

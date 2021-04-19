@@ -1,0 +1,282 @@
+fun expectedError(errorType, fn) {
+	try {
+		fn()
+	} intercept errorType as e{
+		println(e.getMessage())
+	} else {
+		raise AssertionError("Expect an " + errorType._class().name + " error occurs.")
+	}
+}
+
+fun operator1_test() {
+	class Coffe {
+		init() {
+			this.name = "coffe"
+			this.price = 5.6
+		}
+	}
+	
+	class Water {
+		init() {
+			this.name = "water"
+			this.price = 0.5
+		}
+	}
+	
+	var addMarker = false
+	var subMarker = false
+	var divMarker = false
+	var mulMarker = false
+	var modMarker = false
+	
+	var gtMarker = false
+	var gteqMarker = false
+	var ltMarker = false
+	var lteqMarker = false
+	
+	class Store {
+		init() {
+			super._setAttr("water", Water())
+			super._setAttr("coffe", Coffe())
+			super._setAttr("choosing", this.coffe)
+			super._setAttr("failed", false)
+		}
+		
+		choose(name) {
+			var drink
+			if (name == "water") {
+				drink = this.water
+			} else if (name == "coffe") {
+				drink = this.coffe 
+			} else {
+				assert false : "Unknown Drink: " + name
+			}
+			super._setAttr("choosing", drink)
+		}
+		
+		_add(operand) {
+			addMarker = true
+			return this.price + operand
+		}
+		
+		_sub(operand) {
+			subMarker = true
+			return this.price - operand
+		}
+		
+		_mul(operand) {
+			mulMarker = true
+			return this.price * operand
+		}
+		
+		_div(operand) {
+			divMarker = true
+			return this.price / operand
+		}
+		
+		_mod(operand) {
+			modMarker = true
+			return this.price % operand
+		}
+		
+		_gt(operand) {
+			gtMarker = true
+			if (operand is Store) {
+				return this.price > operand.price
+			}
+			return this.price > operand
+		}
+		
+		_gteq(operand) {
+			gteqMarker = true
+			if (operand is Store) {
+				return this.price >= operand.price
+			}
+			return this.price >= operand
+		}
+		
+		_lt(operand) {
+			ltMarker = true
+			if (operand is Store) {
+				return this.price < operand.price
+			}
+			return this.price < operand
+		}
+		
+		_lteq(operand) {
+			lteqMarker = true
+			if (operand is Store) {
+				return this.price <= operand.price
+			}
+			return this.price <= operand
+		}
+		
+		_setAttr(name, value) {
+			super._setAttr("failed", true)
+			return null
+		}
+		
+		_getUnknownAttr(name) {
+			return getAttr(this.choosing, name)
+		}
+	}
+	
+	var store = Store()
+	
+	assert !store.failed
+	
+	store.choose("water")
+	assert store.price == 0.5
+	assert store.name == "water"
+	
+	store.choose("coffe")
+	assert store.price == 5.6
+	assert store.name == "coffe"
+	
+	assert store + 5 == 5.6 + 5
+	assert store - 5 == 5.6 - 5
+	assert store * 5 == 5.6 * 5
+	assert store / 5 == 5.6 / 5
+	assert store % 5 == 5.6 % 5
+	
+	assert store > 5    == 5.6 > 5
+	assert store >= 5.6 == 5.6 >= 5.6
+	assert store < 5    == 5.6 < 5
+	assert store <= 5.6 == 5.6 <= 5.6
+	
+	assert addMarker && subMarker && mulMarker && divMarker && modMarker
+	assert ltMarker && lteqMarker && gtMarker && gteqMarker
+	
+	store.a = true
+	assert store.failed
+}
+
+fun operator2_test() {
+	class OperatorTest {
+		fun _getAttr(name) { return name; }
+		fun _setAttr(name, value) { return name + value; }
+		fun _getItem(key) { return key; }
+		fun _setItem(key, value) { return key + value; }
+		fun _positive() { return -5; }
+		fun _negative() { return 5; }
+		fun _add(operand) { return operand; }
+		fun _sub(operand) { return operand; }
+		fun _mul(operand) { return operand; }
+		fun _div(operand) { return operand; }
+		fun _gt(operand) { return true; }
+		fun _gteq(operand) { return true; }
+		fun _lt(operand) { return true; }
+		fun _lteq(operand) { return true; }
+		fun _equals(operand) { return true; }
+		fun _str() { return "Test"; }
+	}
+	var obj = OperatorTest()
+	
+	fun getAttr_test(obj) {
+		assert test.a == "a"
+		assert test._getAttr("a") == "a"
+		assert getAttr(test, "a") == "a"
+	}
+	
+	fun setAttr_test(obj) {
+		assert (test.attr = "-value") == "attr-value"
+		assert test._setAttr("attr", "-value") == "attr-value"
+		assert setAttr("attr", "-value") == "attr-value"
+	}
+	
+	fun unary_test(obj) {
+		assert +obj == -5 && obj._positive() == +obj
+		assert -obj == 5  && obj._negative() == -obj
+	}
+	
+	fun binary_test(obj) {
+		assert obj + 5 == 5 && obj._add(5) == 5
+		assert obj - 6 == 6 && obj._sub(6) == 6
+		assert obj * 7 == 7 && obj._mul(7) == 7
+		assert obj / 8 == 8 && obj._div(8) == 8
+		
+		assert obj > obj   && obj._gt(obj)
+		assert obj >= obj  && obj._gteq(obj)
+		assert obj < obj   && obj._lt(obj)
+		assert obj <= obj  && obj._lteq(obj)
+		assert obj == 5    && obj._equals(5)
+	}
+	
+	getAttr_test(obj)
+	setAttr_test(obj)
+	unary_test(obj)
+	binary_test(obj)
+	assert str(obj) == "Test"
+	assert obj._str() == "Test"
+	assert "Abc: " + obj == "Abc: Test"
+}
+
+fun mismatchedArguments_test() {
+	class OperatorTest {
+		fun _getAttr() {}
+		fun _setAttr() {}
+		fun _getItem() {}
+		fun _setItem() {}
+		fun _positive(a) {}
+		fun _negative(a) {}
+		fun _add() {}
+		fun _sub() {}
+		fun _mul() {}
+		fun _div() {}
+		fun _gt() {}
+		fun _gteq() {}
+		fun _lt() {}
+		fun _lteq() {}
+		fun _equals() {}
+		fun _str(a) {}
+		fun _iterator(a) {}
+	}
+	var test = OperatorTest()
+	expectedError(ArgumentError, lambda -> test.a = 5)
+	expectedError(ArgumentError, lambda -> test.a)
+	expectedError(ArgumentError, lambda -> test[""] = 5)
+	expectedError(ArgumentError, lambda -> test[""])
+	expectedError(ArgumentError, lambda -> +test)
+	expectedError(ArgumentError, lambda -> -test)
+	expectedError(ArgumentError, lambda -> test * 5)
+	expectedError(ArgumentError, lambda -> test / 5)
+	expectedError(ArgumentError, lambda -> test + 5)
+	expectedError(ArgumentError, lambda -> test - 5)
+	expectedError(ArgumentError, lambda -> test > 5)
+	expectedError(ArgumentError, lambda -> test >= 5)
+	expectedError(ArgumentError, lambda -> test < 5)
+	expectedError(ArgumentError, lambda -> test <= 5)
+	expectedError(ArgumentError, lambda -> test == 5)
+	expectedError(ArgumentError, lambda -> "" + test)
+	expectedError(ArgumentError, lambda -> for (i in test){})
+}
+
+fun returnTypeCheck_test() {
+	class OperatorTest {
+		fun _str() { return false; }
+		fun _iterator() { return ""; }
+	}
+	var test = OperatorTest()
+	expectedError(TypeError, lambda -> "" + test)
+	expectedError(AttributeError, lambda -> for (i in test) {})
+}
+
+fun getUnknownAttr_test() {
+	class Test {
+		fun _getUnknownAttr(name) {
+			return "attr: " + name
+		}
+	}
+	var test = Test()
+	assert test.a == "attr: a"
+	assert test.b == "attr: b"
+	test.a = 5
+	assert test.a == 5
+	assert test.lol == "attr: lol"
+}
+
+operator1_test()
+operator2_test
+mismatchedArguments_test()
+returnTypeCheck_test()
+getUnknownAttr_test()

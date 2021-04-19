@@ -1,0 +1,37 @@
+fun expectedError(errType, fn) {
+	try { fn(); }
+	intercept errType as e { 
+		assert e.getMessage() == "The frozen object can't be changed."
+	} else { assert false; }
+}
+
+fun freeze_test() {
+	
+	fun frozenObject_test(obj) {
+		obj.freeze()
+		expectedError(AttributeError, lambda -> obj.a = 0)
+		expectedError(AttributeError, lambda -> obj._setAttr("a", 0))
+		expectedError(AttributeError, lambda -> setAttr(obj, "a", 0))
+		expectedError(AttributeError, lambda -> obj["a"] = 0)
+		expectedError(AttributeError, lambda -> obj._setItem("a", 0))
+	}
+	class MyClass {
+		fun _setAttr(name, value) {
+			return super._setAttr(name, value)
+		}
+		fun _getAttr(name) {
+			return super._getAttr(name)
+		}
+		
+		fun _setItem(name, value) {
+			return super._setItem(name, value)
+		}
+	}
+	frozenObject_test(Error(""))
+	frozenObject_test(MyClass())
+	frozenObject_test(Object())
+	frozenObject_test(Array(0, 0))
+	frozenObject_test(Range(0, 0))
+}
+
+freeze_test()

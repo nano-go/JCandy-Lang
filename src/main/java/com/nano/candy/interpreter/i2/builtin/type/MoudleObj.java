@@ -16,7 +16,6 @@ public class MoudleObj extends BuiltinObject {
 	
 	public static final CandyClass MOUDLE_CLASS = BuiltinClassFactory.generate(
 		MoudleObj.class);
-	
 	private String name;
 	private HashMap<String, CandyObject> attrs;
 	public MoudleObj(String name, HashMap<String, CandyObject> attrs) {
@@ -35,7 +34,7 @@ public class MoudleObj extends BuiltinObject {
 	}
 
 	@Override
-	public CandyObject iterator() {
+	public CandyObject iterator(VM vm) {
 		return new IteratorObj.MapIterator(attrs.entrySet().iterator());
 	}
 	

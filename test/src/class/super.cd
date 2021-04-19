@@ -21,3 +21,56 @@
 	assert c.init(2) == c
 	assert c.value == 2
 }
+
+class Message {
+	fun init(message) {
+		if (getAttr(this, "message") != null) {
+			raise Error("Fail")
+		}
+		this.message = message
+	}
+}
+
+class Submessage : Message {
+	fun init() {
+		super.init("")
+	}
+}
+Submessage()
+
+class Submessage : Message {
+	fun init() {
+		{
+			super.init("")
+			this.message = ""
+		}
+	}
+}
+Submessage()
+
+try {
+	class Submessage : Message {
+		fun init() {
+			var a = super.init("")
+		}
+	}
+	Submessage()
+} intercept ArgumentError {}
+else {
+	assert false
+}
+
+try {
+	class Submessage : Message {
+		fun init() {
+			{
+				var a;
+				super.init("")
+			}
+		}
+	}
+	Submessage()
+} intercept ArgumentError {}
+else {
+	assert false
+}
