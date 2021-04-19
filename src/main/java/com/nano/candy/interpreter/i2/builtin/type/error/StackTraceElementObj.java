@@ -8,7 +8,7 @@ import com.nano.candy.interpreter.i2.builtin.type.StringObj;
 import com.nano.candy.interpreter.i2.builtin.type.classes.BuiltinClassFactory;
 import com.nano.candy.interpreter.i2.builtin.type.classes.CandyClass;
 import com.nano.candy.interpreter.i2.rtda.Frame;
-import com.nano.candy.interpreter.i2.rtda.FrameStack;
+import com.nano.candy.interpreter.i2.rtda.StackFrame;
 import com.nano.candy.interpreter.i2.vm.VM;
 
 @BuiltinClass("StackTraceElement")
@@ -17,11 +17,11 @@ public class StackTraceElementObj extends BuiltinObject {
 	public static final CandyClass STACK_TRACE_ELEMENT_CLASS = 
 		BuiltinClassFactory.generate(StackTraceElementObj.class);
 	
-	public static StackTraceElementObj[] getStackTraceElements(FrameStack stack) {
+	public static StackTraceElementObj[] getStackTraceElements(StackFrame stack) {
 		return getStackTraceElements(stack, 0);
 	}
 		
-	public static StackTraceElementObj[] getStackTraceElements(FrameStack stack, int offset) {
+	public static StackTraceElementObj[] getStackTraceElements(StackFrame stack, int offset) {
 		StackTraceElementObj[] stackTraceElements =
 			new StackTraceElementObj[stack.frameCount()-offset];
 		for (int i = 0; offset < stack.frameCount(); i ++, offset ++) {

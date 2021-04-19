@@ -1,7 +1,7 @@
 package com.nano.candy.interpreter.i2.tool.debug.cmds.info;
 
 import com.nano.candy.interpreter.i2.rtda.Frame;
-import com.nano.candy.interpreter.i2.rtda.FrameStack;
+import com.nano.candy.interpreter.i2.rtda.StackFrame;
 import com.nano.candy.interpreter.i2.tool.debug.AbstractCommand;
 import com.nano.candy.interpreter.i2.tool.debug.CommandLine;
 import com.nano.candy.interpreter.i2.tool.debug.CommandOptions;
@@ -39,7 +39,7 @@ public class InfoStack extends AbstractCommand {
 	@Override
 	public void startToExe(VMTracer tracer, CommandLine cmdline) {
 		VM vm = tracer.getVM();
-		FrameStack fs = vm.getFrameStack();
+		StackFrame fs = vm.getFrameStack();
 		if (fs.frameCount() == 0) {
 			tracer.getConsole().getPrinter().println("No stack frame.");
 			return;
@@ -53,7 +53,7 @@ public class InfoStack extends AbstractCommand {
 		printAllFrames(tracer.getConsole(), fs);
 	}
 
-	private void printFrame(Console console, FrameStack fs, String funcName) {
+	private void printFrame(Console console, StackFrame fs, String funcName) {
 		StringBuilder builder = new StringBuilder();
 		int i = 0;
 		for (int sp = 0; sp < fs.frameCount(); sp ++) {
@@ -74,7 +74,7 @@ public class InfoStack extends AbstractCommand {
 		console.getPrinter().print(builder.toString());
 	}
 	
-	private void printAllFrames(Console console, FrameStack fs) {
+	private void printAllFrames(Console console, StackFrame fs) {
 		StringBuilder builder = new StringBuilder();
 		for (int sp = fs.sp()-1;; sp --) {
 			Frame frame = fs.getAt(sp);

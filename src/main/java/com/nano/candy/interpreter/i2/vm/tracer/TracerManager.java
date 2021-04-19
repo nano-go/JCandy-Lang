@@ -1,6 +1,6 @@
 package com.nano.candy.interpreter.i2.vm.tracer;
 import com.nano.candy.interpreter.i2.rtda.Frame;
-import com.nano.candy.interpreter.i2.rtda.FrameStack;
+import com.nano.candy.interpreter.i2.rtda.StackFrame;
 import com.nano.candy.interpreter.i2.vm.VM;
 import java.util.HashSet;
 
@@ -30,7 +30,7 @@ public final class TracerManager {
 		this.stackMonitors.remove(stackMonitor);
 	}
 	
-	public final void notifyStackPushed(VM vm, FrameStack frameStack) {
+	public final void notifyStackPushed(VM vm, StackFrame frameStack) {
 		if (stackMonitors.isEmpty()) {
 			return;
 		}
@@ -39,7 +39,7 @@ public final class TracerManager {
 		}
 	}
 	
-	public final void notifyStackPoped(VM vm, Frame oldFrame, FrameStack stack) {
+	public final void notifyStackPoped(VM vm, Frame oldFrame, StackFrame stack) {
 		if (stackMonitors.isEmpty()) {
 			return;
 		}

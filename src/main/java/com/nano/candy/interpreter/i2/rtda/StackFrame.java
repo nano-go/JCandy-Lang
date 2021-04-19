@@ -3,18 +3,18 @@ package com.nano.candy.interpreter.i2.rtda;
 import com.nano.candy.interpreter.i2.builtin.type.error.StackOverflowError;
 import java.util.Arrays;
 
-public final class FrameStack {
+public final class StackFrame {
 
-	private Frame[] frameStack;
+	private Frame[] stack;
 	private int sp;
 	private Frame frame;
 
 	private final int maxStackDeepth;
 	
-	public FrameStack(int maxStackDeepth) {
+	public StackFrame(int maxStackDeepth) {
 		this.maxStackDeepth = maxStackDeepth;
 		this.sp = 1;
-		this.frameStack = new Frame[16];
+		this.stack = new Frame[16];
 		this.frame = null;
 	}
 	
@@ -31,11 +31,11 @@ public final class FrameStack {
 	}
 	
 	public Frame getAt(int index) {
-		return frameStack[index + 1];
+		return stack[index + 1];
 	}
 	
 	public Frame peek(int k) {
-		return frameStack[sp-k-1];
+		return stack[sp-k-1];
 	}
 	
 	public Frame peek() {
@@ -46,23 +46,23 @@ public final class FrameStack {
 		if (sp > maxStackDeepth) {
 			new StackOverflowError().throwSelfNative();
 		}
-		if (sp >= frameStack.length) {
-			frameStack = Arrays.copyOf(frameStack, frameStack.length*2);
+		if (sp >= stack.length) {
+			stack = Arrays.copyOf(stack, stack.length*2);
 		}
 		this.frame = frame;
-		this.frameStack[sp ++] = frame;
+		this.stack[sp ++] = frame;
 	}
 	
 	public Frame popFrame() {
-		Frame old = this.frameStack[-- sp];
-		this.frame = this.frameStack[sp - 1];
+		Frame old = this.stack[-- sp];
+		this.frame = this.stack[sp - 1];
 		return old;
 	}
 	
 	public void clearFrame() {
 		for (int i = 1; i < sp; i ++) {
-			frameStack[i].recycleSelf();
-			frameStack[i] = null;
+			stack[i].recycleSelf();
+			stack[i] = null;
 		}
 		this.sp = 1;
 	}

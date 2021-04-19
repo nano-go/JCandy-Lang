@@ -1,7 +1,7 @@
 package com.nano.candy.interpreter.i2.tool.debug;
 
 import com.nano.candy.interpreter.i2.rtda.Frame;
-import com.nano.candy.interpreter.i2.rtda.FrameStack;
+import com.nano.candy.interpreter.i2.rtda.StackFrame;
 import com.nano.candy.interpreter.i2.rtda.chunk.Chunk;
 import com.nano.candy.interpreter.i2.rtda.chunk.ConstantPool;
 import com.nano.candy.interpreter.i2.vm.VM;
@@ -117,9 +117,9 @@ public class VMTracer implements StackTracer, CodeTracer {
 	public void afterIns(VM vm) {}
 
 	@Override
-	public void newFramePushed(VM vm, FrameStack stack) {}
+	public void newFramePushed(VM vm, StackFrame stack) {}
 
 	@Override
-	public void oldFramePoped(VM vm, Frame oldFrame, FrameStack stack) {}
+	public void oldFramePoped(VM vm, Frame oldFrame, StackFrame stack) {}
 
 }

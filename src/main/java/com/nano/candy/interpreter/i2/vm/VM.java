@@ -22,9 +22,9 @@ import com.nano.candy.interpreter.i2.builtin.type.error.TypeError;
 import com.nano.candy.interpreter.i2.builtin.utils.ObjectHelper;
 import com.nano.candy.interpreter.i2.rtda.FileScope;
 import com.nano.candy.interpreter.i2.rtda.Frame;
-import com.nano.candy.interpreter.i2.rtda.FrameStack;
 import com.nano.candy.interpreter.i2.rtda.GlobalEnvironment;
 import com.nano.candy.interpreter.i2.rtda.OperandStack;
+import com.nano.candy.interpreter.i2.rtda.StackFrame;
 import com.nano.candy.interpreter.i2.rtda.UpvalueObj;
 import com.nano.candy.interpreter.i2.rtda.chunk.Chunk;
 import com.nano.candy.interpreter.i2.rtda.chunk.ConstantPool;
@@ -60,7 +60,7 @@ public final class VM {
 	 */
 	private TracerManager tracerManager;
 	
-	private FrameStack frameStack;
+	private StackFrame stack;
 	
 	private ConstantPool cp;
 	private byte[] code;
@@ -75,7 +75,7 @@ public final class VM {
 	public void reset(InterpreterOptions options) {
 		this.global = new GlobalEnvironment();
 		this.moudleManager = new MoudleManager();
-		this.frameStack = new FrameStack(maxStackDeepth);
+		this.stack = new StackFrame(maxStackDeepth);
 		this.options = options;
 		this.tracerManager = null;
 	}
@@ -142,33 +142,33 @@ public final class VM {
 		pushFrame(Frame.fetchFrame(file.getChunk(), global.curFileScope()));
 	}
 	
-	public FrameStack getFrameStack() {
-		return frameStack;
+	public StackFrame getFrameStack() {
+		return stack;
 	}
 	
 	public void syncPcToTopFrame() {
-		if (!frameStack.isEmpty()) {
-			frameStack.peek().pc = pc;
+		if (!stack.isEmpty()) {
+			stack.peek().pc = pc;
 		}
 	}
 	
 	public void pushFrame(Frame frame) {
 		syncPcToTopFrame();
-		frameStack.pushFrame(frame);
+		stack.pushFrame(frame);
 		syncFrameData();
 		if (tracerManager != null)
-			tracerManager.notifyStackPushed(this, frameStack);
+			tracerManager.notifyStackPushed(this, stack);
 	}
 	
 	public void popFrame() {
 		Frame old = fastPopFrame();
-		if (frameStack.isEmpty()) {
+		if (stack.isEmpty()) {
 			resetFrameData();
 		} else {
 			syncFrameData();
 		}
 		if (tracerManager != null)
-			tracerManager.notifyStackPoped(this, old, frameStack);
+			tracerManager.notifyStackPoped(this, old, stack);
 		old.recycleSelf();
 	}
 	
@@ -178,19 +178,19 @@ public final class VM {
 		// push return value to operand stack.
 		push(old.pop());
 		if (tracerManager != null)
-			tracerManager.notifyStackPoped(this, old, frameStack);
+			tracerManager.notifyStackPoped(this, old, stack);
 		old.recycleSelf();
 	}
 	
 	public void clearStack() {
-		while (!frameStack.isEmpty()) {
+		while (!stack.isEmpty()) {
 			fastPopFrame();
 		}
 		resetFrameData();
 	}
 	
 	private final Frame fastPopFrame() {
-		Frame old = frameStack.popFrame();
+		Frame old = stack.popFrame();
 		if (old.isTopFrame()) {
 			SourceFileInfo.unmarkRunning(old.chunk.getSourceFileName());
 		}
@@ -198,7 +198,7 @@ public final class VM {
 	}
 	
 	private void syncFrameData() {
-		Frame frame = frameStack.peek();
+		Frame frame = stack.peek();
 		this.cp = frame.chunk.getConstantPool();
 		this.slots = frame.slots;
 		this.code = frame.chunk.getByteCode();
@@ -217,15 +217,15 @@ public final class VM {
 	}
 	
 	public void returnFromVM(CandyObject returnValue) {
-		frameStack.peek().push(returnValue);
+		stack.peek().push(returnValue);
 	}
 
 	public void returnNilFromVM() {
-		frameStack.peek().push(NullPointer.nil());
+		stack.peek().push(NullPointer.nil());
 	}
 	
 	public  Frame frame() {
-		return frameStack.peek();
+		return stack.peek();
 	}
 
 	/* -------------------- Execution Helper -------------------- */
@@ -270,7 +270,7 @@ public final class VM {
 	public boolean tryToHandleError(ErrorObj err, boolean printError) {
 		syncPcToTopFrame();
 		if (err.getStackTraceElements() == null) {
-			err.setStackTraceElements(frameStack);
+			err.setStackTraceElements(stack);
 		}
 		ErrorHandlerTable. ErrorHandler handler = findExceptionHandler();
 		if (handler != null) {
@@ -285,8 +285,8 @@ public final class VM {
 	}
 	
 	private ErrorHandlerTable.ErrorHandler findExceptionHandler() {
-		while (!frameStack.isEmpty()) {
-			Frame frame = frameStack.peek();
+		while (!stack.isEmpty()) {
+			Frame frame = stack.peek();
 			ErrorHandlerTable.ErrorHandler handler = null;
 			ErrorHandlerTable table = frame.getErrorHandlerTable();
 			if (table == null || 

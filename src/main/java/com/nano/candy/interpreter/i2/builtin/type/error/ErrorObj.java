@@ -8,7 +8,7 @@ import com.nano.candy.interpreter.i2.builtin.type.StringObj;
 import com.nano.candy.interpreter.i2.builtin.type.classes.BuiltinClassFactory;
 import com.nano.candy.interpreter.i2.builtin.type.classes.CandyClass;
 import com.nano.candy.interpreter.i2.builtin.utils.ObjectHelper;
-import com.nano.candy.interpreter.i2.rtda.FrameStack;
+import com.nano.candy.interpreter.i2.rtda.StackFrame;
 import com.nano.candy.interpreter.i2.vm.CarrierErrorException;
 import com.nano.candy.interpreter.i2.vm.VM;
 import java.util.Arrays;
@@ -67,7 +67,7 @@ public class ErrorObj extends CandyObjEntity {
 		this.stackTraceElements = stackTraceElements;
 	}
 	
-	public void setStackTraceElements(FrameStack stack) {
+	public void setStackTraceElements(StackFrame stack) {
 		this.stackTraceElements = StackTraceElementObj.getStackTraceElements(stack);
 	}
 	
