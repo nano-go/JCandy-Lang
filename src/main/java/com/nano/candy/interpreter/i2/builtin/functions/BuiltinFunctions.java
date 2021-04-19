@@ -79,7 +79,7 @@ public class BuiltinFunctions {
 	}
 	
 	public static final BuiltinFunctionEntity CMD_ARGS = 
-		new BuiltinFunctionEntity("cmd_args", 0, BuiltinFunctions::cmd_args);
+		new BuiltinFunctionEntity("cmdArgs", 0, BuiltinFunctions::cmd_args);
 	public static void cmd_args(VM vm) {
 		CandyObject[] args = new CandyObject[vm.getOptions().getArgs().length];
 		int i = 0;
