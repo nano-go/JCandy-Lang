@@ -1,4 +1,5 @@
 package com.nano.candy.std;
+import com.nano.candy.utils.Characters;
 
 
 public class Names {
@@ -36,4 +37,21 @@ public class Names {
 	public static final String METHOD_OP_LTEQ = "_lteq";
 	
 	private Names(){}
+	
+	public static boolean isCandyIdentifier(String name) {
+		if (name.length() == 0) {
+			return false;
+		}
+		if (!Characters.isCandyIdentifierStart(name.charAt(0))) {
+			return false;
+		}
+		final int len = name.length();
+		for (int i = 1; i < len; i ++) {
+			char ch = name.charAt(i);
+			if (!Characters.isCandyIdentifier(ch)) {
+				return false;
+			}
+		}
+		return true;
+	}
 }

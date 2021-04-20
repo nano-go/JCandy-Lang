@@ -1,11 +1,9 @@
 package com.nano.candy.interpreter.i2.builtin.utils;
 
 import com.nano.candy.interpreter.i2.builtin.CandyObject;
-import com.nano.candy.interpreter.i2.builtin.functions.BuiltinFunctionEntity;
-import com.nano.candy.interpreter.i2.builtin.functions.Callback;
 import com.nano.candy.interpreter.i2.builtin.type.CallableObj;
-import com.nano.candy.interpreter.i2.builtin.type.DoubleObj;
 import com.nano.candy.interpreter.i2.builtin.type.IntegerObj;
+import com.nano.candy.interpreter.i2.builtin.type.NumberObj;
 import com.nano.candy.interpreter.i2.builtin.type.StringObj;
 import com.nano.candy.interpreter.i2.builtin.type.classes.BoundBuiltinMethod;
 import com.nano.candy.interpreter.i2.builtin.type.classes.CandyClass;
@@ -58,12 +56,28 @@ public class ObjectHelper {
 		return className + "." + methodName;
 	}
 	
-	public static CallableObj genFunction(String name, int arity, Callback callback) {
-		return new BuiltinFunctionEntity(name, arity, callback);
-	}
-	
 	public static CallableObj genMethod(CandyObject receiver, String name, int arity, MethodCallback callback) {
 		return new BoundBuiltinMethod(receiver, name, arity, callback);
+	}
+	
+	public static String callStr(VM vm, CandyObject obj) {
+		return obj.strApiExeUser(vm).value();
+	}
+	
+	public static CandyObject setAttr(VM vm, CandyObject obj, String attr, CandyObject value) {
+		return obj.setAttrApiExeUser(vm, attr, value);
+	}
+	
+	public static CandyObject getAttr(VM vm, CandyObject obj, String attr) {
+		return obj.getAttrApiExeUser(vm, attr);
+	}
+	
+	public static CandyObject setItem(VM vm, CandyObject obj, CandyObject key, CandyObject value) {
+		return obj.setItemApiExeUser(vm, key, value);
+	}
+
+	public static CandyObject getItem(VM vm, CandyObject obj, CandyObject key) {
+		return obj.getItemApiExeUser(vm, key);
 	}
 	
 	public static long asInteger(CandyObject obj) {
@@ -72,8 +86,8 @@ public class ObjectHelper {
 	}
 	
 	public static double asDouble(CandyObject obj) {
-		TypeError.checkTypeMatched(DoubleObj.DOUBLE_CLASS, obj);
-		return ((DoubleObj) obj).doubleValue();
+		TypeError.checkTypeMatched(NumberObj.NUMBER_CLASS, obj);
+		return ((NumberObj) obj).doubleValue();
 	}
 	
 	public static String asString(CandyObject obj) {
@@ -81,7 +95,7 @@ public class ObjectHelper {
 		return ((StringObj) obj).value();
 	}
 	
-	public static CandyObject callFunctionWithArgs(VM vm, CallableObj callable, CandyObject... args) {
+	public static CandyObject callFunction(VM vm, CallableObj callable, CandyObject... args) {
 		for (int i = args.length-1; i >= 0; i --) {
 			vm.push(args[i]);
 		}

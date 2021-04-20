@@ -255,7 +255,7 @@ public final class ArrayObj extends BuiltinObject {
 			ArgumentError.checkArity(defaultElement, 1);
 			CallableObj callable = (CallableObj) defaultElement;
 			for (int i = 0; i < initalCapacity; i ++) {
-				CandyObject element = ObjectHelper.callFunctionWithArgs(
+				CandyObject element = ObjectHelper.callFunction(
 					vm, callable, IntegerObj.valueOf(i));
 				append(element);
 			}

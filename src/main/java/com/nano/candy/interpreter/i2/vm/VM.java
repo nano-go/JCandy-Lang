@@ -22,7 +22,7 @@ import com.nano.candy.interpreter.i2.builtin.type.error.TypeError;
 import com.nano.candy.interpreter.i2.builtin.utils.ObjectHelper;
 import com.nano.candy.interpreter.i2.rtda.FileScope;
 import com.nano.candy.interpreter.i2.rtda.Frame;
-import com.nano.candy.interpreter.i2.rtda.GlobalEnvironment;
+import com.nano.candy.interpreter.i2.rtda.GlobalScope;
 import com.nano.candy.interpreter.i2.rtda.OperandStack;
 import com.nano.candy.interpreter.i2.rtda.StackFrame;
 import com.nano.candy.interpreter.i2.rtda.Upvalue;
@@ -47,7 +47,7 @@ public final class VM {
 	
 	private int maxStackDeepth = CandySystem.DEFAULT_MAX_STACK;
 	
-	private GlobalEnvironment global;
+	private GlobalScope global;
 	
 	/**
 	 * This is used to import source files as moudle to manage.
@@ -73,7 +73,7 @@ public final class VM {
 	public VM() {}
 	
 	public void reset(InterpreterOptions options) {
-		this.global = new GlobalEnvironment();
+		this.global = new GlobalScope();
 		this.moudleManager = new MoudleManager();
 		this.stack = new StackFrame(maxStackDeepth);
 		this.options = options;
@@ -111,7 +111,11 @@ public final class VM {
 		return parent.getAbsolutePath();
 	}
 	
-	public GlobalEnvironment getGlobalEnv() {
+	public File getFile(String relativePath) {
+		return new File(getCurrentDirectory(), relativePath);
+	}
+	
+	public GlobalScope getGlobalScope() {
 		return global;
 	}
 	

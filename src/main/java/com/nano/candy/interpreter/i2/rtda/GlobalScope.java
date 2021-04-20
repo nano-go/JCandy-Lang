@@ -1,8 +1,7 @@
 package com.nano.candy.interpreter.i2.rtda;
 
+import com.nano.candy.interpreter.i2.builtin.BuiltinFunctions;
 import com.nano.candy.interpreter.i2.builtin.CandyObject;
-import com.nano.candy.interpreter.i2.builtin.functions.BuiltinFunctionEntity;
-import com.nano.candy.interpreter.i2.builtin.functions.BuiltinFunctions;
 import com.nano.candy.interpreter.i2.builtin.type.ArrayObj;
 import com.nano.candy.interpreter.i2.builtin.type.BoolObj;
 import com.nano.candy.interpreter.i2.builtin.type.DoubleObj;
@@ -26,13 +25,13 @@ import com.nano.candy.interpreter.i2.builtin.type.error.RangeError;
 import com.nano.candy.interpreter.i2.builtin.type.error.StackOverflowError;
 import com.nano.candy.interpreter.i2.builtin.type.error.StackTraceElementObj;
 import com.nano.candy.interpreter.i2.builtin.type.error.TypeError;
+import com.nano.candy.interpreter.i2.cni.CNativeFunction;
+import com.nano.candy.interpreter.i2.cni.NativeFuncRegister;
 import com.nano.candy.interpreter.i2.rtda.moudle.CompiledFileInfo;
 import com.nano.candy.interpreter.i2.rtda.moudle.SourceFileInfo;
-import java.lang.reflect.Field;
-import java.lang.reflect.Modifier;
 import java.util.HashMap;
 
-public class GlobalEnvironment {
+public class GlobalScope {
 	
 	private static final HashMap<String, Variable> BUILTIN_VARS = new HashMap<>();
 	
@@ -72,25 +71,12 @@ public class GlobalEnvironment {
 	}
 
 	private static void defineBuiltinFunctions() {
-		for (Field field : BuiltinFunctions.class.getFields()) {
-			int modifiers = field.getModifiers();
-			if (!Modifier.isStatic(modifiers)) {
-				continue;
-			}
-			if (field.getType() == BuiltinFunctionEntity.class) {
-				try {
-					defineBuiltinFunction(
-						(BuiltinFunctionEntity) field.get(null));
-				} catch (Exception e) {
-					throw new Error(e);
-				}
-			}
+		CNativeFunction[] builtinFunctions =
+			NativeFuncRegister.getNativeFunctions(BuiltinFunctions.class);
+		for (CNativeFunction f : builtinFunctions) {
+			BUILTIN_VARS.put(f.declredName(), 
+				Variable.getVariable(f.declredName(), f));
 		}
-	}
-
-	private static void defineBuiltinFunction(BuiltinFunctionEntity func) {
-		BUILTIN_VARS.put(func.declredName(), 
-			Variable.getVariable(func.declredName(), func));
 	}
 
 	private static void defineClass(CandyClass clazz) {
@@ -101,7 +87,7 @@ public class GlobalEnvironment {
 	private HashMap<String, FileScope> fileScopePool;
 	private FileScope curFileScope;
 	
-	public GlobalEnvironment() {
+	public GlobalScope() {
 		fileScopePool = new HashMap<>();
 		curFileScope = null;
 	}
@@ -136,7 +122,7 @@ public class GlobalEnvironment {
 		return curFileScope;
 	}
 	
-	public void clearFileScope() {
+	public void removeFileScope() {
 		curFileScope = null;
 	}
 	
