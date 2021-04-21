@@ -2,20 +2,23 @@ package com.nano.candy.interpreter.i2.builtin.type;
 
 import com.nano.candy.interpreter.i2.builtin.BuiltinObject;
 import com.nano.candy.interpreter.i2.builtin.CandyObject;
-import com.nano.candy.interpreter.i2.builtin.annotation.BuiltinClass;
-import com.nano.candy.interpreter.i2.builtin.annotation.BuiltinMethod;
-import com.nano.candy.interpreter.i2.builtin.type.classes.BuiltinClassFactory;
+import com.nano.candy.interpreter.i2.builtin.type.TupleObj;
 import com.nano.candy.interpreter.i2.builtin.type.classes.CandyClass;
 import com.nano.candy.interpreter.i2.builtin.type.error.TypeError;
 import com.nano.candy.interpreter.i2.builtin.utils.ArrayHelper;
 import com.nano.candy.interpreter.i2.builtin.utils.ObjectHelper;
+import com.nano.candy.interpreter.i2.cni.NativeClass;
+import com.nano.candy.interpreter.i2.cni.NativeClassRegister;
+import com.nano.candy.interpreter.i2.cni.NativeMethod;
 import com.nano.candy.interpreter.i2.vm.VM;
 import com.nano.candy.utils.ArrayUtils;
 import java.util.Objects;
 
-@BuiltinClass("Tuple")
+@NativeClass(name = "Tuple")
 public final class TupleObj extends BuiltinObject {
-	public static final CandyClass TUPLE_CLASS = BuiltinClassFactory.generate(TupleObj.class);
+	public static final CandyClass TUPLE_CLASS = 
+		NativeClassRegister.generateNativeClass(TupleObj.class);
+	
 	public static final TupleObj EMPTY_TUPLE = new TupleObj(ArrayObj.EMPTY_ARRAY);
 	
 	private final CandyObject[] elements;
@@ -92,8 +95,8 @@ public final class TupleObj extends BuiltinObject {
 		return StringObj.valueOf(builder.toString());
 	}
 	
-	@BuiltinMethod(name = "len")
-	public void len(VM vm) {
-		vm.returnFromVM(IntegerObj.valueOf(elements.length));
+	@NativeMethod(name = "len")
+	public CandyObject len(VM vm, CandyObject[] args) {
+		return IntegerObj.valueOf(elements.length);
 	}
 }

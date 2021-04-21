@@ -2,9 +2,7 @@ package com.nano.candy.interpreter.i2.builtin.type;
 
 import com.nano.candy.interpreter.i2.builtin.BuiltinObject;
 import com.nano.candy.interpreter.i2.builtin.CandyObject;
-import com.nano.candy.interpreter.i2.builtin.annotation.BuiltinClass;
-import com.nano.candy.interpreter.i2.builtin.annotation.BuiltinMethod;
-import com.nano.candy.interpreter.i2.builtin.type.classes.BuiltinClassFactory;
+import com.nano.candy.interpreter.i2.builtin.type.ArrayObj;
 import com.nano.candy.interpreter.i2.builtin.type.classes.CandyClass;
 import com.nano.candy.interpreter.i2.builtin.type.error.ArgumentError;
 import com.nano.candy.interpreter.i2.builtin.type.error.NativeError;
@@ -12,14 +10,19 @@ import com.nano.candy.interpreter.i2.builtin.type.error.RangeError;
 import com.nano.candy.interpreter.i2.builtin.type.error.TypeError;
 import com.nano.candy.interpreter.i2.builtin.utils.ArrayHelper;
 import com.nano.candy.interpreter.i2.builtin.utils.ObjectHelper;
+import com.nano.candy.interpreter.i2.cni.NativeClass;
+import com.nano.candy.interpreter.i2.cni.NativeClassRegister;
+import com.nano.candy.interpreter.i2.cni.NativeMethod;
 import com.nano.candy.interpreter.i2.vm.VM;
+import com.nano.candy.std.Names;
 import com.nano.candy.utils.ArrayUtils;
 import java.util.Arrays;
 
-@BuiltinClass("Array")
+@NativeClass(name = "Array")
 public final class ArrayObj extends BuiltinObject {
 	
-	public static final CandyClass ARRAY_CLASS = BuiltinClassFactory.generate(ArrayObj.class);
+	public static final CandyClass ARRAY_CLASS = 
+		NativeClassRegister.generateNativeClass(ArrayObj.class);
 	public static final CandyObject[] EMPTY_ARRAY = new CandyObject[0];
 	
 	private static final int MAX_ARRAY_SIZE = Integer.MAX_VALUE - 8;
@@ -245,10 +248,10 @@ public final class ArrayObj extends BuiltinObject {
 		return StringObj.valueOf(builder.toString());
 	}
 	
-	@BuiltinMethod(name = "", argc = 2)
-	public void initalizer(VM vm) {
-		long initalCapacity = ObjectHelper.asInteger(vm.pop());
-		CandyObject defaultElement = vm.pop();
+	@NativeMethod(name = Names.METHOD_INITALIZER, argc = 2)
+	public CandyObject initalizer(VM vm, CandyObject[] args) {
+		long initalCapacity = ObjectHelper.asInteger(args[0]);
+		CandyObject defaultElement = args[1];
 		initArray(initalCapacity);
 		
 		if (defaultElement.isCallable()) {
@@ -264,116 +267,108 @@ public final class ArrayObj extends BuiltinObject {
 				append(defaultElement);
 			}
 		}	
-		vm.returnFromVM(this);
+		return this;
 	}
 	
-	@BuiltinMethod(name = "append", argc = 1)
-	public void append(VM vm) {
-		append(vm.pop());
-		vm.returnFromVM(this);
+	@NativeMethod(name = "append", argc = 1)
+	public CandyObject append(VM vm, CandyObject[] args) {
+		append(args[0]);
+		return this;
 	}
 	
-	@BuiltinMethod(name = "deleteAt", argc = 1)
-	public void deleteAt(VM vm) {
-		vm.returnFromVM(deleteAt(asIndex(vm.pop())));
+	@NativeMethod(name = "deleteAt", argc = 1)
+	public CandyObject deleteAt(VM vm, CandyObject[] args) {
+		return deleteAt(asIndex(args[0]));
 	}
 	
-	@BuiltinMethod(name = "delete", argc = 1)
-	public void delete(VM vm) {
-		vm.returnFromVM(BoolObj.valueOf(
-			delete(vm, vm.pop()))
-		);
+	@NativeMethod(name = "delete", argc = 1)
+	public CandyObject delete(VM vm, CandyObject[] args) {
+		return BoolObj.valueOf(delete(vm, args[0]));
 	}
 	
-	@BuiltinMethod(name = "insert", argc = 2)
-	public void insert(VM vm) {
-		int index = asIndexForInsert(vm.pop());
-		CandyObject e = vm.pop();
-		insert(index, e);
-		vm.returnFromVM(e);
+	@NativeMethod(name = "insert", argc = 2)
+	public CandyObject insert(VM vm, CandyObject[] args) {
+		int index = asIndexForInsert(args[0]);
+		insert(index, args[1]);
+		return args[1];
 	}
 	
-	@BuiltinMethod(name = "set", argc = 2)
-	public void set(VM vm) {
-		int index = asIndex(vm.pop());
-		CandyObject value = vm.pop();
-		elements[index] = value;
-		vm.returnFromVM(value);
+	@NativeMethod(name = "set", argc = 2)
+	public CandyObject set(VM vm, CandyObject[] args) {
+		return elements[asIndex(args[0])] = args[1];
 	}
 	
-	@BuiltinMethod(name = "get", argc = 1)
-	public void get(VM vm) {
-		int index = asIndex(vm.pop());
-		vm.returnFromVM(elements[index]);
+	@NativeMethod(name = "get", argc = 1)
+	public CandyObject get(VM vm, CandyObject[] args) {
+		return elements[asIndex(args[0])];
 	}
 	
-	@BuiltinMethod(name = "contains", argc = 1)
-	public void contains(VM vm) {
-		boolean inArr = indexOf(vm, vm.pop()) != -1;
-		vm.returnFromVM(BoolObj.valueOf(inArr));
+	@NativeMethod(name = "contains", argc = 1)
+	public CandyObject contains(VM vm, CandyObject[] args) {
+		return BoolObj.valueOf(indexOf(vm, args[0]) != -1);
 	}
 	
-	@BuiltinMethod(name = "indexOf", argc = 1)
-	public void indexOf(VM vm) {
-		vm.returnFromVM(IntegerObj.valueOf(indexOf(vm, vm.pop())));
+	@NativeMethod(name = "indexOf", argc = 1)
+	public CandyObject indexOf(VM vm, CandyObject[] args) {
+		return IntegerObj.valueOf(indexOf(vm, args[0]));
 	}
 	
-	@BuiltinMethod(name = "lastIndexOf", argc = 1)
-	public void lastIndexOf(VM vm) {
-		vm.returnFromVM(IntegerObj.valueOf(lastIndexOf(vm, vm.pop())));
+	@NativeMethod(name = "lastIndexOf", argc = 1)
+	public CandyObject lastIndexOf(VM vm, CandyObject[] args) {
+		return IntegerObj.valueOf(lastIndexOf(vm, args[0]));
 	}
 	
-	@BuiltinMethod(name = "size", argc = 0)
-	public void size(VM vm) {
-		vm.returnFromVM(IntegerObj.valueOf(size));
+	@NativeMethod(name = "size")
+	public CandyObject size(VM vm, CandyObject[] args) {
+		return IntegerObj.valueOf(size);
 	}
 	
-	@BuiltinMethod(name = "swap", argc = 2)
-	public void swap(VM vm) {
-		int i = asIndex(vm.pop());
-		int j = asIndex(vm.pop());
+	@NativeMethod(name = "swap", argc = 2)
+	public CandyObject swap(VM vm, CandyObject[] args) {
+		int i = asIndex(args[0]);
+		int j = asIndex(args[1]);
 		
 		CandyObject tmp = elements[i];
 		elements[i] = elements[j];
 		elements[j] = tmp;
-		vm.returnFromVM(this);
+		return this;
 	}
 	
-	@BuiltinMethod(name = "copy", argc = 0)
-	public void copy(VM vm) {
-		vm.returnFromVM(new ArrayObj(Arrays.copyOf(elements, size)));
+	@NativeMethod(name = "copy")
+	public CandyObject copy(VM vm, CandyObject[] args) {
+		return new ArrayObj(Arrays.copyOf(elements, size));
 	}
 	
-	@BuiltinMethod(name = "copyRange", argc = 2)
-	public void copyRange(VM vm) {
-		int from = asIndex(vm.pop());
-		int to = asIndexForInsert(vm.pop());
-		vm.returnFromVM(new ArrayObj(Arrays.copyOfRange(elements, from, to)));
+	@NativeMethod(name = "copyRange", argc = 2)
+	public CandyObject copyRange(VM vm, CandyObject[] args) {
+		int from = asIndex(args[0]);
+		int to = asIndexForInsert(args[1]);
+		return new ArrayObj(Arrays.copyOfRange(elements, from, to));
 	}
 	
-	@BuiltinMethod(name = "sort", argc = 0) 
-	public void sort(VM vm) {
+	@NativeMethod(name = "sort") 
+	public CandyObject sort(VM vm, CandyObject[] args) {
 		Arrays.sort(elements, 0, size, ObjectHelper.newComparator(vm));
-		vm.returnFromVM(this);
+		return this;
 	}
 	
-	@BuiltinMethod(name = "reverse", argc = 0)
-	public void reverse(VM vm) {
+	@NativeMethod(name = "reverse")
+	public CandyObject reverse(VM vm, CandyObject[] args) {
 		int half = size/2;
 		for (int i = 0; i < half; i ++) {
 			CandyObject tmp = elements[i];
 			elements[i] = elements[size-1-i];
 			elements[size-1-i] = tmp;
 		}
-		vm.returnFromVM(this);
+		return this;
 	}
 	
-	@BuiltinMethod(name = "clear", argc = 0)
-	public void clear(VM vm) {
+	@NativeMethod(name = "clear")
+	public CandyObject clear(VM vm, CandyObject[] args) {
 		for (int i = 0; i < size; i ++) {
 			elements[i] = null;
 		}
 		size = 0;
-		vm.returnNilFromVM();
+		return null;
 	}
 }

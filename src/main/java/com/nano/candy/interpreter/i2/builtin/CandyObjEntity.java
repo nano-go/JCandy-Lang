@@ -7,6 +7,7 @@ import com.nano.candy.interpreter.i2.builtin.type.MethodObj;
 import com.nano.candy.interpreter.i2.builtin.type.StringObj;
 import com.nano.candy.interpreter.i2.builtin.type.classes.CandyClass;
 import com.nano.candy.interpreter.i2.builtin.type.error.ArgumentError;
+import com.nano.candy.interpreter.i2.builtin.type.error.AttributeError;
 import com.nano.candy.interpreter.i2.builtin.type.error.TypeError;
 import com.nano.candy.interpreter.i2.builtin.utils.ObjectHelper;
 import com.nano.candy.interpreter.i2.vm.VM;
@@ -67,29 +68,28 @@ public class CandyObjEntity extends CandyObject {
 		return null;
 	}
 	
+	public CandyObject invokeApiExeUser(VM vm, String name, CandyObject... args) {
+		CallableObj callable = getCandyClass().getBoundMethod(name, this);
+		AttributeError.checkAttributeNull(this, name, callable);
+		return ObjectHelper.callFunction(vm, callable, args);
+	}
+	
 	@Override
 	public final void setAttrApi(VM vm, String attr, CandyObject value) {
 		checkIsFrozen();
 		attrSetter = getBoundMethod(Names.METHOD_SET_ATTR, 2, attrSetter);
-		if (!attrSetter.isBuiltin()) {		
-			vm.push(value);
-			vm.push(StringObj.valueOf(attr));
-			attrSetter.onCall(vm);
-		} else {
-			vm.returnFromVM(setAttr(vm, attr, value));
-		}
+		vm.push(value);
+		vm.push(StringObj.valueOf(attr));
+		attrSetter.onCall(vm);
 	}
 
 	@Override
 	public final CandyObject setAttrApiExeUser(VM vm, String attr, CandyObject value) {
 		checkIsFrozen();
 		attrSetter = getBoundMethod(Names.METHOD_SET_ATTR, 2, attrSetter);
-		if (!attrSetter.isBuiltin()) {		
-			vm.push(value);
-			vm.push(StringObj.valueOf(attr));	
-			return invokeMethod(vm, attrGetter);
-		} 
-		return setAttr(vm, attr, value);
+		vm.push(value);
+		vm.push(StringObj.valueOf(attr));	
+		return invokeMethod(vm, attrGetter);
 	}
 	
 	@Override
@@ -135,104 +135,69 @@ public class CandyObjEntity extends CandyObject {
 	public final CandyObject getUnknownAttrApiExeUser(VM vm, String attr) {
 		unknownAttrGetter = getBoundMethod(
 			Names.METHOD_GET_UNKNOWN_ATTR, 1, unknownAttrGetter);
-		if (!unknownAttrGetter.isBuiltin()) {
-			vm.push(StringObj.valueOf(attr));
-			return invokeMethod(vm, unknownAttrGetter);
-		} else {
-			return getUnknownAttr(vm, attr);
-		}
+		vm.push(StringObj.valueOf(attr));
+		return invokeMethod(vm, unknownAttrGetter);
 	}
 
 	@Override
 	public final void getUnknownAttrApi(VM vm, String attr) {
 		unknownAttrGetter = getBoundMethod(
 			Names.METHOD_GET_UNKNOWN_ATTR, 1, unknownAttrGetter);
-		if (!unknownAttrGetter.isBuiltin()) {
-			vm.push(StringObj.valueOf(attr));
-			unknownAttrGetter.onCall(vm);
-		} else {
-			vm.returnFromVM(getUnknownAttr(vm, attr));
-		}
+		vm.push(StringObj.valueOf(attr));
+		unknownAttrGetter.onCall(vm);
 	}
 
 	@Override
 	public final void setItemApi(VM vm, CandyObject key, CandyObject value) {
 		checkIsFrozen();
 		itemSetter = getBoundMethod(Names.METHOD_SET_ITEM, 2, itemSetter);
-		if (!itemSetter.isBuiltin()) {
-			vm.push(value);
-			vm.push(key);
-			itemSetter.onCall(vm);
-		} else {
-			vm.returnFromVM(setItem(vm, key, value));
-		}
+		vm.push(value);
+		vm.push(key);
+		itemSetter.onCall(vm);
 	}
 
 	@Override
 	public final CandyObject setItemApiExeUser(VM vm, CandyObject key, CandyObject value) {
 		checkIsFrozen();
 		itemSetter = getBoundMethod(Names.METHOD_SET_ITEM, 2, itemSetter);
-		if (!itemSetter.isBuiltin()) {
-			vm.push(value);
-			vm.push(key);
-			return invokeMethod(vm, itemSetter);
-		} else {
-			 return setItem(vm, key, value);
-		}
+		vm.push(value);
+		vm.push(key);
+		return invokeMethod(vm, itemSetter);
 	}
 
 	@Override
 	public final void getItemApi(VM vm, CandyObject key) {
 		itemGetter = getBoundMethod(Names.METHOD_GET_ITEM, 1, itemGetter);
-		if (!itemGetter.isBuiltin()) {
-			vm.push(key);
-			itemGetter.onCall(vm);
-		} else {
-			vm.returnFromVM(getItem(vm, key));
-		}
+		vm.push(key);
+		itemGetter.onCall(vm);
 	}
 
 	@Override
 	public final CandyObject getItemApiExeUser(VM vm, CandyObject key) {
 		itemGetter = getBoundMethod(Names.METHOD_GET_ITEM, 1, itemGetter);
-		if (!itemGetter.isBuiltin()) {
-			vm.push(key);
-			return invokeMethod(vm, itemGetter);
-		} else {
-			return getItem(vm, key);
-		}
+		vm.push(key);
+		return invokeMethod(vm, itemGetter);
 	}
 
 	@Override
 	public final void equalsApi(VM vm, CandyObject operand) {
 		equalTo = getBoundMethod(Names.METHOD_EQUALS, 1, equalTo);
-		if (!equalTo.isBuiltin()) {
-			vm.push(operand);
-			equalTo.onCall(vm);
-		} else {
-			vm.returnFromVM(equals(vm, operand));
-		}
+		vm.push(operand);
+		equalTo.onCall(vm);
 	}
 
 	@Override
 	public final BoolObj equalsApiExeUser(VM vm, CandyObject operand) {
 		equalTo = getBoundMethod(Names.METHOD_EQUALS, 1, equalTo);
-		if (!equalTo.isBuiltin()) {
-			vm.push(operand);
-			return (BoolObj) 
-				invokeMethod(vm, equalTo, BoolObj.BOOL_CLASS);
-		} 
-		return equals(vm, operand);
+		vm.push(operand);
+		return (BoolObj) 
+			invokeMethod(vm, equalTo, BoolObj.BOOL_CLASS);
 	}
 
 	@Override
 	public final void hashCodeApi(VM vm) {
 		hashcode = getBoundMethod(Names.METHOD_HASH_CODE, 0, hashcode);
-		if (!hashcode.isBuiltin()) {
-			hashcode.onCall(vm);
-			return;
-		}
-		vm.returnFromVM(hashCode(vm));
+		hashcode.onCall(vm);
 	}
 
 	@Override
@@ -248,246 +213,155 @@ public class CandyObjEntity extends CandyObject {
 	@Override
 	public final StringObj strApiExeUser(VM vm) {
 		stringVal = getBoundMethod(Names.METHOD_STR_VALUE, 0, stringVal);
-		if (!stringVal.isBuiltin()) {
-			return (StringObj) 
-				invokeMethod(vm, stringVal, StringObj.STRING_CLASS);
-		} 
-		return str(vm);
+		return (StringObj) 
+			invokeMethod(vm, stringVal, StringObj.STRING_CLASS);
 	}
 
 	@Override
 	public final CandyObject iteratorApiExeUser(VM vm) {
 		CallableObj iterator = getBoundMethod(Names.METHOD_ITERATOR, 0, null);
-		if (!iterator.isBuiltin()) {
-			return invokeMethod(vm, iterator);
-		}
-		return iterator(vm);
+		return invokeMethod(vm, iterator);
 	}
 	
 	// Operator Methods
 	
 	
-	private boolean binaryApi(VM vm, String name, CandyObject operand) {
-		CallableObj callable = getCandyClass().getMethod(name);
-		if (!callable.isBuiltin()) {
-			MethodObj boundMet = new MethodObj(this, callable);
-			ArgumentError.checkArity(boundMet, 1);
-			vm.push(operand);
-			boundMet.onCall(vm);
-			return true;
-		}
-		return false;
+	private void binaryApi(VM vm, String name, CandyObject operand) {
+		CallableObj boundMet = getBoundMethod(name, 1, null);
+		vm.push(operand);
+		boundMet.onCall(vm);
 	}
 	
 	private CandyObject binaryApiExeUser(VM vm, String name, CandyObject operand, 
 	                                     CandyClass expextedReturnType) {
-		CallableObj callable = getCandyClass().getMethod(name);
-		if (!callable.isBuiltin()) {
-			MethodObj boundMet = new MethodObj(this, callable);
-			ArgumentError.checkArity(boundMet, 1);
-			vm.push(operand);
-			return invokeMethod(vm, boundMet, expextedReturnType);
-		}
-		return null;
+		CallableObj boundMet = getBoundMethod(name, 1, null);
+		vm.push(operand);
+		return invokeMethod(vm, boundMet, expextedReturnType);
 	}
 	
-	private boolean unaryApi(VM vm, String name) {
-		CallableObj callable = getCandyClass().getMethod(name);
-		if (!callable.isBuiltin()) {
-			MethodObj boundMet = new MethodObj(this, callable);
-			ArgumentError.checkArity(boundMet, 0);
-			boundMet.onCall(vm);
-			return true;
-		}
-		return false;
+	private void unaryApi(VM vm, String name) {
+		CallableObj boundMet = getBoundMethod(name, 0, null);
+		boundMet.onCall(vm);
 	}
 
 	private CandyObject unaryApiExeUser(VM vm, String name) {
-		CallableObj callable = getCandyClass().getMethod(name);
-		ArgumentError.checkArity(callable, 0);
-		if (!callable.isBuiltin()) {
-			MethodObj boundMet = new MethodObj(this, callable);
-			ArgumentError.checkArity(boundMet, 0);
-			return invokeMethod(vm, boundMet);
-		}
-		return null;
+		CallableObj boundMet = getBoundMethod(name, 0, null);
+		return invokeMethod(vm, boundMet);
 	}
 	
 	@Override
 	public final void positiveApi(VM vm) {
-		if (!unaryApi(vm, Names.METHOD_OP_POSITIVE)) {
-			vm.returnFromVM(positive(vm));
-		}
+		unaryApi(vm, Names.METHOD_OP_POSITIVE);
 	}
 
 	@Override
 	public final CandyObject positiveApiExeUser(VM vm) {
-		CandyObject obj = unaryApiExeUser(vm, Names.METHOD_OP_POSITIVE);
-		if (obj == null) {
-			return positive(vm);
-		}
-		return obj;
+		return unaryApiExeUser(vm, Names.METHOD_OP_POSITIVE);
 	}
 
 	@Override
 	public final void negativeApi(VM vm) {
-		if (!unaryApi(vm, Names.METHOD_OP_NEGATIVE)) {
-			vm.returnFromVM(negative(vm));
-		}
+		unaryApi(vm, Names.METHOD_OP_NEGATIVE);
 	}
 
 	@Override
 	public final CandyObject negativeApiExeUser(VM vm) {
-		CandyObject obj = unaryApiExeUser(vm, Names.METHOD_OP_NEGATIVE);
-		if (obj == null) {
-			return negative(vm);
-		}
-		return obj;
+		return unaryApiExeUser(vm, Names.METHOD_OP_NEGATIVE);
 	}
 
 	@Override
 	public final void addApi(VM vm, CandyObject operand) {
-		if (!binaryApi(vm, Names.METHOD_OP_ADD, operand)) {
-			vm.returnFromVM(add(vm, operand));
-		}
+		binaryApi(vm, Names.METHOD_OP_ADD, operand);
 	}
 
 	@Override
 	public final CandyObject addApiExeUser(VM vm, CandyObject operand) {
-		CandyObject obj = binaryApiExeUser(vm, Names.METHOD_OP_ADD, operand, null);
-		if (obj == null) {
-			return add(vm, operand);
-		}
-		return obj;
+		return binaryApiExeUser(vm, Names.METHOD_OP_ADD, operand, null);
 	}
 
 	@Override
 	public final void subApi(VM vm, CandyObject operand) {
-		if (!binaryApi(vm, Names.METHOD_OP_SUB, operand)) {
-			vm.returnFromVM(sub(vm, operand));
-		}
+		binaryApi(vm, Names.METHOD_OP_SUB, operand);
 	}
 
 	@Override
 	public final CandyObject subApiExeUser(VM vm, CandyObject operand) {
-		CandyObject obj = binaryApiExeUser(vm, Names.METHOD_OP_SUB, operand, null);
-		if (obj == null) {
-			return sub(vm, operand);
-		}
-		return obj;
+		return binaryApiExeUser(vm, Names.METHOD_OP_SUB, operand, null);
 	}
 
 	@Override
 	public final void mulApi(VM vm, CandyObject operand) {
-		if (!binaryApi(vm, Names.METHOD_OP_MUL, operand)) {
-			vm.returnFromVM(mul(vm, operand));
-		}
+		binaryApi(vm, Names.METHOD_OP_MUL, operand);
 	}
 
 	@Override
 	public final CandyObject mulApiExeUser(VM vm, CandyObject operand) {
-		CandyObject obj = binaryApiExeUser(vm, Names.METHOD_OP_MUL, operand, null);
-		if (obj == null) {
-			return mul(vm, operand);
-		}
-		return obj;
+		return binaryApiExeUser(vm, Names.METHOD_OP_MUL, operand, null);
 	}
 
 	@Override
 	public final void divApi(VM vm, CandyObject operand) {
-		if (!binaryApi(vm, Names.METHOD_OP_DIV, operand)) {
-			vm.returnFromVM(div(vm, operand));
-		}
+		binaryApi(vm, Names.METHOD_OP_DIV, operand);
 	}
 
 	@Override
 	public final CandyObject divApiExeUser(VM vm, CandyObject operand) {
-		CandyObject obj = binaryApiExeUser(vm, Names.METHOD_OP_DIV, operand, null);
-		if (obj == null) {
-			return div(vm, operand);
-		}
-		return obj;
+		return binaryApiExeUser(vm, Names.METHOD_OP_DIV, operand, null);
 	}
 
 	@Override
 	public final void modApi(VM vm, CandyObject operand) {
-		if (!binaryApi(vm, Names.METHOD_OP_MOD, operand)) {
-			vm.returnFromVM(mod(vm, operand));
-		}
+		binaryApi(vm, Names.METHOD_OP_MOD, operand);
 	}
 
 	@Override
 	public final CandyObject modApiExeUser(VM vm, CandyObject operand) {
-		CandyObject obj = binaryApiExeUser(vm, Names.METHOD_OP_MOD, operand, null);
-		if (obj == null) {
-			return mod(vm, operand);
-		}
-		return obj;
+		return binaryApiExeUser(vm, Names.METHOD_OP_MOD, operand, null);
 	}
 
 	
 	@Override
 	public final void gtApi(VM vm, CandyObject operand) {
-		if (!binaryApi(vm, Names.METHOD_OP_GT, operand)) {
-			vm.returnFromVM(gt(vm, operand));
-		}
+		binaryApi(vm, Names.METHOD_OP_GT, operand);
 	}
 
 	@Override
 	public final BoolObj gtApiExeUser(VM vm, CandyObject operand) {
-		CandyObject obj = binaryApiExeUser(vm, Names.METHOD_OP_GT, operand, BoolObj.BOOL_CLASS);
-		if (obj == null) {
-			return gt(vm, operand);
-		}
-		return (BoolObj) obj;
+		return (BoolObj) binaryApiExeUser(
+			vm, Names.METHOD_OP_GT, operand, BoolObj.BOOL_CLASS);
 	}
 
 	@Override
 	public final void gteqApi(VM vm, CandyObject operand) {
-		if (!binaryApi(vm, Names.METHOD_OP_GTEQ, operand)) {
-			vm.returnFromVM(gteq(vm, operand));
-		}
+		binaryApi(vm, Names.METHOD_OP_GTEQ, operand);
 	}
 
 	@Override
 	public final BoolObj gteqApiExeUser(VM vm, CandyObject operand) {
-		CandyObject obj = binaryApiExeUser(vm, Names.METHOD_OP_GTEQ, operand, BoolObj.BOOL_CLASS);
-		if (obj == null) {
-			return gteq(vm, operand);
-		}
-		return (BoolObj) obj;
+		return (BoolObj) binaryApiExeUser(
+			vm, Names.METHOD_OP_GTEQ, operand, BoolObj.BOOL_CLASS);
 	}
 
 	@Override
 	public final void ltApi(VM vm, CandyObject operand) {
-		if (!binaryApi(vm, Names.METHOD_OP_LT, operand)) {
-			vm.returnFromVM(lt(vm, operand));
-		}
+		binaryApi(vm, Names.METHOD_OP_LT, operand);
 	}
 
 	@Override
 	public final BoolObj ltApiExeUser(VM vm, CandyObject operand) {
-		CandyObject obj = binaryApiExeUser(vm, Names.METHOD_OP_LT, operand, BoolObj.BOOL_CLASS);
-		if (obj == null) {
-			return lt(vm, operand);
-		}
-		return (BoolObj) obj;
+		return (BoolObj) binaryApiExeUser(
+			vm, Names.METHOD_OP_LT, operand, BoolObj.BOOL_CLASS);
 	}
 
 	@Override
 	public final void lteqApi(VM vm, CandyObject operand) {
-		if (!binaryApi(vm, Names.METHOD_OP_LTEQ, operand)) {
-			vm.returnFromVM(lteq(vm, operand));
-		}
+		binaryApi(vm, Names.METHOD_OP_LTEQ, operand);
 	}
 
 	@Override
 	public final BoolObj lteqApiExeUser(VM vm, CandyObject operand) {
-		CandyObject obj = binaryApiExeUser(vm, Names.METHOD_OP_LTEQ, operand, BoolObj.BOOL_CLASS);
-		if (obj == null) {
-			return lteq(vm, operand);
-		}
-		return (BoolObj) obj;
+		return (BoolObj) binaryApiExeUser(
+			vm, Names.METHOD_OP_LTEQ, operand, BoolObj.BOOL_CLASS);
 	}
 	
 }

@@ -6,6 +6,7 @@ import com.nano.candy.interpreter.i2.builtin.type.MoudleObj;
 import com.nano.candy.interpreter.i2.rtda.moudle.CompiledFileInfo;
 import java.util.Collection;
 import java.util.HashMap;
+import com.nano.candy.interpreter.i2.builtin.type.classes.CandyClass;
 
 /**
  * This is the top scope of a Candy source file.
@@ -40,6 +41,10 @@ public class FileScope {
 	
 	public void defineCallable(CallableObj callableObj) {
 		setVar(callableObj.declredName(), callableObj);
+	}
+	
+	public void defineClass(CandyClass clazz) {
+		setVar(clazz.getCandyClassName(), clazz);
 	}
 	
 	public MoudleObj generateMoudleObject() {

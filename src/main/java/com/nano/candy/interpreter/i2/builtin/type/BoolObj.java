@@ -1,15 +1,17 @@
 package com.nano.candy.interpreter.i2.builtin.type;
 import com.nano.candy.interpreter.i2.builtin.BuiltinObject;
-import com.nano.candy.interpreter.i2.builtin.annotation.BuiltinClass;
-import com.nano.candy.interpreter.i2.builtin.type.classes.BuiltinClassFactory;
+import com.nano.candy.interpreter.i2.builtin.type.BoolObj;
 import com.nano.candy.interpreter.i2.builtin.type.classes.CandyClass;
+import com.nano.candy.interpreter.i2.cni.NativeClass;
+import com.nano.candy.interpreter.i2.cni.NativeClassRegister;
 import com.nano.candy.interpreter.i2.vm.VM;
 import com.nano.candy.std.StringFunctions;
 
-@BuiltinClass("Bool")
+@NativeClass(name = "Bool")
 public class BoolObj extends BuiltinObject {
 
-	public static final CandyClass BOOL_CLASS = BuiltinClassFactory.generate(BoolObj.class);
+	public static final CandyClass BOOL_CLASS =
+		NativeClassRegister.generateNativeClass(BoolObj.class);
 	
 	public static final BoolObj TRUE = new BoolObj(true);
 	public static final BoolObj FALSE = new BoolObj(false);

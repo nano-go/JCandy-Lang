@@ -1,17 +1,20 @@
 package com.nano.candy.interpreter.i2.builtin.type;
 
 import com.nano.candy.interpreter.i2.builtin.BuiltinObject;
-import com.nano.candy.interpreter.i2.builtin.annotation.BuiltinClass;
-import com.nano.candy.interpreter.i2.builtin.annotation.BuiltinMethod;
-import com.nano.candy.interpreter.i2.builtin.type.classes.BuiltinClassFactory;
+import com.nano.candy.interpreter.i2.builtin.CandyObject;
+import com.nano.candy.interpreter.i2.builtin.type.CallableObj;
 import com.nano.candy.interpreter.i2.builtin.type.classes.CandyClass;
 import com.nano.candy.interpreter.i2.builtin.utils.ObjectHelper;
+import com.nano.candy.interpreter.i2.cni.NativeClass;
+import com.nano.candy.interpreter.i2.cni.NativeClassRegister;
+import com.nano.candy.interpreter.i2.cni.NativeMethod;
 import com.nano.candy.interpreter.i2.vm.VM;
 
-@BuiltinClass("Callable")
+@NativeClass(name = "Callable")
 public abstract class CallableObj extends BuiltinObject {
 
-	public static final CandyClass CALLABLE_CLASS = BuiltinClassFactory.generate(CallableObj.class);
+	public static final CandyClass CALLABLE_CLASS = 
+		NativeClassRegister.generateNativeClass(CallableObj.class);
 	
 	protected String declredName;
 	protected String name;
@@ -51,14 +54,14 @@ public abstract class CallableObj extends BuiltinObject {
 		return ObjectHelper.toString(toStringTag(), "%s(%d)", name, arity);
 	}
 	
-	@BuiltinMethod(name = "arity")
-	public final void arity(VM vm) {
-		vm.returnFromVM(IntegerObj.valueOf(arity()));
+	@NativeMethod(name = "arity")
+	public final CandyObject arity(VM vm, CandyObject[] args) {
+		return IntegerObj.valueOf(arity());
 	}
 	
-	@BuiltinMethod(name = "name")
-	public final void name(VM vm) {
-		vm.returnFromVM(StringObj.valueOf(declredName));
+	@NativeMethod(name = "name")
+	public final CandyObject name(VM vm, CandyObject[] args) {
+		return StringObj.valueOf(declredName);
 	}
 	
 	@Override

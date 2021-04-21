@@ -157,7 +157,10 @@ public class CandyClass extends BuiltinObject {
 		}
 		Constructor<? extends CandyObject> constructor;
 		try {
-			constructor = objEntityClass.getConstructor();
+			constructor = objEntityClass.getDeclaredConstructor();
+			if (!constructor.isAccessible()) {
+				constructor.setAccessible(true);
+			}
 		} catch (NoSuchMethodException | SecurityException  e) {
 			new NativeError(
 				"The built-in class can't be instantiated: " + getCandyClassName()

@@ -41,7 +41,7 @@ import static com.nano.candy.interpreter.i2.instruction.Instructions.*;
 
 public final class VM {
 	
-	public static final boolean DEBUG = true;
+	public static final boolean DEBUG = false;
 	
 	private static final byte WIDE_INDEX_MARK = (byte) 0xFF;
 	
@@ -464,7 +464,7 @@ public final class VM {
 				if (e instanceof CarrierErrorException) {
 					err = ((CarrierErrorException) e).getErrorObj();
 				} else {
-					err = new NativeError(e.getMessage());
+					err = new NativeError(e);
 				}
 				if (tryToHandleError(err, true)) continue;
 				if (DEBUG) e.printStackTrace();

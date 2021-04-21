@@ -1,17 +1,18 @@
 package com.nano.candy.interpreter.i2.builtin.type;
 import com.nano.candy.interpreter.i2.builtin.CandyObject;
-import com.nano.candy.interpreter.i2.builtin.annotation.BuiltinClass;
+import com.nano.candy.interpreter.i2.builtin.type.IntegerObj;
 import com.nano.candy.interpreter.i2.builtin.type.NumberObj;
-import com.nano.candy.interpreter.i2.builtin.type.classes.BuiltinClassFactory;
 import com.nano.candy.interpreter.i2.builtin.type.classes.CandyClass;
+import com.nano.candy.interpreter.i2.cni.NativeClass;
+import com.nano.candy.interpreter.i2.cni.NativeClassRegister;
 import com.nano.candy.interpreter.i2.vm.VM;
 import com.nano.candy.std.StringFunctions;
 
-@BuiltinClass("Integer")
+@NativeClass(name = "Integer")
 public class IntegerObj extends NumberObj {
 	
-	public static final CandyClass INTEGER_CLASS = BuiltinClassFactory.generate(
-		IntegerObj.class, NumberObj.NUMBER_CLASS);
+	public static final CandyClass INTEGER_CLASS = 
+		NativeClassRegister.generateNativeClass(IntegerObj.class, NumberObj.NUMBER_CLASS);
 
 	private static final IntegerObj[] CACHES = new IntegerObj[256];
 	

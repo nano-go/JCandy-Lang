@@ -1,16 +1,18 @@
 package com.nano.candy.interpreter.i2.builtin.type;
 import com.nano.candy.interpreter.i2.builtin.BuiltinObject;
 import com.nano.candy.interpreter.i2.builtin.CandyObject;
-import com.nano.candy.interpreter.i2.builtin.annotation.BuiltinClass;
-import com.nano.candy.interpreter.i2.builtin.annotation.BuiltinMethod;
-import com.nano.candy.interpreter.i2.builtin.type.classes.BuiltinClassFactory;
+import com.nano.candy.interpreter.i2.builtin.type.NumberObj;
 import com.nano.candy.interpreter.i2.builtin.type.classes.CandyClass;
+import com.nano.candy.interpreter.i2.cni.NativeClass;
+import com.nano.candy.interpreter.i2.cni.NativeClassRegister;
+import com.nano.candy.interpreter.i2.cni.NativeMethod;
 import com.nano.candy.interpreter.i2.vm.VM;
 
-@BuiltinClass("Number")
+@NativeClass(name = "Number")
 public abstract class NumberObj extends BuiltinObject {
 	
-	public static final CandyClass NUMBER_CLASS = BuiltinClassFactory.generate(NumberObj.class);
+	public static final CandyClass NUMBER_CLASS = 
+		NativeClassRegister.generateNativeClass(NumberObj.class);
 	
 	public NumberObj(CandyClass clazz) {
 		super(clazz);
@@ -129,21 +131,19 @@ public abstract class NumberObj extends BuiltinObject {
 		return super.equals(vm, operand);
 	}
 	
-	@BuiltinMethod(name = "intVal")
-	public void intValue(VM vm) {
+	@NativeMethod(name = "intVal")
+	public CandyObject intValue(VM vm, CandyObject[] args) {
 		if (getCandyClass() == IntegerObj.INTEGER_CLASS) {
-			vm.returnFromVM(this);
-			return;
+			return this;
 		}
-		vm.returnFromVM(IntegerObj.valueOf(intValue()));
+		return IntegerObj.valueOf(intValue());
 	}
 	
-	@BuiltinMethod(name = "doubleVal")
-	public void doubleValue(VM vm) {
+	@NativeMethod(name = "doubleVal")
+	public CandyObject doubleValue(VM vm, CandyObject[] args) {
 		if (getCandyClass() == DoubleObj.DOUBLE_CLASS) {
-			vm.returnFromVM(this);
-			return;
+			return this;
 		}
-		vm.returnFromVM(DoubleObj.valueOf(doubleValue()));
+		return DoubleObj.valueOf(doubleValue());
 	}
 }

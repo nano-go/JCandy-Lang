@@ -2,19 +2,22 @@ package com.nano.candy.interpreter.i2.builtin.type;
 
 import com.nano.candy.interpreter.i2.builtin.BuiltinObject;
 import com.nano.candy.interpreter.i2.builtin.CandyObject;
-import com.nano.candy.interpreter.i2.builtin.annotation.BuiltinClass;
-import com.nano.candy.interpreter.i2.builtin.annotation.BuiltinMethod;
-import com.nano.candy.interpreter.i2.builtin.type.classes.BuiltinClassFactory;
+import com.nano.candy.interpreter.i2.builtin.type.Range;
 import com.nano.candy.interpreter.i2.builtin.type.classes.CandyClass;
 import com.nano.candy.interpreter.i2.builtin.type.error.TypeError;
 import com.nano.candy.interpreter.i2.builtin.utils.ObjectHelper;
+import com.nano.candy.interpreter.i2.cni.NativeClass;
+import com.nano.candy.interpreter.i2.cni.NativeClassRegister;
+import com.nano.candy.interpreter.i2.cni.NativeMethod;
 import com.nano.candy.interpreter.i2.vm.VM;
+import com.nano.candy.std.Names;
 import java.util.Objects;
 
-@BuiltinClass("Range")
+@NativeClass(name = "Range")
 public class Range extends BuiltinObject {
 	
-	public static final CandyClass RANGE_CLASS = BuiltinClassFactory.generate(Range.class);
+	public static final CandyClass RANGE_CLASS = 
+		NativeClassRegister.generateNativeClass(Range.class);
 	
 	protected static class RangeIterator extends IteratorObj {
 		private int v;
@@ -102,26 +105,26 @@ public class Range extends BuiltinObject {
 		return IntegerObj.valueOf(Objects.hash(left, right));
 	}
 
-	/*===================== Built-in Methods ===================*/
+	/*===================== Native Methods ===================*/
 
-	@BuiltinMethod(name = "", argc = 2)
-	public void initializer(VM vm) {
-		this.left = ObjectHelper.asInteger(vm.pop());
-		this.right = ObjectHelper.asInteger(vm.pop());
-		vm.returnFromVM(this);
+	@NativeMethod(name = Names.METHOD_INITALIZER, argc = 2)
+	public CandyObject initializer(VM vm, CandyObject[] args) {
+		this.left = ObjectHelper.asInteger(args[0]);
+		this.right = ObjectHelper.asInteger(args[1]);
+		return this;
 	}
 
-	@BuiltinMethod(name = "rand")
-	public void rand(VM vm) {
+	@NativeMethod(name = "rand")
+	public CandyObject rand(VM vm, CandyObject[] args) {
 		if (left == right) {
 			new TypeError("Empty set: %s", toString()).throwSelfNative();
 		}
 		long rand = left + (long) (Math.random() * (right - left)) ;
-		vm.returnFromVM(IntegerObj.valueOf(rand));
+		return IntegerObj.valueOf(rand);
 	}
 
-	@BuiltinMethod(name = "toArray")
-	public void toArray(VM vm) {
+	@NativeMethod(name = "toArray")
+	public CandyObject toArray(VM vm, CandyObject[] args) {
 		long length = length();
 		ArrayObj.checkCapacity(length);
 		int size = (int) length;
@@ -131,6 +134,6 @@ public class Range extends BuiltinObject {
 		for (int i = 0; i < size; i ++, e += v) {
 			elements[i] = IntegerObj.valueOf(e);
 		}
-		vm.returnFromVM(new ArrayObj(elements));
+		return new ArrayObj(elements);
 	}
 }

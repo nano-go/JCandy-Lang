@@ -1,33 +1,37 @@
 package com.nano.candy.interpreter.i2.cni;
+
 import com.nano.candy.interpreter.i2.builtin.CandyObject;
 import com.nano.candy.interpreter.i2.vm.VM;
 import java.lang.reflect.Method;
 
-public class CNativeFunction extends CNativeCallable {
+public class CNativeMethod extends CNativeCallable {
 	
 	private Method method;
-	protected CNativeFunction(String name, int arity, Method method) {
-		super(name, name, arity);
+	private int arity;
+
+	protected CNativeMethod(String simpleName, String name, int arity, Method method) {
+		// extra hidden instance argument.
+		super(simpleName, name, arity + 1);
 		this.method = method;
+		this.arity = arity;
 	}
 	
 	public Method getMethod() {
 		return method;
 	}
-	
+
 	@Override
 	protected CandyObject onCall(VM vm, CandyObject instance, CandyObject[] args) throws Exception {
-		return (CandyObject) method.invoke(null, vm, args);
+		return (CandyObject) method.invoke(instance, vm, args);
+	}
+
+	@Override
+	public boolean isMethod() {
+		return true;
 	}
 
 	@Override
 	protected String toStringTag() {
-		return "native function";
+		return "native method";
 	}
-	
-	@Override
-	public final boolean isMethod() {
-		return false;
-	}
-	
 }

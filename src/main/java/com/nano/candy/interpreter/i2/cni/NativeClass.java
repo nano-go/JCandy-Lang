@@ -1,4 +1,4 @@
-package com.nano.candy.interpreter.i2.builtin.annotation;
+package com.nano.candy.interpreter.i2.cni;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
@@ -7,9 +7,9 @@ import java.lang.annotation.Target;
 
 @Target(ElementType.TYPE)
 @Retention(RetentionPolicy.RUNTIME)
-public @interface BuiltinClass {
+public @interface NativeClass {
 	// Built-in class name.
-	String value() default "";
+	String name();
 	boolean isInheritable() default false;
 }
 

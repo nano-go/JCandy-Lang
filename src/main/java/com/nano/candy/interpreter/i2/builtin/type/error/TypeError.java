@@ -1,15 +1,15 @@
 package com.nano.candy.interpreter.i2.builtin.type.error;
 
 import com.nano.candy.interpreter.i2.builtin.CandyObject;
-import com.nano.candy.interpreter.i2.builtin.annotation.BuiltinClass;
-import com.nano.candy.interpreter.i2.builtin.type.classes.BuiltinClassFactory;
 import com.nano.candy.interpreter.i2.builtin.type.classes.CandyClass;
 import com.nano.candy.interpreter.i2.builtin.type.error.ErrorObj;
+import com.nano.candy.interpreter.i2.cni.NativeClass;
+import com.nano.candy.interpreter.i2.cni.NativeClassRegister;
 
-@BuiltinClass(value = "TypeError", isInheritable = true)
+@NativeClass(name = "TypeError", isInheritable = true)
 public class TypeError extends ErrorObj {
 	public static final CandyClass TYPE_ERROR_CLASS = 
-		BuiltinClassFactory.generate(TypeError.class, ERROR_CLASS);
+		NativeClassRegister.generateNativeClass(TypeError.class, ERROR_CLASS);
 		
 	public static void checkIsCallable(CandyObject callable) {
 		if (!callable.isCallable()) {

@@ -2,24 +2,26 @@ package com.nano.candy.interpreter.i2.builtin.type;
 
 import com.nano.candy.interpreter.i2.builtin.BuiltinObject;
 import com.nano.candy.interpreter.i2.builtin.CandyObject;
-import com.nano.candy.interpreter.i2.builtin.annotation.BuiltinClass;
-import com.nano.candy.interpreter.i2.builtin.annotation.BuiltinMethod;
 import com.nano.candy.interpreter.i2.builtin.type.ArrayObj;
 import com.nano.candy.interpreter.i2.builtin.type.StringObj;
-import com.nano.candy.interpreter.i2.builtin.type.classes.BuiltinClassFactory;
 import com.nano.candy.interpreter.i2.builtin.type.classes.CandyClass;
 import com.nano.candy.interpreter.i2.builtin.type.error.RangeError;
 import com.nano.candy.interpreter.i2.builtin.type.error.TypeError;
 import com.nano.candy.interpreter.i2.builtin.utils.ObjectHelper;
+import com.nano.candy.interpreter.i2.cni.NativeClass;
+import com.nano.candy.interpreter.i2.cni.NativeClassRegister;
+import com.nano.candy.interpreter.i2.cni.NativeMethod;
 import com.nano.candy.interpreter.i2.vm.VM;
 import com.nano.candy.std.StringFunctions;
 import com.nano.candy.utils.ArrayUtils;
 import java.util.ArrayList;
 
-@BuiltinClass("String")
+@NativeClass(name = "String")
 public class StringObj extends BuiltinObject {
 
-	public static final CandyClass STRING_CLASS = BuiltinClassFactory.generate(StringObj.class);
+	public static final CandyClass STRING_CLASS =
+		NativeClassRegister.generateNativeClass(StringObj.class);
+	
 	public static final StringObj EMPTY_STR = new StringObj("");
 	public static final StringObj RECURSIVE_LIST = new StringObj("[...]");
 	public static final StringObj EMPTY_LIST = new StringObj("[]");
@@ -87,54 +89,52 @@ public class StringObj extends BuiltinObject {
 		return hashCode;
 	}
 	
-	@BuiltinMethod(name = "substr", argc = 2)
-	public void substring(VM vm) {
-		long beginIndex = ObjectHelper.asInteger(vm.pop());
-		long endIndex = ObjectHelper.asInteger(vm.pop());
+	@NativeMethod(name = "substr", argc = 2)
+	public CandyObject substring(VM vm, CandyObject[] args) {
+		long beginIndex = ObjectHelper.asInteger(args[0]);
+		long endIndex = ObjectHelper.asInteger(args[1]);
 		final int size = value.length();
 		RangeError.checkIndex(beginIndex, size);
 		RangeError.checkIndexForAdd(endIndex, size);
 		if (beginIndex > endIndex) {
-			vm.returnFromVM(EMPTY_STR);
-			return;
+			return EMPTY_STR;
 		}
-		vm.returnFromVM(valueOf(value.substring(
-			(int) beginIndex, (int) endIndex)));
+		return valueOf(value.substring(
+			(int) beginIndex, (int) endIndex));
 	}
 	
-	@BuiltinMethod(name = "length")
-	public void length(VM vm) {
-		vm.returnFromVM(IntegerObj.valueOf(value.length()));
+	@NativeMethod(name = "length")
+	public CandyObject length(VM vm, CandyObject[] args) {
+		return IntegerObj.valueOf(value.length());
 	}
 	
-	@BuiltinMethod(name = "startWith", argc = 1)
-	public void startWith(VM vm) {
-		String str = vm.pop().strApiExeUser(vm).value;
-		vm.returnFromVM(BoolObj.valueOf(value.startsWith(str)));
+	@NativeMethod(name = "startWith", argc = 1)
+	public CandyObject startWith(VM vm, CandyObject[] args) {
+		String str = args[0].strApiExeUser(vm).value;
+		return BoolObj.valueOf(value.startsWith(str));
 	}
 	
-	@BuiltinMethod(name = "endWith", argc = 1)
-	public void endWith(VM vm) {
-		String str = vm.pop().strApiExeUser(vm).value;
-		vm.returnFromVM(BoolObj.valueOf(value.endsWith(str)));
+	@NativeMethod(name = "endWith", argc = 1)
+	public CandyObject endWith(VM vm, CandyObject[] args) {
+		String str = args[0].strApiExeUser(vm).value;
+		return BoolObj.valueOf(value.endsWith(str));
 	}
 	
-	@BuiltinMethod(name = "split", argc = 1)
-	public void split(VM vm) {
-		String regex = ObjectHelper.asString(vm.pop());
+	@NativeMethod(name = "split", argc = 1)
+	public CandyObject split(VM vm, CandyObject[] args) {
+		String regex = ObjectHelper.asString(args[0]);
 		String[] res = value.split(regex);
 		CandyObject[] elements = new CandyObject[res.length];
 		for (int i = 0; i < res.length; i ++) {
 			elements[i] = valueOf(res[i]);
 		}
-		vm.returnFromVM(new ArrayObj(elements));
+		return new ArrayObj(elements);
 	}
 	
-	@BuiltinMethod(name = "splitlines", argc = 0)
-	public void splitlines(VM vm) {
+	@NativeMethod(name = "splitlines")
+	public CandyObject splitlines(VM vm, CandyObject[] args) {
 		if (value.length() == 0) {
-			vm.returnFromVM(new ArrayObj(0));
-			return;
+			return new ArrayObj(0);
 		}
 		ArrayList<CandyObject> lines = new ArrayList<CandyObject>();
 		char[] buffer = new char[Math.min(value.length(), 128)];
@@ -152,38 +152,37 @@ public class StringObj extends BuiltinObject {
 		if (chars[chars.length-1] != '\n') {
 			lines.add(valueOf(String.valueOf(buffer, 0, bp)));
 		}
-		vm.returnFromVM(new ArrayObj(lines.toArray(ArrayObj.EMPTY_ARRAY)));
+		return new ArrayObj(lines.toArray(ArrayObj.EMPTY_ARRAY));
 	}
 	
-	@BuiltinMethod(name = "trim")
-	public void trim(VM vm) {
-		vm.returnFromVM(valueOf(value.trim()));
+	@NativeMethod(name = "trim")
+	public CandyObject trim(VM vm, CandyObject[] args) {
+		return valueOf(value.trim());
 	}
 	
-	@BuiltinMethod(name = "replaceFirst", argc = 2)
-	public void replace(VM vm) {
-		String regex = ObjectHelper.asString(vm.pop());
-		String replacement = vm.pop().strApiExeUser(vm).value;
-		vm.returnFromVM(valueOf(value.replaceFirst(regex, replacement)));
+	@NativeMethod(name = "replaceFirst", argc = 2)
+	public CandyObject replace(VM vm, CandyObject[] args) {
+		String regex = ObjectHelper.asString(args[0]);
+		String replacement = args[1].strApiExeUser(vm).value;
+		return valueOf(value.replaceFirst(regex, replacement));
 	}
 	
 
-	@BuiltinMethod(name = "replaceAll", argc = 2)
-	public void replaceAll(VM vm) {
-		String regex = ObjectHelper.asString(vm.pop());
-		String replacement = vm.pop().strApiExeUser(vm).value;
-		vm.returnFromVM(valueOf(value.replaceAll(regex, replacement)));
+	@NativeMethod(name = "replaceAll", argc = 2)
+	public CandyObject replaceAll(VM vm, CandyObject[] args) {
+		String regex = ObjectHelper.asString(args[0]);
+		String replacement = args[1].strApiExeUser(vm).value;
+		return valueOf(value.replaceAll(regex, replacement));
 	}
 	
-	@BuiltinMethod(name = "join", argc = 1)
-	public void join(VM vm) {
-		CandyObject obj = vm.pop();
+	@NativeMethod(name = "join", argc = 1)
+	public CandyObject join(VM vm, CandyObject[] args) {
+		CandyObject obj = args[0];
 		TypeError.checkTypeMatched(ArrayObj.ARRAY_CLASS, obj);
 		ArrayObj array = (ArrayObj) obj;
 		final int size = array.size();
 		if (size == 0) {
-			vm.returnFromVM(EMPTY_STR);
-			return;
+			return EMPTY_STR;
 		}
 		
 		StringBuilder builder = new StringBuilder();
@@ -197,16 +196,16 @@ public class StringObj extends BuiltinObject {
 			i ++;
 			builder.append(this.value);
 		}
-		vm.returnFromVM(valueOf(builder.toString()));
+		return valueOf(builder.toString());
 	}
 	
-	@BuiltinMethod(name = "toUpperCase") 
-	public void toUpperCase(VM vm){
-		vm.returnFromVM(valueOf(value.toUpperCase()));
+	@NativeMethod(name = "toUpperCase") 
+	public CandyObject toUpperCase(VM vm, CandyObject[] args){
+		return valueOf(value.toUpperCase());
 	}
 	
-	@BuiltinMethod(name = "toLowerCase") 
-	public void toLowerCase(VM vm){
-		vm.returnFromVM(valueOf(value.toLowerCase()));
+	@NativeMethod(name = "toLowerCase") 
+	public CandyObject toLowerCase(VM vm, CandyObject[] args){
+		return valueOf(value.toLowerCase());
 	}
 }

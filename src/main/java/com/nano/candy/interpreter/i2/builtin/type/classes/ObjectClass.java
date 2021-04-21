@@ -1,5 +1,8 @@
 package com.nano.candy.interpreter.i2.builtin.type.classes;
 import com.nano.candy.interpreter.i2.builtin.CandyObject;
+import com.nano.candy.interpreter.i2.cni.CNativeMethod;
+import com.nano.candy.interpreter.i2.cni.NativeMethodRegister;
+import com.nano.candy.std.Names;
 
 public class ObjectClass {
 	
@@ -12,11 +15,11 @@ public class ObjectClass {
 	}
 	
 	private static ClassSignature getObjectClassSignature() {
-		BuiltinMethodEntity[] methods = BuiltinMethodEntity.
-			createMethodEntities("Object", CandyObject.class);
+		CNativeMethod[] methods = NativeMethodRegister.
+			generateNativeMethods("Object", CandyObject.class);
 		ClassSignature signature = new ClassSignature("Object", null);
-		for (BuiltinMethodEntity method : methods) {
-			if ("".equals(method.declredName())) {
+		for (CNativeMethod method : methods) {
+			if (Names.METHOD_INITALIZER.equals(method.declredName())) {
 				signature.setInitializer(method);
 			} else {
 				signature.defineMethod(method);

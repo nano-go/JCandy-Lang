@@ -3,6 +3,7 @@ package com.nano.candy.interpreter.i2.builtin.utils;
 import com.nano.candy.interpreter.i2.builtin.CandyObject;
 import com.nano.candy.interpreter.i2.builtin.type.CallableObj;
 import com.nano.candy.interpreter.i2.builtin.type.IntegerObj;
+import com.nano.candy.interpreter.i2.builtin.type.NullPointer;
 import com.nano.candy.interpreter.i2.builtin.type.NumberObj;
 import com.nano.candy.interpreter.i2.builtin.type.StringObj;
 import com.nano.candy.interpreter.i2.builtin.type.classes.BoundBuiltinMethod;
@@ -42,6 +43,10 @@ public class ObjectHelper {
 		if (obj == null) {
 			new AttributeError(String.format(msg, args)).throwSelfNative();
 		}
+	}
+	
+	public static CandyObject preventNull(CandyObject obj) {
+		return obj == null ? NullPointer.nil() : obj;
 	}
 	
 	public static String toString(String tag, String content, Object... args) {
@@ -96,8 +101,12 @@ public class ObjectHelper {
 	}
 	
 	public static CandyObject callFunction(VM vm, CallableObj callable, CandyObject... args) {
-		for (int i = args.length-1; i >= 0; i --) {
-			vm.push(args[i]);
+		int expectedArity = args == null ? 0 : args.length;
+		ArgumentError.checkArity(callable, expectedArity);
+		if (args != null) {
+			for (int i = args.length-1; i >= 0; i --) {
+				vm.push(args[i]);
+			}
 		}
 		callable.onCall(vm);
 		if (!callable.isBuiltin()) {

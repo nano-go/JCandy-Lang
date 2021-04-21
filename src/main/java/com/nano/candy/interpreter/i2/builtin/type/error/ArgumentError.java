@@ -1,16 +1,16 @@
 package com.nano.candy.interpreter.i2.builtin.type.error;
 
 import com.nano.candy.interpreter.i2.builtin.CandyObject;
-import com.nano.candy.interpreter.i2.builtin.annotation.BuiltinClass;
 import com.nano.candy.interpreter.i2.builtin.type.CallableObj;
-import com.nano.candy.interpreter.i2.builtin.type.classes.BuiltinClassFactory;
 import com.nano.candy.interpreter.i2.builtin.type.classes.CandyClass;
+import com.nano.candy.interpreter.i2.cni.NativeClass;
+import com.nano.candy.interpreter.i2.cni.NativeClassRegister;
 
-@BuiltinClass(value = "ArgumentError", isInheritable = true)
+@NativeClass(name = "ArgumentError", isInheritable = true)
 public class ArgumentError extends ErrorObj {
 
 	public static final CandyClass ARGUMENT_ERROR_CLASS = 
-		BuiltinClassFactory.generate(ArgumentError.class, ERROR_CLASS);
+		NativeClassRegister.generateNativeClass(ArgumentError.class, ERROR_CLASS);
 	
 	public static void checkArity(CandyObject callable, int actual) {
 		if (callable.arity() != actual) {

@@ -1,23 +1,25 @@
 package com.nano.candy.interpreter.i2.builtin.type.error;
 
 import com.nano.candy.interpreter.i2.builtin.CandyObjEntity;
-import com.nano.candy.interpreter.i2.builtin.annotation.BuiltinClass;
-import com.nano.candy.interpreter.i2.builtin.annotation.BuiltinMethod;
+import com.nano.candy.interpreter.i2.builtin.CandyObject;
 import com.nano.candy.interpreter.i2.builtin.type.ArrayObj;
 import com.nano.candy.interpreter.i2.builtin.type.StringObj;
-import com.nano.candy.interpreter.i2.builtin.type.classes.BuiltinClassFactory;
 import com.nano.candy.interpreter.i2.builtin.type.classes.CandyClass;
 import com.nano.candy.interpreter.i2.builtin.utils.ObjectHelper;
+import com.nano.candy.interpreter.i2.cni.NativeClass;
+import com.nano.candy.interpreter.i2.cni.NativeClassRegister;
+import com.nano.candy.interpreter.i2.cni.NativeMethod;
 import com.nano.candy.interpreter.i2.rtda.StackFrame;
 import com.nano.candy.interpreter.i2.vm.CarrierErrorException;
 import com.nano.candy.interpreter.i2.vm.VM;
+import com.nano.candy.std.Names;
 import java.util.Arrays;
 
-@BuiltinClass(value = "Error", isInheritable = true)
+@NativeClass(name = "Error", isInheritable = true)
 public class ErrorObj extends CandyObjEntity {
 	
 	public static final CandyClass ERROR_CLASS = 
-		BuiltinClassFactory.generate(ErrorObj.class);
+		NativeClassRegister.generateNativeClass(ErrorObj.class);
 	
 	protected StackTraceElementObj[] stackTraceElements;
 	protected String message;
@@ -96,12 +98,11 @@ public class ErrorObj extends CandyObjEntity {
 		return builder.toString();
 	}
 	
-	@BuiltinMethod(name = "", argc = 1)
-	protected void init(VM vm) {
+	@NativeMethod(name = Names.METHOD_INITALIZER, argc = 1)
+	protected CandyObject init(VM vm, CandyObject[] args) {
 		if (this.stackTraceElements != null && 
 		     this.stackTraceElements.length != 0 ) {
-			vm.returnFromVM(this);
-			return;
+			return this;
 		}
 		vm.syncPcToTopFrame();
 		int offset = 0;
@@ -110,31 +111,31 @@ public class ErrorObj extends CandyObjEntity {
 		}
 		this.stackTraceElements = 
 			StackTraceElementObj.getStackTraceElements(vm.getFrameStack(), offset);	
-		this.message = ObjectHelper.asString(vm.pop());
-		vm.returnFromVM(this);
+		this.message = ObjectHelper.asString(args[0]);
+		return this;
 	}
 	
-	@BuiltinMethod(name = "getStackTraceElements", argc = 0)
-	protected void getStackTraceElements(VM vm) {
-		vm.returnFromVM(new ArrayObj(Arrays.copyOf(
+	@NativeMethod(name = "getStackTraceElements")
+	protected CandyObject getStackTraceElements(VM vm, CandyObject[] args) {
+		return new ArrayObj(Arrays.copyOf(
 			stackTraceElements, stackTraceElements.length
-		)));
+		));
 	}
 	
-	@BuiltinMethod(name = "getMessage", argc = 0)
-	protected void getMessage(VM vm) {
-		vm.returnFromVM(StringObj.valueOf(message));
+	@NativeMethod(name = "getMessage")
+	protected CandyObject getMessage(VM vm, CandyObject[] args) {
+		return StringObj.valueOf(message);
 	}
 	
-	@BuiltinMethod(name = "setMessage", argc = 1)
-	protected void setMessage(VM vm) {
-		setMessage(ObjectHelper.asString(vm.pop()));
-		vm.returnNilFromVM();
+	@NativeMethod(name = "setMessage", argc = 1)
+	protected CandyObject setMessage(VM vm, CandyObject[] args) {
+		setMessage(ObjectHelper.asString(args[0]));
+		return null;
 	}
 	
-	@BuiltinMethod(name = "sprintStackTrace", argc = 1)
-	protected void sprintStackTrace(VM vm) {
-		int maxFrames = (int) ObjectHelper.asInteger(vm.pop());
-		vm.returnFromVM(StringObj.valueOf(sprintStackTrace(maxFrames)));
+	@NativeMethod(name = "sprintStackTrace", argc = 1)
+	protected CandyObject sprintStackTrace(VM vm, CandyObject[] args) {
+		int maxFrames = (int) ObjectHelper.asInteger(args[0]);
+		return StringObj.valueOf(sprintStackTrace(maxFrames));
 	}
 }

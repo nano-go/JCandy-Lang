@@ -1,16 +1,16 @@
 package com.nano.candy.interpreter.i2.builtin.type.error;
 
-import com.nano.candy.interpreter.i2.builtin.annotation.BuiltinClass;
-import com.nano.candy.interpreter.i2.builtin.type.classes.BuiltinClassFactory;
 import com.nano.candy.interpreter.i2.builtin.type.classes.CandyClass;
+import com.nano.candy.interpreter.i2.cni.NativeClass;
+import com.nano.candy.interpreter.i2.cni.NativeClassRegister;
 import com.nano.candy.sys.CandySystem;
 import java.io.File;
 import java.io.IOException;
 
-@BuiltinClass(value = "IOError", isInheritable = true)
+@NativeClass(name = "IOError", isInheritable = true)
 public class IOError extends ErrorObj {
 	public static final CandyClass IO_ERROR_CLASS = 
-		BuiltinClassFactory.generate(IOError.class, ERROR_CLASS);
+		NativeClassRegister.generateNativeClass(IOError.class, ERROR_CLASS);
 	/**
 	 * Throws a <code>IOError</code> if the specified file is
 	 * not a Candy source file.

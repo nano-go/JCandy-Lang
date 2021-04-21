@@ -1,14 +1,14 @@
 package com.nano.candy.interpreter.i2.builtin.type.error;
 
 import com.nano.candy.interpreter.i2.builtin.CandyObject;
-import com.nano.candy.interpreter.i2.builtin.annotation.BuiltinClass;
-import com.nano.candy.interpreter.i2.builtin.type.classes.BuiltinClassFactory;
 import com.nano.candy.interpreter.i2.builtin.type.classes.CandyClass;
+import com.nano.candy.interpreter.i2.cni.NativeClass;
+import com.nano.candy.interpreter.i2.cni.NativeClassRegister;
 
-@BuiltinClass(value = "AttributeError", isInheritable = true)
+@NativeClass(name = "AttributeError", isInheritable = true)
 public class AttributeError extends ErrorObj {
 	public static final CandyClass ATTR_ERROR_CLASS = 
-		BuiltinClassFactory.generate(AttributeError.class, ERROR_CLASS);
+		NativeClassRegister.generateNativeClass(AttributeError.class, ERROR_CLASS);
 
 	public static void checkAttributeNull(CandyObject obj, String attrStr, CandyObject attr) {
 		if (attr == null) {

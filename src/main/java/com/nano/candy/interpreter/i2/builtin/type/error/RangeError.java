@@ -1,14 +1,13 @@
 package com.nano.candy.interpreter.i2.builtin.type.error;
 
-import com.nano.candy.interpreter.i2.builtin.annotation.BuiltinClass;
-import com.nano.candy.interpreter.i2.builtin.type.classes.BuiltinClassFactory;
 import com.nano.candy.interpreter.i2.builtin.type.classes.CandyClass;
-import com.nano.candy.interpreter.i2.builtin.type.error.RangeError;
+import com.nano.candy.interpreter.i2.cni.NativeClass;
+import com.nano.candy.interpreter.i2.cni.NativeClassRegister;
 
-@BuiltinClass(value = "RangeError", isInheritable = true)
+@NativeClass(name = "RangeError", isInheritable = true)
 public class RangeError extends ErrorObj {
 	public static final CandyClass RANGE_ERROR_CLASS = 
-		BuiltinClassFactory.generate(RangeError.class, ERROR_CLASS);
+		NativeClassRegister.generateNativeClass(RangeError.class, ERROR_CLASS);
 	
 	public static void checkIndexForAdd(long index, int size) {
 		checkIndex(index, size + 1);

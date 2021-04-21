@@ -1,14 +1,34 @@
 package com.nano.candy.interpreter.i2.builtin.type.error;
 
-import com.nano.candy.interpreter.i2.builtin.annotation.BuiltinClass;
-import com.nano.candy.interpreter.i2.builtin.type.classes.BuiltinClassFactory;
 import com.nano.candy.interpreter.i2.builtin.type.classes.CandyClass;
+import com.nano.candy.interpreter.i2.cni.NativeClass;
+import com.nano.candy.interpreter.i2.cni.NativeClassRegister;
+import java.io.IOException;
+import java.io.PrintWriter;
+import java.io.StringWriter;
 
-@BuiltinClass(value = "NativeError", isInheritable = true)
+@NativeClass(name = "NativeError", isInheritable = true)
 public class NativeError extends ErrorObj {
 	public static final CandyClass NATIVE_ERROR_CLASS = 
-		BuiltinClassFactory.generate(NativeError.class, ERROR_CLASS);
+		NativeClassRegister.generateNativeClass(NativeError.class, ERROR_CLASS);
 	
+	private static String nativeErrorMessage(Throwable throwable) {
+		StringWriter sw = new StringWriter();
+		PrintWriter pw = new PrintWriter(sw);
+		throwable.printStackTrace(pw);
+		String msg = String.format(
+			"A java exception occurs.\n    %s: %s\n    java stack:%s", 
+			throwable.getClass().getSimpleName(), 
+			throwable.getMessage(),
+			sw.toString()
+		);
+		try {
+			pw.close();
+			sw.close();
+		} catch (IOException e) {}
+		return msg;
+	}
+		
 	public NativeError() {
 		super(NATIVE_ERROR_CLASS);
 	}
@@ -18,10 +38,6 @@ public class NativeError extends ErrorObj {
 	}
 	
 	public NativeError(Throwable throwable) {
-		this(String.format(
-			"A java error occurs.\n    %s: %s", 
-			throwable.getClass().getSimpleName(), 
-			throwable.getMessage()
-		));
+		this(nativeErrorMessage(throwable));
 	}
 }
