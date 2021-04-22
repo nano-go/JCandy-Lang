@@ -28,9 +28,9 @@ public class ModuleObj extends BuiltinObject {
 	
 	@Override
 	public CandyObject getAttr(VM vm, String attr) {
-		CandyObject obj = attrs.get(attr).getValue();
-		if (obj != null) {
-			return obj;
+		Variable variable = attrs.get(attr);
+		if (variable != null) {
+			return variable.getValue();
 		}
 		return super.getAttr(vm, attr);
 	}
