@@ -2,8 +2,8 @@ package com.nano.candy.interpreter.i2.builtin.type;
 import com.nano.candy.interpreter.i2.builtin.BuiltinObject;
 import com.nano.candy.interpreter.i2.builtin.CandyObject;
 import com.nano.candy.interpreter.i2.builtin.type.IteratorObj;
+import com.nano.candy.interpreter.i2.builtin.type.classes.BoundBuiltinMethod;
 import com.nano.candy.interpreter.i2.builtin.type.classes.ObjectClass;
-import com.nano.candy.interpreter.i2.builtin.utils.ObjectHelper;
 import com.nano.candy.interpreter.i2.rtda.Variable;
 import com.nano.candy.interpreter.i2.vm.VM;
 import com.nano.candy.std.Names;
@@ -97,12 +97,12 @@ public abstract class IteratorObj extends BuiltinObject {
 	}
 
 	private CandyObject genNextMethod() {
-		return ObjectHelper.genMethod(this,
+		return new BoundBuiltinMethod(this,
 			Names.METHOD_ITERATOR_NEXT, 0, IteratorObj::next);
 	}
 	
 	private CandyObject genHasNextMethod() {
-		return ObjectHelper.genMethod(this,
+		return new BoundBuiltinMethod(this,
 			Names.METHOD_ITERATOR_HAS_NEXT,0, IteratorObj::hasNext);
 	}
 	

@@ -12,9 +12,10 @@ public class ArgumentError extends ErrorObj {
 	public static final CandyClass ARGUMENT_ERROR_CLASS = 
 		NativeClassRegister.generateNativeClass(ArgumentError.class, ERROR_CLASS);
 	
-	public static void checkArity(CandyObject callable, int actual) {
-		if (callable.arity() != actual) {
-			new ArgumentError(callable, actual).throwSelfNative();
+	public static void checkArity(CandyObject callable, int expectedArity) {
+		if (callable.arity() != expectedArity) {
+			new ArgumentError(callable, expectedArity)
+				.throwSelfNative();
 		}
 	}
 

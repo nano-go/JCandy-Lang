@@ -10,7 +10,6 @@ public class Variable implements Comparable<Variable> {
 		return new Variable(name, value);
 	}
 	
-
 	private Variable(String name, CandyObject value) {
 		this.name = name;
 		this.value = value;

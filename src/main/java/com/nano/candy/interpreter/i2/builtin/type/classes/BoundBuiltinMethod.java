@@ -6,19 +6,30 @@ import com.nano.candy.interpreter.i2.builtin.utils.ObjectHelper;
 import com.nano.candy.interpreter.i2.vm.VM;
 
 /**
- * This is a bound built-in method which is a faster implementation way
- * of the bound method.
+ * This is a built-in method bound with an instance.
  *
- * You can simply create the method object by 
- * 'ObjectHelper#genMethod(CandyObject, String, int)' and the method reference
- * feature in Java8.
+ * It is easy and portable to create a built-in method by the 
+ * java 8 functional feature, Method-Reference.
  */
 public class BoundBuiltinMethod extends CallableObj {
 
 	private CandyObject receiver;
 	private MethodCallback callback;
 	
-	public BoundBuiltinMethod(CandyObject receiver, String name, int arity, MethodCallback callback) {
+	/**
+	 * For example:
+	 * <pre><code>
+	 * public static CandyObject xxx(CandyObject instance, VM vm) {...}
+	 * ...
+	 * return new BoundBuiltinMethod(this, xxx, 2, ClassName::xxx);
+	 * </code></pre>
+	 *
+	 * @param receiver the instance bound with this.
+	 * @param name     the name of this method.
+	 * @param arity    the arity of this method (excluding self). 
+	 */
+	public BoundBuiltinMethod(CandyObject receiver, String name, 
+	                          int arity, MethodCallback callback) {
 		super(name, ObjectHelper.methodName(
 			receiver.getCandyClass(), name
 		), arity);

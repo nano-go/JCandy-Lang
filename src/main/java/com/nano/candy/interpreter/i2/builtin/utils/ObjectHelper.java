@@ -6,9 +6,7 @@ import com.nano.candy.interpreter.i2.builtin.type.IntegerObj;
 import com.nano.candy.interpreter.i2.builtin.type.NullPointer;
 import com.nano.candy.interpreter.i2.builtin.type.NumberObj;
 import com.nano.candy.interpreter.i2.builtin.type.StringObj;
-import com.nano.candy.interpreter.i2.builtin.type.classes.BoundBuiltinMethod;
 import com.nano.candy.interpreter.i2.builtin.type.classes.CandyClass;
-import com.nano.candy.interpreter.i2.builtin.type.classes.MethodCallback;
 import com.nano.candy.interpreter.i2.builtin.type.error.ArgumentError;
 import com.nano.candy.interpreter.i2.builtin.type.error.AttributeError;
 import com.nano.candy.interpreter.i2.builtin.type.error.TypeError;
@@ -59,10 +57,6 @@ public class ObjectHelper {
 	
 	public static String methodName(String className, String methodName) {
 		return className + "." + methodName;
-	}
-	
-	public static CallableObj genMethod(CandyObject receiver, String name, int arity, MethodCallback callback) {
-		return new BoundBuiltinMethod(receiver, name, arity, callback);
 	}
 	
 	public static String callStr(VM vm, CandyObject obj) {

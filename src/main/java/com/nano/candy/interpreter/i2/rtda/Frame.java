@@ -13,7 +13,7 @@ import java.util.ListIterator;
 public final class Frame implements Recyclable {
 	
 	private static final GenericObjectPool<Frame> FRAME_POOL =
-		new GenericObjectPool<Frame>(50, new Frame[0]);
+		new GenericObjectPool<Frame>(100, new Frame[0]);
 	
 	public static Frame fetchFrame(Chunk chunk, FileScope scope)  {
 		Frame f = FRAME_POOL.fetch();
@@ -129,19 +129,6 @@ public final class Frame implements Recyclable {
 		return openUpvalue;
 	}
 	
-	public void closeUpvalues(int index) {
-		ListIterator<Upvalue> i = openUpvalues.listIterator();
-		while (i.hasNext()) {
-			Upvalue upvalue = i.next();
-			if (upvalue.index() == index) {
-				upvalue.close();
-				i.remove();
-				return;
-			}
-		}
-		throw new Error();
-	}
-	
 	public void closeUpvalues(ConstantValue.CloseIndexes closeInfo) {
 		if (openUpvalues == null) {
 			return;
@@ -202,7 +189,7 @@ public final class Frame implements Recyclable {
 	
 	/**
 	 * Returns the current line number, assuming the instruction that
-	 * want to locate has executed already.
+	 * want to locate has executed.
 	 */
 	public int currentLineExecuted() {
 		return chunk.getLineNumber(pc-1);
@@ -220,7 +207,7 @@ public final class Frame implements Recyclable {
 		slots[slot] = value;
 	}
 	
-	public void resetAllSlots() {
+	public void clearSlots() {
 		for (int i = 0; i < slots.length; i ++) {
 			slots[i] = null;
 		}
@@ -245,7 +232,7 @@ public final class Frame implements Recyclable {
 	@Override
 	public void release() {
 		this.closeAllUpvalues();
-		this.resetAllSlots();
+		this.clearSlots();
 		this.chunk = null;
 		this.name = null;
 		this.opStack = null;

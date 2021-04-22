@@ -212,17 +212,20 @@ public class CodeGenerator implements AstVisitor<Void, Void> {
 	}
 	
 	/**
-	 * Generates code to assign the value of its left-hand operand to its
-	 * right-hand operand, a variable or an attribute or an indexer element.
+	 * Generates code to assign an expression to an attribute, an item
+	 * or a variable.
 	 *
-	 * Assign:  a    op= value
-	 * SetAttr: a.b  op= value
-	 * SetItem: a[c] op= value
+	 * @param lhs the left-hand side of the assignment.
+	 *
+	 * @param operator assignment operator or it a binary operator if
+	 *                 it is a compound assigment such as a += b.
+	 *
+	 * @param rhs the right-hand side of the assignment.
 	 */ 
-	private void writeAssignExpr(Expr lhs, TokenKind operator, Expr rhs) {
+	private void writeAssignmentExpr(Expr lhs, TokenKind operator, Expr rhs) {
 		boolean isCompoundAssignment = operator != TokenKind.ASSIGN;
 		if (isCompoundAssignment) {
-			loadLeftValue(lhs);
+			loadLeftHandSide(lhs);
 		}
 		rhs.accept(this);
 		if (isCompoundAssignment) {
@@ -233,9 +236,9 @@ public class CodeGenerator implements AstVisitor<Void, Void> {
 	}
 	
 	/**
-	 * Load the given lhs expression to stack top.
+	 * Load the left-hand side of the assignment to stack top.
 	 */
-	private void loadLeftValue(Expr lhs) {
+	private void loadLeftHandSide(Expr lhs) {
 		if (lhs instanceof Expr.Assign) {	
 			loadVariable(((Expr.Assign)lhs).name, line(lhs));	
 			return;
@@ -735,7 +738,7 @@ public class CodeGenerator implements AstVisitor<Void, Void> {
 
 	@Override
 	public Void visit(Expr.Assign node) {
-		writeAssignExpr(node, node.assignOperator, node.rhs);
+		writeAssignmentExpr(node, node.assignOperator, node.rhs);
 		return null;
 	}
 
@@ -884,7 +887,7 @@ public class CodeGenerator implements AstVisitor<Void, Void> {
 
 	@Override
 	public Void visit(Expr.SetAttr node) {
-		writeAssignExpr(node, node.assignOperator, node.rhs);
+		writeAssignmentExpr(node, node.assignOperator, node.rhs);
 		return null;
 	}
 
@@ -898,7 +901,7 @@ public class CodeGenerator implements AstVisitor<Void, Void> {
 
 	@Override
 	public Void visit(Expr.SetItem node) {
-		writeAssignExpr(node, node.assignOperator, node.rhs);
+		writeAssignmentExpr(node, node.assignOperator, node.rhs);
 		return null;
 	}
 
