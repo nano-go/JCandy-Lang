@@ -1,0 +1,4 @@
+select([
+	"arr_sample",
+	"number_rand"
+])

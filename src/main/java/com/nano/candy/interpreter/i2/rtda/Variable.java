@@ -23,7 +23,7 @@ public class Variable implements Comparable<Variable> {
 		return name;
 	}
 
-	protected void setValue(CandyObject value) {
+	public void setValue(CandyObject value) {
 		this.value = value;
 	}
 

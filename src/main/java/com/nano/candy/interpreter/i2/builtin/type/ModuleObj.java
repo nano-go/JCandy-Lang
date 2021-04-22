@@ -34,13 +34,23 @@ public class ModuleObj extends BuiltinObject {
 		}
 		return super.getAttr(vm, attr);
 	}
+
+	@Override
+	public CandyObject setAttr(VM vm, String attr, CandyObject ref) {
+		Variable variable = attrs.get(attr);
+		if (variable != null) {
+			variable.setValue(ref);
+			return ref;
+		}
+		return super.setAttr(vm, attr, ref);
+	}
 	
 	public void defineTo(HashMap<String, Variable> vars) {
 		vars.putAll(attrs);
 	}
 	
 	public void defineTo(ModuleObj moudleObj) {
-		attrs.putAll(moudleObj.attrs);
+		moudleObj.attrs.putAll(this.attrs);
 	}
 	
 	public void addToScope(GlobalScope gs) {

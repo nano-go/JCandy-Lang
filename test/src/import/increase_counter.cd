@@ -1,0 +1,2 @@
+import "counter.cd" as c
+c.counter += 1

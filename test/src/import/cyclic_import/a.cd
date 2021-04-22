@@ -1,0 +1,5 @@
+try {
+	import "b" as b
+} intercept ModuleError as e {
+	println(e.getMessage())
+}

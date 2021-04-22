@@ -10,6 +10,25 @@ public class CandySystem {
 	public static final String DEFAULT_USER_DIR = getUserDirectory();
 	public static final int DEFAULT_MAX_STACK = 1024 * 8;
 	
+	private static String CANDY_HOME;
+	private static String CANDY_LIBS;
+	
+	public static void init() {
+		CANDY_HOME = System.getenv("CANDY_HOME");
+		if (CANDY_HOME != null) {
+			String libs = CANDY_HOME.endsWith("/") ? "libs" : "/libs";
+			CANDY_LIBS = CANDY_HOME + libs;
+		}
+	}
+	
+	public static String getCandyHomePath() {
+		return CANDY_HOME;
+	}
+	
+	public static String getCandyLibsPath() {
+		return CANDY_LIBS;
+	}
+	
 	public static boolean isCandySource(String fileName) {
 		return fileName.endsWith("." + FILE_SUFFIX);
 	}

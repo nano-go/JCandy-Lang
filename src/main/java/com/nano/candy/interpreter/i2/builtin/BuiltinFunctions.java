@@ -1,14 +1,17 @@
 package com.nano.candy.interpreter.i2.builtin;
 import com.nano.candy.interpreter.i2.builtin.type.ArrayObj;
 import com.nano.candy.interpreter.i2.builtin.type.IntegerObj;
+import com.nano.candy.interpreter.i2.builtin.type.ModuleObj;
 import com.nano.candy.interpreter.i2.builtin.type.Range;
 import com.nano.candy.interpreter.i2.builtin.type.StringObj;
 import com.nano.candy.interpreter.i2.builtin.type.error.IOError;
 import com.nano.candy.interpreter.i2.builtin.type.error.NativeError;
+import com.nano.candy.interpreter.i2.builtin.type.error.TypeError;
 import com.nano.candy.interpreter.i2.builtin.utils.ObjectHelper;
 import com.nano.candy.interpreter.i2.cni.NativeContext;
 import com.nano.candy.interpreter.i2.cni.NativeFunc;
 import com.nano.candy.interpreter.i2.cni.NativeLibraryLoader;
+import com.nano.candy.interpreter.i2.rtda.module.ModuleManager;
 import com.nano.candy.interpreter.i2.vm.VM;
 import java.io.IOException;
 
@@ -62,6 +65,20 @@ public class BuiltinFunctions {
 	public static CandyObject importFile(VM vm, CandyObject[] args) {
 		String filePath = ObjectHelper.asString(args[0]);
 		return vm.getModuleManager().importFile(vm, filePath);
+	}
+	
+	@NativeFunc(name = "select", arity = 1)
+	public static CandyObject select(VM vm, CandyObject[] args) {
+		TypeError.checkTypeMatched(ArrayObj.ARRAY_CLASS, args[0]);
+		ArrayObj files = (ArrayObj) args[0];
+		final int size = files.size();
+		final ModuleManager m = vm.getModuleManager();
+		for (int i = 0; i < size; i ++) {
+			ModuleObj moduleObj =
+				m.importFile(vm, ObjectHelper.asString(files.get(i)));
+			moduleObj.addToScope(vm.getGlobalScope());
+		}
+		return null;
 	}
 
 	@NativeFunc(name = "cmdArgs", arity = 0)

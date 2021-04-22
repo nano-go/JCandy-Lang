@@ -1,8 +1,9 @@
 package com.nano.candy.std;
 import com.nano.candy.utils.Characters;
 
-
 public class Names {
+	
+	public static final String MOUDLE_FILE_NAME = "__module__.cd";
 	
 	public static final String METHOD_INITALIZER = "init";
 	

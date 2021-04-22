@@ -1,6 +1,7 @@
 package com.nano.candy.main;
 import com.nano.candy.interpreter.Interpreter;
 import com.nano.candy.interpreter.InterpreterFactory;
+import com.nano.candy.sys.CandySystem;
 
 public class CandyRun {
 	
@@ -13,6 +14,7 @@ public class CandyRun {
 	}
 	
 	public void main() throws Exception {
+		CandySystem.init();
 		if (options.isPrintHelper()) {
 			options.printHelper();
 			return;
@@ -20,6 +22,4 @@ public class CandyRun {
 		interpreter.enter(options.interpreterOptions);
 		options.tool.run(interpreter, options);
 	}
-
-
 }

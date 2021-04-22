@@ -19,6 +19,7 @@ import com.nano.candy.interpreter.i2.builtin.type.error.AttributeError;
 import com.nano.candy.interpreter.i2.builtin.type.error.CompilerError;
 import com.nano.candy.interpreter.i2.builtin.type.error.ErrorObj;
 import com.nano.candy.interpreter.i2.builtin.type.error.IOError;
+import com.nano.candy.interpreter.i2.builtin.type.error.ModuleError;
 import com.nano.candy.interpreter.i2.builtin.type.error.NameError;
 import com.nano.candy.interpreter.i2.builtin.type.error.NativeError;
 import com.nano.candy.interpreter.i2.builtin.type.error.RangeError;
@@ -56,6 +57,7 @@ public class GlobalScope {
 
 	private static void defineBuiltinErrorClasses() {
 		defineClass(ErrorObj.ERROR_CLASS);
+		defineClass(ModuleError.MODULE_ERROR_CLASS);
 		defineClass(ArgumentError.ARGUMENT_ERROR_CLASS);
 		defineClass(AssertionError.ASSERTION_ERROR_CLASS);
 		defineClass(AttributeError.ATTR_ERROR_CLASS);
