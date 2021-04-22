@@ -10,7 +10,7 @@ fun test(clazz) {
 test(Integer)
 test(Double)
 test(Number)
-test(Moudle)
+test(Module)
 test(String)
 test(Bool)
 

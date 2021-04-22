@@ -1,4 +1,4 @@
-package com.nano.candy.interpreter.i2.rtda.moudle;
+package com.nano.candy.interpreter.i2.rtda.module;
 
 import com.nano.candy.interpreter.i2.builtin.type.error.IOError;
 import com.nano.candy.interpreter.i2.vm.CarrierErrorException;

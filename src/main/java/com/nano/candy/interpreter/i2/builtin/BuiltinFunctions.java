@@ -61,7 +61,7 @@ public class BuiltinFunctions {
 	@NativeFunc(name = "importFile", arity = 1)
 	public static CandyObject importFile(VM vm, CandyObject[] args) {
 		String filePath = ObjectHelper.asString(args[0]);
-		return vm.getMoudleManager().importFile(vm, filePath);
+		return vm.getModuleManager().importFile(vm, filePath);
 	}
 
 	@NativeFunc(name = "cmdArgs", arity = 0)

@@ -1,17 +1,21 @@
-package com.nano.candy.interpreter.i2.rtda.moudle;
+package com.nano.candy.interpreter.i2.rtda.module;
 
 import com.nano.candy.interpreter.i2.rtda.chunk.Chunk;
 import java.io.File;
 
 /**
- * This denotes a compiled source file or a command line.
+ * This denotes a compiled source file or a compiled chunk.
  */
 public class CompiledFileInfo {
 
-	private String filepath;
-	private String simpleName;
-	private boolean isRealFile;
-	private Chunk chunk;
+	private final String filepath;
+	private final String simpleName;
+	private final Chunk chunk;
+	
+	/**
+	 * Whether this file is existed and is a source file.
+	 */
+	private final boolean isRealFile;
 
 	public CompiledFileInfo(String filepath, Chunk chunk) {
 		this(filepath, chunk, true);

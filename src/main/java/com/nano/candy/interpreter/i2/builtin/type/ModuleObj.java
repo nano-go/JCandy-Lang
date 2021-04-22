@@ -2,36 +2,51 @@ package com.nano.candy.interpreter.i2.builtin.type;
 
 import com.nano.candy.interpreter.i2.builtin.BuiltinObject;
 import com.nano.candy.interpreter.i2.builtin.CandyObject;
-import com.nano.candy.interpreter.i2.builtin.type.MoudleObj;
+import com.nano.candy.interpreter.i2.builtin.type.ModuleObj;
 import com.nano.candy.interpreter.i2.builtin.type.classes.CandyClass;
 import com.nano.candy.interpreter.i2.cni.NativeClass;
 import com.nano.candy.interpreter.i2.cni.NativeClassRegister;
 import com.nano.candy.interpreter.i2.cni.NativeMethod;
+import com.nano.candy.interpreter.i2.rtda.GlobalScope;
 import com.nano.candy.interpreter.i2.rtda.Variable;
 import com.nano.candy.interpreter.i2.vm.VM;
 import java.util.HashMap;
 
-@NativeClass(name = "Moudle")
-public class MoudleObj extends BuiltinObject {
+@NativeClass(name = "Module")
+public class ModuleObj extends BuiltinObject {
 	
 	public static final CandyClass MOUDLE_CLASS = 
-		NativeClassRegister.generateNativeClass(MoudleObj.class);
+		NativeClassRegister.generateNativeClass(ModuleObj.class);
 	
 	private String name;
 	private HashMap<String, Variable> attrs;
-	public MoudleObj(String name, HashMap<String, Variable> attrs) {
+	public ModuleObj(String name, HashMap<String, Variable> attrs) {
 		super(MOUDLE_CLASS);
 		this.name = name;
 		this.attrs = attrs;
 	}
-
+	
 	@Override
 	public CandyObject getAttr(VM vm, String attr) {
 		CandyObject obj = attrs.get(attr).getValue();
-		if (obj == null) {
-			return super.getAttr(vm, attr);
+		if (obj != null) {
+			return obj;
 		}
-		return obj;
+		return super.getAttr(vm, attr);
+	}
+	
+	public void defineTo(HashMap<String, Variable> vars) {
+		vars.putAll(attrs);
+	}
+	
+	public void defineTo(ModuleObj moudleObj) {
+		attrs.putAll(moudleObj.attrs);
+	}
+	
+	public void addToScope(GlobalScope gs) {
+		for (Variable v : attrs.values()) {
+			gs.curFileScope().defineVeriable(v);
+		}
 	}
 
 	@Override
@@ -46,5 +61,12 @@ public class MoudleObj extends BuiltinObject {
 	@NativeMethod(name = "name")
 	public CandyObject getName(VM vm, CandyObject[] args) {
 		return StringObj.valueOf(name);
+	}
+	
+	@NativeMethod(name = "addToCurEnv")
+	public CandyObject addToCurEnv(VM vm, CandyObject[] args) {
+		GlobalScope gs = vm.getGlobalScope();
+		addToScope(gs);
+		return null;
 	}
 }

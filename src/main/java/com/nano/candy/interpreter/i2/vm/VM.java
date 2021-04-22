@@ -7,7 +7,7 @@ import com.nano.candy.interpreter.i2.builtin.type.BoolObj;
 import com.nano.candy.interpreter.i2.builtin.type.CallableObj;
 import com.nano.candy.interpreter.i2.builtin.type.DoubleObj;
 import com.nano.candy.interpreter.i2.builtin.type.IntegerObj;
-import com.nano.candy.interpreter.i2.builtin.type.MoudleObj;
+import com.nano.candy.interpreter.i2.builtin.type.ModuleObj;
 import com.nano.candy.interpreter.i2.builtin.type.NullPointer;
 import com.nano.candy.interpreter.i2.builtin.type.PrototypeFunctionObj;
 import com.nano.candy.interpreter.i2.builtin.type.StringObj;
@@ -30,9 +30,9 @@ import com.nano.candy.interpreter.i2.rtda.chunk.Chunk;
 import com.nano.candy.interpreter.i2.rtda.chunk.ConstantPool;
 import com.nano.candy.interpreter.i2.rtda.chunk.ConstantValue;
 import com.nano.candy.interpreter.i2.rtda.chunk.attrs.ErrorHandlerTable;
-import com.nano.candy.interpreter.i2.rtda.moudle.CompiledFileInfo;
-import com.nano.candy.interpreter.i2.rtda.moudle.MoudleManager;
-import com.nano.candy.interpreter.i2.rtda.moudle.SourceFileInfo;
+import com.nano.candy.interpreter.i2.rtda.module.CompiledFileInfo;
+import com.nano.candy.interpreter.i2.rtda.module.ModuleManager;
+import com.nano.candy.interpreter.i2.rtda.module.SourceFileInfo;
 import com.nano.candy.interpreter.i2.vm.tracer.TracerManager;
 import com.nano.candy.sys.CandySystem;
 import java.io.File;
@@ -52,7 +52,7 @@ public final class VM {
 	/**
 	 * This is used to import source files as moudle to manage.
 	 */
-	private MoudleManager moudleManager;
+	private ModuleManager moudleManager;
 	
 	/**
 	 * Trace code execution and the change of stack. Lazily initalized
@@ -74,7 +74,7 @@ public final class VM {
 	
 	public void reset(InterpreterOptions options) {
 		this.global = new GlobalScope();
-		this.moudleManager = new MoudleManager();
+		this.moudleManager = new ModuleManager();
 		this.stack = new StackFrame(maxStackDeepth);
 		this.options = options;
 		this.tracerManager = null;
@@ -119,7 +119,7 @@ public final class VM {
 		return global;
 	}
 	
-	public MoudleManager getMoudleManager() {
+	public ModuleManager getModuleManager() {
 		return moudleManager;
 	}
 	
@@ -190,7 +190,7 @@ public final class VM {
 		old.recycleSelf();
 	}
 	
-	public void clearStack() {
+	public void clearFrameStack() {
 		while (!stack.isEmpty()) {
 			fastPopFrame();
 		}
@@ -472,11 +472,11 @@ public final class VM {
 				break;
 			}
 		}
-		clearStack();
+		clearFrameStack();
 		return code;
 	}
 	
-	public MoudleObj run() {
+	public ModuleObj run() {
 		SourceFileInfo srcFileInfo = getCurSourceFileInfo();
 		if (srcFileInfo != null) {
 			srcFileInfo.markRunning();
@@ -484,8 +484,8 @@ public final class VM {
 		// OP_EXIT will help VM to exit runFrame method.
 		runFrame(false);
 		
-		MoudleObj moudleObj = 
-			global.curFileScope().generateMoudleObject();
+		ModuleObj moudleObj = 
+			global.curFileScope().generateModuleObject();
 		popFrame();
 		return moudleObj;
 	}
@@ -944,7 +944,7 @@ public final class VM {
 				 * Other.
 				 */
 				case OP_IMPORT: {
-					MoudleObj moudleObj = moudleManager.importFile(
+					ModuleObj moudleObj = moudleManager.importFile(
 						this, ObjectHelper.asString(pop())
 					);
 					global.setVar(cp.getString(readIndex()), moudleObj);

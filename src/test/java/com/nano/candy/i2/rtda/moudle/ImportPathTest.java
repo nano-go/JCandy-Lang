@@ -1,6 +1,6 @@
 package com.nano.candy.i2.rtda.moudle;
 
-import com.nano.candy.interpreter.i2.rtda.moudle.MoudleManager;
+import com.nano.candy.interpreter.i2.rtda.module.ModuleManager;
 import java.io.File;
 import org.junit.Assert;
 import org.junit.Test;
@@ -20,7 +20,7 @@ public class ImportPathTest {
 	
 	@Test public void testImportPath() {
 		for (String[] paths : IMPORT_PATH_CASES) {
-			File f = MoudleManager.findSourceFile(paths[0], paths[1]);
+			File f = ModuleManager.findSourceFile(paths[0], paths[1]);
 			Assert.assertEquals(paths[2], f.getPath());
 		}
 	}

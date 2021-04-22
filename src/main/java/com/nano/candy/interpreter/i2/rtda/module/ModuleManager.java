@@ -1,5 +1,5 @@
-package com.nano.candy.interpreter.i2.rtda.moudle;
-import com.nano.candy.interpreter.i2.builtin.type.MoudleObj;
+package com.nano.candy.interpreter.i2.rtda.module;
+import com.nano.candy.interpreter.i2.builtin.type.ModuleObj;
 import com.nano.candy.interpreter.i2.builtin.type.error.NativeError;
 import com.nano.candy.interpreter.i2.tool.Compiler;
 import com.nano.candy.interpreter.i2.vm.VM;
@@ -7,12 +7,12 @@ import com.nano.candy.sys.CandySystem;
 import java.io.File;
 import java.util.HashMap;
 
-public class MoudleManager {
+public class ModuleManager {
 	
-	private HashMap<SourceFileInfo, MoudleObj> importedMoudles;
+	private HashMap<SourceFileInfo, ModuleObj> importedModules;
 	
-	public MoudleManager() {
-		importedMoudles = new HashMap<>();
+	public ModuleManager() {
+		importedModules = new HashMap<>();
 	}
 	
 	public static File findSourceFile(String env, String path) {
@@ -27,26 +27,27 @@ public class MoudleManager {
 		return new File(env, path);
 	}
 	
-    public MoudleObj importFile(VM vm, String relativePath) {
+    public ModuleObj importFile(VM vm, String relativePath) {
 		SourceFileInfo srcFile = SourceFileInfo.get(
 			findSourceFile(vm.getCurrentDirectory(), relativePath)
 		);
-		MoudleObj moudleObj = checkSrcFile(srcFile);
-		if (moudleObj == null) {
-			moudleObj = runFile(vm, srcFile);
-			importedMoudles.put(srcFile, moudleObj);
+		ModuleObj moduleObj = checkSrcFile(srcFile);
+		if (moduleObj == null) {
+			moduleObj = runFile(vm, srcFile);
+			importedModules.put(srcFile, moduleObj);
+			srcFile.markImported();
 		}
-		return moudleObj;
+		return moduleObj;
 	}
 	
-	private MoudleObj checkSrcFile(SourceFileInfo srcFile) {
+	private ModuleObj checkSrcFile(SourceFileInfo srcFile) {
 		if (srcFile.isRunning()) {
 			new NativeError("Cyclic import.").throwSelfNative();
 		}
-		return importedMoudles.get(srcFile);
+		return importedModules.get(srcFile);
 	}
 
-	private MoudleObj runFile(VM vm, SourceFileInfo srcFile) {
+	private ModuleObj runFile(VM vm, SourceFileInfo srcFile) {
 		CompiledFileInfo compiledFile = Compiler.compile(
 			srcFile.getFile(), vm.getOptions(), true);
 		vm.loadFile(compiledFile);

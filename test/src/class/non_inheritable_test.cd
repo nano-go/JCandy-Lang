@@ -14,7 +14,7 @@ fun noninheritableClasses_test() {
 	noninheritable_test(Double)
 	noninheritable_test(Number)
 	noninheritable_test(Array)
-	noninheritable_test(Moudle)
+	noninheritable_test(Module)
 	noninheritable_test(Tuple)
 	noninheritable_test(null._class())
 	noninheritable_test(Range)
