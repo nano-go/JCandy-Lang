@@ -30,7 +30,6 @@ import com.nano.candy.interpreter.i2.rtda.chunk.Chunk;
 import com.nano.candy.interpreter.i2.rtda.chunk.ConstantPool;
 import com.nano.candy.interpreter.i2.rtda.chunk.ConstantValue;
 import com.nano.candy.interpreter.i2.rtda.chunk.attrs.ErrorHandlerTable;
-import com.nano.candy.interpreter.i2.rtda.module.CompiledFileInfo;
 import com.nano.candy.interpreter.i2.rtda.module.ModuleManager;
 import com.nano.candy.interpreter.i2.rtda.module.SourceFileInfo;
 import com.nano.candy.interpreter.i2.vm.tracer.TracerManager;

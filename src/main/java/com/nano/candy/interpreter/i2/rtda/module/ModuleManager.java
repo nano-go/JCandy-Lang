@@ -2,6 +2,7 @@ package com.nano.candy.interpreter.i2.rtda.module;
 import com.nano.candy.interpreter.i2.builtin.type.ModuleObj;
 import com.nano.candy.interpreter.i2.builtin.type.error.NativeError;
 import com.nano.candy.interpreter.i2.tool.Compiler;
+import com.nano.candy.interpreter.i2.vm.CompiledFileInfo;
 import com.nano.candy.interpreter.i2.vm.VM;
 import com.nano.candy.sys.CandySystem;
 import java.io.File;

@@ -1,4 +1,4 @@
-package com.nano.candy.interpreter.i2.rtda.module;
+package com.nano.candy.interpreter.i2.vm;
 
 import com.nano.candy.interpreter.i2.rtda.chunk.Chunk;
 import java.io.File;
@@ -11,7 +11,7 @@ public class CompiledFileInfo {
 	private final String filepath;
 	private final String simpleName;
 	private final Chunk chunk;
-	
+
 	/**
 	 * Whether this file is existed and is a source file.
 	 */
@@ -39,7 +39,7 @@ public class CompiledFileInfo {
 	public boolean isRealFile() {
 		return isRealFile;
 	}
-	
+
 	public String getSimpleName() {
 		return simpleName;
 	}

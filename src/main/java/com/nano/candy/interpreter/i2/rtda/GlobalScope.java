@@ -27,8 +27,8 @@ import com.nano.candy.interpreter.i2.builtin.type.error.StackTraceElementObj;
 import com.nano.candy.interpreter.i2.builtin.type.error.TypeError;
 import com.nano.candy.interpreter.i2.cni.CNativeFunction;
 import com.nano.candy.interpreter.i2.cni.NativeFuncRegister;
-import com.nano.candy.interpreter.i2.rtda.module.CompiledFileInfo;
 import com.nano.candy.interpreter.i2.rtda.module.SourceFileInfo;
+import com.nano.candy.interpreter.i2.vm.CompiledFileInfo;
 import java.util.HashMap;
 
 public class GlobalScope {
