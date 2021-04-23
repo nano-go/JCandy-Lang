@@ -15,7 +15,7 @@ public class ModuleManager {
 		this.loader = loader;
 	}
 	
-	public ModuleObj importFile(VM vm, String relativePath) {
+	public ModuleObj importModule(VM vm, String relativePath) {
 		try {
 			return loader.loadModule(vm, relativePath);
 		} catch (ModuleLoadingException | ModuleNotFoundException e) {

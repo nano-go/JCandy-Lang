@@ -943,7 +943,7 @@ public final class VM {
 				 * Other.
 				 */
 				case OP_IMPORT: {
-					ModuleObj moudleObj = moudleManager.importFile(
+					ModuleObj moudleObj = moudleManager.importModule(
 						this, ObjectHelper.asString(pop())
 					);
 					global.setVar(cp.getString(readIndex()), moudleObj);

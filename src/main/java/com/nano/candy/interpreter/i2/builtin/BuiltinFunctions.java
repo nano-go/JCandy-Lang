@@ -1,5 +1,6 @@
 package com.nano.candy.interpreter.i2.builtin;
 import com.nano.candy.interpreter.i2.builtin.type.ArrayObj;
+import com.nano.candy.interpreter.i2.builtin.type.CallableObj;
 import com.nano.candy.interpreter.i2.builtin.type.IntegerObj;
 import com.nano.candy.interpreter.i2.builtin.type.ModuleObj;
 import com.nano.candy.interpreter.i2.builtin.type.Range;
@@ -13,7 +14,10 @@ import com.nano.candy.interpreter.i2.cni.NativeFunc;
 import com.nano.candy.interpreter.i2.cni.NativeLibraryLoader;
 import com.nano.candy.interpreter.i2.rtda.module.ModuleManager;
 import com.nano.candy.interpreter.i2.vm.VM;
+import com.nano.candy.std.Names;
+import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
 
 public class BuiltinFunctions {
 
@@ -55,18 +59,33 @@ public class BuiltinFunctions {
 		obj.setAttr(vm, attrStr, args[2]);
 		return args[2];
 	}
-
+	
+	@NativeFunc(name = "max", arity = 2)
+	public static CandyObject max(VM vm, CandyObject[] args) {
+		return args[0].gtApiExeUser(vm, args[1]).value()
+			? args[0] : args[1];
+	}
+	
+	@NativeFunc(name = "min", arity = 2)
+	public static CandyObject min(VM vm, CandyObject[] args) {
+		return args[0].ltApiExeUser(vm, args[1]).value()
+			? args[0] : args[1];
+	}
+	
 	@NativeFunc(name = "str", arity = 1)
 	public static CandyObject str(VM vm, CandyObject[] args) {
 		return args[0].strApiExeUser(vm);
 	}
 
-	@NativeFunc(name = "importFile", arity = 1)
+	@NativeFunc(name = "importModule", arity = 1)
 	public static CandyObject importFile(VM vm, CandyObject[] args) {
 		String filePath = ObjectHelper.asString(args[0]);
-		return vm.getModuleManager().importFile(vm, filePath);
+		return vm.getModuleManager().importModule(vm, filePath);
 	}
 	
+	/**
+	 * Adds the selected modules to the current file scope.
+	 */
 	@NativeFunc(name = "select", arity = 1)
 	public static CandyObject select(VM vm, CandyObject[] args) {
 		TypeError.checkTypeMatched(ArrayObj.ARRAY_CLASS, args[0]);
@@ -75,10 +94,41 @@ public class BuiltinFunctions {
 		final ModuleManager m = vm.getModuleManager();
 		for (int i = 0; i < size; i ++) {
 			ModuleObj moduleObj =
-				m.importFile(vm, ObjectHelper.asString(files.get(i)));
+				m.importModule(vm, ObjectHelper.asString(files.get(i)));
 			moduleObj.addToScope(vm.getGlobalScope());
 		}
 		return null;
+	}
+	
+	/**
+	 * Adds the modules selected by the specified filter to the current 
+	 * file scope.
+	 */
+	@NativeFunc(name = "selectByFilter", arity = 1)
+	public static CandyObject selectRegex(VM vm, CandyObject[] args) {
+		TypeError.checkTypeMatched(CallableObj.CALLABLE_CLASS, args[0]);
+		CallableObj filter = (CallableObj) args[0];
+		File currentDirectory = new File(vm.getCurrentDirectory());
+		File[] subfiles = currentDirectory.listFiles();
+		if (subfiles == null) {
+			return null;
+		}
+		final ModuleManager m = vm.getModuleManager();
+		ArrayList<StringObj> selectedFiles = new ArrayList<>();
+		for (File f : subfiles) {
+			// ignore the specific file.
+			if (Names.MOUDLE_FILE_NAME.equals(f.getName())) {
+				continue;
+			}
+			CandyObject accept = ObjectHelper.callFunction
+				(vm, filter, StringObj.valueOf(f.getName()));
+			if (accept.boolValue(vm).value()) {
+				ModuleObj moduleObj = m.importModule(vm, f.getName());
+				moduleObj.addToScope(vm.getGlobalScope());
+				selectedFiles.add(StringObj.valueOf(f.getName()));
+			}
+		}
+		return new ArrayObj(selectedFiles.toArray(new StringObj[0]));
 	}
 
 	@NativeFunc(name = "cmdArgs", arity = 0)
