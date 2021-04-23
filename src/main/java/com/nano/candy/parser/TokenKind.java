@@ -44,6 +44,9 @@ public enum TokenKind {
 	ASSERT("assert"),
 	IF("if"),
 	ELSE("else"),
+	TRY("try"),
+	INTERCEPT("intercept"),
+	RAISE("raise"),
 	WHILE("while"),
 	FOR("for"),
 	IN("in"),
@@ -54,6 +57,7 @@ public enum TokenKind {
 	LAMBDA("lambda"),
 	CLASS("class"),
 	IMPORT("import"),
+	FINALLY("finally"),
 	AS("as"),
 	TRUE("true"),
 	FALSE("false"),
@@ -63,7 +67,6 @@ public enum TokenKind {
 	
 	EOF,
 	IDENTIFIER,
-	ARRAY,
 	DOUBLE,
 	INTEGER,
 	STRING;
@@ -71,29 +74,13 @@ public enum TokenKind {
 	private static final HashMap<String, TokenKind> KEYWORD_KINDS = 
 		new HashMap<String, TokenKind>();
 	static {
-		KEYWORD_KINDS.put(TokenKind.VAR.literal, TokenKind.VAR);
-		KEYWORD_KINDS.put(TokenKind.ASSERT.literal, TokenKind.ASSERT);
-		KEYWORD_KINDS.put(TokenKind.LOGICAL_OR.literal, TokenKind.LOGICAL_OR);
-		KEYWORD_KINDS.put(TokenKind.LOGICAL_AND.literal, TokenKind.LOGICAL_AND);
-		KEYWORD_KINDS.put(TokenKind.IS.literal, TokenKind.IS);
-		KEYWORD_KINDS.put(TokenKind.FOR.literal, TokenKind.FOR);
-		KEYWORD_KINDS.put(TokenKind.IN.literal, TokenKind.IN);
-		KEYWORD_KINDS.put(TokenKind.WHILE.literal, TokenKind.WHILE);
-		KEYWORD_KINDS.put(TokenKind.CONTINUE.literal, TokenKind.CONTINUE);
-		KEYWORD_KINDS.put(TokenKind.BREAK.literal, TokenKind.BREAK);
-		KEYWORD_KINDS.put(TokenKind.TRUE.literal, TokenKind.TRUE);
-		KEYWORD_KINDS.put(TokenKind.FALSE.literal, TokenKind.FALSE);
-		KEYWORD_KINDS.put(TokenKind.NULL.literal, TokenKind.NULL);
-		KEYWORD_KINDS.put(TokenKind.IF.literal, TokenKind.IF);
-		KEYWORD_KINDS.put(TokenKind.ELSE.literal, TokenKind.ELSE);
-		KEYWORD_KINDS.put(TokenKind.FUN.literal, TokenKind.FUN);
-		KEYWORD_KINDS.put(TokenKind.RETURN.literal, TokenKind.RETURN);
-		KEYWORD_KINDS.put(TokenKind.LAMBDA.literal, TokenKind.LAMBDA);
-		KEYWORD_KINDS.put(TokenKind.IMPORT.literal, TokenKind.IMPORT);
-		KEYWORD_KINDS.put(TokenKind.AS.literal, TokenKind.AS);
-		KEYWORD_KINDS.put(TokenKind.CLASS.literal, TokenKind.CLASS);
-		KEYWORD_KINDS.put(TokenKind.THIS.literal, TokenKind.THIS);
-		KEYWORD_KINDS.put(TokenKind.SUPER.literal, TokenKind.SUPER);
+		for (int i = VAR.ordinal(); i <= SUPER.ordinal(); i ++) {
+			TokenKind keyword = TokenKind.values()[i];
+			KEYWORD_KINDS.put(keyword.literal, keyword);
+		}
+		KEYWORD_KINDS.put(LOGICAL_AND.literal, LOGICAL_AND);
+		KEYWORD_KINDS.put(LOGICAL_OR.literal, LOGICAL_OR);
+		KEYWORD_KINDS.put(IS.literal, IS);
 	}
 
 	public static TokenKind lookupKind(String identifier) {
