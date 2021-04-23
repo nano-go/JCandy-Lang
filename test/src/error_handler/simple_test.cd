@@ -30,7 +30,7 @@ fun tryIntercept_test() {
 	expectedError1(lambda -> println(0, 2), ArgumentError)
 	expectedError1(lambda -> a.b, NameError)
 	expectedError1(lambda -> "".substr("", ""), TypeError)
-	expectedError1(lambda -> importFile(" %&*()"), ModuleError)
+	expectedError1(lambda -> importModule(" %&*()"), ModuleError)
 	expectedError1(lambda -> assert false, AssertionError)
 	
 	expectedError2(lambda -> null.good, NativeError, AttributeError)
@@ -38,7 +38,7 @@ fun tryIntercept_test() {
 	expectedError2(lambda -> println(0, 2), NativeError, ArgumentError)
 	expectedError2(lambda -> a.b, NativeError, NameError)
 	expectedError2(lambda -> "".substr("", ""), NativeError, TypeError)
-	expectedError2(lambda -> importFile(" %&*()"), NativeError, ModuleError)
+	expectedError2(lambda -> importModule(" %&*()"), NativeError, ModuleError)
 	expectedError2(lambda -> assert false, NativeError, AssertionError)
 	
 	fun sample1() {
@@ -170,7 +170,7 @@ fun nestedTryInterception() {
 			raise NativeError("")
 		} intercept NativeError {
 			try {
-				var a = importFile(" &&&**")
+				var a = importModule(" &&&**")
 			} intercept RangeError {
 				assert false
 			} intercept ModuleError {
