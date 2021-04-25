@@ -2,14 +2,18 @@ package com.nano.candy.interpreter.i2.builtin.type;
 import com.nano.candy.interpreter.i2.builtin.BuiltinObject;
 import com.nano.candy.interpreter.i2.builtin.CandyObject;
 import com.nano.candy.interpreter.i2.builtin.type.IteratorObj;
-import com.nano.candy.interpreter.i2.builtin.type.classes.BoundBuiltinMethod;
+import com.nano.candy.interpreter.i2.builtin.type.classes.CandyClass;
 import com.nano.candy.interpreter.i2.builtin.type.classes.ObjectClass;
+import com.nano.candy.interpreter.i2.cni.NativeClass;
+import com.nano.candy.interpreter.i2.cni.NativeClassRegister;
+import com.nano.candy.interpreter.i2.cni.NativeMethod;
 import com.nano.candy.interpreter.i2.rtda.Variable;
 import com.nano.candy.interpreter.i2.vm.VM;
 import com.nano.candy.std.Names;
 import java.util.Iterator;
 import java.util.Map;
 
+@NativeClass(name = "Iterator")
 public abstract class IteratorObj extends BuiltinObject {
 	
 	public static class MapIterator extends IteratorObj {
@@ -76,42 +80,20 @@ public abstract class IteratorObj extends BuiltinObject {
 		}
 	}
 	
-	private CandyObject next;
-	private CandyObject hasNext;
-	
+	private static final CandyClass ITERATOR_CLASS = 
+		NativeClassRegister.generateNativeClass(IteratorObj.class);
 	public IteratorObj() {
-		super(ObjectClass.getObjClass());
-		this.next = genNextMethod();
-		this.hasNext = genHasNextMethod();
-	}
-
-	@Override
-	public CandyObject getAttr(VM vm, String attr) {
-		switch (attr) {
-			case Names.METHOD_ITERATOR_NEXT:
-				return next;
-			case Names.METHOD_ITERATOR_HAS_NEXT:	
-				return hasNext;
-		}
-		return super.getAttr(vm, attr);
-	}
-
-	private CandyObject genNextMethod() {
-		return new BoundBuiltinMethod(this,
-			Names.METHOD_ITERATOR_NEXT, 0, IteratorObj::next);
+		super(ITERATOR_CLASS);
 	}
 	
-	private CandyObject genHasNextMethod() {
-		return new BoundBuiltinMethod(this,
-			Names.METHOD_ITERATOR_HAS_NEXT,0, IteratorObj::hasNext);
+	@NativeMethod(name = Names.METHOD_ITERATOR_HAS_NEXT)
+	private CandyObject hasNext(VM vm, CandyObject... args) {
+		return BoolObj.valueOf(hasNext(vm));
 	}
 	
-	private static CandyObject hasNext(CandyObject iterator, VM vm) {
-		return BoolObj.valueOf(((IteratorObj)iterator).hasNext(vm));
-	}
-
-	private static CandyObject next(CandyObject iterator, VM vm) {
-		return ((IteratorObj)iterator).next(vm);
+	@NativeMethod(name = Names.METHOD_ITERATOR_NEXT)
+	private CandyObject next(VM vm, CandyObject... args) {
+		return next(vm);
 	}
 	
 	public abstract boolean hasNext(VM vm);
