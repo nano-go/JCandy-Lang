@@ -1,0 +1,156 @@
+fun expectedError(name, arity, argc, fn) {
+	try {
+		fn()
+	} intercept ArgumentError as e {
+		// println(e.getMessage())
+		assert e.getMessage() == "The " + name +
+		       " takes " + (arity-1) + "+ arguments, but " + 
+		       argc + " were given."
+	}
+}
+
+fun expected(vaargs, *expected) {
+	for (i in range(0, expected.size())) {
+		assert vaargs[i] == expected[i] :
+		        "Expected " + expected[i] + ", but was " + vaargs[i]
+	}
+}
+
+fun varargs1_test(fn) {
+	assert fn() == null
+	assert fn(1) == [1]
+	assert fn(1, [2, 3]) == [1, [2, 3]]
+}
+
+fun varargs2_left_test(fn) {
+	expected(fn(1, 2, 3, 4), [1, 2, 3], 4)
+	expected(fn(4), null, 4)
+	expected(fn(1, 2), [1], 2)
+}
+
+fun varargs2_right_test(fn) {
+	expected(fn(1, 2, 3, 4), 1, [2, 3, 4])
+	expected(fn(4), 4, null)
+	expected(fn(1, 2), 1, [2])
+}
+
+fun varargs3_mid_test(fn) {
+	expected(fn(1, 2, 3), 1, [2], 3)
+	expected(fn(1, 2, 3, 4), 1, [2, 3], 4)
+	expected(fn(2, 4), 2, null, 4)
+}
+
+fun functions_test() {
+	fun test1(*a) { return a; }
+	fun test2(*a, b) { return (a, b); }
+	fun test3(a, *b) { return (a, b); }
+	fun test4(a, *b, c) { return (a, b, c); }
+	
+	expectedError(test2.name(), 2, 0, lambda -> test2())
+	expectedError(test3.name(), 2, 0, lambda -> test3())
+	expectedError(test4.name(), 3, 1, lambda -> test4(1))
+	expectedError(test4.name(), 3, 0, lambda -> test4())
+	
+	varargs1_test(test1)
+	varargs2_left_test(test2)
+	varargs2_right_test(test3)
+	varargs3_mid_test(test4)
+}
+functions_test()
+
+class Test {
+	fun init(a, *b) {
+		this.a = a
+		this.b = b
+	}
+	
+	fun sum(*a) {
+		if (a == null) {
+			return 0
+		}
+		var sum = 0
+		for (e in a) {
+			sum += e
+		}
+		return sum
+	}
+	fun test1(*a) { return a; }
+	fun test2(*a, b) { return (a, b); }
+	fun test3(a, *b) { return (a, b); }
+	fun test4(a, *b, c) { return (a, b, c); }
+}
+
+fun method_test() {
+	var t = Test(1, 2, 3, 4)
+	assert t.a == 1
+	assert t.b == [2, 3, 4]
+	
+	var t = Test(1)
+	assert t.a == 1
+	assert t.b == null
+	
+	assert t.sum() == 0
+	assert t.sum(1, 2, 3, 4) == 10
+	
+	varargs1_test(t.test1)
+	varargs2_left_test(t.test2)
+	varargs2_right_test(t.test3)
+	varargs3_mid_test(t.test4)
+	
+	expectedError("Test.test2", 3, 1, lambda -> t.test2())
+	expectedError("Test.test3", 3, 1, lambda -> t.test3())
+	expectedError("Test.test4", 4, 1, lambda -> t.test4())
+	expectedError("Test.test4", 4, 2, lambda -> t.test4(1))
+}
+method_test()
+
+
+
+
+/**
+ * Unpack Test.
+ */
+
+fun expectedError(name, arity, argc, fn) {
+	try {
+		fn()
+	} intercept ArgumentError as e {
+		println(e.getMessage())
+	}
+}
+
+fun t1(a, b) {
+	return (a, b)
+}
+expectedError(t1.name(), 2, 1, lambda -> t1(*[1]))
+expected(t1(*[1, 2]), 1, 2)
+
+
+fun t1(*a) {
+	return (a)
+}
+expected(t1([1, 2]), [1, 2])
+expected(t1(*[1, 2]), 1, 2)
+try {
+	t1(*2)
+} intercept TypeError {}
+else { assert false; }
+
+
+fun t1(*a, b) {
+	return (a, b)
+}
+expected(t1([1, 2]), null, [1, 2])
+expected(t1(*[1, 2]), [1], 2)
+expected(t1(*(1, 2)), [1], 2)
+expected(t1(*[1, 2, 3, 4], 5, 6), [1, 2, 3, 4, 5], 6)
+expected(t1(1, 2, *[3, 4, 5], 6), [1, 2, 3, 4, 5], 6)
+
+fun t1(a, b) {
+	return (a, b)
+}
+expected(t1(*[1, 2]), 1, 2)
+expected(t1(*[1, 2, 3]), 1, 2)
+expected(t1(*[1, 2, 3, 4]), 1, 2)
+expected(t1(1, *[1, 2]), 1, 1)
+expected(t1(*[1], *[2]), 1, 2)

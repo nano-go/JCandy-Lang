@@ -26,29 +26,36 @@ class AnnotationSigntureVerifier {
 		}
 	}
 	
-	protected static void verifyNativeFunc(Method m, int arity, String name) {
+	protected static void verifyNativeFunc(Method m, int arity, int varAgrsIndex,
+	                                       String name) {
 		if (!Modifier.isStatic(m.getModifiers())) {
 			error("The method %s must be static.", m.getName());
 		}
-		verifyCallable(m, arity, name);
+		verifyCallable(m, arity, varAgrsIndex, name);
 	}
 	
-	protected static void verifyNativeMethod(Method m, int arity, String name) {
+	protected static void verifyNativeMethod(Method m, int arity, int varAgrsIndex,
+	                                         String name) {
 		if (Modifier.isStatic(m.getModifiers())) {
 			error("The method %s can't be static.", m.getName());
 		}
 		if (Modifier.isAbstract(m.getModifiers())) {
 			error("Invalid method modifier: abstract.", m.getName());
 		}
-		verifyCallable(m, arity, name);
+		verifyCallable(m, arity, varAgrsIndex, name);
 	}
 	
-	protected static void verifyCallable(Method m, int arity, String name) {
+	protected static void verifyCallable(Method m, int arity, int varAgrsIndex,
+	                                     String name) {
 		if (arity < 0) {
 			error("Invalid arity %d of the method %s.", arity, m.getName());
 		}
 		if (!Names.isCandyIdentifier(name)) {
 			error("Invalid name %s of the method %s.", name, m.getName());
+		}
+		if (varAgrsIndex >= arity) {
+			error("Invalid var args index %d of the method %s.", 
+				varAgrsIndex, m.getName());
 		}
 		if (m.getParameterCount() != 2) {
 			error("The method %s must have two paramters.", m.getName());

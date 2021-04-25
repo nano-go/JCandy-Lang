@@ -6,8 +6,9 @@ import java.lang.reflect.Method;
 public class CNativeFunction extends CNativeCallable {
 	
 	private Method method;
-	protected CNativeFunction(String name, int arity, Method method) {
-		super(name, name, arity);
+	protected CNativeFunction(String name, int arity, 
+	                          int vaargIndex, Method method) {
+		super(name, name, arity, vaargIndex);
 		this.method = method;
 	}
 	

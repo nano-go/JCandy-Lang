@@ -9,9 +9,10 @@ public class CNativeMethod extends CNativeCallable {
 	private Method method;
 	private int arity;
 
-	protected CNativeMethod(String simpleName, String name, int arity, Method method) {
+	protected CNativeMethod(String simpleName, String name,
+	                        int arity, int vaargIndex, Method method) {
 		// extra hidden instance argument.
-		super(simpleName, name, arity + 1);
+		super(simpleName, name, arity + 1, vaargIndex);
 		this.method = method;
 		this.arity = arity;
 	}

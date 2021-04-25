@@ -1,6 +1,5 @@
 package com.nano.candy.interpreter.i2.builtin.type.classes;
 
-import com.nano.candy.interpreter.i2.builtin.BuiltinObject;
 import com.nano.candy.interpreter.i2.builtin.CandyObjEntity;
 import com.nano.candy.interpreter.i2.builtin.CandyObject;
 import com.nano.candy.interpreter.i2.builtin.type.CallableObj;
@@ -8,7 +7,6 @@ import com.nano.candy.interpreter.i2.builtin.type.MethodObj;
 import com.nano.candy.interpreter.i2.builtin.type.NullPointer;
 import com.nano.candy.interpreter.i2.builtin.type.StringObj;
 import com.nano.candy.interpreter.i2.builtin.type.error.NativeError;
-import com.nano.candy.interpreter.i2.builtin.utils.ObjectHelper;
 import com.nano.candy.interpreter.i2.vm.CarrierErrorException;
 import com.nano.candy.interpreter.i2.vm.VM;
 import com.nano.candy.std.Names;
@@ -18,11 +16,10 @@ import java.util.HashMap;
 /**
  * A candy class provides language level class object, it's a built-in object.
  */
-public class CandyClass extends BuiltinObject {
+public class CandyClass extends CallableObj {
 	
 	/**
-	 * An instance is created by reflection of the entity class when
-	 * this class is called.
+	 * An instance is created by reflecting the entity class.
 	 */
 	protected final Class<? extends CandyObject> objEntityClass;
 	
@@ -34,13 +31,16 @@ public class CandyClass extends BuiltinObject {
 	protected final CallableObj initializer;
 	
 	protected CandyClass(ClassSignature signature) {
-		super(null);
+		super(null, signature.className, null);
 		this.objEntityClass = signature.objEntityClass;
 		this.superClass = signature.superClass;
 		this.className = signature.className;
 		this.isInheritable = signature.isInheritable;
 		this.methods = signature.methods;
 		this.initializer = signature.initializer;
+		super.parameter = new ParametersInfo(
+			arity(), varArgsIndex()
+		);
 	}
 
 	public Class<? extends CandyObject> getObjEntityClass() {
@@ -60,8 +60,9 @@ public class CandyClass extends BuiltinObject {
 	}
 	
 	/**
-	 * Returns the unbound method by the given name or null if
-	 * not found.
+	 * Finds the unbound method by the given name and return it.
+	 *
+	 * @param the unbound method or null if not found.
 	 */
 	public CallableObj getMethod(String name) {
 		CallableObj method = methods.get(name);
@@ -75,7 +76,7 @@ public class CandyClass extends BuiltinObject {
 	}
 	
 	/**
-	 * Returns the method is bound with the given instance or null
+	 * Returns the method bound with the given instance or null
 	 * if not found.
 	 */
 	public MethodObj getBoundMethod(String name, CandyObject instance) {
@@ -136,19 +137,24 @@ public class CandyClass extends BuiltinObject {
 	}
 
 	@Override
-	public boolean isCallable() {
-		return true;
+	public int varArgsIndex() {
+		return initializer == null ? -1 : initializer.varArgsIndex()-1;
+	}
+	
+	@Override
+	public boolean isBuiltin() {
+		return initializer == null ? true : initializer.isBuiltin();
 	}
 
 	@Override
-	public void onCall(VM vm) {
+	public void call(VM vm, int argc, int unpackingBits) {
 		CandyObject instance = createInstance(vm);
-		if (initializer == null) {
-			vm.returnFromVM(instance);
-		} else {
-			vm.push(instance);
-			initializer.onCall(vm);
-		}
+		new MethodObj(instance, initializer).call(vm, argc, unpackingBits);
+	}
+
+	@Override
+	protected void onCall(VM vm, int argc, int unpackingBits) {
+		throw new Error("Supported");
 	}
 	
 	protected CandyObject createInstance(VM vm) {
@@ -178,9 +184,9 @@ public class CandyClass extends BuiltinObject {
 		}
 		throw new Error("Unreachable");
 	}
-	
+
 	@Override
-	public String toString() {
-		return ObjectHelper.toString("build-in class", className);
+	protected String strTag() {
+		return "class";
 	}
 }

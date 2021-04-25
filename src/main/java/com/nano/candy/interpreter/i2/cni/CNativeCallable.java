@@ -2,35 +2,36 @@ package com.nano.candy.interpreter.i2.cni;
 import com.nano.candy.interpreter.i2.builtin.CandyObject;
 import com.nano.candy.interpreter.i2.builtin.type.CallableObj;
 import com.nano.candy.interpreter.i2.builtin.type.NullPointer;
+import com.nano.candy.interpreter.i2.builtin.type.classes.CandyClass;
 import com.nano.candy.interpreter.i2.builtin.type.error.NativeError;
 import com.nano.candy.interpreter.i2.vm.CarrierErrorException;
 import com.nano.candy.interpreter.i2.vm.VM;
 import java.lang.reflect.InvocationTargetException;
 
+@NativeClass(name = "NativeCallable")
 public abstract class CNativeCallable extends CallableObj {
-
-	private static final CandyObject[] EMPTY_ARGS = new CandyObject[0];
 	
-	public CNativeCallable(String declredName, String name, int arity) {
-		super(declredName, name, arity);
+	public static final CandyClass NATIVE_CALLABLE_CLASS
+		= NativeClassRegister.generateNativeClass(CNativeCallable.class);
+	
+	public CNativeCallable(String declaredName, String name,
+	                       int arity, int varArgsIndex) {
+		super(
+			declaredName, name,
+			new ParametersInfo(arity, varArgsIndex)
+		);
 	}
-	
+
 	@Override
-	public void onCall(VM vm) {
+	protected void onCall(VM vm, int argc, int unpackFlags) {
 		CandyObject instance = null;
-		int arity = this.arity;
 		if (isMethod()) {
-			arity --;
 			instance = vm.pop();
+			argc --;
 		}
-		CandyObject[] args;
-		if (arity == 0) {
-			args = EMPTY_ARGS;
-		} else {
-			args = new CandyObject[arity]; 
-			for (int i = 0; i < arity; i ++) {
-				args[i] = vm.pop();
-			}
+		CandyObject[] args = new CandyObject[argc];
+		for (int i = 0; i < argc; i ++) {
+			args[i] = vm.pop();
 		}
 		try {
 			CandyObject ret = onCall(vm, instance, args);

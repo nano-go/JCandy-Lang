@@ -6,7 +6,6 @@ import com.nano.candy.interpreter.i2.builtin.type.IntegerObj;
 import com.nano.candy.interpreter.i2.builtin.type.MethodObj;
 import com.nano.candy.interpreter.i2.builtin.type.StringObj;
 import com.nano.candy.interpreter.i2.builtin.type.classes.CandyClass;
-import com.nano.candy.interpreter.i2.builtin.type.error.ArgumentError;
 import com.nano.candy.interpreter.i2.builtin.type.error.AttributeError;
 import com.nano.candy.interpreter.i2.builtin.type.error.TypeError;
 import com.nano.candy.interpreter.i2.builtin.utils.ObjectHelper;
@@ -35,37 +34,26 @@ public class CandyObjEntity extends CandyObject {
 		attrs = new HashMap<>();
 	}
 	
-	protected static CandyObject invokeMethod(VM vm, CallableObj method) {
-		return invokeMethod(vm, method, null);
-	}
-	
-	protected static CandyObject invokeMethod(VM vm, CallableObj method, CandyClass expectedRetType) {
-		CandyObject retObj = ObjectHelper.callFunction(vm, method);
+	protected static CandyObject invokeMethod(VM vm, CallableObj method, 
+	                                          CandyClass expectedRetType,
+	                                          CandyObject... args) {
+		CandyObject retObj = ObjectHelper.callFunction(vm, method, args);
 		if (expectedRetType != null) {
 			TypeError.checkTypeMatched(
 				expectedRetType, retObj,
 				"'%s' must return '%s' (actual type %s).",
-				method.declredName(),
+				method.declaredName(),
 				expectedRetType.getClassName(), retObj.getCandyClassName()
 			);
 		}
 		return retObj;
 	}
 	
-	protected CallableObj getBoundMethod(String name, int expectedArity) {
-		return getBoundMethod(name, expectedArity, null);
-	}
-	
-	protected CallableObj getBoundMethod(String name, int expectedArity, CallableObj cache) {
+	protected CallableObj getBoundMethod(String name, CallableObj cache) {
 		if (cache != null) {
 			return cache;
 		}
-		cache = getCandyClass().getBoundMethod(name, this);
-		if (cache != null) {
-			ArgumentError.checkArity(cache, expectedArity);
-			return cache;
-		}
-		return null;
+		return getCandyClass().getBoundMethod(name, this);
 	}
 	
 	public CandyObject invokeApiExeUser(VM vm, String name, CandyObject... args) {
@@ -77,19 +65,19 @@ public class CandyObjEntity extends CandyObject {
 	@Override
 	public final void setAttrApi(VM vm, String attr, CandyObject value) {
 		checkIsFrozen();
-		attrSetter = getBoundMethod(Names.METHOD_SET_ATTR, 2, attrSetter);
+		attrSetter = getBoundMethod(Names.METHOD_SET_ATTR, attrSetter);
 		vm.push(value);
 		vm.push(StringObj.valueOf(attr));
-		attrSetter.onCall(vm);
+		attrSetter.call(vm, 2);
 	}
 
 	@Override
 	public final CandyObject setAttrApiExeUser(VM vm, String attr, CandyObject value) {
 		checkIsFrozen();
-		attrSetter = getBoundMethod(Names.METHOD_SET_ATTR, 2, attrSetter);
+		attrSetter = getBoundMethod(Names.METHOD_SET_ATTR, attrSetter);
 		vm.push(value);
 		vm.push(StringObj.valueOf(attr));	
-		return invokeMethod(vm, attrGetter);
+		return invokeMethod(vm, attrGetter, null);
 	}
 	
 	@Override
@@ -104,16 +92,16 @@ public class CandyObjEntity extends CandyObject {
 	 */
 	@Override
 	public final void getAttrApi(VM vm, String attr) {
-		attrGetter = getBoundMethod(Names.METHOD_GET_ATTR, 1, attrGetter);
+		attrGetter = getBoundMethod(Names.METHOD_GET_ATTR, attrGetter);
 		vm.push(StringObj.valueOf(attr));
-		attrGetter.onCall(vm);
+		attrGetter.call(vm, 1);
 	}
 	
 	@Override
 	public final CandyObject getAttrApiExeUser(VM vm, String attr) {
-		attrGetter = getBoundMethod(Names.METHOD_GET_ATTR, 1, attrGetter);
-		vm.push(StringObj.valueOf(attr));
-		return invokeMethod(vm, attrGetter);
+		attrGetter = getBoundMethod(Names.METHOD_GET_ATTR, attrGetter);
+		return invokeMethod
+			(vm, attrGetter, null, StringObj.valueOf(attr));
 	}
 	
 	@Override
@@ -134,75 +122,71 @@ public class CandyObjEntity extends CandyObject {
 	@Override
 	public final CandyObject getUnknownAttrApiExeUser(VM vm, String attr) {
 		unknownAttrGetter = getBoundMethod(
-			Names.METHOD_GET_UNKNOWN_ATTR, 1, unknownAttrGetter);
-		vm.push(StringObj.valueOf(attr));
-		return invokeMethod(vm, unknownAttrGetter);
+			Names.METHOD_GET_UNKNOWN_ATTR, unknownAttrGetter);
+		return invokeMethod(vm, unknownAttrGetter, null, StringObj.valueOf(attr));
 	}
 
 	@Override
 	public final void getUnknownAttrApi(VM vm, String attr) {
 		unknownAttrGetter = getBoundMethod(
-			Names.METHOD_GET_UNKNOWN_ATTR, 1, unknownAttrGetter);
+			Names.METHOD_GET_UNKNOWN_ATTR, unknownAttrGetter);
 		vm.push(StringObj.valueOf(attr));
-		unknownAttrGetter.onCall(vm);
+		unknownAttrGetter.call(vm, 1);
 	}
 
 	@Override
 	public final void setItemApi(VM vm, CandyObject key, CandyObject value) {
 		checkIsFrozen();
-		itemSetter = getBoundMethod(Names.METHOD_SET_ITEM, 2, itemSetter);
+		itemSetter = getBoundMethod(Names.METHOD_SET_ITEM, itemSetter);
 		vm.push(value);
 		vm.push(key);
-		itemSetter.onCall(vm);
+		itemSetter.call(vm, 2);
 	}
 
 	@Override
 	public final CandyObject setItemApiExeUser(VM vm, CandyObject key, CandyObject value) {
 		checkIsFrozen();
-		itemSetter = getBoundMethod(Names.METHOD_SET_ITEM, 2, itemSetter);
-		vm.push(value);
-		vm.push(key);
-		return invokeMethod(vm, itemSetter);
+		itemSetter = getBoundMethod(Names.METHOD_SET_ITEM, itemSetter);
+		return invokeMethod(vm, itemSetter, null, key, value);
 	}
 
 	@Override
 	public final void getItemApi(VM vm, CandyObject key) {
-		itemGetter = getBoundMethod(Names.METHOD_GET_ITEM, 1, itemGetter);
+		itemGetter = getBoundMethod(Names.METHOD_GET_ITEM, itemGetter);
 		vm.push(key);
-		itemGetter.onCall(vm);
+		itemGetter.call(vm, 1);
 	}
 
 	@Override
 	public final CandyObject getItemApiExeUser(VM vm, CandyObject key) {
-		itemGetter = getBoundMethod(Names.METHOD_GET_ITEM, 1, itemGetter);
+		itemGetter = getBoundMethod(Names.METHOD_GET_ITEM, itemGetter);
 		vm.push(key);
-		return invokeMethod(vm, itemGetter);
+		return invokeMethod(vm, itemGetter, null, key);
 	}
 
 	@Override
 	public final void equalsApi(VM vm, CandyObject operand) {
-		equalTo = getBoundMethod(Names.METHOD_EQUALS, 1, equalTo);
+		equalTo = getBoundMethod(Names.METHOD_EQUALS, equalTo);
 		vm.push(operand);
-		equalTo.onCall(vm);
+		equalTo.call(vm, 1);
 	}
 
 	@Override
 	public final BoolObj equalsApiExeUser(VM vm, CandyObject operand) {
-		equalTo = getBoundMethod(Names.METHOD_EQUALS, 1, equalTo);
-		vm.push(operand);
+		equalTo = getBoundMethod(Names.METHOD_EQUALS, equalTo);
 		return (BoolObj) 
-			invokeMethod(vm, equalTo, BoolObj.BOOL_CLASS);
+			invokeMethod(vm, equalTo, BoolObj.BOOL_CLASS, operand);
 	}
 
 	@Override
 	public final void hashCodeApi(VM vm) {
-		hashcode = getBoundMethod(Names.METHOD_HASH_CODE, 0, hashcode);
-		hashcode.onCall(vm);
+		hashcode = getBoundMethod(Names.METHOD_HASH_CODE, hashcode);
+		hashcode.call(vm, 0);
 	}
 
 	@Override
 	public final IntegerObj hashCodeApiExeUser(VM vm) {
-		hashcode = getBoundMethod(Names.METHOD_HASH_CODE, 0, hashcode);
+		hashcode = getBoundMethod(Names.METHOD_HASH_CODE, hashcode);
 		if (!hashcode.isBuiltin()) {
 			return (IntegerObj) 
 				invokeMethod(vm, hashcode, IntegerObj.INTEGER_CLASS);
@@ -212,41 +196,40 @@ public class CandyObjEntity extends CandyObject {
 	
 	@Override
 	public final StringObj strApiExeUser(VM vm) {
-		stringVal = getBoundMethod(Names.METHOD_STR_VALUE, 0, stringVal);
+		stringVal = getBoundMethod(Names.METHOD_STR_VALUE, stringVal);
 		return (StringObj) 
 			invokeMethod(vm, stringVal, StringObj.STRING_CLASS);
 	}
 
 	@Override
 	public final CandyObject iteratorApiExeUser(VM vm) {
-		CallableObj iterator = getBoundMethod(Names.METHOD_ITERATOR, 0, null);
-		return invokeMethod(vm, iterator);
+		CallableObj iterator = getBoundMethod(Names.METHOD_ITERATOR, null);
+		return invokeMethod(vm, iterator, null);
 	}
 	
 	// Operator Methods
 	
 	
 	private void binaryApi(VM vm, String name, CandyObject operand) {
-		CallableObj boundMet = getBoundMethod(name, 1, null);
+		CallableObj boundMet = getBoundMethod(name, null);
 		vm.push(operand);
-		boundMet.onCall(vm);
+		boundMet.call(vm, 1);
 	}
 	
 	private CandyObject binaryApiExeUser(VM vm, String name, CandyObject operand, 
 	                                     CandyClass expextedReturnType) {
-		CallableObj boundMet = getBoundMethod(name, 1, null);
-		vm.push(operand);
-		return invokeMethod(vm, boundMet, expextedReturnType);
+		CallableObj boundMet = getBoundMethod(name, null);
+		return invokeMethod(vm, boundMet, expextedReturnType, operand);
 	}
 	
 	private void unaryApi(VM vm, String name) {
-		CallableObj boundMet = getBoundMethod(name, 0, null);
-		boundMet.onCall(vm);
+		CallableObj boundMet = getBoundMethod(name, null);
+		boundMet.call(vm, 0);
 	}
 
 	private CandyObject unaryApiExeUser(VM vm, String name) {
-		CallableObj boundMet = getBoundMethod(name, 0, null);
-		return invokeMethod(vm, boundMet);
+		CallableObj boundMet = getBoundMethod(name, null);
+		return invokeMethod(vm, boundMet, null);
 	}
 	
 	@Override

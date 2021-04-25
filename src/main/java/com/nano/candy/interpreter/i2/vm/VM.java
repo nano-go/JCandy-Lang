@@ -408,7 +408,7 @@ public final class VM {
 	 * Call the specified name of the method of the specified class.
 	 */
 	private void evalOpSuperInvoke() {
-		int arity = readUint8();
+		int argc = readUint8();
 		CandyClass superClass = (CandyClass) pop();
 		CandyObject instance = pop();
 		String methodName = cp.getString(readIndex());
@@ -422,8 +422,7 @@ public final class VM {
 				superClass.getClassName(), methodName
 			).throwSelfNative();
 		}
-		ObjectHelper.checkIsValidCallable(method, arity);
-		method.onCall(this);
+		method.call(this, argc);
 	}
 	
 	private CandyObject getGlobalVariable(String name, boolean throwsErrorIfNotFound) {
@@ -882,30 +881,36 @@ public final class VM {
 					int arity = readUint8();
 					String attr = cp.getString(readIndex());
 					CandyObject method = pop().getAttrApiExeUser(this, attr);
-					ObjectHelper.checkIsValidCallable(method, arity);
-					method.onCall(this);
+					TypeError.checkIsCallable(method);
+					((CallableObj) method).call(this, arity);
 					break;
 				}
 				case OP_CALL_SLOT: {
 					int arity = readUint8();	
 					CandyObject function = load(readUint8());
-					ObjectHelper.checkIsValidCallable(function, arity);
-					function.onCall(this);
+					TypeError.checkIsCallable(function);
+					((CallableObj) function).call(this, arity);
 					break;
 				}
 				case OP_CALL_GLOBAL: {
 					int arity = readUint8();
 					String name = cp.getString(readIndex());
 					CandyObject function = getGlobalVariable(name, true);
-					ObjectHelper.checkIsValidCallable(function, arity);
-					function.onCall(this);
+					TypeError.checkIsCallable(function);
+					((CallableObj) function).call(this, arity);
 					break;
 				}
 				case OP_CALL: {
 					int arity = readUint8();
-					CandyObject operand = pop();
-					ObjectHelper.checkIsValidCallable(operand, arity);
-					operand.onCall(this);
+					TypeError.requiresCallable(pop())
+						.call(this, arity);
+					break;
+				}
+				case OP_CALL_EX: {
+					int arity = readUint8();
+					int unpackFlags = cp.getUnpackFlags(readIndex());
+					TypeError.requiresCallable(pop())
+						.call(this, arity, unpackFlags);
 					break;
 				}
 				

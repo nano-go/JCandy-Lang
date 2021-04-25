@@ -7,7 +7,6 @@ import com.nano.candy.interpreter.i2.builtin.type.NullPointer;
 import com.nano.candy.interpreter.i2.builtin.type.NumberObj;
 import com.nano.candy.interpreter.i2.builtin.type.StringObj;
 import com.nano.candy.interpreter.i2.builtin.type.classes.CandyClass;
-import com.nano.candy.interpreter.i2.builtin.type.error.ArgumentError;
 import com.nano.candy.interpreter.i2.builtin.type.error.AttributeError;
 import com.nano.candy.interpreter.i2.builtin.type.error.TypeError;
 import com.nano.candy.interpreter.i2.vm.VM;
@@ -30,11 +29,6 @@ public class ObjectHelper {
 				return -1;
 			}
 		};
-	}
-	
-	public static void checkIsValidCallable(CandyObject callable, int actualArity) {
-		TypeError.checkIsCallable(callable);
-		ArgumentError.checkArity(callable, actualArity);
 	}
 	
 	public static void checkNullObject(CandyObject obj, String msg, Object... args) {
@@ -95,25 +89,6 @@ public class ObjectHelper {
 	}
 	
 	public static CandyObject callFunction(VM vm, CallableObj callable, CandyObject... args) {
-		int expectedArity = args == null ? 0 : args.length;
-		ArgumentError.checkArity(callable, expectedArity);
-		if (args != null) {
-			for (int i = args.length-1; i >= 0; i --) {
-				vm.push(args[i]);
-			}
-		}
-		callable.onCall(vm);
-		if (!callable.isBuiltin()) {
-			vm.runFrame(true);
-		}
-		return vm.pop();
-	}
-	
-	public static CandyObject callFunction(VM vm, CallableObj callable) {
-		callable.onCall(vm);
-		if (!callable.isBuiltin()) {
-			vm.runFrame(true);
-		}
-		return vm.pop();
+		return callable.callExeUser(vm, args);
 	}
 }

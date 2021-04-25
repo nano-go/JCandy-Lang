@@ -18,20 +18,20 @@ public class NativeMethodRegister {
 	}
 	
 	public static CNativeMethod generateNativeMethod(String className, Method m) {
-		if (!m.isAccessible()) {
-			m.setAccessible(true);
-		}
+		m.setAccessible(true);
 		verifyNativeMethod(m);
 		NativeMethod nativeMethod = m.getAnnotation(NativeMethod.class);
 		String name = className + "." + nativeMethod.name();
 		return new CNativeMethod(
-			nativeMethod.name(), name, nativeMethod.argc(), m);
+			nativeMethod.name(), name, nativeMethod.argc(),
+			nativeMethod.vaargIndex(), m);
 	}
 	
 	private static void verifyNativeMethod(Method m) {
 		AnnotationSigntureVerifier.verifyAnnotationPresent(m, NativeMethod.class);
 		NativeMethod nativeMethod = m.getAnnotation(NativeMethod.class);
 		AnnotationSigntureVerifier.verifyNativeMethod(
-			m, nativeMethod.argc(), nativeMethod.name());
+			m, nativeMethod.argc(), nativeMethod.vaargIndex(),
+			nativeMethod.name());
 	}
 }

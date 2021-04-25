@@ -53,14 +53,7 @@ public abstract class CandyObject {
 	private CandyObject isCallable(VM vm, CandyObject[] args) {
 		return BoolObj.valueOf(isCallable());
 	}
-	public int arity() {
-		return 0;
-	}
-	public void onCall(VM vm) {
-		new TypeError("The object is not callable.").throwSelfNative();
-	}
 	
-
 	/**
 	 * freeze() method prevents you from changing an object, thereby turning
 	 * an object into a constant.

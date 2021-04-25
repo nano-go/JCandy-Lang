@@ -13,9 +13,10 @@ public class NativeFuncRegister {
 	}
 	
 	public static CNativeFunction generateNativeFunc(Method javaMethod) {
+		javaMethod.setAccessible(true);
 		verifyNativeMethod(javaMethod);
 		NativeFunc anno = javaMethod.getAnnotation(NativeFunc.class);
-		return new CNativeFunction(anno.name(), anno.arity(), javaMethod);
+		return new CNativeFunction(anno.name(), anno.arity(), anno.varArgsIndex(), javaMethod);
 	}
 	
 	public static CNativeFunction[] getNativeFunctions(Class<?> nativeFunctionSet) {
@@ -28,7 +29,7 @@ public class NativeFuncRegister {
 		for (int i = 0; i < verifiedMethods.length; i ++) {
 			Method m = verifiedMethods[i];
 			NativeFunc anno = m.getAnnotation(NativeFunc.class);
-			functions[i] = new CNativeFunction(anno.name(), anno.arity(), m);
+			functions[i] = new CNativeFunction(anno.name(), anno.arity(), anno.varArgsIndex(), m);
 		}
 		return functions;
 	}
@@ -37,6 +38,7 @@ public class NativeFuncRegister {
 		Method[] nativeMethods = nativeFunctionSet.getDeclaredMethods();
 		List<Method> annotatedMethods = new ArrayList<>(nativeMethods.length);
 		for (Method m : nativeMethods) {
+			m.setAccessible(true);
 			if (!m.isAnnotationPresent(NativeFunc.class)) {
 				continue;
 			}
@@ -50,6 +52,6 @@ public class NativeFuncRegister {
 		AnnotationSigntureVerifier.verifyAnnotationPresent(m, NativeFunc.class);
 		NativeFunc nativeFunc = m.getAnnotation(NativeFunc.class);
 		AnnotationSigntureVerifier.verifyNativeFunc(
-			m, nativeFunc.arity(), nativeFunc.name());
+			m, nativeFunc.arity(), nativeFunc.varArgsIndex(), nativeFunc.name());
 	}
 }

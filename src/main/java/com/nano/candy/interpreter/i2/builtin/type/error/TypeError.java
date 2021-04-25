@@ -5,11 +5,17 @@ import com.nano.candy.interpreter.i2.builtin.type.classes.CandyClass;
 import com.nano.candy.interpreter.i2.builtin.type.error.ErrorObj;
 import com.nano.candy.interpreter.i2.cni.NativeClass;
 import com.nano.candy.interpreter.i2.cni.NativeClassRegister;
+import com.nano.candy.interpreter.i2.builtin.type.CallableObj;
 
 @NativeClass(name = "TypeError", isInheritable = true)
 public class TypeError extends ErrorObj {
 	public static final CandyClass TYPE_ERROR_CLASS = 
 		NativeClassRegister.generateNativeClass(TypeError.class, ERROR_CLASS);
+	
+	public static CallableObj requiresCallable(CandyObject callable) {
+		checkIsCallable(callable);
+		return (CallableObj) callable;
+	}
 		
 	public static void checkIsCallable(CandyObject callable) {
 		if (!callable.isCallable()) {
@@ -48,5 +54,9 @@ public class TypeError extends ErrorObj {
 	
 	public TypeError(String msgFmt, Object... args) {
 		super(TYPE_ERROR_CLASS, msgFmt, args);
+	}
+	
+	public TypeError(String msg) {
+		super(TYPE_ERROR_CLASS, msg);
 	}
 }

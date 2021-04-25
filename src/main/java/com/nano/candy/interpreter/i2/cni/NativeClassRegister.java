@@ -37,7 +37,7 @@ public class NativeClassRegister {
 		CNativeMethod[] methods = NativeMethodRegister
 			.generateNativeMethods(sinature.getClassName(), clazz);
 		for (CNativeMethod method : methods) {
-			if (Names.METHOD_INITALIZER.equals(method.declredName())) {
+			if (Names.METHOD_INITALIZER.equals(method.declaredName())) {
 				sinature.setInitializer(method);
 			} else {
 				sinature.defineMethod(method);

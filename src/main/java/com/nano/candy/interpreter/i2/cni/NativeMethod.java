@@ -10,5 +10,6 @@ import java.lang.annotation.Target;
 public @interface NativeMethod {
 	public String name();
 	public int argc() default 0;
+	public int vaargIndex() default -1;
 }
 

@@ -255,11 +255,10 @@ public final class ArrayObj extends BuiltinObject {
 		initArray(initalCapacity);
 		
 		if (defaultElement.isCallable()) {
-			ArgumentError.checkArity(defaultElement, 1);
 			CallableObj callable = (CallableObj) defaultElement;
 			for (int i = 0; i < initalCapacity; i ++) {
-				CandyObject element = ObjectHelper.callFunction(
-					vm, callable, IntegerObj.valueOf(i));
+				CandyObject element = 
+					callable.callExeUser(vm, IntegerObj.valueOf(i));
 				append(element);
 			}
 		} else {

@@ -12,16 +12,36 @@ public class ArgumentError extends ErrorObj {
 	public static final CandyClass ARGUMENT_ERROR_CLASS = 
 		NativeClassRegister.generateNativeClass(ArgumentError.class, ERROR_CLASS);
 	
-	public static void checkArity(CandyObject callable, int expectedArity) {
-		if (callable.arity() != expectedArity) {
-			new ArgumentError(callable, expectedArity)
-				.throwSelfNative();
+	public static void checkArity(CallableObj callable, int expectedArity) {
+		if (callable.varArgsIndex() >= 0) {
+			if (expectedArity < callable.arity()-1) {
+				new ArgumentError
+					(callable, expectedArity).throwSelfNative();
+			}
+			return;
 		}
+		if (callable.arity() != expectedArity) {
+			new ArgumentError
+				(callable, expectedArity).throwSelfNative();
+		}
+	}
+	
+	public static void throwsArgumentError(CallableObj callable, 
+	                                       int actual) {
+		if (callable.varArgsIndex() != -1) {
+			new ArgumentError(
+				"The %s takes %d+ arguments, but %d were given.",
+				name(callable), callable.arity()-1, actual
+			).throwSelfNative();
+		} else {
+			new ArgumentError(callable, actual).throwSelfNative();
+		}
+		
 	}
 
 	private static String name(CandyObject obj) {
 		if (obj instanceof CallableObj) {
-			return ((CallableObj) obj).name();
+			return ((CallableObj) obj).fullName();
 		}
 		return obj.getCandyClass().getClassName();
 	}
@@ -30,9 +50,15 @@ public class ArgumentError extends ErrorObj {
 		super(ARGUMENT_ERROR_CLASS);
 	}
 
-	public ArgumentError(CandyObject callable, int actual) {
+	public ArgumentError(CallableObj callable, int actual) {
 		this("The %s takes %d arguments, but %d were given.",
 			 name(callable), callable.arity(), actual
+		);
+	}
+	
+	public ArgumentError(CallableObj callable, int arity, int actual) {
+		this("The %s takes %d arguments, but %d were given.",
+			 name(callable), arity, actual
 		);
 	}
 	

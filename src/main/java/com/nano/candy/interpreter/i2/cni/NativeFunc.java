@@ -10,4 +10,5 @@ import java.lang.annotation.Target;
 public @interface NativeFunc {
 	public String name();
 	public int arity() default 0;
+	public int varArgsIndex() default -1;
 }
