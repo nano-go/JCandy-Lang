@@ -76,8 +76,8 @@ public class GlobalScope {
 		CNativeFunction[] builtinFunctions =
 			NativeFuncRegister.getNativeFunctions(BuiltinFunctions.class);
 		for (CNativeFunction f : builtinFunctions) {
-			BUILTIN_VARS.put(f.declredName(), 
-				Variable.getVariable(f.declredName(), f));
+			BUILTIN_VARS.put(f.declaredName(), 
+				Variable.getVariable(f.declaredName(), f));
 		}
 	}
 

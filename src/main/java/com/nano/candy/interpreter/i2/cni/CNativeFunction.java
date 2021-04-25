@@ -21,7 +21,7 @@ public class CNativeFunction extends CNativeCallable {
 	}
 
 	@Override
-	protected String toStringTag() {
+	protected String strTag() {
 		return "native function";
 	}
 	

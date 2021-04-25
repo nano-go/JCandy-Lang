@@ -31,7 +31,7 @@ public class CNativeMethod extends CNativeCallable {
 	}
 
 	@Override
-	protected String toStringTag() {
+	protected String strTag() {
 		return "native method";
 	}
 }

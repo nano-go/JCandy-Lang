@@ -40,7 +40,7 @@ public class FileScope {
 	}
 	
 	public void defineCallable(CallableObj callableObj) {
-		setVar(callableObj.declredName(), callableObj);
+		setVar(callableObj.declaredName(), callableObj);
 	}
 	
 	public void defineClass(CandyClass clazz) {

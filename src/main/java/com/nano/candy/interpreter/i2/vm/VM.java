@@ -9,7 +9,7 @@ import com.nano.candy.interpreter.i2.builtin.type.DoubleObj;
 import com.nano.candy.interpreter.i2.builtin.type.IntegerObj;
 import com.nano.candy.interpreter.i2.builtin.type.ModuleObj;
 import com.nano.candy.interpreter.i2.builtin.type.NullPointer;
-import com.nano.candy.interpreter.i2.builtin.type.PrototypeFunctionObj;
+import com.nano.candy.interpreter.i2.builtin.type.PrototypeFunction;
 import com.nano.candy.interpreter.i2.builtin.type.StringObj;
 import com.nano.candy.interpreter.i2.builtin.type.TupleObj;
 import com.nano.candy.interpreter.i2.builtin.type.classes.CandyClass;
@@ -344,7 +344,7 @@ public final class VM {
 			pc += init.getLength();
 		}
 		for (ConstantValue.MethodInfo methodInfo : classInfo.methods) {
-			PrototypeFunctionObj prototypefunc = 
+			PrototypeFunction prototypefunc = 
 				createFunctionObj(classInfo.className, methodInfo);
 			signature.defineMethod(methodInfo.name, prototypefunc);
 			pc += methodInfo.getLength();
@@ -358,13 +358,13 @@ public final class VM {
 	 * @param className The name of the class that the method is defined in or null.
 	 * @param methodInfo The information of the prototype function.
 	 */
-	private PrototypeFunctionObj createFunctionObj(String className, ConstantValue.MethodInfo methodInfo) {
+	private PrototypeFunction createFunctionObj(String className, ConstantValue.MethodInfo methodInfo) {
 		Upvalue[] upvalues = frame().captureUpvalueObjs(methodInfo);
 		String tagName = methodInfo.name;
 		if (className != null) {
 			tagName = ObjectHelper.methodName(className, tagName);
 		}
-		return new PrototypeFunctionObj(
+		return new PrototypeFunction(
 			frame().chunk, pc, // Start pc.
 			upvalues, tagName, 
 			methodInfo, global.curFileScope()

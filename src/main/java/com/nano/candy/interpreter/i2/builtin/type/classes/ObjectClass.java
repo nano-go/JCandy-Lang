@@ -19,7 +19,7 @@ public class ObjectClass {
 			generateNativeMethods("Object", CandyObject.class);
 		ClassSignature signature = new ClassSignature("Object", null);
 		for (CNativeMethod method : methods) {
-			if (Names.METHOD_INITALIZER.equals(method.declredName())) {
+			if (Names.METHOD_INITALIZER.equals(method.declaredName())) {
 				signature.setInitializer(method);
 			} else {
 				signature.defineMethod(method);

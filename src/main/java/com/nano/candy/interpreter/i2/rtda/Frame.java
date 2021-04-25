@@ -1,6 +1,6 @@
 package com.nano.candy.interpreter.i2.rtda;
 import com.nano.candy.interpreter.i2.builtin.CandyObject;
-import com.nano.candy.interpreter.i2.builtin.type.PrototypeFunctionObj;
+import com.nano.candy.interpreter.i2.builtin.type.PrototypeFunction;
 import com.nano.candy.interpreter.i2.rtda.chunk.Chunk;
 import com.nano.candy.interpreter.i2.rtda.chunk.ConstantValue;
 import com.nano.candy.interpreter.i2.rtda.chunk.attrs.CodeAttribute;
@@ -23,7 +23,7 @@ public final class Frame implements Recyclable {
 		return f.init(chunk, scope);
 	}
 	
-	public static Frame fetchFrame(PrototypeFunctionObj prototypeFunc) {
+	public static Frame fetchFrame(PrototypeFunction prototypeFunc) {
 		Frame f = FRAME_POOL.fetch();
 		if (f == null) {
 			f = new Frame();
@@ -72,10 +72,10 @@ public final class Frame implements Recyclable {
 		return this;
 	}
 	
-	private Frame init(PrototypeFunctionObj prototypeFunc) {
+	private Frame init(PrototypeFunction prototypeFunc) {
 		adaptForSlots(prototypeFunc.getMaxLocal());
 		this.opStack = new FixedOperandStack(prototypeFunc.getMaxStack());
-		this.name = prototypeFunc.declredName();
+		this.name = prototypeFunc.declaredName();
 		this.chunk = prototypeFunc.chunk;
 		this.codeAttr = prototypeFunc.metInfo.attrs;
 		this.pc = prototypeFunc.pc;
@@ -193,6 +193,10 @@ public final class Frame implements Recyclable {
 	 */
 	public int currentLineExecuted() {
 		return chunk.getLineNumber(pc-1);
+	}
+	
+	public OperandStack getOperandStack() {
+		return opStack;
 	}
 	
 	public int slotCount() {

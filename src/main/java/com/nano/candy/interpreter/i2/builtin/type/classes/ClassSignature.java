@@ -57,7 +57,7 @@ public class ClassSignature {
 	}
 	
 	public ClassSignature defineMethod(CallableObj obj) {
-		return defineMethod(obj.declredName(), obj);
+		return defineMethod(obj.declaredName(), obj);
 	}
 
 	public ClassSignature defineMethod(String name, CallableObj obj) {
