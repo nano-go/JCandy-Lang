@@ -200,9 +200,10 @@ public class ScannerTestCase {
 		/*===== KeyWord Test Case ===== */
 		newTKCase(
 			"if else while for in var fun class lambda return " + 
-			"this super break continue assert import as",
+			"this super break continue assert import as raise intercept try",
 			IF, ELSE, WHILE, FOR, IN, VAR, FUN, CLASS, LAMBDA,
-			RETURN, THIS, SUPER, BREAK, CONTINUE, ASSERT, IMPORT, AS
+			RETURN, THIS, SUPER, BREAK, CONTINUE, ASSERT, IMPORT, AS,
+			RAISE, INTERCEPT, TRY
 		),
 		newTKCase(
 			"true\n false \n null \n",
@@ -224,7 +225,7 @@ public class ScannerTestCase {
 		newTKCase("[a, b, c, d]", 
 			LBRACKET, id("a"), COMMA, id("b"), COMMA, 
 			id("c"), COMMA, id("d"), RBRACKET, SEMIEOF
-		),
+		)
 	};
 	
 	private static Token integer(String intLiteral) {
@@ -303,9 +304,6 @@ public class ScannerTestCase {
 	 * These 'Positions' are where the error is occured if hasError is true.
 	 */
 	static final CandyTestCase[] POSITION_AND_ERROR_TEST_CASES = {
-		newPECase("abc&def|", true, pos(1, 4), pos(1, 8)),
-		
-		/* Position(Have no error) */
 		
 		newPECase("\n\n abcdefg", false, pos(3, 2), pos(3, 9)),
 		newPECase("\n\t\t_abc 123 \n", false, pos(2, 3), pos(2, 8), pos(2,12)),
@@ -313,13 +311,11 @@ public class ScannerTestCase {
 		newPECase("\n\"Oh my god! Are you ok?\"\n\n bbbbb", false, pos(2, 1), pos(2, 25), pos(4, 2), pos(4, 7)),
 		
 		/* Comment */
-		
 		newPECase("/** abc.\n\n\t\t*/≈≈___╳", true, pos(3, 5), pos(3, 6), pos(3, 10)),
 		newPECase("\n\n/** good good", true, pos(3,14)),
 		newPECase("/**abcd", true, pos(1, 8)),
 		
-		/* String Literal */
-		
+		/* String Literal */	
 		newPECase("\"music\nIn the end\"", true, pos(1, 7), pos(2, 12)),
 		newPECase("\"\\uFFFR\"", true, pos(1, 7)),
 		newPECase("\"\\u\"", true, pos(1, 4), pos(1, 5)),
@@ -327,8 +323,7 @@ public class ScannerTestCase {
 		newPECase("\"\\788\"", true, pos(1, 4)),
 		newPECase("\"\\777\"", true, pos(1, 5)),
 		
-		/* Number Literal */
-		
+		/* Number Literal */	
 		newPECase("0bFFFF", true, pos(1, 3), pos(1, 4), pos(1, 5), pos(1, 6)),
 		newPECase("0b002", true, pos(1, 5)),
 		newPECase("0xFFFF.FFF", true, pos(1, 7)),
