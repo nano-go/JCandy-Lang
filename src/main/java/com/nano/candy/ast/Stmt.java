@@ -6,6 +6,7 @@ import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Optional;
+import java.util.Iterator;
 
 public abstract class Stmt extends ASTreeNode {
 	
@@ -229,18 +230,38 @@ public abstract class Stmt extends ASTreeNode {
 	
 	public static class FuncDef extends Stmt {
 		public Optional<String> name;
-		public List<String> params;
+		public Parameters parameters;
 		public Stmt.Block body;
 		
-		public FuncDef(String name, List<String> params, Stmt.Block body) {
+		public FuncDef(String name, Parameters parameters, 
+					   Stmt.Block body) {
 			this.name = Optional.ofNullable(name) ;
-			this.params = params;
+			this.parameters = parameters;
 			this.body = body;
 		}
 		
 		@Override
 		public <R> R accept(AstVisitor<R, ?> visitor) {
 			return visitor.visit(this);
+		}
+	}
+	
+	public static class Parameters {
+		public final List<String> params;
+		
+		/**
+		 * The parameter in the vaArgsIndex allows that variable arguments 
+		 * are passed to it.
+		 */
+		public final int vaArgsIndex;
+		
+		public Parameters(List<String> params, int isVaArgs) {
+			this.params = params;
+			this.vaArgsIndex = isVaArgs;
+		}
+		
+		public int size() {
+			return params.size();
 		}
 	}
 	
@@ -283,7 +304,7 @@ public abstract class Stmt extends ASTreeNode {
 		}
 
 		public int constructorParamNumber() {
-			return initializer.isPresent() ? initializer.get().params.size() : 0;
+			return initializer.isPresent() ? initializer.get().parameters.size() : 0;
 		}
 		
 		@Override

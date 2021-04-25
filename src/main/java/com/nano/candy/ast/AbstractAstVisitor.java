@@ -90,8 +90,8 @@ public abstract class AbstractAstVisitor<R> implements AstVisitor<R, R> {
 	@Override
 	public R visit(Expr.CallFunc node) {
 		node.expr.accept(this);
-		for (Expr arg : node.arguments) {
-			arg.accept(this);
+		for (Expr.Argument arg : node.arguments) {
+			arg.expr.accept(this);
 		}
 		return null;
 	}

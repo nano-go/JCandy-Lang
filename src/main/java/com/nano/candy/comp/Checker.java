@@ -8,7 +8,7 @@ import com.nano.candy.ast.Stmt;
 import com.nano.candy.std.Names;
 import com.nano.candy.utils.Logger;
 import com.nano.candy.utils.Position;
-import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.ListIterator;
@@ -288,8 +288,9 @@ public class Checker implements AstVisitor<Stmt, Expr> {
 
 	private Stmt.ExprS newSuperCall(Position pos) {
 		Expr.Super superExpr = locate(pos, new Expr.Super(INITIALIZER_NAME));
-		Expr.CallFunc callSuperExpr =
-			locate(pos, new Expr.CallFunc(superExpr, new ArrayList<Expr>()));
+		Expr.CallFunc callSuperExpr = new Expr.CallFunc
+			(superExpr, Collections.<Expr.Argument>emptyList());
+		callSuperExpr.pos = pos;
 		return locate(pos, new Stmt.ExprS(callSuperExpr));
 	}
 
@@ -327,8 +328,8 @@ public class Checker implements AstVisitor<Stmt, Expr> {
 
 	private void checkParams(Stmt.FuncDef node) {
 		String funcName = node.name.isPresent() ? node.name.get() : "lambda";
-		HashSet<String> duplicatedNameHelper = new HashSet<>(node.params.size());
-		for (String param : node.params) {
+		HashSet<String> duplicatedNameHelper = new HashSet<>(node.parameters.size());
+		for (String param : node.parameters.params) {
 			if (duplicatedNameHelper.contains(param)) {
 				error(node, "Duplicated parameter name '%s' in the function '%s'.", 
 					  param, funcName);
@@ -336,12 +337,12 @@ public class Checker implements AstVisitor<Stmt, Expr> {
 				duplicatedNameHelper.add(param);
 			}
 		}
-		if (node.params.size() > MAX_PARAMETER_NUMBER) {
+		if (node.parameters.size() > MAX_PARAMETER_NUMBER) {
 			error(node, "Can't have parameters more than %d in the function '%s'.",
 				  MAX_PARAMETER_NUMBER, funcName);
 		}
 	}
-
+	
 	private void insertReturnStmt(Stmt.FuncDef node) {
 		if (!isReturnStmt(node.body.getLastStmt())) {
 			Stmt.Return returnStmt = new Stmt.Return(null);
@@ -407,10 +408,8 @@ public class Checker implements AstVisitor<Stmt, Expr> {
 		if (node.arguments.size() > MAX_PARAMETER_NUMBER) {
 			error(node, "Too many arguments.");
 		}
-		ListIterator<Expr> i = node.arguments.listIterator();
-		while (i.hasNext()) {
-			Expr arg = i.next();
-			i.set(visitExpr(arg));
+		for (Expr.Argument arg : node.arguments) {
+			arg.expr = visitExpr(arg.expr);
 		}
 		checkCallable(node.expr);
 		return node;

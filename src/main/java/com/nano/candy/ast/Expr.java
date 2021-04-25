@@ -59,8 +59,10 @@ public abstract class Expr extends ASTreeNode {
 	public static class Lambda extends Expr {		
 		public Stmt.FuncDef funcDef;
 
-		public Lambda(List<String> params, Stmt.Block body) {
-			this.funcDef = new Stmt.FuncDef(null, params, body);
+		public Lambda(Stmt.Parameters params, Stmt.Block body) {
+			this.funcDef = new Stmt.FuncDef(
+				null, params, body
+			);
 		}
 		
 		@Override
@@ -357,16 +359,26 @@ public abstract class Expr extends ASTreeNode {
 	
 	public static class CallFunc extends Expr {
 		public Expr expr;
-		public List<Expr> arguments;
+		public List<Argument> arguments;
 		
-		public CallFunc(Expr expr, List<Expr> arguments) {
+		public CallFunc(Expr expr, List<Argument> arguments) {
 			this.expr = expr;
 			this.arguments = arguments;
 		}
-
+		
 		@Override
 		public <R> R accept(AstVisitor<?, R> visitor) {
 			return visitor.visit(this);
+		}
+	}
+	
+	public static class Argument {
+		public Expr expr;
+		public boolean isUnpack;
+
+		public Argument(Expr expr, boolean isUnpacking) {
+			this.expr = expr;
+			this.isUnpack = isUnpacking;
 		}
 	}
 	

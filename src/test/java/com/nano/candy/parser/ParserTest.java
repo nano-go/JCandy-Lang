@@ -53,8 +53,12 @@ public class ParserTest {
 		"fun test(a, b, c) { return 0 ; }",
 		"fun test(a, b, c) { a * b * c ; }",
 		"fun test(a, b, c) \n { a * b * c ; }",
+		"fun test(a, *b) {}",
+		"fun test(*a) {}",
 		"test(lambda a, b -> if (a > b) b else c)",
 		"test(lambda a, b -> if (a > b) b else return c)",
+		"test(a, *b)",
+		"test(*a, b)",
 		"var lambdaExpr = lambda a, b -> a * b",
 		"var lambdaExpr = lambda a, b -> (a * b)",
 		"var lambdaExpr = lambda a, b -> { a * b\n }",
@@ -102,9 +106,9 @@ public class ParserTest {
 		newPECase("var ", loc(1, 5)),
 		newPECase("a. ", loc(1, 4)),
 		newPECase("fun ", loc(1, 5)),
+		newPECase("fun a(a, *) {}", loc(1, 11)),
 		newPECase("class ", loc(1, 7)),
 		newPECase("class a :", loc(1, 10)),
-		newPECase("lable1:\nvar a = ", loc(1, 7), loc(2, 9)),
 		newPECase("raise lambda e -> e", loc(1, 7)),
 	};
 	 
@@ -125,7 +129,7 @@ public class ParserTest {
 			parser.parse() ;
 			for (Logger.LogMessage msg : logger.getErrorMessages()) {
 				actualPos.add(msg.getPos()) ;
-			}		
+			}
 			LoggerMsgChecker.expectedErrors(true, true) ;
 			assertArrayEquals(expected.positions, actualPos.toArray()) ;
 		}

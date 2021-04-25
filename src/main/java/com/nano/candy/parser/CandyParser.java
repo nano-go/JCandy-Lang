@@ -524,7 +524,7 @@ class CandyParser implements Parser {
 		matchIf(FUN);
 		Token name = peek();
 		matchIf(IDENTIFIER, true);
-		List<String> params = parseParams(false);
+		Stmt.Parameters params = parseParams(false);
 		ensureExpectedKind(TokenKind.LBRACE);
 		Stmt.Block body = parseBlock();
 		return locate(name, new Stmt.FuncDef(name.getLiteral(), params, body));
@@ -633,34 +633,43 @@ class CandyParser implements Parser {
 	private Stmt.FuncDef parseFunDef() {
 		Token location = match(FUN);
 		String name = match(IDENTIFIER, "Expected function name.").getLiteral();
-		List<String> params = parseParams(false);
+		Stmt.Parameters params = parseParams(false);
 		Stmt.Block body = toFuncBlock(parseBlock());
 		return locate(location, new Stmt.FuncDef(name, params, body));
 	}
 
 	/**
 	 * Params = ( ( "(" Parameters ")" ) | Parameters ) [ <SEMI> ]
-	 * Parameters = [ <IDENTIFIER> ( "." <IDENTIFIER> )*
+	 *
+	 * Parameters = [ ( [ "*" ] <IDENTIFIER> )  [ "," Parameters ] ]
 	 */
-	private List<String> parseParams(boolean optionalParentheses) {
+	private Stmt.Parameters parseParams(boolean optionalParentheses) {
 		ArrayList<String> params = new ArrayList<>(6);
 		boolean leftParenMatched = matchIf(LPAREN, !optionalParentheses);
 		if (leftParenMatched && matchIf(RPAREN)) {
 			ignorableLinebreak();
-			return params;
-		}	
+			return new Stmt.Parameters(params, -1);
+		}
+		int vaArgIndex = -1;
 		do {
-			Token nameTok = peek();
-			if (!matchIf(IDENTIFIER)) {
+			if (matchIf(STAR)) {
+				if (vaArgIndex != -1) {
+					error(previous, "A function only has a parameter to" 
+						  + " aceept variable arguments.");
+				}
+				vaArgIndex = params.size();
+				matchIf(IDENTIFIER, true);
+			} else if (!matchIf(IDENTIFIER)) {
 				break;
 			}
+			Token nameTok = previous();
 			params.add(nameTok.getLiteral());
 		} while (matchIf(COMMA));	
 		if (!optionalParentheses || leftParenMatched) {
 			matchIf(RPAREN, "Expected parameter declaration.");
 		}
 		ignorableLinebreak();
-		return params;
+		return new Stmt.Parameters(params, vaArgIndex);
 	}
 	
 	/**
@@ -967,7 +976,7 @@ class CandyParser implements Parser {
 			Token tok = peek();
 			switch (tok.getKind()) {
 				case LPAREN:
-					List<Expr> args = parseArguments();
+					List<Expr.Argument> args = parseArguments();
 					expr = locate(tok, new Expr.CallFunc(expr, args));
 					continue;
 					
@@ -1000,11 +1009,12 @@ class CandyParser implements Parser {
 	}
 
 	/**
-	 * Agruments = "(" [ ExprOrLambda ( "," ExprOrLambda )* ] [ <SEMI> ] ")"
+	 * Agruments = "(" [ [ "*" ] ExprOrLambda ( "," [ "*" ] ExprOrLambda )* ] 
+	 *             [ <SEMI> ] ")"
 	 */
-	private List<Expr> parseArguments() {
+	private List<Expr.Argument> parseArguments() {
 		consume();
-		List<Expr> args = new ArrayList<>();
+		List<Expr.Argument> args = new ArrayList<>();
 		if (matchIf(RPAREN)) {
 			return args;
 		}
@@ -1012,7 +1022,9 @@ class CandyParser implements Parser {
 			if (peekKind() == RPAREN) {
 				break;
 			}
-			args.add(parseExprOrLambda());
+			boolean isUnpack = matchIf(STAR);
+			Expr arg = parseExprOrLambda();
+			args.add(new Expr.Argument(arg, isUnpack));
 		} while (matchIf(COMMA));
 		ignorableLinebreak();
 		matchIf(RPAREN, true);
@@ -1035,7 +1047,7 @@ class CandyParser implements Parser {
 	 */
 	private Expr.Lambda parseLambdaExpr() {
 		Token location = match(LAMBDA);
-		List<String> params = parseParams(true);
+		Stmt.Parameters params = parseParams(true);
 		match(ARROW);
 		
 		boolean originalSingleLineLambda = inSingleLineLambda;
