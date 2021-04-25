@@ -44,4 +44,8 @@ public class ConstantPool {
 		return ((ConstantValue.ConstantUtf8String)cp[index]).value();
 	}
 	
+	public int getUnpackFlags(int index) {
+		return ((ConstantValue.UnpackFlags)cp[index]).unpackFlags;
+	}
+	
 }

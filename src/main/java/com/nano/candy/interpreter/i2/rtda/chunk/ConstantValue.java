@@ -74,6 +74,7 @@ public abstract class ConstantValue {
 
 		public String name;
 		public int arity;
+		public int varArgsIndex;
 		public byte[] upvalues;
 		public ClassInfo classDefinedIn;
 		public CodeAttribute attrs;
@@ -190,6 +191,40 @@ public abstract class ConstantValue {
 				"Upvalues: %s", Arrays.toString(upvalueIndexes)
 			));
 			return builder.toString();
+		}
+	}
+	
+	public static class UnpackFlags extends ConstantValue {
+		public int unpackFlags;
+
+		public UnpackFlags(int unpackFlags) {
+			this.unpackFlags = unpackFlags;
+		}
+
+		@Override
+		public String headName() {
+			return "Unpack Flags";
+		}
+
+		@Override
+		public String toString() {
+			return String.valueOf(unpackFlags);
+		}
+
+		@Override
+		public int hashCode() {
+			return Integer.hashCode(unpackFlags);
+		}
+
+		@Override
+		public boolean equals(Object obj) {
+			if (obj == this) {
+				return true;
+			}
+			if (obj instanceof UnpackFlags) {
+				return unpackFlags == ((UnpackFlags) obj).unpackFlags;
+			}
+			return false;
 		}
 	}
 }

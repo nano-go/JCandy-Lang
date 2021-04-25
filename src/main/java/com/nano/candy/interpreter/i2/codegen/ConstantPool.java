@@ -10,6 +10,7 @@ class ConstantPool {
 	
 	private ArrayList<ConstantValue> constantPool = new ArrayList<>();
 	
+	private HashMap<ConstantValue, Integer> constantValueIndexMap = new HashMap<>();
 	private HashMap<Long, Integer> integerConstantIndexMap = new HashMap<>();
 	private HashMap<Double, Integer> doubleConstantIndexMap = new HashMap<>();
 	private HashMap<String, Integer> utf8ConstantIndexMap = new HashMap<>();
@@ -28,10 +29,15 @@ class ConstantPool {
 	}
 	
 	public int addConstantValue(ConstantValue cv) {
+		Integer i = constantValueIndexMap.get(cv);
+		if (i != null) {
+			return i;
+		}
 		int index = constantPool.size();
 		if (index >= 65536) {
 			throw new Error("Too many constant value!");
 		}
+		constantValueIndexMap.put(cv, index);
 		constantPool.add(cv);
 		return index;
 	}

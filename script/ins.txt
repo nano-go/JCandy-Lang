@@ -68,6 +68,7 @@ OP_GLOBAL_GET globalget
 OP_INVOKE invoke
 OP_CALL_GLOBAL call_global_var
 OP_CALL_SLOT call_slot
+OP_CALL_EX call_ex
 OP_CALL call
 
 OP_RETURN_NIL return_nil

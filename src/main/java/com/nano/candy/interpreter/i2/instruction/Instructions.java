@@ -71,32 +71,33 @@ public class Instructions {
 	public static final byte OP_INVOKE            = (byte)56;
 	public static final byte OP_CALL_GLOBAL       = (byte)57;
 	public static final byte OP_CALL_SLOT         = (byte)58;
-	public static final byte OP_CALL              = (byte)59;
+	public static final byte OP_CALL_EX           = (byte)59;
+	public static final byte OP_CALL              = (byte)60;
 
-	public static final byte OP_RETURN_NIL        = (byte)60;
-	public static final byte OP_RETURN            = (byte)61;
+	public static final byte OP_RETURN_NIL        = (byte)61;
+	public static final byte OP_RETURN            = (byte)62;
 
-	public static final byte OP_CLASS             = (byte)62;
-	public static final byte OP_SUPER_GET         = (byte)63;
-	public static final byte OP_SUPER_INVOKE      = (byte)64;
-	public static final byte OP_FUN               = (byte)65;
+	public static final byte OP_CLASS             = (byte)63;
+	public static final byte OP_SUPER_GET         = (byte)64;
+	public static final byte OP_SUPER_INVOKE      = (byte)65;
+	public static final byte OP_FUN               = (byte)66;
 
-	public static final byte OP_RAISE             = (byte)66;
-	public static final byte OP_MATCH_ERRORS      = (byte)67;
+	public static final byte OP_RAISE             = (byte)67;
+	public static final byte OP_MATCH_ERRORS      = (byte)68;
 
-	public static final byte OP_IMPORT            = (byte)68;
+	public static final byte OP_IMPORT            = (byte)69;
 
-	public static final byte OP_NEW_ARRAY         = (byte)69;
-	public static final byte OP_BUILT_TUPLE       = (byte)70;
-	public static final byte OP_APPEND            = (byte)71;
-	public static final byte OP_ASSERT            = (byte)72;
-	public static final byte OP_PRINT             = (byte)73;
+	public static final byte OP_NEW_ARRAY         = (byte)70;
+	public static final byte OP_BUILT_TUPLE       = (byte)71;
+	public static final byte OP_APPEND            = (byte)72;
+	public static final byte OP_ASSERT            = (byte)73;
+	public static final byte OP_PRINT             = (byte)74;
 
-	public static final byte OP_EXIT              = (byte)74;
+	public static final byte OP_EXIT              = (byte)75;
 
-	public static final byte INSTRUCTION_NUMBER = 75;
+	public static final byte INSTRUCTION_NUMBER = 76;
 
-	public static final String[] INSTRUCTION_NAMES = new String[75];
+	public static final String[] INSTRUCTION_NAMES = new String[76];
 	static {
 		INSTRUCTION_NAMES[OP_NOP]               = "nop";
 		INSTRUCTION_NAMES[OP_POP]               = "pop";
@@ -157,6 +158,7 @@ public class Instructions {
 		INSTRUCTION_NAMES[OP_INVOKE]            = "invoke";
 		INSTRUCTION_NAMES[OP_CALL_GLOBAL]       = "call_global_var";
 		INSTRUCTION_NAMES[OP_CALL_SLOT]         = "call_slot";
+		INSTRUCTION_NAMES[OP_CALL_EX]           = "call_ex";
 		INSTRUCTION_NAMES[OP_CALL]              = "call";
 		INSTRUCTION_NAMES[OP_RETURN_NIL]        = "return_nil";
 		INSTRUCTION_NAMES[OP_RETURN]            = "return";

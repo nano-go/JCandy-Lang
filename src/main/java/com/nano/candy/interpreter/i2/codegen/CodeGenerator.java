@@ -323,13 +323,17 @@ public class CodeGenerator implements AstVisitor<Void, Void> {
 	private MethodInfo makeMethodInfo(MethodInfo methodInfo, String name, 
 	                                  Stmt.FuncDef node, ClassInfo classDefinedIn) {	
 		enterFunctionScope();
-		int arity = node.params.size();
+		int arity = node.parameters.size();
+		int vaArgsIndex = node.parameters.vaArgsIndex;
 		if (classDefinedIn != null) {
 			methodInfo.classDefinedIn = classDefinedIn;
 			declrVariable("this");
 			arity ++;
+			if (vaArgsIndex != -1) {
+				vaArgsIndex ++;
+			}
 		}	
-		locals.addLocals(node.params);
+		locals.addLocals(node.parameters.params);
 		// locate the beginning of the method for debugger.
 		if (isDebugMode && classDefinedIn != null) {
 			builder.emitop(OP_NOP, node.pos.getLine());
@@ -337,6 +341,7 @@ public class CodeGenerator implements AstVisitor<Void, Void> {
 		walkBlock(node.body);
 		methodInfo.name = name;	
 		methodInfo.arity = arity;
+		methodInfo.varArgsIndex = vaArgsIndex;
 		methodInfo.upvalues = genUpvalueBytes(locals.upvalues());
 		methodInfo.attrs = builder.buildCodeAttr(locals.maxSlotCount());
 		closeFunctionScope();
@@ -821,48 +826,63 @@ public class CodeGenerator implements AstVisitor<Void, Void> {
 	 */
 	@Override
 	public Void visit(Expr.CallFunc node) {
+		int bits = 1;
+		int flags = 0;
+		for (Expr.Argument arg : node.arguments) {
+			if (arg.isUnpack) {
+				flags |= bits;
+			}
+			bits <<= 1;
+		}
 		Collections.reverse(node.arguments);
-		for (Expr arg : node.arguments) {
-			arg.accept(this);
+		for (Expr.Argument arg : node.arguments) {
+			arg.expr.accept(this);
 		}
 		
 		final int ARGC = node.arguments.size();
 		final int LINE = line(node);
-		
-		if (node.expr instanceof Expr.GetAttr) {
-			invokeAttribute((Expr.GetAttr) node.expr, ARGC, LINE);
-			return null;
-		} 
-		
-		if (node.expr instanceof Expr.Super) {
-			invokeSuper((Expr.Super) node.expr, ARGC, LINE);
-			return null;
+		if (flags != 0) {
+			node.expr.accept(this);
+			builder.emitopWithArg(OP_CALL_EX, ARGC, LINE);
+			builder.emitConstant(new ConstantValue.UnpackFlags(flags));	
+		} else if(!emitCallInstruction(node.expr, ARGC, LINE)) {
+			node.expr.accept(this);
+			builder.emitopWithArg(OP_CALL, ARGC, LINE);
 		}
-		
-		if (node.expr instanceof Expr.VarRef) {
-			Expr.VarRef varRef = (Expr.VarRef) node.expr;		
+		builder.state().pop(ARGC);
+		return null;
+	}
+
+	private boolean emitCallInstruction(Expr expr, int ARGC, int LINE) {
+		if (expr instanceof Expr.GetAttr) {
+			invokeAttribute((Expr.GetAttr) expr, ARGC, LINE);
+			return true;
+		} 
+
+		if (expr instanceof Expr.Super) {
+			invokeSuper((Expr.Super) expr, ARGC, LINE);
+			return true;
+		}
+
+		if (expr instanceof Expr.VarRef) {
+			Expr.VarRef varRef = (Expr.VarRef) expr;		
 			int slot = locals.resolveLocal(varRef.name);	
 			if (slot != -1) {
 				callLocalVar(slot, ARGC, LINE);
-				return null;
+				return true;
 			}
-			
+
 			if (locals.resolveUpvalue(varRef.name) == -1) {
 				callGlobalVar(varRef.name, ARGC, LINE);
-				return null;
+				return true;
 			}
-		} 
-		
-		node.expr.accept(this);
-		builder.emitopWithArg(OP_CALL, ARGC, LINE);
-		builder.state().pop(ARGC);
-		return null;
+		}
+		return false;
 	}
 
 	private void invokeAttribute(Expr.GetAttr node, int argc, int line) {
 		node.objExpr.accept(this);
 		builder.emitInvoke(node.attr, argc, line);
-		builder.state().pop(argc);
 	}
 	
 	private void invokeSuper(Expr.Super superNode, int argc, int line) {
@@ -870,19 +890,16 @@ public class CodeGenerator implements AstVisitor<Void, Void> {
 		loadVariable("super", -1);
 		builder.emitopWithArg(OP_SUPER_INVOKE, argc, -1);
 		builder.emitStringConstant(superNode.reference);
-		builder.state().pop(argc);
 	}
 	
 	private void callLocalVar(int slot, int argc, int line) {
 		builder.emitopWithArg(OP_CALL_SLOT, argc, line);
 		builder.emit1((byte) slot);
-		builder.state().pop(argc);
 	}
 	
 	private void callGlobalVar(String name, int argc, int line) {
 		builder.emitopWithArg(OP_CALL_GLOBAL, argc, line);
 		builder.emitStringConstant(name);
-		builder.state().pop(argc);
 	}
 
 	@Override

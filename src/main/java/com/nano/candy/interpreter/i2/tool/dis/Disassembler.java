@@ -76,7 +76,8 @@ public class Disassembler {
 				return disassCallSlotIns(pc);
 			case OP_CALL_GLOBAL:
 				return disassCallGlobalIns(pc);
-			
+			case OP_CALL_EX:
+				return disassCallEx(pc);
 			case OP_LOAD:
 			case OP_STORE:
 			case OP_POP_STORE:
@@ -193,6 +194,18 @@ public class Disassembler {
 		int constIndex = readCpIndex(pc); /* u1 - u3 */
 		String global = getConstantValue(constIndex).toString();
 		String argStr = String.format("global %s(%d)", global, arity);
+		return new DisassSimpleInstruction(
+			chunk, insPc, 2, argStr
+		);
+	}
+	
+	private DisassInstruction disassCallEx(int pc) {
+		int insPc = pc ++;
+		int arity = code[pc ++] & 0xFF; /* u1 */
+		int constIndex = readCpIndex(pc); /* u1 - u3 */
+		String unpackFlags = getConstantValue(constIndex).toString();
+		String argStr = String.format
+			("arity: %d, unpackFlags: %s", arity, unpackFlags);
 		return new DisassSimpleInstruction(
 			chunk, insPc, 2, argStr
 		);
