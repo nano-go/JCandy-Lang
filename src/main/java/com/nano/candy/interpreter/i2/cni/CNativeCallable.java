@@ -11,6 +11,8 @@ import java.lang.reflect.InvocationTargetException;
 @NativeClass(name = "NativeCallable")
 public abstract class CNativeCallable extends CallableObj {
 	
+	private static final CandyObject[] EMPTY_ARGUMENTS = new CandyObject[0];
+	
 	public static final CandyClass NATIVE_CALLABLE_CLASS
 		= NativeClassRegister.generateNativeClass(CNativeCallable.class);
 	
@@ -29,9 +31,12 @@ public abstract class CNativeCallable extends CallableObj {
 			instance = vm.pop();
 			argc --;
 		}
-		CandyObject[] args = new CandyObject[argc];
-		for (int i = 0; i < argc; i ++) {
-			args[i] = vm.pop();
+		CandyObject[] args = EMPTY_ARGUMENTS;
+		if (argc != 0) {
+			args = new CandyObject[argc];
+			for (int i = 0; i < argc; i ++) {
+				args[i] = vm.pop();
+			}
 		}
 		try {
 			CandyObject ret = onCall(vm, instance, args);

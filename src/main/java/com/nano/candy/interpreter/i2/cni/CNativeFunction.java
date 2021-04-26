@@ -1,24 +1,24 @@
 package com.nano.candy.interpreter.i2.cni;
+import com.esotericsoftware.reflectasm.MethodAccess;
 import com.nano.candy.interpreter.i2.builtin.CandyObject;
 import com.nano.candy.interpreter.i2.vm.VM;
-import java.lang.reflect.Method;
 
 public class CNativeFunction extends CNativeCallable {
 	
-	private Method method;
+	private MethodAccess method;
+	private int index;
+	
 	protected CNativeFunction(String name, int arity, 
-	                          int vaargIndex, Method method) {
+	                          int vaargIndex, 
+	                          MethodAccess method, int index) {
 		super(name, name, arity, vaargIndex);
 		this.method = method;
-	}
-	
-	public Method getMethod() {
-		return method;
+		this.index = index;
 	}
 	
 	@Override
 	protected CandyObject onCall(VM vm, CandyObject instance, CandyObject[] args) throws Exception {
-		return (CandyObject) method.invoke(null, vm, args);
+		return (CandyObject) method.invoke(null, index, vm, args);
 	}
 
 	@Override
@@ -30,5 +30,4 @@ public class CNativeFunction extends CNativeCallable {
 	public final boolean isMethod() {
 		return false;
 	}
-	
 }

@@ -1,4 +1,5 @@
 package com.nano.candy.interpreter.i2.cni;
+import com.esotericsoftware.reflectasm.MethodAccess;
 import com.nano.candy.interpreter.i2.rtda.FileScope;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
@@ -12,24 +13,22 @@ public class NativeFuncRegister {
 		}
 	}
 	
-	public static CNativeFunction generateNativeFunc(Method javaMethod) {
-		javaMethod.setAccessible(true);
-		verifyNativeMethod(javaMethod);
-		NativeFunc anno = javaMethod.getAnnotation(NativeFunc.class);
-		return new CNativeFunction(anno.name(), anno.arity(), anno.varArgsIndex(), javaMethod);
-	}
-	
 	public static CNativeFunction[] getNativeFunctions(Class<?> nativeFunctionSet) {
 		Method[] methods = getNativeMethods(nativeFunctionSet);
-		return getNativeFunctions(methods);
+		return getNativeFunctions(nativeFunctionSet, methods);
 	}
 
-	private static CNativeFunction[] getNativeFunctions(Method[] verifiedMethods) {
+	private static CNativeFunction[] getNativeFunctions(Class<?> clazz, Method[] verifiedMethods) {
 		CNativeFunction[] functions = new CNativeFunction[verifiedMethods.length];
+		MethodAccess access = MethodAccess.get(clazz);
 		for (int i = 0; i < verifiedMethods.length; i ++) {
 			Method m = verifiedMethods[i];
+			int index = access.getIndex(m.getName());
 			NativeFunc anno = m.getAnnotation(NativeFunc.class);
-			functions[i] = new CNativeFunction(anno.name(), anno.arity(), anno.varArgsIndex(), m);
+			functions[i] = new CNativeFunction(
+				anno.name(), anno.arity(), anno.varArgsIndex(),
+				access, index
+			);
 		}
 		return functions;
 	}

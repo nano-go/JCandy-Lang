@@ -99,7 +99,7 @@ public class ErrorObj extends CandyObjEntity {
 	}
 	
 	@NativeMethod(name = Names.METHOD_INITALIZER, argc = 1)
-	protected CandyObject init(VM vm, CandyObject[] args) {
+	public CandyObject init(VM vm, CandyObject[] args) {
 		if (this.stackTraceElements != null && 
 		     this.stackTraceElements.length != 0 ) {
 			return this;
@@ -116,25 +116,25 @@ public class ErrorObj extends CandyObjEntity {
 	}
 	
 	@NativeMethod(name = "getStackTraceElements")
-	protected CandyObject getStackTraceElements(VM vm, CandyObject[] args) {
+	public CandyObject getStackTraceElements(VM vm, CandyObject[] args) {
 		return new ArrayObj(Arrays.copyOf(
 			stackTraceElements, stackTraceElements.length
 		));
 	}
 	
 	@NativeMethod(name = "getMessage")
-	protected CandyObject getMessage(VM vm, CandyObject[] args) {
+	public CandyObject getMessage(VM vm, CandyObject[] args) {
 		return StringObj.valueOf(message);
 	}
 	
 	@NativeMethod(name = "setMessage", argc = 1)
-	protected CandyObject setMessage(VM vm, CandyObject[] args) {
+	public CandyObject setMessage(VM vm, CandyObject[] args) {
 		setMessage(ObjectHelper.asString(args[0]));
 		return null;
 	}
 	
 	@NativeMethod(name = "sprintStackTrace", argc = 1)
-	protected CandyObject sprintStackTrace(VM vm, CandyObject[] args) {
+	public CandyObject sprintStackTrace(VM vm, CandyObject[] args) {
 		int maxFrames = (int) ObjectHelper.asInteger(args[0]);
 		return StringObj.valueOf(sprintStackTrace(maxFrames));
 	}
