@@ -123,22 +123,13 @@ public abstract class CallableObj extends BuiltinObject {
 	}
 	
 	@NativeMethod(name = "arity")
-	private final CandyObject arity(VM vm, CandyObject[] args) {
+	public final CandyObject arity(VM vm, CandyObject[] args) {
 		return IntegerObj.valueOf(arity());
 	}
 	
 	@NativeMethod(name = "name")
-	private final CandyObject name(VM vm, CandyObject[] args) {
+	public final CandyObject name(VM vm, CandyObject[] args) {
 		return StringObj.valueOf(declaredName());
-	}
-	
-	protected final CandyObject[] unpack(VM vm, int argc, int unpackFlags) {
-		CandyObject[] args = ElementsUnpacker.unpackFromStack
-			(vm, argc, varArgsIndex(), arity(), unpackFlags);
-		if (args == null) {
-			ArgumentError.throwsArgumentError(this, argc);
-		}
-		return args;
 	}
 	
 	public final CandyObject callExeUser(VM vm, CandyObject... args) {
@@ -173,16 +164,25 @@ public abstract class CallableObj extends BuiltinObject {
 	 * Usually called by the VM.
 	 */
 	public void call(VM vm, int argc, int unpackFlags) {
-		if (unpackFlags != EMPTY_UNPACK_FLAGS || varArgsIndex() != -1) {
-			CandyObject[] args = unpack(vm, argc, unpackFlags);
-			pushArguments(vm.frame().getOperandStack(), args);
-			onCall(vm, args.length, unpackFlags);
-		} else {
+		if (unpackFlags == EMPTY_UNPACK_FLAGS && varArgsIndex() < 0) {
 			if (this.arity() != argc) {
 				ArgumentError.throwsArgumentError(this, argc);
 			}
 			onCall(vm, argc, unpackFlags);
+		} else {
+			CandyObject[] args = unpack(vm, argc, unpackFlags);
+			pushArguments(vm.frame().getOperandStack(), args);
+			onCall(vm, args.length, unpackFlags);
 		}
+	}
+	
+	protected final CandyObject[] unpack(VM vm, int argc, int unpackFlags) {
+		CandyObject[] args = ElementsUnpacker.unpackFromStack
+			(vm, argc, varArgsIndex(), arity(), unpackFlags);
+		if (args == null) {
+			ArgumentError.throwsArgumentError(this, argc);
+		}
+		return args;
 	}
 	
 	@Override

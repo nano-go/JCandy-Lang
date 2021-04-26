@@ -42,7 +42,11 @@ public class ElementsUnpacker {
 	{
 		if (!checkArgs(n, starIndex, targetLen, unpackFlags)) {
 			return null;
-		}	
+		}
+		if (unpackFlags == CallableObj.EMPTY_UNPACK_FLAGS) {
+			return fetchFromStack(vm, n, starIndex, targetLen);
+		}
+		
 		LinkedList<CandyObject> buffer = new LinkedList<>();
 		unpackToBuffer(vm, n, unpackFlags, buffer);
 		if (buffer.size() < targetLen-1) {
@@ -63,14 +67,45 @@ public class ElementsUnpacker {
 			// the buffer is empty;
 			elements[i ++] = NullPointer.nil();
 		}
-		if (i < targetLen) {
-			return null;
+		return i < targetLen ? null : elements;
+	}
+
+	private static CandyObject[] fetchFromStack(VM vm, int n, 
+	                                            int starIndex,
+	                                            int targetLen) {
+		CandyObject[] elements = new CandyObject[targetLen];
+		if (starIndex < 0) { 
+			// targetLen == n
+			for (int i = 0; i < n; i ++) {
+				elements[i] = vm.pop();
+			}
+			return elements;
+		}
+		
+		int nextTargetElements = targetLen - starIndex - 1;
+		int i;
+		for (i = 0; i < starIndex; i ++, n --) {
+			elements[i] = vm.pop();
+		}
+		if (nextTargetElements >= n) {
+			elements[i] = NullPointer.nil();
+		} else {
+			ArrayObj arr = new ArrayObj(8);
+			while (nextTargetElements < n) {
+				arr.append(vm.pop());
+				n --;
+			}
+			elements[i] = arr;
+		}
+		i ++;
+		for (; i < targetLen; i ++, n --) {
+			elements[i] = vm.pop();
 		}
 		return elements;
 	}
 	
 	/**
-	 * Fetchs n elements from the stack into the buffer
+	 * Fetchs/Unpacks n elements from the stack into the buffer.
 	 */
 	public static void unpackToBuffer(VM vm, int n, int unpackingBits,
 	                                  LinkedList<CandyObject> buffer) {
@@ -135,8 +170,8 @@ public class ElementsUnpacker {
 	                                 int targetLen, int unpackingBits) {
 		if (starIndex >= targetLen) {
 			throw new Error
-			("Unexpected Arguments: StarInxex(" + starIndex + 
-			 "), TargetLen(" + targetLen + ")");
+				("Unexpected Arguments: StarInxex(" + starIndex + 
+			 	 "), TargetLen(" + targetLen + ")");
 		}
 		if (unpackingBits != 0) {
 			return !(n == 0 && targetLen != 0);
