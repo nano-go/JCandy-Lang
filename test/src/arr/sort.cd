@@ -49,7 +49,7 @@ fun quickSort(arr) {
 
 for (i in range(0, 25)) {
 	var arr = []
-	for (i in range(1, range(0, 1000).rand())) {
+	for (i in range(1, range(2, 1000).rand())) {
 		var randomElement = range(0, 100000).rand()
 		arr.append(randomElement)
 	}
