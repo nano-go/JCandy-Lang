@@ -224,6 +224,9 @@ public final class VM {
 	}
 	
 	public void returnFromVM(CandyObject returnValue) {
+		if (returnValue == null) {
+			returnValue = NullPointer.nil();
+		}
 		stack.peek().push(returnValue);
 	}
 
