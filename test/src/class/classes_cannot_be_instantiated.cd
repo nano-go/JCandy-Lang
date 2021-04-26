@@ -4,6 +4,8 @@ fun test(clazz) {
 	} intercept NativeError as e {
 		assert e.getMessage() == 
 			"The built-in class can't be instantiated: " + clazz.name
+	} else {
+		assert false
 	}
 }
 
