@@ -4,6 +4,7 @@ import com.nano.candy.interpreter.i2.builtin.type.BoolObj;
 import com.nano.candy.interpreter.i2.builtin.type.IntegerObj;
 import com.nano.candy.interpreter.i2.builtin.type.StringObj;
 import com.nano.candy.interpreter.i2.builtin.type.classes.CandyClass;
+import com.nano.candy.interpreter.i2.builtin.type.classes.ObjectClass;
 import com.nano.candy.interpreter.i2.builtin.type.error.AttributeError;
 import com.nano.candy.interpreter.i2.builtin.type.error.NativeError;
 import com.nano.candy.interpreter.i2.builtin.type.error.TypeError;
@@ -20,6 +21,10 @@ public abstract class CandyObject {
 
 	private CandyClass clazz;
 	private boolean frozen;
+	
+	public CandyObject() {
+		this(ObjectClass.getObjClass());
+	}
 
 	public CandyObject(CandyClass clazz) {
 		this.clazz = clazz;
