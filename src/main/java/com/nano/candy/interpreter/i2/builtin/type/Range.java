@@ -19,29 +19,6 @@ public class Range extends BuiltinObject {
 	public static final CandyClass RANGE_CLASS = 
 		NativeClassRegister.generateNativeClass(Range.class);
 	
-	protected static class RangeIterator extends IteratorObj {
-		private int v;
-		private long left, right;
-
-		public RangeIterator(long left, long right) {
-			this.left = left;
-			this.right = right;
-			this.v = left > right ? -1 : 1;
-		}
-		
-		@Override
-		public boolean hasNext(VM vm) {
-			return left != right;
-		}
-
-		@Override
-		public CandyObject next(VM vm) {
-			IntegerObj next = IntegerObj.valueOf(left);
-			left += v;
-			return next;
-		}
-	}
-	
 	long left, right;
 	
 	public Range() {
@@ -68,7 +45,7 @@ public class Range extends BuiltinObject {
 
 	@Override
 	public CandyObject iterator(VM vm) {
-		return new RangeIterator(left, right);
+		return new IteratorObj.RangeIterator(left, right);
 	}
 	
 	@Override

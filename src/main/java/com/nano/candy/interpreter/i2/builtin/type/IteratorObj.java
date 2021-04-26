@@ -2,19 +2,38 @@ package com.nano.candy.interpreter.i2.builtin.type;
 import com.nano.candy.interpreter.i2.builtin.BuiltinObject;
 import com.nano.candy.interpreter.i2.builtin.CandyObject;
 import com.nano.candy.interpreter.i2.builtin.type.IteratorObj;
-import com.nano.candy.interpreter.i2.builtin.type.classes.CandyClass;
 import com.nano.candy.interpreter.i2.builtin.type.classes.ObjectClass;
-import com.nano.candy.interpreter.i2.cni.NativeClass;
-import com.nano.candy.interpreter.i2.cni.NativeClassRegister;
-import com.nano.candy.interpreter.i2.cni.NativeMethod;
+import com.nano.candy.interpreter.i2.cni.FasterNativeMethod;
 import com.nano.candy.interpreter.i2.rtda.Variable;
 import com.nano.candy.interpreter.i2.vm.VM;
 import com.nano.candy.std.Names;
 import java.util.Iterator;
 import java.util.Map;
 
-@NativeClass(name = "Iterator")
 public abstract class IteratorObj extends BuiltinObject {
+	
+	public static class RangeIterator extends IteratorObj {
+		private int v;
+		private long left, right;
+
+		public RangeIterator(long left, long right) {
+			this.left = left;
+			this.right = right;
+			this.v = left > right ? -1 : 1;
+		}
+
+		@Override
+		public final boolean hasNext(VM vm) {
+			return left != right;
+		}
+
+		@Override
+		public final CandyObject next(VM vm) {
+			IntegerObj next = IntegerObj.valueOf(left);
+			left += v;
+			return next;
+		}
+	}
 	
 	public static class MapIterator extends IteratorObj {
 		private Iterator<Map.Entry<String, CandyObject>> iterator;
@@ -23,12 +42,12 @@ public abstract class IteratorObj extends BuiltinObject {
 			this.iterator = iterator;
 		}
 		@Override
-		public boolean hasNext(VM vm) {
+		public final boolean hasNext(VM vm) {
 			return iterator.hasNext();
 		}
 
 		@Override
-		public CandyObject next(VM vm) {
+		public final CandyObject next(VM vm) {
 			Map.Entry<String, CandyObject> entry = iterator.next();
 			CandyObject[] kv = {
 				StringObj.valueOf(entry.getKey()), entry.getValue()
@@ -45,12 +64,12 @@ public abstract class IteratorObj extends BuiltinObject {
 		}
 		
 		@Override
-		public boolean hasNext(VM vm) {
+		public final boolean hasNext(VM vm) {
 			return iterator.hasNext();
 		}
 
 		@Override
-		public CandyObject next(VM vm) {
+		public final CandyObject next(VM vm) {
 			Variable variable = iterator.next();
 			CandyObject[] kv = {
 				StringObj.valueOf(variable.getName()), variable.getValue()
@@ -70,29 +89,48 @@ public abstract class IteratorObj extends BuiltinObject {
 		}
 
 		@Override
-		public boolean hasNext(VM vm) {
+		public final boolean hasNext(VM vm) {
 			return i < size;
 		}
 
 		@Override
-		public CandyObject next(VM vm) {
+		public final CandyObject next(VM vm) {
 			return elements[i ++];
 		}
 	}
 	
-	private static final CandyClass ITERATOR_CLASS = 
-		NativeClassRegister.generateNativeClass(IteratorObj.class);
+	private FasterNativeMethod next;
+	private FasterNativeMethod hasNext;
+	
 	public IteratorObj() {
-		super(ITERATOR_CLASS);
+		super(ObjectClass.getObjClass());
+		next = new FasterNativeMethod(
+			"Iterator", Names.METHOD_ITERATOR_NEXT, 0, 
+			this::next
+		);
+		
+		hasNext = new FasterNativeMethod(
+			"Iterator", Names.METHOD_ITERATOR_HAS_NEXT, 0, 
+			this::hasNext
+		);
+	}
+
+	@Override
+	public CandyObject getAttr(VM vm, String attr) {
+		switch (attr) {
+			case Names.METHOD_ITERATOR_NEXT:
+				return next;
+			case Names.METHOD_ITERATOR_HAS_NEXT:
+				return hasNext;
+		}
+		return super.getAttr(vm, attr);
 	}
 	
-	@NativeMethod(name = Names.METHOD_ITERATOR_HAS_NEXT)
-	private CandyObject hasNext(VM vm, CandyObject... args) {
+	public final CandyObject hasNext(VM vm, int argc) {
 		return BoolObj.valueOf(hasNext(vm));
 	}
 	
-	@NativeMethod(name = Names.METHOD_ITERATOR_NEXT)
-	private CandyObject next(VM vm, CandyObject... args) {
+	public final CandyObject next(VM vm, int argc) {
 		return next(vm);
 	}
 	
