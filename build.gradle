@@ -53,5 +53,6 @@ repositories {
 
 dependencies {
 	compile fileTree(dir: 'java-libs', include: ['*.jar'])
+	compile group: 'com.esotericsoftware', name: 'reflectasm', version: '1.11.9'
 	testImplementation 'junit:junit:4.13'
 }
