@@ -868,8 +868,9 @@ public final class VM {
 				case OP_SUPER_GET: {
 					CandyClass clazz = (CandyClass) pop();
 					push(clazz.getBoundMethod(
-						cp.getString(readIndex()), pop())
-					);
+						cp.getString(readIndex()), 
+						pop()
+					));
 					break;
 				}
 				
@@ -996,3 +997,6 @@ public final class VM {
 		}
 	}
 }
+
+
+

@@ -183,7 +183,6 @@ class CandyScanner implements Scanner {
 				case '.' :
 					kind = TokenKind.DOT;
 					break;
-					
 				default :
 					reader.error(startPos, "Unknown character: '%c'", ch);
 					continue scanAgain;
