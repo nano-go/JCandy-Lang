@@ -1,5 +1,6 @@
 package com.nano.candy.interpreter.i2.builtin.type.classes;
 
+import com.esotericsoftware.reflectasm.ConstructorAccess;
 import com.nano.candy.interpreter.i2.builtin.CandyObject;
 import com.nano.candy.interpreter.i2.builtin.type.CallableObj;
 import java.util.HashMap;
@@ -8,8 +9,8 @@ import java.util.HashMap;
  * Builds a candy class with this signature.
  */
 public class ClassSignature {
-	protected Class<? extends CandyObject> objEntityClass;
-
+	protected ConstructorAccess<? extends CandyObject> constructorAccess;
+	protected boolean canBeCreated;
 	protected CandyClass superClass;
 	protected String className;
 	protected boolean isInheritable;
@@ -27,10 +28,12 @@ public class ClassSignature {
 		
 		if (this.superClass == null) {
 			this.methods = new HashMap<>();
+			this.canBeCreated = true;
 		} else {
 			this.methods = new HashMap<>(superClass.methods);
 			this.initializer = superClass.initializer;
-			this.objEntityClass = superClass.objEntityClass;
+			this.constructorAccess = superClass.constructorAccess;
+			this.canBeCreated = superClass.canBeCreated;
 		}
 	}
 
@@ -47,7 +50,12 @@ public class ClassSignature {
 	}
 
 	public ClassSignature setObjEntityClass(Class<? extends CandyObject> objEntityClass) {
-		this.objEntityClass = objEntityClass;
+		try {
+			this.constructorAccess = ConstructorAccess.get(objEntityClass);			
+		} catch (RuntimeException e) {
+			this.constructorAccess = null;
+			this.canBeCreated = false;
+		}
 		return this;
 	}
 

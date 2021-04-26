@@ -1,5 +1,6 @@
 package com.nano.candy.interpreter.i2.builtin.type.classes;
 
+import com.esotericsoftware.reflectasm.ConstructorAccess;
 import com.nano.candy.interpreter.i2.builtin.CandyObjEntity;
 import com.nano.candy.interpreter.i2.builtin.CandyObject;
 import com.nano.candy.interpreter.i2.builtin.type.CallableObj;
@@ -7,21 +8,30 @@ import com.nano.candy.interpreter.i2.builtin.type.MethodObj;
 import com.nano.candy.interpreter.i2.builtin.type.NullPointer;
 import com.nano.candy.interpreter.i2.builtin.type.StringObj;
 import com.nano.candy.interpreter.i2.builtin.type.error.NativeError;
-import com.nano.candy.interpreter.i2.vm.CarrierErrorException;
 import com.nano.candy.interpreter.i2.vm.VM;
 import com.nano.candy.std.Names;
-import java.lang.reflect.Constructor;
 import java.util.HashMap;
 
 /**
- * A candy class provides language level class object, it's a built-in object.
+ * A candy class provides language level class objects.
+ *
+ * It's also a callable object. When you call it, an instance will be created
+ * and the initalizer of the class will be called.
  */
 public class CandyClass extends CallableObj {
 	
 	/**
-	 * An instance is created by reflecting the entity class.
+	 * A Candy object instance is created by the constructor.
 	 */
-	protected final Class<? extends CandyObject> objEntityClass;
+	protected final ConstructorAccess<? extends CandyObject> constructorAccess;
+	
+	/**
+	 * False if the object entity class (java class) has no a constructor 
+	 * with empty parameters or the constructor is private or protected.
+	 *
+	 * This class cannot create instances if false.
+	 */
+	protected final boolean canBeCreated;
 	
 	protected final CandyClass superClass;
 	protected final String className;
@@ -31,39 +41,19 @@ public class CandyClass extends CallableObj {
 	protected final CallableObj initializer;
 	
 	protected CandyClass(ClassSignature signature) {
-		super(null, signature.className, null);
-		this.objEntityClass = signature.objEntityClass;
+		super(null, signature.className, null);	
 		this.superClass = signature.superClass;
 		this.className = signature.className;
 		this.isInheritable = signature.isInheritable;
 		this.methods = signature.methods;
 		this.initializer = signature.initializer;
+		this.constructorAccess = signature.constructorAccess;
+		this.canBeCreated = signature.canBeCreated;
 		super.parameter = new ParametersInfo(
 			arity(), varArgsIndex()
 		);
 	}
-
-	public Class<? extends CandyObject> getObjEntityClass() {
-		return objEntityClass;
-	}
 	
-	public boolean isBuiltinClass() {
-		return objEntityClass != null && objEntityClass != CandyObjEntity.class;
-	}
-	
-	public boolean isInheritable() {
-		return isInheritable;
-	}
-	
-	public CallableObj getInitializer() {
-		return this.initializer;
-	}
-	
-	/**
-	 * Finds the unbound method by the given name and return it.
-	 *
-	 * @param the unbound method or null if not found.
-	 */
 	public CallableObj getMethod(String name) {
 		CallableObj method = methods.get(name);
 		if (method != null) {
@@ -75,16 +65,20 @@ public class CandyClass extends CallableObj {
 		return null;
 	}
 	
-	/**
-	 * Returns the method bound with the given instance or null
-	 * if not found.
-	 */
 	public MethodObj getBoundMethod(String name, CandyObject instance) {
 		CallableObj method = getMethod(name);
 		if (method != null) {
 			return new MethodObj(instance, method);
 		}
 		return null;
+	}
+	
+	public final boolean isInheritable() {
+		return isInheritable;
+	}
+
+	public final CallableObj getInitializer() {
+		return this.initializer;
 	}
 	
 	public final String getClassName() {
@@ -105,7 +99,7 @@ public class CandyClass extends CallableObj {
 		return clazz.isSuperClassOf(this);
 	}
 	
-	public CandyClass getSuperClass() {
+	public final CandyClass getSuperClass() {
 		return superClass;
 	}
 	
@@ -113,7 +107,7 @@ public class CandyClass extends CallableObj {
 	public final CandyClass getCandyClass() {
 		return this;
 	}
-
+	
 	@Override
 	public final String getCandyClassName() {
 		return getClassName();
@@ -145,44 +139,32 @@ public class CandyClass extends CallableObj {
 	public boolean isBuiltin() {
 		return initializer == null ? true : initializer.isBuiltin();
 	}
-
+	
 	@Override
-	public void call(VM vm, int argc, int unpackingBits) {
-		CandyObject instance = createInstance(vm);
-		new MethodObj(instance, initializer).call(vm, argc, unpackingBits);
-	}
-
-	@Override
-	protected void onCall(VM vm, int argc, int unpackingBits) {
+	protected void onCall(VM vm, int argc, int unpackFlags) {
 		throw new Error("Supported");
 	}
+
+	@Override
+	public void call(VM vm, int argc, int unpackFlags) {
+		CandyObject instance = createInstance(vm);
+		new MethodObj(instance, initializer).call(vm, argc, unpackFlags);
+	}
 	
-	protected CandyObject createInstance(VM vm) {
-		if (objEntityClass == null) {
+	protected CandyObject createInstance(VM vm) {		
+		if (!canBeCreated) {
+			new NativeError(
+				"The built-in class can't be instantiated: " 
+				+ getCandyClassName()
+			).throwSelfNative();
+		}
+		
+		if (constructorAccess == null) {
 			return new CandyObjEntity(this);
 		}
-		Constructor<? extends CandyObject> constructor;
-		try {
-			constructor = objEntityClass.getDeclaredConstructor();
-			if (!constructor.isAccessible()) {
-				constructor.setAccessible(true);
-			}
-		} catch (NoSuchMethodException | SecurityException  e) {
-			new NativeError(
-				"The built-in class can't be instantiated: " + getCandyClassName()
-			).throwSelfNative();
-			throw new Error("Unreachable");
-		}
-		try {
-			CandyObject obj = constructor.newInstance();
-			obj.setCandyClass(this);
-			return obj;
-		} catch (CarrierErrorException e) {
-			throw e;
-		} catch (Exception e) {
-			new NativeError(e).throwSelfNative();
-		}
-		throw new Error("Unreachable");
+		CandyObject obj = constructorAccess.newInstance();
+		obj.setCandyClass(this);
+		return obj;
 	}
 
 	@Override
