@@ -18,7 +18,7 @@ public class CandyObjEntity extends CandyObject {
 	private HashMap<String, CandyObject> attrs;
 	
 	/**
-	 * Cache.
+	 * Caches.
 	 */
 	private CallableObj attrGetter;
 	private CallableObj attrSetter;
@@ -66,18 +66,23 @@ public class CandyObjEntity extends CandyObject {
 	public final void setAttrApi(VM vm, String attr, CandyObject value) {
 		checkIsFrozen();
 		attrSetter = getBoundMethod(Names.METHOD_SET_ATTR, attrSetter);
-		vm.push(value);
-		vm.push(StringObj.valueOf(attr));
-		attrSetter.call(vm, 2);
+		if (attrSetter.isBuiltin()) {
+			vm.returnFromVM(setAttr(vm, attr, value));
+		} else {
+			vm.push(value);
+			vm.push(StringObj.valueOf(attr));
+			attrSetter.call(vm, 2);
+		}
 	}
 
 	@Override
 	public final CandyObject setAttrApiExeUser(VM vm, String attr, CandyObject value) {
 		checkIsFrozen();
 		attrSetter = getBoundMethod(Names.METHOD_SET_ATTR, attrSetter);
-		vm.push(value);
-		vm.push(StringObj.valueOf(attr));	
-		return invokeMethod(vm, attrGetter, null);
+		if (attrSetter.isBuiltin()) {
+			return setAttr(vm, attr, value);
+		} 
+		return attrGetter.callExeUser(vm, StringObj.valueOf(attr), value);
 	}
 	
 	@Override
@@ -86,13 +91,13 @@ public class CandyObjEntity extends CandyObject {
 		return ref;
 	}
 	
-	/**
-	 * @see #getAttr(VM, String)
-	 * @see CandyObject#getAttr(VM)
-	 */
 	@Override
 	public final void getAttrApi(VM vm, String attr) {
 		attrGetter = getBoundMethod(Names.METHOD_GET_ATTR, attrGetter);
+		if (attrGetter.isBuiltin()) {
+			vm.returnFromVM(super.nativeGetAttr(vm, attr));
+			return;
+		} 
 		vm.push(StringObj.valueOf(attr));
 		attrGetter.call(vm, 1);
 	}
@@ -100,8 +105,10 @@ public class CandyObjEntity extends CandyObject {
 	@Override
 	public final CandyObject getAttrApiExeUser(VM vm, String attr) {
 		attrGetter = getBoundMethod(Names.METHOD_GET_ATTR, attrGetter);
-		return invokeMethod
-			(vm, attrGetter, null, StringObj.valueOf(attr));
+		if (attrGetter.isBuiltin()) {
+			return super.nativeGetAttr(vm, attr);
+		} 
+		return attrGetter.callExeUser(vm, StringObj.valueOf(attr));
 	}
 	
 	@Override
@@ -118,26 +125,37 @@ public class CandyObjEntity extends CandyObject {
 		}
 		return value;
 	}
+	
+	@Override
+	public final void getUnknownAttrApi(VM vm, String attr) {
+		unknownAttrGetter = getBoundMethod(
+			Names.METHOD_GET_UNKNOWN_ATTR, unknownAttrGetter);
+		if (!unknownAttrGetter.isBuiltin()) {
+			vm.push(StringObj.valueOf(attr));
+			unknownAttrGetter.call(vm, 1);
+			return;
+		}
+		vm.returnFromVM(getUnknownAttr(vm, attr));
+	}
 
 	@Override
 	public final CandyObject getUnknownAttrApiExeUser(VM vm, String attr) {
 		unknownAttrGetter = getBoundMethod(
 			Names.METHOD_GET_UNKNOWN_ATTR, unknownAttrGetter);
-		return invokeMethod(vm, unknownAttrGetter, null, StringObj.valueOf(attr));
-	}
-
-	@Override
-	public final void getUnknownAttrApi(VM vm, String attr) {
-		unknownAttrGetter = getBoundMethod(
-			Names.METHOD_GET_UNKNOWN_ATTR, unknownAttrGetter);
-		vm.push(StringObj.valueOf(attr));
-		unknownAttrGetter.call(vm, 1);
+		if (unknownAttrGetter.isBuiltin()) {
+			return getUnknownAttr(vm, attr);
+		}
+		return unknownAttrGetter.callExeUser(vm, StringObj.valueOf(attr));
 	}
 
 	@Override
 	public final void setItemApi(VM vm, CandyObject key, CandyObject value) {
 		checkIsFrozen();
 		itemSetter = getBoundMethod(Names.METHOD_SET_ITEM, itemSetter);
+		if (itemSetter.isBuiltin()){ 
+			vm.returnFromVM(setItem(vm, key, value));
+			return;
+		}
 		vm.push(value);
 		vm.push(key);
 		itemSetter.call(vm, 2);
@@ -147,12 +165,19 @@ public class CandyObjEntity extends CandyObject {
 	public final CandyObject setItemApiExeUser(VM vm, CandyObject key, CandyObject value) {
 		checkIsFrozen();
 		itemSetter = getBoundMethod(Names.METHOD_SET_ITEM, itemSetter);
-		return invokeMethod(vm, itemSetter, null, key, value);
+		if (itemSetter.isBuiltin()){ 
+			return setItem(vm, key, value);
+		}
+		return itemSetter.callExeUser(vm, key, value);
 	}
 
 	@Override
 	public final void getItemApi(VM vm, CandyObject key) {
 		itemGetter = getBoundMethod(Names.METHOD_GET_ITEM, itemGetter);
+		if (itemGetter.isBuiltin()){ 
+			vm.returnFromVM(getItem(vm, key));
+			return;
+		}
 		vm.push(key);
 		itemGetter.call(vm, 1);
 	}
@@ -160,22 +185,31 @@ public class CandyObjEntity extends CandyObject {
 	@Override
 	public final CandyObject getItemApiExeUser(VM vm, CandyObject key) {
 		itemGetter = getBoundMethod(Names.METHOD_GET_ITEM, itemGetter);
-		vm.push(key);
-		return invokeMethod(vm, itemGetter, null, key);
+		if (itemGetter.isBuiltin()) {
+			return getItem(vm, key);
+		}
+		return itemGetter.callExeUser(vm, key);
 	}
 
 	@Override
 	public final void equalsApi(VM vm, CandyObject operand) {
 		equalTo = getBoundMethod(Names.METHOD_EQUALS, equalTo);
-		vm.push(operand);
-		equalTo.call(vm, 1);
+		if (!equalTo.isBuiltin()) {
+			vm.push(operand);
+			equalTo.call(vm, 1);
+			return;
+		}
+		vm.returnFromVM(equals(vm, operand));
 	}
 
 	@Override
 	public final BoolObj equalsApiExeUser(VM vm, CandyObject operand) {
 		equalTo = getBoundMethod(Names.METHOD_EQUALS, equalTo);
-		return (BoolObj) 
-			invokeMethod(vm, equalTo, BoolObj.BOOL_CLASS, operand);
+		if (!equalTo.isBuiltin()) {
+			return (BoolObj) 
+				invokeMethod(vm, equalTo, BoolObj.BOOL_CLASS, operand);
+		}
+		return equals(vm, operand);
 	}
 
 	@Override
@@ -197,14 +231,20 @@ public class CandyObjEntity extends CandyObject {
 	@Override
 	public final StringObj strApiExeUser(VM vm) {
 		stringVal = getBoundMethod(Names.METHOD_STR_VALUE, stringVal);
-		return (StringObj) 
-			invokeMethod(vm, stringVal, StringObj.STRING_CLASS);
+		if (!stringVal.isBuiltin()) {
+			return (StringObj) 
+				invokeMethod(vm, stringVal, StringObj.STRING_CLASS);
+		}
+		return str(vm);
 	}
 
 	@Override
 	public final CandyObject iteratorApiExeUser(VM vm) {
 		CallableObj iterator = getBoundMethod(Names.METHOD_ITERATOR, null);
-		return invokeMethod(vm, iterator, null);
+		if (!iterator.isBuiltin()) {
+			return invokeMethod(vm, iterator, null);
+		}
+		return iterator(vm);
 	}
 	
 	// Operator Methods
@@ -223,8 +263,7 @@ public class CandyObjEntity extends CandyObject {
 	}
 	
 	private void unaryApi(VM vm, String name) {
-		CallableObj boundMet = getBoundMethod(name, null);
-		boundMet.call(vm, 0);
+		getBoundMethod(name, null).call(vm, 0);
 	}
 
 	private CandyObject unaryApiExeUser(VM vm, String name) {

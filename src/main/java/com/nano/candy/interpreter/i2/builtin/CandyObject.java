@@ -50,7 +50,7 @@ public abstract class CandyObject {
 		return false;
 	}
 	@NativeMethod(name = "isCallable")
-	private CandyObject isCallable(VM vm, CandyObject[] args) {
+	public CandyObject isCallable(VM vm, CandyObject[] args) {
 		return BoolObj.valueOf(isCallable());
 	}
 	
@@ -67,7 +67,7 @@ public abstract class CandyObject {
 		this.frozen = true;
 	}
 	@NativeMethod(name = "freeze")
-	private CandyObject freeze(VM vm, CandyObject[] args) {
+	public CandyObject freeze(VM vm, CandyObject[] args) {
 		freeze();
 		return null;
 	}
@@ -77,7 +77,7 @@ public abstract class CandyObject {
 		return frozen;
 	}
 	@NativeMethod(name = "frozen")
-	private CandyObject frozen(VM vm, CandyObject[] args) {
+	public CandyObject frozen(VM vm, CandyObject[] args) {
 		return BoolObj.valueOf(frozen());
 	}
 	public final void checkIsFrozen() {
@@ -106,7 +106,7 @@ public abstract class CandyObject {
 	public abstract CandyObject setAttrApiExeUser(VM vm, String attr, CandyObject value);
 	public abstract CandyObject setAttr(VM vm, String attr, CandyObject value);
 	@NativeMethod(name = Names.METHOD_SET_ATTR, argc = 2)
-	private CandyObject setAttr(VM vm, CandyObject[] args) {
+	public CandyObject setAttr(VM vm, CandyObject[] args) {
 		String attr = ObjectHelper.asString(args[0]);
 		checkIsFrozen();
 		return setAttr(vm, attr, args[1]);
@@ -133,10 +133,11 @@ public abstract class CandyObject {
 	 * if the specified attribute is not found.
 	 */
 	public abstract CandyObject getAttr(VM vm, String attr);
-	
 	@NativeMethod(name = Names.METHOD_GET_ATTR, argc = 1)
-	private CandyObject getAttr(VM vm, CandyObject[] args) {
-		String attr = ObjectHelper.asString(args[0]);
+	public final CandyObject getAttr(VM vm, CandyObject[] args) {
+		return nativeGetAttr(vm, ObjectHelper.asString(args[0]));
+	}
+	protected final CandyObject nativeGetAttr(VM vm, String attr) {
 		CandyObject ret = getAttr(vm, attr);
 		if (ret != null) {
 			return ret;
@@ -151,7 +152,7 @@ public abstract class CandyObject {
 		throw new Error();
 	}
 	@NativeMethod(name = Names.METHOD_GET_UNKNOWN_ATTR, argc = 1)
-	private CandyObject getUnknownAttr(VM vm, CandyObject[] args) {
+	public final CandyObject getUnknownAttr(VM vm, CandyObject[] args) {
 		return getUnknownAttr(vm, ObjectHelper.asString(args[0]));
 	}
 
@@ -175,7 +176,7 @@ public abstract class CandyObject {
 		return null;
 	}
 	@NativeMethod(name = Names.METHOD_SET_ITEM, argc = 2)
-	private CandyObject setItem(VM vm, CandyObject[] args) {
+	public final CandyObject setItem(VM vm, CandyObject[] args) {
 		checkIsFrozen();
 		setItem(vm, args[0], args[1]);
 		return args[1];
@@ -198,7 +199,7 @@ public abstract class CandyObject {
 		return null;
 	}
 	@NativeMethod(name = Names.METHOD_GET_ITEM, argc = 1)
-	private CandyObject getItem(VM vm, CandyObject[] args) {
+	public final CandyObject getItem(VM vm, CandyObject[] args) {
 		return getItem(vm, args[0]);
 	}
 
@@ -209,7 +210,7 @@ public abstract class CandyObject {
 		return BoolObj.valueOf(this == operand);
 	}
 	@NativeMethod(name = Names.METHOD_EQUALS, argc = 1)
-	private CandyObject equals(VM vm, CandyObject[] args) {
+	public final CandyObject equals(VM vm, CandyObject[] args) {
 		return equals(vm, args[0]);
 	}
 
@@ -220,7 +221,7 @@ public abstract class CandyObject {
 		return IntegerObj.valueOf(super.hashCode());
 	}
 	@NativeMethod(name = Names.METHOD_HASH_CODE)
-	private CandyObject hashCodeMethod(VM vm, CandyObject[] args) {
+	public final CandyObject hashCodeMethod(VM vm, CandyObject[] args) {
 		return hashCode(vm);
 	}
 
@@ -241,7 +242,7 @@ public abstract class CandyObject {
 		return StringObj.valueOf(this.toString());
 	}
 	@NativeMethod(name = Names.METHOD_STR_VALUE)
-	private CandyObject stringValue(VM vm, CandyObject[] args) {
+	public final CandyObject stringValue(VM vm, CandyObject[] args) {
 		return str(vm);
 	}
 	
@@ -260,16 +261,16 @@ public abstract class CandyObject {
 		return null;
 	}
 	@NativeMethod(name = Names.METHOD_ITERATOR)
-	private CandyObject iteratorMethod(VM vm, CandyObject[] args) {
+	public final CandyObject iteratorMethod(VM vm, CandyObject[] args) {
 		return iterator(vm);
 	}
 	
 	
 	@NativeMethod(name = Names.METHOD_INITALIZER)
-	private CandyObject objDefaultInitializer (VM vm, CandyObject[] args) { return this; }
+	public final CandyObject objDefaultInitializer (VM vm, CandyObject[] args) { return this; }
 
 	@NativeMethod(name = "_class")
-	private CandyObject getClass(VM vm, CandyObject[] args) {
+	public final CandyObject getClass(VM vm, CandyObject[] args) {
 		return getCandyClass();
 	}
 
@@ -281,7 +282,7 @@ public abstract class CandyObject {
 		return null;
 	}
 	@NativeMethod(name = Names.METHOD_OP_POSITIVE)
-	private CandyObject positiveMethod(VM vm, CandyObject[] args) {
+	public final CandyObject positiveMethod(VM vm, CandyObject[] args) {
 		return positive(vm);
 	}
 
@@ -292,7 +293,7 @@ public abstract class CandyObject {
 		return null;
 	}
 	@NativeMethod(name = Names.METHOD_OP_NEGATIVE)
-	private CandyObject negativeMethod(VM vm, CandyObject[] args) {
+	public final CandyObject negativeMethod(VM vm, CandyObject[] args) {
 		return negative(vm);
 	}
 
@@ -306,7 +307,7 @@ public abstract class CandyObject {
 		return null;
 	}
 	@NativeMethod(name = Names.METHOD_OP_ADD, argc = 1)
-	private CandyObject addMethod(VM vm, CandyObject[] args) {
+	public final CandyObject addMethod(VM vm, CandyObject[] args) {
 		return add(vm, args[0]);
 	}
 
@@ -317,7 +318,7 @@ public abstract class CandyObject {
 		return null;
 	}
 	@NativeMethod(name = Names.METHOD_OP_SUB, argc = 1)
-	private CandyObject subMethod(VM vm, CandyObject[] args) {
+	public final CandyObject subMethod(VM vm, CandyObject[] args) {
 		return sub(vm, args[0]);
 	}
 
@@ -328,7 +329,7 @@ public abstract class CandyObject {
 		return null;
 	}
 	@NativeMethod(name = Names.METHOD_OP_MUL, argc = 1)
-	private CandyObject mulMethod(VM vm, CandyObject[] args) {
+	public final CandyObject mulMethod(VM vm, CandyObject[] args) {
 		return mul(vm, args[0]);
 	}
 
@@ -339,7 +340,7 @@ public abstract class CandyObject {
 		return null;
 	}
 	@NativeMethod(name = Names.METHOD_OP_DIV, argc = 1)
-	private CandyObject divMethod(VM vm, CandyObject[] args) {
+	public final CandyObject divMethod(VM vm, CandyObject[] args) {
 		return div(vm, args[0]);
 	}
 
@@ -350,7 +351,7 @@ public abstract class CandyObject {
 		return null;
 	}
 	@NativeMethod(name = Names.METHOD_OP_MOD, argc = 1)
-	private CandyObject modMethod(VM vm, CandyObject[] args) {
+	public final CandyObject modMethod(VM vm, CandyObject[] args) {
 		return mod(vm, args[0]);
 	}
 
@@ -361,7 +362,7 @@ public abstract class CandyObject {
 		return null;
 	}
 	@NativeMethod(name = Names.METHOD_OP_GT, argc = 1)
-	private CandyObject gtMethod(VM vm, CandyObject[] args) {
+	public final CandyObject gtMethod(VM vm, CandyObject[] args) {
 		return gt(vm, args[0]);
 	}
 
@@ -372,7 +373,7 @@ public abstract class CandyObject {
 		return null;
 	}
 	@NativeMethod(name = Names.METHOD_OP_GTEQ, argc = 1)
-	private CandyObject gteqMethod(VM vm, CandyObject[] args) {
+	public final CandyObject gteqMethod(VM vm, CandyObject[] args) {
 		return gteq(vm, args[0]);
 	}
 
@@ -383,7 +384,7 @@ public abstract class CandyObject {
 		return null;
 	}
 	@NativeMethod(name = Names.METHOD_OP_LT, argc = 1)
-	private CandyObject ltMethod(VM vm, CandyObject[] args) {
+	public final CandyObject ltMethod(VM vm, CandyObject[] args) {
 		return lt(vm, args[0]);
 	}
 
@@ -394,7 +395,7 @@ public abstract class CandyObject {
 		return null;
 	}
 	@NativeMethod(name = Names.METHOD_OP_LTEQ, argc = 1)
-	private CandyObject lteqMethod(VM vm, CandyObject[] args) {
+	public final CandyObject lteqMethod(VM vm, CandyObject[] args) {
 		return lteq(vm, args[0]);
 	}
 
