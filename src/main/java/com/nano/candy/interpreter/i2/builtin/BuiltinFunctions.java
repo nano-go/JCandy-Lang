@@ -106,7 +106,7 @@ public class BuiltinFunctions {
 	 */
 	@NativeFunc(name = "selectByFilter", arity = 1)
 	public static CandyObject selectRegex(VM vm, CandyObject[] args) {
-		TypeError.checkTypeMatched(CallableObj.CALLABLE_CLASS, args[0]);
+		TypeError.checkIsCallable(args[0]);
 		CallableObj filter = (CallableObj) args[0];
 		File currentDirectory = new File(vm.getCurrentDirectory());
 		File[] subfiles = currentDirectory.listFiles();
