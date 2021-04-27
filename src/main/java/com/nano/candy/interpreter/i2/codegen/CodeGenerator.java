@@ -380,10 +380,10 @@ public class CodeGenerator implements AstVisitor<Void, Void> {
 	public Void visit(Stmt.ClassDef node) {
 		ClassInfo classInfo = new ClassInfo();
 		
-		if (node.superClassName.isPresent()) {
-			Expr.VarRef superClass = node.superClassName.get();
+		if (node.superClass.isPresent()) {
+			Expr superClass = node.superClass.get();
 			// load super class object to operand stack top.
-			loadVariable(superClass.name, line(superClass));
+			superClass.accept(this);
 			// If true, VM will fetch the super class from the operand stack top.
 			classInfo.hasSuperClass = true;
 		} else {

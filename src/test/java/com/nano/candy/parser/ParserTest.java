@@ -72,6 +72,8 @@ public class ParserTest {
 		"class Point {\n x() { \n return x; } y() { \n return y; } }",
 		"class P {\n P() {this.x = x; this.y = y;} A() { super.test().b; } }",
 		"class A \n {}",
+		"class A : a.b {}",
+		"class A : a[c] {}",
 		"class A \n { fun a(a, b) \n {} fun a() \n {} fun a(a, b) {} }",
 		"import \"stream.cd\" as stream;",
 		"import a + b as stream",

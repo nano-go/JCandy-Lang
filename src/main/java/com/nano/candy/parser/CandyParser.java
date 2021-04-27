@@ -429,7 +429,7 @@ class CandyParser implements Parser {
 	private Stmt.ClassDef parseClassDef() {
 		Token location = match(CLASS);
 		Token name = match(IDENTIFIER, "Expected class name.");
-		Expr.VarRef superClass = parseSuperClass();
+		Expr superClass = parseSuperClass();
 		ignorableLinebreak();
 		matchIf(LBRACE, true);
 		Stmt.ClassDef classDef = new Stmt.ClassDef(
@@ -441,6 +441,16 @@ class CandyParser implements Parser {
 			classDef.endPos = Optional.of(endPos.getPos());
 		}
 		return locate(location, classDef);
+	}
+	
+	/**
+	 * SuperClass = [ ":" <IDENTIFIER> ]
+	 */
+	private Expr parseSuperClass() {
+		if (matchIf(COLON)) {
+			return parseExpr(); 
+		}
+		return null;
 	}
 	
 	/**
@@ -475,17 +485,6 @@ class CandyParser implements Parser {
 			return locate(begainning, importstmt);
 		}
 		return locate(fileExpr.pos, importstmt);
-	}
-
-	/**
-	 * SuperClass = [ ":" <IDENTIFIER> ]
-	 */
-	private Expr.VarRef parseSuperClass() {
-		if (matchIf(COLON)) {
-			Token name = match(IDENTIFIER, "Expected super class name.");
-			return locate(name, new Expr.VarRef(name.getLiteral()));
-		}
-		return null;
 	}
 	
 	/**

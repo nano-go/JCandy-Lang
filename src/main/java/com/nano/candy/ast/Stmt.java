@@ -288,17 +288,17 @@ public abstract class Stmt extends ASTreeNode {
 
 		@FieldName("className")
 		public String name;
-		public Optional<Expr.VarRef> superClassName;
+		public Optional<Expr> superClass;
 		public Optional<Stmt.FuncDef> initializer;
 		public List<Stmt.FuncDef> methods;
 		
 		public Optional<Position> endPos;
 
-		public ClassDef(String name, Expr.VarRef superClassName, 
+		public ClassDef(String name, Expr superClass, 
 		                List<Stmt.FuncDef> methods) {
 			this.name = name;
 			this.methods = methods;
-			this.superClassName = Optional.ofNullable(superClassName);
+			this.superClass = Optional.ofNullable(superClass);
 			this.initializer = Optional.empty();
 			this.endPos = Optional.ofNullable(null);
 		}

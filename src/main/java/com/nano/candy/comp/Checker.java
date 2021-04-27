@@ -238,13 +238,6 @@ public class Checker implements AstVisitor<Stmt, Expr> {
 
 	@Override
 	public Stmt visit(Stmt.ClassDef node) {
-		if (node.superClassName.isPresent()) {
-			String superClassName = node.superClassName.get().name;
-			if (superClassName.equals(node.name)) {
-				error(node, "A class can't inherti from itself(%s).", node.name);
-			}
-		}
-		
 		boolean origin = inClass;
 		inClass = true;
 		if (node.initializer.isPresent()) {
