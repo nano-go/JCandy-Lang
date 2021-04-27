@@ -924,9 +924,7 @@ public final class VM {
 				case OP_RAISE: {
 					CandyObject err = pop();
 					TypeError.checkTypeMatched(ErrorObj.ERROR_CLASS, err);
-					if (!tryToHandleError((ErrorObj) err, true)) {
-						throw new VMExitException(1);
-					}
+					((ErrorObj) err).throwSelfNative();
 					break;
 				}
 				case OP_MATCH_ERRORS: {
