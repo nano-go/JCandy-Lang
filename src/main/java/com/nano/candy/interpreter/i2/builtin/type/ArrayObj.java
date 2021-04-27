@@ -118,6 +118,22 @@ public final class ArrayObj extends BuiltinObject {
 		elements[size ++] = obj;
 	}
 	
+	public void addAll(CandyObject[] arr, int len) {
+		addAll(this.size, arr, len);
+	}
+	
+	public void addAll(int index, CandyObject[] arr, int len) {
+		ensureCapacity(this.size + len);
+		System.arraycopy(
+			elements, index, elements, index + len, this.size-index);
+		System.arraycopy(arr, 0, elements, index, len);
+		this.size += len;
+	}
+	
+	public CandyObject[] getBuiltinArray() {
+		return elements;
+	}
+	
 	public CandyObject get(int index) {
 		RangeError.checkIndex(index, size);
 		return elements[index];
@@ -175,6 +191,26 @@ public final class ArrayObj extends BuiltinObject {
 		return oldValue;
 	}
 	
+	public void deleteRange(int from, int to) {
+		if (from > to) {
+			new RangeError("fromIndex(" + from + ") > toIndex(" + to + ")")
+				.throwSelfNative();
+		}
+		if (to == from) {
+			return;
+		}
+		int n = size - to;
+		System.arraycopy(elements, to, elements, from, n);
+		for (int i = from + n; i < size; i ++) {
+			elements[i] = null;
+		}
+		size -= to-from;
+	}
+	
+	public TupleObj toTuple() {
+		return new TupleObj(Arrays.copyOf(elements, size));
+	}
+	
 	@Override
 	public CandyObject getItem(VM vm, CandyObject key) {
 		return elements[asIndex(key)];
@@ -223,8 +259,7 @@ public final class ArrayObj extends BuiltinObject {
 		}
 		final int SIZE = this.size;
 		for (int i = 0; i < SIZE; i ++) {	
-			BoolObj result = get(i).equalsApiExeUser(
-				vm, arr.get(i));
+			BoolObj result = get(i).equalsApiExeUser(vm, arr.get(i));
 			if (!result.value()) {
 				return BoolObj.FALSE;
 			}
@@ -275,6 +310,34 @@ public final class ArrayObj extends BuiltinObject {
 		return this;
 	}
 	
+	@NativeMethod(name = "appendAll", argc = 1, varArgsIndex = 0)
+	public CandyObject appendAll(VM vm, CandyObject[] args) {
+		if (args[0] == NullPointer.nil()) {
+			return this;
+		}
+		ArrayObj arr = (ArrayObj) args[0];
+		addAll(arr.elements, arr.size);
+		return this;
+	}
+	
+	@NativeMethod(name = "insert", argc = 2)
+	public CandyObject insert(VM vm, CandyObject[] args) {
+		int index = asIndexForInsert(args[0]);
+		insert(index, args[1]);
+		return args[1];
+	}
+	
+	@NativeMethod(name = "insertAll", argc = 2, varArgsIndex = 1)
+	public CandyObject insertAllAt(VM vm, CandyObject[] args) {
+		int index = asIndexForInsert(args[0]);
+		if (args[1] == NullPointer.nil()) {
+			return this;
+		}
+		ArrayObj arr = (ArrayObj) args[1];
+		addAll(index, arr.elements, arr.size);
+		return this;
+	}
+	
 	@NativeMethod(name = "deleteAt", argc = 1)
 	public CandyObject deleteAt(VM vm, CandyObject[] args) {
 		return deleteAt(asIndex(args[0]));
@@ -285,11 +348,10 @@ public final class ArrayObj extends BuiltinObject {
 		return BoolObj.valueOf(delete(vm, args[0]));
 	}
 	
-	@NativeMethod(name = "insert", argc = 2)
-	public CandyObject insert(VM vm, CandyObject[] args) {
-		int index = asIndexForInsert(args[0]);
-		insert(index, args[1]);
-		return args[1];
+	@NativeMethod(name = "deleteRange", argc = 2)
+	public CandyObject deleteRange(VM vm, CandyObject[] args) {
+		deleteRange(asIndex(args[0]), asIndexForInsert(args[1]));
+		return this;
 	}
 	
 	@NativeMethod(name = "set", argc = 2)
@@ -315,11 +377,6 @@ public final class ArrayObj extends BuiltinObject {
 	@NativeMethod(name = "lastIndexOf", argc = 1)
 	public CandyObject lastIndexOf(VM vm, CandyObject[] args) {
 		return IntegerObj.valueOf(lastIndexOf(vm, args[0]));
-	}
-	
-	@NativeMethod(name = "size")
-	public CandyObject size(VM vm, CandyObject[] args) {
-		return IntegerObj.valueOf(size);
 	}
 	
 	@NativeMethod(name = "swap", argc = 2)
@@ -362,12 +419,32 @@ public final class ArrayObj extends BuiltinObject {
 		return this;
 	}
 	
+	@NativeMethod(name = "foreach", argc = 1)
+	public CandyObject foreach(VM vm, CandyObject[] args) {
+		CallableObj walker = TypeError.requiresCallable(args[0]);
+		final int SIZE = size;
+		for (int i = 0; i < SIZE; i ++) {
+			walker.callExeUser(vm, IntegerObj.valueOf(i), elements[i]);
+		}
+		return this;
+	}
+	
+	@NativeMethod(name = "toTuple")
+	public CandyObject toTuple(VM vm, CandyObject[] args) {
+		return toTuple();
+	}
+	
+	@NativeMethod(name = "size")
+	public CandyObject size(VM vm, CandyObject[] args) {
+		return IntegerObj.valueOf(size);
+	}
+	
 	@NativeMethod(name = "clear")
 	public CandyObject clear(VM vm, CandyObject[] args) {
 		for (int i = 0; i < size; i ++) {
 			elements[i] = null;
 		}
 		size = 0;
-		return null;
+		return this;
 	}
 }
