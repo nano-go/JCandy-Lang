@@ -23,8 +23,12 @@ public final class ArrayObj extends BuiltinObject {
 	
 	public static final CandyClass ARRAY_CLASS = 
 		NativeClassRegister.generateNativeClass(ArrayObj.class);
+	
 	public static final CandyObject[] EMPTY_ARRAY = new CandyObject[0];
 	
+	/**
+	 * Requested maximum array size.
+	 */
 	private static final int MAX_ARRAY_SIZE = Integer.MAX_VALUE - 8;
 	
 	protected static void checkCapacity(long capacity) {
@@ -65,7 +69,7 @@ public final class ArrayObj extends BuiltinObject {
 	}
 	
 	private void initArray(long n) {
-		if (n > Integer.MAX_VALUE || n < 0) {
+		if (n > MAX_ARRAY_SIZE || n < 0) {
 			new ArgumentError("Illegal capacity: %d", n)
 				.throwSelfNative();
 		}
@@ -76,30 +80,25 @@ public final class ArrayObj extends BuiltinObject {
 		}
 	}
 	
-	private void ensureCapacity(int minCapacity) {
-		if (minCapacity > elements.length) {
-			if (elements == EMPTY_ARRAY) {
-				elements = new CandyObject[10];
-				return;
+	private void ensureCapacity(int minCapacity) {	
+		if (elements == EMPTY_ARRAY) {
+			elements = new CandyObject[Math.max(16, minCapacity)];
+			return;
+		}
+		if (minCapacity - elements.length > 0) {
+			if (minCapacity < 0) {
+				new NativeError("Out of memory.").throwSelfNative();
 			}
-			
 			int oldCapacity = elements.length;
 			int newCapacity = oldCapacity + (oldCapacity >> 1);
-			if (newCapacity - minCapacity < 0)
+			if (newCapacity < minCapacity)
 				newCapacity = minCapacity;
-			if (newCapacity - MAX_ARRAY_SIZE > 0)
-				newCapacity = hugeCapacity(minCapacity);
+			if (newCapacity > MAX_ARRAY_SIZE) {
+				new NativeError("Out of memory.").throwSelfNative();
+			}
 			elements = Arrays.copyOf(elements, newCapacity);
 		}
 	}
-	
-	private static int hugeCapacity(int minCapacity) {
-        if (minCapacity < 0)
-            new NativeError("Out of memory.").throwSelfNative();
-        return (minCapacity > MAX_ARRAY_SIZE) ?
-            Integer.MAX_VALUE :
-            MAX_ARRAY_SIZE;
-    }
 	
 	private int asIndex(CandyObject index) {
 		long validIndex = ObjectHelper.asInteger(index);
