@@ -56,6 +56,14 @@ fun operator_str_test() {
 	assert [CustomClass("1"), 2, CustomClass("3")]._str() ==
 	       "[1, 2, 3]"
 	
+	var arr = [1, 2, 3]
+	arr.append(arr)
+	assert str(arr) == "[1, 2, 3, [...]]"
+	
+	var arr = []
+	arr.append(arr)
+	assert str(arr) == "[[...]]"
+	
 	class CustomClass {
 		fun _str() { raise TypeError(""); }
 	}
