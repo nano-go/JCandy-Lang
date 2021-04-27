@@ -10,10 +10,13 @@ public class CNativeMethod extends CNativeCallable {
 	private int index;
 
 	protected CNativeMethod(String simpleName, String name,
-	                        int arity, int vaargIndex, 
+	                        int arity, int varArgsIndex, 
 	                        MethodAccess method, int index) {
 		// extra hidden instance qargument.
-		super(simpleName, name, arity + 1, vaargIndex);
+		super(
+			simpleName, name, arity + 1, 
+			varArgsIndex == -1 ? -1 : varArgsIndex + 1
+		);
 		this.method = method;
 		this.index = index;
 	}
