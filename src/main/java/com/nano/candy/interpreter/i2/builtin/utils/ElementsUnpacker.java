@@ -122,9 +122,16 @@ public class ElementsUnpacker {
 	 * Unpacks the specified element (must be a iterable object) into 
 	 * the buffer. If the element is empty, the {@link NullPointer#nil()}
 	 * will be offered to the buffer.
+	 *
+	 * If the element is {@link NullPointer.nil()}, the {@code null} will
+	 * not be unpacked, but it will be offered to the buffer.
 	 */
 	public static void unpackElement(VM vm, CandyObject element, 
 	                                 LinkedList<CandyObject> buffer) {
+		if (element == NullPointer.nil()) {
+			buffer.offer(element);
+			return;
+		}
 		CandyObject obj = element.iteratorApiExeUser(vm);
 		CandyObject hasNext =
 			obj.getAttrApiExeUser(vm, Names.METHOD_ITERATOR_HAS_NEXT);
