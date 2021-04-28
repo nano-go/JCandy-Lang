@@ -1,8 +1,11 @@
 package com.nano.candy.interpreter.i2.builtin;
 import com.nano.candy.interpreter.i2.builtin.type.ArrayObj;
 import com.nano.candy.interpreter.i2.builtin.type.CallableObj;
+import com.nano.candy.interpreter.i2.builtin.type.DoubleObj;
 import com.nano.candy.interpreter.i2.builtin.type.IntegerObj;
+import com.nano.candy.interpreter.i2.builtin.type.MethodObj;
 import com.nano.candy.interpreter.i2.builtin.type.ModuleObj;
+import com.nano.candy.interpreter.i2.builtin.type.NullPointer;
 import com.nano.candy.interpreter.i2.builtin.type.Range;
 import com.nano.candy.interpreter.i2.builtin.type.StringObj;
 import com.nano.candy.interpreter.i2.builtin.type.error.IOError;
@@ -45,6 +48,20 @@ public class BuiltinFunctions {
 	@NativeFunc(name = "clock", arity = 0)
 	public static CandyObject clock(VM vm, CandyObject[] args) {
 		return IntegerObj.valueOf(System.currentTimeMillis());
+	}
+	
+	@NativeFunc(name = "methods", arity = 1) 
+	public static CandyObject methods(VM vm, CandyObject[] args) {
+		ArrayObj arr = new ArrayObj(16);
+		for (CallableObj m : args[0].getCandyClass().getMethods()) {
+			arr.append(new MethodObj(args[0], m));
+		}
+		return arr;
+	}
+	
+	@NativeFunc(name = "bool", arity = 1) 
+	public static CandyObject bool(VM vm, CandyObject[] args) {
+		return args[0].boolValue(vm);
 	}
 
 	@NativeFunc(name = "getAttr", arity = 2)

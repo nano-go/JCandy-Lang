@@ -10,6 +10,7 @@ import com.nano.candy.interpreter.i2.builtin.type.StringObj;
 import com.nano.candy.interpreter.i2.builtin.type.error.NativeError;
 import com.nano.candy.interpreter.i2.vm.VM;
 import com.nano.candy.std.Names;
+import java.util.Collection;
 import java.util.HashMap;
 
 /**
@@ -52,6 +53,10 @@ public class CandyClass extends CallableObj {
 		super.parameter = new ParametersInfo(
 			arity(), varArgsIndex()
 		);
+	}
+	
+	public Collection<CallableObj> getMethods() {
+		return methods.values();
 	}
 	
 	public CallableObj getMethod(String name) {
