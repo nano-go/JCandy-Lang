@@ -25,7 +25,7 @@ public class NativeMethodRegister {
 		String name = m.getName();
 		MethodAccess method = MethodAccess.get(clazz);
 		NativeMethod nativeMethod = m.getAnnotation(NativeMethod.class);
-		String fullName = clazz.getName() + "." + nativeMethod.name();
+		String fullName = clazz.getSimpleName() + "." + nativeMethod.name();
 		return new CNativeMethod(
 			nativeMethod.name(), fullName, nativeMethod.argc(),
 			nativeMethod.varArgsIndex(), method, 
