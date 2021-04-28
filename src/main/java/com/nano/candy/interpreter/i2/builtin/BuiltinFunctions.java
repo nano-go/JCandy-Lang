@@ -15,6 +15,7 @@ import com.nano.candy.interpreter.i2.cni.NativeLibraryLoader;
 import com.nano.candy.interpreter.i2.rtda.module.ModuleManager;
 import com.nano.candy.interpreter.i2.vm.VM;
 import com.nano.candy.std.Names;
+import com.nano.candy.sys.CandySystem;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -118,6 +119,9 @@ public class BuiltinFunctions {
 		for (File f : subfiles) {
 			// ignore the specific file.
 			if (Names.MOUDLE_FILE_NAME.equals(f.getName())) {
+				continue;
+			}
+			if (f.isFile() && !CandySystem.isCandySource(f.getName())) {
 				continue;
 			}
 			CandyObject accept = ObjectHelper.callFunction
