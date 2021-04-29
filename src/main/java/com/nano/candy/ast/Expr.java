@@ -88,6 +88,25 @@ public abstract class Expr extends ASTreeNode {
 		}
 	}
 	
+	public static class TernaryOperator extends Expr {
+		
+		public Expr condition;
+		public Expr thenExpr;
+		public Expr elseExpr;
+
+		public TernaryOperator(Expr condition, Expr thenExpr, Expr elseExpr) {
+			this.condition = condition;
+			this.thenExpr = thenExpr;
+			this.elseExpr = elseExpr;
+			this.pos = condition.pos;
+		}
+		
+		@Override
+		public <E extends Object> E accept(AstVisitor<?, E> visitor) {
+			return visitor.visit(this);
+		}
+	}
+	
 	public static class Binary extends Expr {
 		public TokenKind operator;
 		public Position operatorPos;

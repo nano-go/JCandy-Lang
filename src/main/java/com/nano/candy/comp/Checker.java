@@ -381,6 +381,19 @@ public class Checker implements AstVisitor<Stmt, Expr> {
 		node.rhs = visitExpr(node.rhs);
 		return node;
 	}
+
+	@Override
+	public Expr visit(Expr.TernaryOperator node) {
+		node.condition = visitExpr(node.condition);
+		node.elseExpr = visitExpr(node.elseExpr);
+		node.thenExpr = visitExpr(node.thenExpr);
+		if (node.condition.isFalsely()) {
+			return node.elseExpr;
+		} else if (node.condition.isConstant()) {
+			return node.thenExpr;
+		}
+		return node;
+	}
 	
 	@Override
 	public Expr visit(Expr.Unary node) {

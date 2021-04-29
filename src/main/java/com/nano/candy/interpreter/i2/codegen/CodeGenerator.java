@@ -748,6 +748,18 @@ public class CodeGenerator implements AstVisitor<Void, Void> {
 	}
 
 	@Override
+	public Void visit(Expr.TernaryOperator node) {
+		node.condition.accept(this);
+		int lableJumpToElse = builder.emitLabel(OP_POP_JUMP_IF_FALSE, -1);
+		node.thenExpr.accept(this);
+		int lableJumpOutElse = builder.emitLabel(OP_JUMP, -1);
+		builder.backpatch(lableJumpToElse);
+		node.elseExpr.accept(this);
+		builder.backpatch(lableJumpOutElse);
+		return null;
+	}
+
+	@Override
 	public Void visit(Expr.Unary node) {
 		node.expr.accept(this);
 		switch (node.operator) {

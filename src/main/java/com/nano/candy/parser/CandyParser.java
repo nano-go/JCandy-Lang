@@ -764,10 +764,10 @@ class CandyParser implements Parser {
 	}
 
 	/**
-	 * Expr =  BinaryExpr [ Assignment ]
+	 * Expr =  TernaryExpr [ Assignment ]
 	 */
 	private Expr parseExpr() {
-		Expr lhs = parseBinaryExpr(0);
+		Expr lhs = parseTernaryOperator();
 		if (!TokenKind.isAssignOperator(peek().getKind())) {
 			return lhs;
 		}
@@ -795,6 +795,20 @@ class CandyParser implements Parser {
 		
 		error(lhs.pos, "Invalid left hand side.");
 		return lhs;
+	}
+	
+	/**
+	 * Ternary = BinaryExpr [ "?" Expr ":" Expr ]
+	 */
+	private Expr parseTernaryOperator() {
+		Expr condition = parseBinaryExpr(0);
+		if (matchIf(QUESITION)) {
+			Expr thanExpr = parseExpr();
+			matchIf(COLON, true);
+			Expr elseExpr = parseExpr();
+			return new Expr.TernaryOperator(condition, thanExpr, elseExpr);
+		}
+		return condition;
 	}
 
 	/**

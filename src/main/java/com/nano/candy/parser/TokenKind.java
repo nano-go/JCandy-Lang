@@ -18,6 +18,7 @@ public enum TokenKind {
 	RBRACKET("]"),
 	LBRACE("{"),
 	RBRACE("}"),
+	QUESITION("?"),
 	COLON(":"),
 	COMMA(","),
 	DOT("."),

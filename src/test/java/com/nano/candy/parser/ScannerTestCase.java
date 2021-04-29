@@ -169,6 +169,9 @@ public class ScannerTestCase {
 		
 		/*===== Operator Test Case =====*/
 		
+		newTKCase("a ? b : c", 
+			id("a"), QUESITION, id("b"), COLON, id("c"), SEMIEOF),
+		
 		newTKCase(
 			"+ - * / % is == != > >= < <= and or && ||", 
 			PLUS, MINUS, STAR, DIV, MOD, 

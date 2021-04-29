@@ -173,6 +173,9 @@ class CandyScanner implements Scanner {
 					break;				
 				case ';' :
 					kind = TokenKind.SEMI;
+					break;
+				case '?':
+					kind = TokenKind.QUESITION;
 					break;			
 				case ':' :
 					kind = TokenKind.COLON;

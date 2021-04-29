@@ -21,6 +21,8 @@ public class ParserTest {
 		"var arr = [[c, cpp, cs, lambda lisp -> lisp], id, name, java]",
 		"var arr = [ \n[1, 2, 3, 4],\n [5,6,7,8],\n[9, 10, 11, 12]\n]",
 		"var arr = [ \n[1, 2, 3, 4],\n [5,6,7,8],\n[9, 10, 11, 12],\n]",
+		"var c = true ? 1 + 2 : false",
+		"a or b or c ? (a or b or c ? a : b or b) : false",
 		"[]",
 		"if (false) var a = 0\nelse if (true) var b = 155 ; else if (a + b * c) true",
 		"if (false) var a = 0\nelse var b = 155",
