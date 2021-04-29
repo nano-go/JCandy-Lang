@@ -428,6 +428,27 @@ public final class VM {
 		method.call(this, argc);
 	}
 	
+	/**
+	 * Instruction: OP_MATCH_ERRORS
+	 */
+	private void evalOpMatchErrors() {
+		int offset = readJumpOffset();
+		pc += 2;
+		int count = readUint8();
+		CandyObject error = peek(count);
+		boolean matched = count == 0;
+		for (int i = 0; i < count; i ++) {
+			CandyObject obj = pop();
+			if (!matched && error.getCandyClass()
+				.isSubClassOf(obj.getCandyClass())) {
+				matched = true;
+			}
+		}
+		if (!matched) {
+			pc += offset-3;
+		}
+	}
+	
 	private CandyObject getGlobalVariable(String name, boolean throwsErrorIfNotFound) {
 		CandyObject obj = global.getVar(name);
 		if (obj == null && throwsErrorIfNotFound) {
@@ -885,29 +906,26 @@ public final class VM {
 					int arity = readUint8();
 					String attr = cp.getString(readIndex());
 					CandyObject method = pop().getAttrApiExeUser(this, attr);
-					TypeError.checkIsCallable(method);
-					((CallableObj) method).call(this, arity);
+					TypeError.requiresCallable(method).call(this, arity);
 					break;
 				}
 				case OP_CALL_SLOT: {
 					int arity = readUint8();	
-					CandyObject function = load(readUint8());
-					TypeError.checkIsCallable(function);
-					((CallableObj) function).call(this, arity);
+					TypeError.requiresCallable(load(readUint8()))
+						.call(this, arity);
 					break;
 				}
 				case OP_CALL_GLOBAL: {
 					int arity = readUint8();
 					String name = cp.getString(readIndex());
-					CandyObject function = getGlobalVariable(name, true);
-					TypeError.checkIsCallable(function);
-					((CallableObj) function).call(this, arity);
+					TypeError.requiresCallable(
+						getGlobalVariable(name, true)
+					).call(this, arity);
 					break;
 				}
 				case OP_CALL: {
 					int arity = readUint8();
-					TypeError.requiresCallable(pop())
-						.call(this, arity);
+					TypeError.requiresCallable(pop()).call(this, arity);
 					break;
 				}
 				case OP_CALL_EX: {
@@ -928,21 +946,7 @@ public final class VM {
 					break;
 				}
 				case OP_MATCH_ERRORS: {
-					int offset = readJumpOffset();
-					pc += 2;
-					int count = readUint8();
-					CandyObject error = peek(count);
-					boolean matched = count == 0;
-					for (int i = 0; i < count; i ++) {
-						CandyObject obj = pop();
-						if (!matched && error.getCandyClass()
-							.isSubClassOf(obj.getCandyClass())) {
-							matched = true;
-						}
-					}
-					if (!matched) {
-						pc += offset-3;
-					}
+					evalOpMatchErrors();
 					break;
 				}	
 				
