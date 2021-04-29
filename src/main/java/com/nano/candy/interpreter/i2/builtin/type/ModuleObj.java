@@ -33,6 +33,10 @@ public class ModuleObj extends BuiltinObject {
 		if (variable != null) {
 			return variable.getValue();
 		}
+		CandyObject val = super.getAttr(vm, attr);
+		if (val != null) {
+			return val;
+		}
 		new AttributeError(
 			"The module '%s' has no attribute '%s'.", name, attr
 		).throwSelfNative();
