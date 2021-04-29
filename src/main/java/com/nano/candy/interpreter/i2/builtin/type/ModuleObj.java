@@ -4,6 +4,7 @@ import com.nano.candy.interpreter.i2.builtin.BuiltinObject;
 import com.nano.candy.interpreter.i2.builtin.CandyObject;
 import com.nano.candy.interpreter.i2.builtin.type.ModuleObj;
 import com.nano.candy.interpreter.i2.builtin.type.classes.CandyClass;
+import com.nano.candy.interpreter.i2.builtin.type.error.AttributeError;
 import com.nano.candy.interpreter.i2.cni.NativeClass;
 import com.nano.candy.interpreter.i2.cni.NativeClassRegister;
 import com.nano.candy.interpreter.i2.cni.NativeMethod;
@@ -32,7 +33,10 @@ public class ModuleObj extends BuiltinObject {
 		if (variable != null) {
 			return variable.getValue();
 		}
-		return super.getAttr(vm, attr);
+		new AttributeError(
+			"The module '%s' has no attribute '%s'.", name, attr
+		).throwSelfNative();
+		throw new Error();
 	}
 
 	@Override
@@ -42,7 +46,10 @@ public class ModuleObj extends BuiltinObject {
 			variable.setValue(ref);
 			return ref;
 		}
-		return super.setAttr(vm, attr, ref);
+		new AttributeError(
+			"The module '%s' has no attribute '%s'.", name, attr
+		).throwSelfNative();
+		throw new Error();
 	}
 	
 	public void defineTo(HashMap<String, Variable> vars) {
