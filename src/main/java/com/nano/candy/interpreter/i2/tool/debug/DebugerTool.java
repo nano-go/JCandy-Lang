@@ -42,7 +42,7 @@ public class DebugerTool implements CandyTool {
 		if (!(interpreter instanceof InterpreterImpl)) {
 			throw new ToolException("Unsupported non-i2 interpreter.");
 		}
-		options.checkIsSrcFile();
+		options.checkHasSrcFile();
 		options.getInterpreterOptions().setIsDebugMode(true);
 		InterpreterImpl i2Interpreter = (InterpreterImpl) interpreter;
 		Chunk chunk = compile(options.getSourceFile(), options.getInterpreterOptions());

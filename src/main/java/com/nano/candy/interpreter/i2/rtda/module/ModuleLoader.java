@@ -72,7 +72,7 @@ public abstract class ModuleLoader {
 			SourceFileInfo srcFile = module.getSourceFile(i);
 			ModuleObj fileModuleObj = fileModuleObjectCache.get(srcFile);
 			if (fileModuleObj == null) {
-				fileModuleObj = compileSourceFile(vm, srcFile);
+				fileModuleObj = compileSourceFile(vm, srcFile);		
 				fileModuleObjectCache.put(srcFile, fileModuleObj);
 			}
 			moduleObjects[i] = fileModuleObj;

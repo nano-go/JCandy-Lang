@@ -16,5 +16,5 @@ public class ScannerFactory {
 
 	public static Scanner newScanner(String fileName, char[] input) {
 		return new CandyScanner(fileName, input);
-	}  
+	}
 }

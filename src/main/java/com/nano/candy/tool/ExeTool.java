@@ -34,7 +34,7 @@ public class ExeTool implements CandyTool {
 	@Override
 	public void run(Interpreter interpreter, CandyOptions options) throws Exception {
 		File srcFile = options.getSourceFile();
-		options.checkIsSrcFile();
+		options.checkHasSrcFile();
 		interpret(interpreter, srcFile);
 	}
 

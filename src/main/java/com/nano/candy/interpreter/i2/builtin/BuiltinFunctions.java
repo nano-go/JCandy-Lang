@@ -123,7 +123,7 @@ public class BuiltinFunctions {
 	 * file scope.
 	 */
 	@NativeFunc(name = "selectByFilter", arity = 1)
-	public static CandyObject selectRegex(VM vm, CandyObject[] args) {
+	public static CandyObject selectByFilter(VM vm, CandyObject[] args) {
 		TypeError.checkIsCallable(args[0]);
 		CallableObj filter = (CallableObj) args[0];
 		File currentDirectory = new File(vm.getCurrentDirectory());

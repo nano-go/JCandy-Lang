@@ -3,12 +3,9 @@ package com.nano.candy.main;
 import com.nano.candy.interpreter.InterpreterOptions;
 import com.nano.candy.tool.CandyTool;
 import com.nano.candy.tool.CandyToolFactory;
-import com.nano.candy.utils.CandyFileFilter;
 import com.nano.candy.utils.CommandLine;
 import com.nano.candy.utils.Options;
-import com.nano.common.io.FilePathUtils;
 import java.io.File;
-import java.util.ArrayList;
 import java.util.Arrays;
 
 public class CandyOptionsParser {

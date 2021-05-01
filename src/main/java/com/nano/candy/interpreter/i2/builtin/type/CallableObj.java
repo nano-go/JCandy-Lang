@@ -151,6 +151,7 @@ public abstract class CallableObj extends BuiltinObject {
 		}
 		call(vm, args == null ? 0 : args.length, unpackFlags);
 		if (!isBuiltin()) {
+			
 			vm.runFrame(true);
 		}
 		return vm.pop();

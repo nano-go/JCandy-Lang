@@ -37,7 +37,7 @@ public class DisassembleTool implements CandyTool {
 	
 	@Override
 	public void run(Interpreter interpreter, CandyOptions options) throws Exception {
-		options.checkIsSrcFile();
+		options.checkHasSrcFile();
 		boolean printAdditionalInfo = options.getCmd().hasOption("-v");
 		boolean printFunctionCode = options.getCmd().hasOption("-c");
 			

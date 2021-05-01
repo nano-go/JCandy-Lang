@@ -1,10 +1,10 @@
 package com.nano.candy.main;
 import com.nano.candy.interpreter.InterpreterOptions;
+import com.nano.candy.sys.CandySystem;
 import com.nano.candy.tool.CandyTool;
 import com.nano.candy.utils.CommandLine;
 import com.nano.candy.utils.Options;
 import java.io.File;
-import com.nano.candy.sys.CandySystem;
 
 public class CandyOptions {
 	
@@ -18,7 +18,7 @@ public class CandyOptions {
 	
 	protected CandyOptions() {}
 
-	public void checkIsSrcFile() {
+	public void checkHasSrcFile() {
 		if (srcFile == null) {
 			throw new Options.ParseException("Missing source files.");
 		}
