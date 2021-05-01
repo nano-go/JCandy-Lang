@@ -1,0 +1,5 @@
+try {
+	importModule("raise_error")
+} else {
+	assert false
+} 

@@ -474,13 +474,29 @@ public final class VM {
 	
 	public int runHandleError() {
 		int code = 0;
+		try {
+			run();
+		} catch (VMExitException e) {
+			code = e.code;
+		}
+		clearFrameStack();
+		return code;
+	}
+	
+	public ModuleObj run() {
+		int deepth = stack.sp();
 		while (true) {
+			SourceFileInfo srcFileInfo = getCurSourceFileInfo();
+			if (srcFileInfo != null) {
+				srcFileInfo.markRunning();
+			}
 			try {
-				run();
-				break;
-			} catch (VMExitException e){
-				code = e.code;
-				break;
+				// OP_EXIT will help VM to exit runFrame method.
+				runFrame(false);
+			} catch (VMExitException e) {
+				throw e;
+			} catch (ContinueRunException e) {
+				continue;
 			} catch (Throwable e) {
 				ErrorObj err;
 				if (e instanceof CarrierErrorException) {
@@ -488,28 +504,21 @@ public final class VM {
 				} else {
 					err = new NativeError(e);
 				}
-				if (tryToHandleError(err, true)) continue;
+				if (tryToHandleError(err, true)) {
+					if (stack.sp() < deepth) {
+						throw new ContinueRunException();
+					} else {
+						continue;
+					}
+				}
 				if (DEBUG) e.printStackTrace();
-				code = 1;
-				break;
+				throw new VMExitException(70);
 			}
+			ModuleObj moudleObj = 
+				global.curFileScope().generateModuleObject();
+			popFrame();
+			return moudleObj;
 		}
-		clearFrameStack();
-		return code;
-	}
-	
-	public ModuleObj run() {
-		SourceFileInfo srcFileInfo = getCurSourceFileInfo();
-		if (srcFileInfo != null) {
-			srcFileInfo.markRunning();
-		}
-		// OP_EXIT will help VM to exit runFrame method.
-		runFrame(false);
-		
-		ModuleObj moudleObj = 
-			global.curFileScope().generateModuleObject();
-		popFrame();
-		return moudleObj;
 	}
 	
 	public void runFrame(boolean exitMethodAtFrameEnd) {
