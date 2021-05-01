@@ -485,17 +485,20 @@ public final class VM {
 	
 	public ModuleObj run() {
 		int deepth = stack.sp();
+		SourceFileInfo srcFileInfo = getCurSourceFileInfo();
+		if (srcFileInfo != null) {
+			srcFileInfo.markRunning();
+		}
 		while (true) {
-			SourceFileInfo srcFileInfo = getCurSourceFileInfo();
-			if (srcFileInfo != null) {
-				srcFileInfo.markRunning();
-			}
 			try {
 				// OP_EXIT will help VM to exit runFrame method.
 				runFrame(false);
 			} catch (VMExitException e) {
 				throw e;
 			} catch (ContinueRunException e) {
+				if (stack.sp() < deepth) {
+					throw e;
+				}
 				continue;
 			} catch (Throwable e) {
 				ErrorObj err;
