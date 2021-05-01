@@ -1,0 +1,2 @@
+
+selectByFilter(lambda e -> e != "main.cd")
