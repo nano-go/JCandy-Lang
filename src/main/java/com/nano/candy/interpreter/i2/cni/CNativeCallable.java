@@ -5,7 +5,9 @@ import com.nano.candy.interpreter.i2.builtin.type.NullPointer;
 import com.nano.candy.interpreter.i2.builtin.type.classes.CandyClass;
 import com.nano.candy.interpreter.i2.builtin.type.error.NativeError;
 import com.nano.candy.interpreter.i2.vm.CarrierErrorException;
+import com.nano.candy.interpreter.i2.vm.ContinueRunException;
 import com.nano.candy.interpreter.i2.vm.VM;
+import com.nano.candy.interpreter.i2.vm.VMExitException;
 import java.lang.reflect.InvocationTargetException;
 
 @NativeClass(name = "NativeCallable")
@@ -44,7 +46,7 @@ public abstract class CNativeCallable extends CallableObj {
 				ret = NullPointer.nil();
 			}
 			vm.returnFromVM(ret);
-		} catch (CarrierErrorException e){
+		} catch (CarrierErrorException | VMExitException | ContinueRunException e){
 			throw e;
 		} catch (InvocationTargetException e) {
 			Throwable t = e.getCause();

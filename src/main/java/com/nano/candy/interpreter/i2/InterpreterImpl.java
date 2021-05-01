@@ -50,9 +50,8 @@ public class InterpreterImpl implements Interpreter {
 	}
 
 	@Override
-	public boolean run() {
-		int code = vm.runHandleError();
-		return code == 0;
+	public int run() {
+		return vm.runHandleError();
 	}
 
 }

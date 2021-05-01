@@ -9,7 +9,6 @@ import com.nano.candy.interpreter.i2.tool.dis.Disassembler;
 import com.nano.candy.interpreter.i2.vm.CarrierErrorException;
 import com.nano.candy.main.CandyOptions;
 import com.nano.candy.tool.CandyTool;
-import com.nano.candy.utils.BlockView;
 import com.nano.candy.utils.Options;
 import java.io.File;
 
@@ -38,7 +37,7 @@ public class DisassembleTool implements CandyTool {
 	
 	@Override
 	public void run(Interpreter interpreter, CandyOptions options) throws Exception {
-		options.checkSrc();
+		options.checkIsSrcFile();
 		boolean printAdditionalInfo = options.getCmd().hasOption("-v");
 		boolean printFunctionCode = options.getCmd().hasOption("-c");
 			
@@ -49,26 +48,21 @@ public class DisassembleTool implements CandyTool {
 		dumper.setIsDisassLineNumberTable(printAdditionalInfo);
 		dumper.setIsDisassFunctions(printFunctionCode || printAdditionalInfo);
 		
-		printDiss(options.getInterpreterOptions(), dumper, options.getFiles());
+		printDiss(
+			options.getInterpreterOptions(), dumper, 
+			options.getSourceFile()
+		);
 	}
 
-	private void printDiss(InterpreterOptions options, DisassInsDumper dumper, File[] files) {
+	private void printDiss(InterpreterOptions options, DisassInsDumper dumper, File file) {
 		Disassembler disassember = new Disassembler();
-		BlockView blockView = new BlockView();
-		for (File src : files) {
-			Chunk chunk;
-			try {
-				chunk = Compiler.compileChunk(src, options, false);
-			} catch (CarrierErrorException e) {
-				continue;
-			}
+		try {
+			Chunk chunk = Compiler.compileChunk(file, options, false);
 			disassember.setChunk(chunk);
-			blockView.addBlock(
-				src.getName(),
-				src.getName(),
-				dumper.dump(disassember.disassChunk())
-			);
+			System.out.println(dumper.dump(disassember.disassChunk()));
+		} catch (CarrierErrorException e) {
+			System.exit(65);
+			
 		}
-		System.out.println(blockView.toString());
 	}
 }

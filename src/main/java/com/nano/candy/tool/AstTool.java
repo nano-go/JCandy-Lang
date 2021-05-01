@@ -38,13 +38,12 @@ public class AstTool implements CandyTool {
 	public void run(Interpreter interpreter, CandyOptions options) throws Exception {	
 		CommandLine cmd = options.getCmd();
 		int flag = parseFlag(cmd);
-		options.checkSrc();
+		options.checkIsSrcFile();
 		AstPrinter printer = AstPrinters.newPrinter(flag);
-		for (File src : options.getFiles()) {
-			Program program = ParserFactory.newParser(src).parse();
-			Logger.getLogger().printAllMessage(true);
-			printer.print(System.out, program);
-		}
+		File src = options.getSourceFile();
+		Program program = ParserFactory.newParser(src).parse();
+		Logger.getLogger().printAllMessage(true);
+		printer.print(System.out, program);
 	}
 
 	private int parseFlag(CommandLine cmd) {

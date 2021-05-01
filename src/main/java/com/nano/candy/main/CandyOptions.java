@@ -4,10 +4,11 @@ import com.nano.candy.tool.CandyTool;
 import com.nano.candy.utils.CommandLine;
 import com.nano.candy.utils.Options;
 import java.io.File;
+import com.nano.candy.sys.CandySystem;
 
 public class CandyOptions {
 	
-	protected File[] srcFiles;
+	protected File srcFile;
 	protected boolean printHelper;
 	protected CandyTool tool;
 	
@@ -17,14 +18,21 @@ public class CandyOptions {
 	
 	protected CandyOptions() {}
 
-	public void checkSrc() {
-		if (srcFiles == null || srcFiles.length == 0) {
+	public void checkIsSrcFile() {
+		if (srcFile == null) {
 			throw new Options.ParseException("Missing source files.");
+		}
+		if (srcFile.isDirectory()) {
+			throw new Options.ParseException("Can't open a directory.");
+		}
+		if (!CandySystem.isCandySource(srcFile.getName())) {
+			throw new Options.ParseException
+				("Can't open non-candy source file.");
 		}
 	}
 	
-	public File[] getFiles() {
-		return srcFiles;
+	public File getSourceFile() {
+		return srcFile;
 	}
 	
 	public CandyTool getTool() {

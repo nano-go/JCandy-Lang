@@ -48,7 +48,7 @@ public class CandyOptionsParser {
 		defineToolOptions(toolOps, candyOptions.tool);
 		candyOptions.cmdLine = new CommandLine(toolOps, args);
 		candyOptions.options = toolOps;
-		candyOptions.srcFiles = getInputFiles(
+		candyOptions.srcFile = getInputFile(
 			candyOptions.cmdLine.getArgs()
 		);
 		String[] defaultArgs = candyOptions.cmdLine.getArgs();
@@ -58,25 +58,16 @@ public class CandyOptionsParser {
 		);
 	}
 	
-	private static File[] getInputFiles(String... args) {
+	private static File getInputFile(String... args) {
 		if (args.length == 0) {
-			return new File[0];
+			return null;
 		}
 		File f = new File(args[0]);
 		if (!f.exists()) {
 			throw new Options.ParseException(
 				"Can't open file: " + f.getAbsolutePath());
 		}
-		ArrayList<File> inputFiles = new ArrayList<>();
-		inputFiles.addAll(FilePathUtils.getFilesByBfsOrder(
-			new File(args[0]), 
-			CandyFileFilter.CANDY_FILE_FILTER
-		));
-		if (inputFiles.size() == 0) {
-			throw new Options.ParseException(
-				"Missing source files: " + f.getAbsolutePath());
-		}
-		return inputFiles.toArray(new File[0]);
+		return f;
 	}
 
 	private static void prepareHelper(CandyOptions candyOptions, Options options) {

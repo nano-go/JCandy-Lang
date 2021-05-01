@@ -6,5 +6,5 @@ public interface Interpreter {
 	public void initOrReset();
 	public void load(String text);
 	public void load(ASTreeNode node);
-	public boolean run();
+	public int run();
 }

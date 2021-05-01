@@ -33,52 +33,18 @@ public class ExeTool implements CandyTool {
 
 	@Override
 	public void run(Interpreter interpreter, CandyOptions options) throws Exception {
-		File[] srcFiles = options.getFiles();
-		if (srcFiles == null || srcFiles.length == 0) {
-			options.getInterpreterOptions().setIsInteractionMode(true);
-			interactivelyInterpret(interpreter);
-			return;
-		}
-		interpret(interpreter, srcFiles);
+		File srcFile = options.getSourceFile();
+		options.checkIsSrcFile();
+		interpret(interpreter, srcFile);
 	}
 
-	private void interpret(Interpreter interpreter, File[] srcFiles) throws IOException {
-		boolean isFailed = false;
-		for (File sourceFile : srcFiles) {
-			interpreter.initOrReset();
-			boolean success = run(interpreter, sourceFile, false);
-			isFailed = !success ? true : isFailed;
-		}
-		if (isFailed) {
-			System.exit(1);
-		}
-	}
-
-	private void interactivelyInterpret(Interpreter interpreter) throws IOException {
+	private void interpret(Interpreter interpreter, File srcFile) throws IOException {
 		interpreter.initOrReset();
-		StringBuilder input = new StringBuilder();
-		boolean inMultiLineMode = false;
-		java.util.Scanner scanner = new java.util.Scanner(System.in);
-		while (true) {
-			System.out.print(">>> ");
-			if (!scanner.hasNext()) {
-				return;
-			}
-			String line = scanner.nextLine().trim();
-			if (line.endsWith("$")) {
-				inMultiLineMode = !inMultiLineMode;
-				line = line.substring(0, line.length() - 1);
-			}
-			input.append(line).append("\n");
-			if (!inMultiLineMode) {
-				run(interpreter, "command line", input.toString(), false);
-				// clear saved input
-				input.delete(0, input.length());
-			}
-		}
+		int exitCode = run(interpreter, srcFile, false);
+		System.exit(exitCode);
 	}
 	
-	public static boolean run(Interpreter interpreter, 
+	public static int run(Interpreter interpreter, 
 	                          File sourceFile, 
 	                          boolean exitIfError) throws IOException {
 		return run(interpreter,
@@ -88,18 +54,22 @@ public class ExeTool implements CandyTool {
 		);
 	}
 	
-	public static boolean run(Interpreter interpreter, 
+	/**
+	 * Return 65 exit code to represent user's input data was incorrect
+	 * if fail to compile.
+	 */
+	public static int run(Interpreter interpreter, 
 	                          String fileName, 
 	                          String content, 
 	                          boolean exitIfError) throws IOException
 	{
 		Program program = ParserFactory.newParser(fileName, content).parse();
 		if (!logger.printAllMessage(exitIfError)) {
-			return false;
+			return 65;
 		}
 		interpreter.load(program);
 		if (!logger.printAllMessage(exitIfError)) {
-			return false;
+			return 65;
 		}
 		return interpreter.run();
 	}

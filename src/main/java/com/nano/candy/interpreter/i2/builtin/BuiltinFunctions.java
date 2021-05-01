@@ -178,4 +178,9 @@ public class BuiltinFunctions {
 		}
 		return null;
 	}
+	
+	@NativeFunc(name = "exit", arity=1)
+	public static CandyObject exit(VM vm, CandyObject[] args) {
+		throw new VMExitException((int)ObjectHelper.asInteger(args[0]));
+	}
 }

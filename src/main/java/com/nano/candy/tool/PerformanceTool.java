@@ -9,16 +9,16 @@ import com.nano.candy.utils.TableView;
 import java.io.File;
 
 public class PerformanceTool implements CandyTool {
-	
+
 	private static final Logger logger = Logger.getLogger();
-	
+
 	protected PerformanceTool() {}
 
 	@Override
 	public String groupName() {
 		return "Performance";
 	}
-	
+
 	@Override
 	public String groupHelper() {
 		return "Performance test tool.";
@@ -28,33 +28,31 @@ public class PerformanceTool implements CandyTool {
 	public String[] aliases() {
 		return new String[]{"perf"};
 	}
-	
+
 	@Override
 	public void defineOptions(Options options) {}
-	
+
 	@Override
-	public void run(Interpreter interpreter, CandyOptions options) throws Exception{
+	public void run(Interpreter interpreter, CandyOptions options) throws Exception {
 		long parserDuration = 0;
 		long loadDuration = 0;
 		long runDuration = 0;
-		for (File src : options.getFiles()) {
-			interpreter.initOrReset();
-			long startTimeMillis = System.currentTimeMillis();
-			ASTreeNode node = ParserFactory.newParser(src).parse();
-			logger.printAllMessage(true);
-			parserDuration += System.currentTimeMillis() - startTimeMillis;
-			
-			startTimeMillis = System.currentTimeMillis();
-			interpreter.load(node);
-			logger.printAllMessage(true);
-			loadDuration += System.currentTimeMillis() - startTimeMillis;
-			
-			startTimeMillis = System.currentTimeMillis();
-			interpreter.run();
-			runDuration += System.currentTimeMillis() - startTimeMillis;
-		}
+		File src = options.getSourceFile();
+		interpreter.initOrReset();
+		long startTimeMillis = System.currentTimeMillis();
+		ASTreeNode node = ParserFactory.newParser(src).parse();
+		logger.printAllMessage(true);
+		parserDuration += System.currentTimeMillis() - startTimeMillis;
+
+		startTimeMillis = System.currentTimeMillis();
+		interpreter.load(node);
+		logger.printAllMessage(true);
+		loadDuration += System.currentTimeMillis() - startTimeMillis;
+
+		startTimeMillis = System.currentTimeMillis();
+		interpreter.run();
+		runDuration += System.currentTimeMillis() - startTimeMillis;
 		
-		System.out.printf("%d files.\n", options.getFiles().length);
 		TableView tableView = new TableView();
 		tableView.setHeaders("parser", "loading", "running");
 		tableView.addItem(
@@ -64,9 +62,9 @@ public class PerformanceTool implements CandyTool {
 		);
 		System.out.println(tableView.toString());
 	}
-	
+
 	private static String ms2str(long ms) {
 		return String.format("%dms", ms);
 	}
-	
+
 }
