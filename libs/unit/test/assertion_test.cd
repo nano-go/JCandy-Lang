@@ -1,0 +1,32 @@
+import "unit" as unit
+
+class AssertionTest : unit.TestCase {
+
+	fun assertion_test() {
+		this.assertEquals(1, 1)
+		this.assertEquals(1, 1.0)
+		this.assertEquals(1, 1.0, "1 != 1.0")
+		this.assertNotEquals(1, 1.01)
+		this.assertNotEquals(true, false)
+		this.assertNotEquals(true, false, "true == false")
+		this.assertTrue(1)
+		this.assertTrue(Object())
+		this.assertTrue(true)
+		this.assertTrue(true, "true == false")
+		this.assertFalse(false)
+		this.assertFalse(null)
+		this.assertFalse(null, "bool(null) != false")
+		this.assertNull(null)
+		this.assertNull(null, "null != null")
+		this.assertNotNull(1)
+		this.assertNotNull(1, "1 == null")
+		this.assertIsInstance(Error, AssertionError(""))
+		this.assertIsInstance(Error, AssertionError(""), "AssertionError is not Error")
+		this.assertIsNotInstance(TypeError, AssertionError(""), "AssertionError is TypeError")
+	}
+
+	fun assertion_error_test() {
+		this.expectedErrorRaised(AssertionError, lambda -> assert false)
+		this.expectedErrorRaised(AssertionError, lambda -> assert null, "assert null")
+	}
+}

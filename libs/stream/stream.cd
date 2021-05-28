@@ -1,0 +1,199 @@
+
+var FLAG_CONTINUE = Object()
+var FLAG_BREAK = Object()
+var FLAG_NULL = Object()
+
+class Stream {
+	fun init(iterable) {
+		this.iterable = iterable
+		this.evalfs = []
+	}
+	
+	fun collect(collector) {
+		return collector(this)
+	}
+
+	fun filter(accepter) {
+		this.evalfs.append(lambda e -> {
+			if (accepter(e)) {
+				return e
+			}
+			return FLAG_CONTINUE
+		})
+		return this
+	}
+	
+	fun map(convertor) {
+		this.evalfs.append(convertor)
+		return this
+	}
+	
+	fun limit(n) {
+		this.evalfs.append(lambda e -> {
+			if (n <= 0) {
+				return FLAG_BREAK
+			}
+			n -= 1
+			return e
+		})
+		return this
+	}
+	
+	fun skip(n) {
+		this.evalfs.append(lambda e -> {
+			if (n > 0) {
+				n -= 1
+				return FLAG_CONTINUE
+			}
+			return e
+		})
+		return this
+	}
+	
+	fun anyMatch(matcher) {
+		var matched = false
+		for (e in this) {
+			if (matcher(e)) {
+				matched = true
+				break
+			}
+		}
+		return matched
+	}
+	
+	fun allMatch(matcher) {
+		var matched = true
+		for (e in this) {
+			if (!matcher(e)) {
+				matched = false
+				break
+			}
+		}
+		return matched
+	}
+	
+	fun noneMatch(matcher) {
+		var noneMatch = true
+		for (e in this) {
+			if (matcher(e)) {
+				noneMatch = false
+				break
+			}
+		}
+		return noneMatch
+	}
+	
+	fun count() {
+		var n = 0
+		this.foreach(lambda e -> n += 1)
+		return n
+	}
+	
+	fun reduce(begainningPos, binaryOperator) {
+		var iterator = this._iterator()
+		var hasNext = iterator._hasNext
+		if (!hasNext()) {
+			return null
+		}
+		var next = iterator._next
+		var element = next()
+		if (begainningPos > 0) {
+			for (i in range(0, begainningPos)) {
+				if (!hasNext()) {
+					return null
+				}
+				element = next()
+			}
+		}
+		while (hasNext()) {
+			element = binaryOperator(element, next())
+		}
+		return element
+	}
+	
+	fun max() {
+		return this.reduce(0, lambda e1, e2 -> {
+			if (e1 > e2) return e1
+			return e2
+		})
+	}
+	
+	fun min() {
+		return this.reduce(0, lambda e1, e2 -> {
+			if (e1 < e2) return e1
+			return e2
+		})
+	}
+	
+	fun foreach(fn) {
+		var flag_break = FLAG_BREAK
+		var flag_continue = FLAG_CONTINUE
+		var evalfs = this.evalfs
+		if (evalfs.size() == 0) {
+			for (e in this.iterable) fn(e)
+			return this
+		}
+		for (e in this.iterable) {
+			for (eval in evalfs) {
+				e = eval(e)
+				if (e == flag_continue || e == flag_break) {
+					break
+				}
+			}
+			if (e == flag_continue) continue
+			if (e == flag_break) break
+			fn(e)
+		}
+		return this
+	}
+	
+	fun _iterator() {
+		var flag_break = FLAG_BREAK
+		var flag_continue = FLAG_CONTINUE
+		var flag_null = FLAG_NULL
+		
+		var eIterator = this.iterable._iterator()
+		var iHasNext = eIterator._hasNext
+		var iNext = eIterator._next
+		
+		var evalfs = this.evalfs
+		var nextElement = flag_null
+		
+		fun advance() {
+			while (iHasNext()) {
+				var e = iNext()
+				for (eval in evalfs) {
+					e = eval(e)
+					if (e == flag_continue || e == flag_break) {
+						break
+					}
+				}
+				if (e == flag_continue) {
+					continue
+				}
+				if (e == flag_break) {
+					break
+				}
+				nextElement = e
+				return
+			}
+			nextElement = flag_null
+		}
+		
+		advance()
+		var iterator = Object()
+		iterator._hasNext = lambda -> nextElement != flag_null
+		iterator._next = lambda -> {
+			var n = nextElement
+			advance()
+			return n
+		}
+		return iterator
+	}
+}
+
+fun arrayCollector(stream) {
+	var arr = []
+	for (e in stream) arr.append(e)
+	return arr
+}

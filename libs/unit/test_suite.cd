@@ -1,0 +1,52 @@
+import "test_case" as tc
+
+/**
+ * A TestSuite is a collection of test cases and test suites. The class
+ * is run by the 'TestRunner'.
+ */
+class TestSuite {
+	
+	fun init(name, *subtests) {
+		this.name = name
+		this.subtests = subtests or []
+	}
+	
+	fun getName() {
+		return this.name
+	}
+
+	fun getTestCount() {
+		return this.subtests.size()
+	}
+
+	fun getSubtests() {
+		return this.subtests;
+	}
+	
+	fun run(result) {
+		var name = this.name
+		// if the name is null, the group can't be pushed into the result.
+		name and result.pushGroup(name)
+		for (i in this.subtests) {
+			i.run(result)
+		}
+		name and result.popGroup()
+	}
+	
+	fun addTest(test) {
+		if (test._class() == test) {
+			raise TypeError("Can't add a class to the TestSuite.")
+		}
+		if (test._class() == tc.TestCase) {
+			raise TypeError("Can't directly add a TestCase to the TestSuite, "	+
+			                "The object must be an instance of subclass of " + 
+											"TestCase.")
+		}
+		if (test is tc.TestCase or test is TestSuite) {
+			this.subtests.append(test)
+			return
+		}
+		raise TypeError("The test '" + test._class().name + 
+		                "' is not a TestCase or TestSuite.")
+	}
+}

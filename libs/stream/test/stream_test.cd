@@ -1,0 +1,192 @@
+import (
+	"stream" as stream
+	"unit" as unit
+)
+
+class StreamTest : unit.TestCase {
+	fun max_test() {
+		var tscase = Array(500, lambda i -> range(-2000, 2000).rand())
+		fun expected(arr) {
+			var max = -2000
+			for (e in arr) {
+				if (e > max) max = e
+			}
+			return max
+		}
+		this.assertEquals(expected(tscase), stream.Stream(tscase).max())
+		
+		tscase = Array(1000, lambda i -> range(0, 1000).rand())
+		fun expected(arr) {
+			var max = 0
+			var limit = 0
+			for (e in arr) {
+				if (e % 3 == 0) continue
+				if (limit == 50) break
+				if (e > max) max = e
+				limit += 1
+			}
+			return max
+		}
+		this.assertEquals(
+			expected(tscase), 
+			stream.Stream(tscase)
+				.filter(lambda e -> e % 3 != 0)
+				.limit(50).max()
+		)
+	}
+
+	fun min_test() {
+		var tscase = Array(500, lambda i -> range(-2000, 2000).rand())
+		fun expected(arr) {
+			var min = 2000
+			for (e in arr) {
+				if (e < min) min = e
+			}
+			return min
+		}
+		this.assertEquals(expected(tscase), stream.Stream(tscase).min())
+		
+		tscase = Array(1000, lambda i -> range(0, 1000).rand())
+		fun expected(arr) {
+			var min = 1000
+			var limit = 0
+			for (e in arr) {
+				if (e % 3 == 0) continue
+				if (limit == 50) break
+				if (e < min) min = e
+				limit += 1
+			}
+			return min
+		}
+		this.assertEquals(
+			expected(tscase), 
+			stream.Stream(tscase)
+				.filter(lambda e -> e % 3 != 0)
+				.limit(50).min()
+		)
+	}
+
+	fun filter_test() {
+		var tscase = Array(1000, lambda i -> {
+			var user = Object()
+			user.id = range(0, 1555).rand()
+			user.age = range(15, 50).rand()
+			return user
+		})
+		
+		fun expected(arr) {
+			var count = 0
+			for (e in arr) {
+				if (e.id <= 400 && e.age <= 18) {
+					count += 1
+				}
+			}
+			return count;
+		}
+		this.assertEquals(
+			expected(tscase),
+			stream.Stream(tscase)
+				.filter(lambda e -> e.id <= 400 && e.age <= 18)
+				.count()
+		)
+	}
+
+	fun map_test() {
+		class User {
+			fun init(id, name) {
+				this.id = id
+				this.name = name
+			}
+		}
+		var tscase = Array(1000, lambda e -> {
+			User(e, "user" + e)
+		})
+		
+		fun expected() {
+			var arr = []
+			for (user in tscase) {
+				if (user.id % 2 == 0) 
+					arr.append(user.name)
+			}
+			return arr
+		}
+		
+		this.assertEquals(
+			expected(),
+			stream.Stream(tscase)
+				.filter(lambda e -> e.id % 2 == 0)
+				.map(lambda e -> e.name)
+				.collect(stream.arrayCollector)
+		)	
+	}
+
+	fun skip_limit_reduce_test() {
+		var tscase = Array(1000, lambda e -> range(1, 2).rand())
+		
+		fun expected(arr) {
+			var skip = 10
+			var limit = 50
+			var s = 0
+			var total = 0
+			for (e in arr) {
+				if (skip > 0) {
+					skip -= 1
+					continue
+				}
+				if (limit <= 0) {
+					break
+				}
+				limit -= 1
+				if (s < 10) {
+					s += 1
+					continue
+				}
+				total += e
+			}
+			return total
+		}
+		this.assertEquals(
+			expected(tscase),
+			stream.Stream(tscase)
+				.skip(10).limit(50).reduce(10, lambda e1, e2 -> e1 + e2)
+		)
+		
+		var singleElement = [ 0 ]
+		this.assertEquals(0, stream.Stream(singleElement).reduce(0, null))
+	}
+
+	fun match_test() {
+		var randData = Array(1000, lambda e -> range(0, 120).rand())
+		
+		fun matchExpected() {
+			for (e in randData) {
+				if (e <= 5) { return true; }
+			}
+		}
+		this.assertEquals(
+			matchExpected(),
+			stream.Stream(randData).anyMatch(lambda e -> e <= 5)
+		)
+			
+		fun allMatchExpected() {
+			for (e in randData) {
+				if (e == 50) { return false; }
+			}
+		}	
+		this.assertEquals(
+			allMatchExpected(),
+			stream.Stream(randData).allMatch(lambda e -> e != 50)
+		)
+		
+		
+		fun noneMatchExpected() {
+			for (e in randData) {
+				if (e == 50) { return false; }
+			}
+		}	
+		this.assertEquals(
+			noneMatchExpected(),
+			stream.Stream(randData).noneMatch(lambda e -> e == 50),
+		)
+	}
+}

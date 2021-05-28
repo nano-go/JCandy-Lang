@@ -1,0 +1,42 @@
+import (
+	"result" as result
+	"dumper" as dumper
+)
+
+/**
+ * Test Runner is used to run test cases or test suites.
+ */
+class TestRunner {
+
+	fun init() {
+		this.dumper = null
+	}
+
+	/**
+	 * Set a dumper for this runner. If you don't specifically set a dumper,
+	 * the runner will use the 'dumper.TextDumper' to dump the result of 
+	 * running a test case of a test suite.
+	 */
+	fun setDumper(dmpr) {
+		if (!(dmpr is dumper.Dumper)) {
+			raise TypeError("The " + dmpr._clas().name + " can't apply to the Dumper.")
+		}
+		this.dumper = dmpr
+	}
+
+	/**
+	 * Run a test case or a test suite. this will call its 'run()' method
+	 * and pass a new 'Result' object to the 'run()' method.
+	 * The dumper will dump the result and output after the run.
+	 */
+	fun run(test) {
+		var d = this.dumper
+		if (d == null) {
+			d = dumper.TextDumper()
+		}
+		var res = result.Result()
+		test.run(res)
+		d.reset()
+		d.dump(res)
+	}
+}

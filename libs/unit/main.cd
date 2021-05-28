@@ -1,0 +1,28 @@
+import (
+	"test_runner" as tr
+	"test_case" as tc
+	"test_suite" as ts
+	"stream" as stream
+)
+
+fun main() {
+	var flags = cmdArgs()
+	var module = "test"
+	if (flags.size() != 0) {
+		module = flags[0]
+	}
+	try {
+		var module = importModule(module)
+		var tests = stream.Stream(module)
+			.map(lambda e -> e[1])
+			.filter(lambda e -> e is tc.TestCase or e is ts.TestSuite)
+			.map(lambda e -> e._class() == e ? e() : e)
+			.collect(stream.arrayCollector)
+		var runner = tr.TestRunner()
+		runner.run(ts.TestSuite(null, *tests))
+	} intercept ModuleError as e {
+		println(e.getMessage())
+	}
+}
+
+main()

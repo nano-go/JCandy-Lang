@@ -1,0 +1,53 @@
+import "unit" as unit
+
+class TestSuite : unit.TestCase {
+
+	fun init_test() {
+		fun assertionTestSuite(ts, taskCount){
+			var result = unit.Result()
+			ts.run(result)
+			this.assertEquals(null, ts.getName())
+			this.assertEquals(taskCount, ts.getTestCount())
+			this.assertEquals(taskCount, result.taskResults.size())
+			this.assertEquals(0, result.getTaskCount())
+		}
+		var ts = unit.TestSuite(null)
+		assertionTestSuite(ts, 0)
+		var ts = unit.TestSuite(null, unit.TestCase(), unit.TestCase())
+		assertionTestSuite(ts, 2)
+	}
+
+	fun suite_test() {
+		class Foo : unit.TestCase {
+			fun a_test() {}
+			fun b_test() {}
+		}
+
+		fun assertTestSuite(ts, taskCount, resultsSize) {
+			var result = unit.Result()
+			ts.run(result)
+			this.assertEquals(taskCount, result.getTaskCount())
+			this.assertEquals(resultsSize, result.taskResults.size())
+			return result
+		}
+
+		var ts = unit.TestSuite(null, Foo(), Foo())
+		assertTestSuite(ts, 4, 2).taskResults.foreach(lambda i, e -> {
+			this.assertEquals("Foo", e.getName())
+		})
+		var ts = unit.TestSuite("abc", Foo(), Foo())
+		var res = assertTestSuite(ts, 4, 1)
+		this.assertEquals("abc", res.taskResults[0].getName())
+	}
+
+	fun add_testcase_test() {
+		var ts = unit.TestSuite(null)
+		ts.addTest(TestSuite())
+		this.assertEquals(1, ts.getTestCount())
+
+		this.expectedErrorRaised(TypeError, lambda -> ts.addTest(unit.TestCase()))
+		this.expectedErrorRaised(TypeError, lambda -> ts.addTest(Object()))
+		this.expectedErrorRaised(TypeError, lambda -> ts.addTest(unit.TestCase))
+		this.expectedErrorRaised(TypeError, lambda -> ts.addTest(unit.TestSuite))
+	}
+}

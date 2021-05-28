@@ -1,0 +1,98 @@
+import "unit" as unit
+
+class Test : unit.TestCase {
+
+	fun assertTestCase(tc, modCount) {
+		var res = unit.Result()
+		tc.run(res)
+		this.assertEquals(modCount, res.getSuccessCount())
+		this.assertEquals(modCount, tc.modCount)
+	}
+
+	fun setup_test() {
+		class Foo : unit.TestCase {
+			fun init() {
+				this.modCount = 0
+			}
+			fun setUp() {
+				this.modCount += 1
+			}
+			fun a_test() {}
+			fun b_test() {}
+		}
+		this.assertTestCase(Foo(), 2)
+		class Foo : unit.TestCase {
+			fun setUp() {
+				this.assertFail()
+			}
+			fun a_test() {}
+			fun b_test() {}
+		}
+		var res = unit.Result()
+		var foo = Foo()
+		foo.run(res)
+		this.assertEquals(2, res.getFailureCount())
+		this.assertEquals(2, res.getTaskCount())
+		this.assertEquals(0, res.getSuccessCount())
+
+		class Foo : unit.TestCase {
+			fun setUp() {
+				raise Error("")
+			}
+			fun a_test() {}
+			fun b_test() {}
+		}
+		var res = unit.Result()
+		var foo = Foo()
+		foo.run(res)
+		this.assertEquals(2, res.getErrorCount())
+		this.assertEquals(0, res.getFailureCount())
+		this.assertEquals(2, res.getTaskCount())
+		this.assertEquals(0, res.getSuccessCount())
+	}
+
+	fun teardown_test() {
+		class Foo : unit.TestCase {
+			fun init() {
+				this.modCount = 0
+			}
+			fun tearDown() {
+				this.modCount += 1
+			}
+			fun a_test() {}
+			fun b_test() {}
+		}
+		this.assertTestCase(Foo(), 2)
+		class Foo : unit.TestCase {
+			fun tearDown() {
+				this.assertFail()
+			}
+			fun a_test() {}
+			fun b_test() {}
+		}
+		var res = unit.Result()
+		var foo = Foo()
+		foo.run(res)
+		this.assertEquals(2, res.getFailureCount())
+		this.assertEquals(2, res.getTaskCount())
+		this.assertEquals(0, res.getSuccessCount())
+
+		class Foo : unit.TestCase {
+			fun tearDown() {
+				raise Error("")
+			}
+			fun a_test() {}
+			fun b_test() {}
+		}
+		var res = unit.Result()
+		var foo = Foo()
+		foo.run(res)
+		this.assertEquals(2, res.getErrorCount())
+		this.assertEquals(0, res.getFailureCount())
+		this.assertEquals(2, res.getTaskCount())
+		this.assertEquals(0, res.getSuccessCount())
+	}
+
+
+
+}

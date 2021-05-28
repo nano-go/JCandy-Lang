@@ -1,0 +1,92 @@
+import "unit" as unit
+
+class ResultTest : unit.TestCase {
+	fun simple_result_test() {
+		var res = unit.Result()
+		res.addSuccess("abcdefg", 0)
+		res.addFailure("foo", 1, Error("error"))
+		res.addError("error", 5, TypeError("TypError"))
+		res.addSkip("skipped")
+
+		this.assertEquals(3, res.getTaskCount())
+		this.assertEquals(1, res.getSuccessCount())
+		this.assertEquals(1, res.getFailureCount())
+		this.assertEquals(1, res.getErrorCount())
+		this.assertEquals(1, res.getSkippedCount())
+
+		var results = res.getTaskResults()
+
+		fun assertResult(res, name, duration, state, e) {
+			this.assertEquals(name, res.getName())
+			this.assertEquals(duration, res.getDuration())
+			this.assertTrue(getAttr(res, state)())
+			e and this.assertIsInstance(e, res.getError())	
+			this.assertNotNull(res.getMessage())
+			this.assertFalse(res.isGroup())
+		}
+		assertResult(results[0], "abcdefg", 0, "isSuccess", null)
+		assertResult(results[1], "foo", 1, "isFailure", Error)
+		assertResult(results[2], "error", 5, "isError", TypeError)
+		assertResult(results[3], "skipped", 0, "isSkipped", null)
+	}
+
+	fun result_group_test() {
+		var res = unit.Result()
+	}
+
+	fun result_tasks_test() {
+		var res = unit.Result()
+		res.pushGroup("group_a")
+		res.addSuccess("foo0", 4)
+		res.addFailure("foo0", 5, null)
+		res.addFailure("foo1", 5, null)
+		res.addError("foo0", 6, null)
+		res.addError("foo1", 6, null)
+		res.addSkip("foo0")
+		
+		this.assertEquals(1, res.getSuccessCount())
+		this.assertEquals(2, res.getFailureCount())
+		this.assertEquals(2, res.getErrorCount())
+		this.assertEquals(1, res.getSkippedCount())
+		res.popGroup()
+
+		res.addSuccess("foo1", 4)
+		res.addFailure("foo2", 5, null)
+		res.addFailure("foo3", 5, null)
+		res.addError("foo2", 6, null)
+		res.addError("foo3", 6, null)
+		res.addSkip("foo1")
+		
+		this.assertEquals(2, res.getSuccessCount())
+		this.assertEquals(4, res.getFailureCount())
+		this.assertEquals(4, res.getErrorCount())
+		this.assertEquals(2, res.getSkippedCount())
+		
+		this.assertEquals(10, res.getTaskCount())
+
+		res.getSuccessResults().foreach(lambda i, e -> {
+			this.assertTrue(e.isSuccess())
+			this.assertEquals("foo"+i, e.getName())
+			this.assertEquals(4, e.getDuration())
+		})
+
+		res.getFailureResults().foreach(lambda i, e -> {
+			this.assertTrue(e.isFailure())
+			this.assertEquals("foo"+i, e.getName())
+			this.assertEquals(5, e.getDuration())
+		})
+
+		res.getErrorResults().foreach(lambda i, e -> {
+			this.assertTrue(e.isError())
+			this.assertEquals("foo"+i, e.getName())
+			this.assertEquals(6, e.getDuration())
+		})
+
+		res.getSkippedResults().foreach(lambda i, e -> {
+			this.assertTrue(e.isSkipped())
+			this.assertEquals("foo"+i, e.getName())
+			this.assertEquals(0, e.getDuration())
+		})
+	}
+}
+

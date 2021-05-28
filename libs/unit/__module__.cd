@@ -1,0 +1,7 @@
+var excluding = ["main.cd", "test"]
+selectByFilter(lambda e -> {
+	for (ex in excluding) {
+		if (ex == e) return false
+	}
+	return true
+})

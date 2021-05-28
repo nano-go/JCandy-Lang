@@ -1,0 +1,166 @@
+import "result" as result
+
+var SCREEN_WIDTH = 70
+var REPORT_SEPERATOR = "="*SCREEN_WIDTH
+var SEPERATOR = "-"*SCREEN_WIDTH
+
+/**
+ * A Dumper can convert a 'Result' object into a serializable data 
+ * such as text and output it by the 'println' or other output ways.
+ */
+class Dumper {
+	
+	fun dump(result) {
+		raise TypeError("Unsupported.")
+	}
+	fun reset() {}
+}
+
+/**
+ * This dumper to dump a result in the text format.
+ */
+class TextDumper : Dumper {
+
+	fun init() {
+		this.buffer=[]
+		this.indentStr = ""
+		this.tab = " "*4
+		this.tabCount = 0
+	}	
+
+	fun reset() {
+		this.indentStr=""
+		this.tabCount=0
+		this.buffer.clear()
+	}
+
+	fun bufferToStr() {
+		return "".join(this.buffer)
+	}
+
+	/**
+	 * Write a string into the string buffer.
+	 */
+	fun write(str) {
+		this.buffer.append(str)
+		return this
+	}
+
+	/**
+	 * Write a stack trace of an error into the string buffer.
+	 */
+	fun writeTraceback(error) {
+		for (e in error.getStackTraceElements()) {
+			this.writeIndent().write("> at ").write(e.getFrameName())
+			var fileName = e.getFileName()
+			if (fileName.length() >= 30) {
+				fileName = fileName.substr(fileName.length()-27, fileName.length())
+				fileName = "..." + fileName
+			}
+			this.write(" (").write(fileName).write(" line: ")
+			this.write(e.getLineNumber()).write(")\n")
+		}
+		return this
+	}
+
+	/**
+	 * Write current indent into the string buffer.
+	 *
+	 * The indent can be modified by the 'indent()' and 'outdent' methods.
+	 */
+	fun writeIndent() {
+		this.write(this.indentStr)
+		return this
+	}
+
+	fun indent() {
+		this.tabCount += 1
+		this.indentStr = this.tab*this.tabCount
+	}
+
+	fun outdent() {
+		if (this.tabCount <= 0) {
+			raise Error("Can't outdent, because tabCount: " + tabCount)
+		}
+		this.tabCount -= 1
+		this.indentStr = this.tab*this.tabCount
+	}
+
+	fun dump(result) {
+		var dumpTaskHelper = this.dumpTaskHelper
+		for (t in result) {
+			dumpTaskHelper(t)
+		}
+		this.writeResultReport(result)
+		print(this.bufferToStr())
+	}
+
+	fun writeResultReport(result) {
+		// seperator
+		this.write("\n").write(REPORT_SEPERATOR).write("\n")
+		var taskCount = result.getTaskCount()
+		var successCount = result.getSuccessCount()
+		var failureCount = result.getFailureCount()
+		var skippedCount = result.getSkippedCount()
+		var errorCount   = result.getErrorCount()
+		this.write("TOTAL ").write(taskCount).write(" TASKS, ")
+		this.write(failureCount).write(" FAILURES, ")
+		this.write(errorCount).write(" ERRORS\n")
+		this.write((result.getPassRate() * 100).intVal()).write("% PASSED")
+		if (skippedCount != 0) {
+			this.write(" (").write(skippedCount).write(" skipped)")
+		}
+		this.write("    TOTAL DURATION: ")
+			.write(result.getTotalDuration())
+			.write("ms\n")
+	}
+
+	fun dumpTaskHelper(task) {
+		if (task.isGroup()) {
+			this.dumpGroup(task)
+		} else {
+			this.dumpTask(task)
+		}
+	}
+
+	fun dumpGroup(group) {
+		this.write("Group Name: ").write(group.getName())
+		this.write(", Total ").write(group.subtaskCount()).write(" Subtasks:\n")
+		this.indent()
+		var n = 1
+		for (t in group) {
+			this.writeIndent()
+			this.write(n).write(". ")
+			this.dumpTaskHelper(t)
+			n += 1
+		}
+		this.outdent()
+		this.write("\n")
+	}
+
+	fun dumpTask(task) {
+		var spaceLen = max(1, 25-task.getName().length())
+		this.write(task.getName()).write(" "*spaceLen)
+		this.write(task.stateStr())
+			.write(" "*max(1, 10-task.stateStr().length()))
+		this.write(task.getDuration()).write("ms")
+		this.write("\n")
+		if (task.isSuccess() || task.isSkipped()) {
+			return
+		}
+		this.writeErrorTask(task)
+	}
+
+	fun writeErrorTask(task)  {
+		this.write(SEPERATOR).write("\n")
+		if (task.getMessage() != "") {
+			this.writeIndent().write("Message: ").write(task.getMessage())
+			this.write("\n")
+		}
+		this.writeIndent().write("Traceback: \n")
+		this.indent()
+		this.writeTraceback(task.getError())
+		this.write(SEPERATOR).write("\n")
+		this.outdent()
+	}
+}

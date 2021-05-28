@@ -1,0 +1,65 @@
+import "unit" as unit
+
+class SkippingTest : unit.TestCase {
+
+	fun skipping_test() {
+		class Foo : unit.TestCase {
+			fun skip_this_test() {
+				this.skip()
+			}
+
+			fun cannot_skip_this_test() {
+				this.assertFail()
+				this.skip()
+			}
+		}
+
+		var result = unit.Result() 
+		Foo().run(result)
+		this.assertEquals(1, result.getSkippedCount())
+		this.assertEquals(1, result.getFailureCount())
+		this.assertEquals([], result.pushedGroup)
+		var skippedMethods = ["skip_this_test"]
+		var failureMethods = ["cannot_skip_this_test"]
+		for (task in result.taskResults[0]) {
+			if (skippedMethods.contains(task.getName())) {
+				this.assertTrue(task.isSkipped())
+			} else if (failureMethods.contains(task.getName())) {
+				this.assertTrue(task.isFailure())
+			}
+		}
+	}
+
+	fun skip_in_teardown_and_setup_test() {
+
+		fun assertAllSkipped(klass, methodCount) {
+			var result = unit.Result() 
+			klass().run(result)
+			this.assertEquals(methodCount, result.getSkippedCount())
+			this.assertEquals(0, result.getTaskCount())
+			this.assertEquals([], result.pushedGroup)
+			for (task in result.taskResults[0]) {
+				this.assertTrue(task.isSkipped())
+			}
+		}
+
+		class Foo : unit.TestCase {
+			fun tearDown() {
+				this.skip()	
+			}
+			fun a_test() {}
+			fun b_test() {}
+		}
+		assertAllSkipped(Foo, 2)
+
+		class Foo : unit.TestCase {
+			fun setUp() {
+				this.skip()	
+			}
+			fun a_test() {}
+			fun b_test() {}
+		}
+		assertAllSkipped(Foo, 2)
+	}
+
+}

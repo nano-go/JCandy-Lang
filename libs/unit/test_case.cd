@@ -1,0 +1,251 @@
+import "result" as result
+
+class AssertionError : Error {
+	fun init(msg) {
+		super.init(msg)
+	}
+}
+
+/**
+ * If you raise an skip error in a test method, the test method
+ * will be skipped.
+ */
+class SkipError : Error {
+	fun init() {
+		super.init("")
+	}
+}
+
+class TestCase {
+
+	/**
+	 * The filter returns a filter to accept all test methods
+	 * will be running.
+	 *
+	 * The returned filter must accept an argument to represent
+	 * the test method name.
+	 */
+	fun filter() {
+		return lambda e -> e.endWith("_test")
+	}
+
+	/**
+	 * Returns the name of this test case.
+	 */
+	fun name() {
+		return this._class().name
+	}
+	
+	fun run(result) {
+		result.pushGroup(this.name())
+		var ms = methods(this)
+		var filter = this.filter()
+		for (m in ms) {
+			if (filter(m.name())) {
+				this._exeMethod(result, m)
+			}
+		}
+		result.popGroup()
+	}
+	
+	fun _exeMethod(result, m) {
+		var name = m.name()
+		// execute setUp. It represents error if returns false.
+		if (!this._exeSpecialMethod(this.setUp, result, name, 0)) {
+			return
+		}
+		var s = clock()
+		var e = null
+		try {
+			m()
+		} intercept as err {
+			e = err
+		}
+		var t = clock() - s
+		// execute tearDown. It represents error if returns false.
+		if (!this._exeSpecialMethod(this.tearDown, result, name, t)) {
+			return
+		}
+		this._addResultByError(result, name, t, e)
+	}
+	
+	fun _exeSpecialMethod(method, result, name, t) {
+		var s = clock()
+		try {
+			method()
+		} intercept as e {
+			this._addResultByError(result, name, clock()-s + t, e)
+			return false
+		}
+		return true
+	}
+
+	fun _addResultByError(result, name, t, e) {
+		if (e == null) {
+			result.addSuccess(name, t)
+		} else if (e is SkipError) {
+			result.addSkip(name)
+		} else if (e is AssertionError) {
+			result.addFailure(name, t, e)
+		} else {
+			result.addError(name, t, e)
+		}
+	}
+
+	/**
+	 * Raise an skip error to skip the running test method.
+	 * The skipped test method will not be counted in tasks.
+	 */
+	fun skip() {
+		raise SkipError()
+	}
+	
+	/**
+	 * The tearDown called after every test method has been called.
+	 *
+	 * If the tearDown raises an error while the test is running, 
+	 * the test method will not be executed. Any error, other than
+	 * AssertionError or SkipError, raised by this method will be 
+	 * considered an error instead of a test failure.
+	 */
+	fun tearDown() {}
+	
+	/*
+	 * The setup called before calling every test method.
+	 *
+	 * If the setUp raises an error while the test is running, 
+	 * the test method will not be executed. Any error, other than
+	 * AssertionError or SkipError, raised by this method will be 
+	 * considered an error instead of a test failure.
+	 */
+	fun setUp() {}
+	
+	/**
+	 * Raise an error to report the running method is failure.
+	 */
+	fun assertFail(*msg) {
+		msg = msg ? msg[0] : ""
+		raise AssertionError(msg)
+	}
+	
+	/**
+	 * If the 'expected' is not equal to 'actual' (!=), an assertion
+	 * error will be raised by this method used to report that the
+	 * running method is failure.
+	 */
+	fun assertEquals(expected, actual, *msg) {
+		if (expected != actual) {
+			msg = msg ? msg[0] : ""
+			this.assertFail("Expected " + expected + ", but was " + 
+				actual + ": [" + msg + "]")
+		}
+	}
+	
+	/**
+	 * If the 'unexpected' is equal to 'actual' (==), an assertion
+	 * error will be raised by this method used to report that the
+	 * running method is failure.
+	 */
+	fun assertNotEquals(unexpected, actual, *msg) {
+		if (unexpected == actual) {
+			msg = msg ? msg[0] : ""
+			this.assertFail("Unexpected " + actual + ": [" + msg + "]")
+		}
+	}
+	
+	/**
+	 * Test that the 'expr' is true.
+	 *
+	 * Note that this method will compare the 'bool(expr) == true' 
+	 * instead of the '(expr == true)'
+	 */
+	fun assertTrue(expr, *msg) {
+		this.assertEquals(true, bool(expr), *msg)
+	}
+	
+	/**
+	 * Test that the 'expr' is false.
+	 *
+	 * Note that this method will compare the 'bool(expr) == false' 
+	 * instead of the '(expr == false)'
+	 */
+	fun assertFalse(expr, *msg) {
+		this.assertEquals(false, bool(expr), *msg)
+	}
+
+	/**
+	 * Test that the 'expr' is null.
+	 */
+	fun assertNull(expr, *msg) {
+		this.assertEquals(null, expr, *msg)
+	}
+	
+	/**
+	 * Test that the 'expr' is not null.
+	 */
+	fun assertNotNull(expr, *msg) {
+		this.assertNotEquals(null, expr, *msg)
+	}
+
+	/**
+	 * Test that the 'obj' is an instance of 'cls'.
+	 */
+	fun assertIsInstance(cls, obj, *msg) {
+		msg = msg ? msg[0] : ""
+		if (!(obj is cls)) {
+			this.assertFail(
+				"Expected the obj is an instance of the class '" +
+				cls.name, "', but the obj's class is '" +
+				obj._class().name
+		 )
+		}
+	}
+
+	/**
+	 * Test that the 'obj' is not an instance of 'cls'.
+	 */
+	fun assertIsNotInstance(cls, obj, *msg) {
+		msg = msg ? msg[0] : ""
+		if (obj is cls) {
+			this.assertFail(
+				"Expected the obj is not an instance of the class '" +
+				cls.name + "'."
+			)
+		}
+	}
+	
+	/**
+	 * Test that an error instanced of the 'errType' is raised
+	 * when the 'fn' is called.
+	 *
+	 * If any error other than 'errType' or no error raised,
+	 * the running test method is failure.
+	 *
+	 * If the 'errType' is not an 'Error', an 'AssertionError' will
+	 * be raised to warn users that the errType is incorrect type.
+	 *
+	 * If the 'errType' is null, it represents any error.
+	 */
+	fun expectedErrorRaised(errType, fn, *msg) {
+		msg = msg ? msg[0] : ""
+		if (errType == null) {
+			errType = Error
+		} else if (!(errType is Error)) {
+			raise Assertion("The '" + errType._class().name +
+			 "' is not an 'Error' type.")
+		}
+		var name = errType._class().name
+		try {
+			fn()
+		} intercept errType {
+			return
+		} intercept as e {
+			this.assertFail("Expect that the '" + name +
+			 "' raised, but the '" + e._class().name + 
+			 "' raised: [" + msg + "]")
+		} else {
+			this.assertFail("Expect that the '" + name +
+			 "' raised, but no error catched: [" + msg + "]")
+		}
+	}
+} 
