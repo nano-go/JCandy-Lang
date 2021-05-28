@@ -17,6 +17,7 @@ import com.nano.candy.interpreter.i2.vm.VM;
 import com.nano.candy.std.Names;
 import com.nano.candy.utils.ArrayUtils;
 import java.util.Arrays;
+import java.util.Random;
 
 @NativeClass(name = "Array")
 public final class ArrayObj extends BuiltinObject {
@@ -414,6 +415,32 @@ public final class ArrayObj extends BuiltinObject {
 			CandyObject tmp = elements[i];
 			elements[i] = elements[size-1-i];
 			elements[size-1-i] = tmp;
+		}
+		return this;
+	}
+	
+	private static Random rad;
+	@NativeMethod(name = "shuffle")
+	public CandyObject shuffle(VM vm, CandyObject[] args) {
+		if (rad == null) {
+			rad = new Random();
+		}
+		for (int i = size-1; i > 1; i --) {
+			int j = rad.nextInt(i+1);
+			CandyObject tmp = elements[i];
+			elements[i] = elements[j];
+			elements[j] = tmp;
+		}
+		return this;
+	}
+	
+	@NativeMethod(name = "map", argc=1)
+	public CandyObject map(VM vm, CandyObject[] args) {
+		CallableObj mapper = TypeError.requiresCallable(args[0]);
+		final int SIZE = size;
+		for (int i = 0; i < SIZE; i ++) {
+			elements[i] = 
+				mapper.callExeUser(vm, IntegerObj.valueOf(i), elements[i]);
 		}
 		return this;
 	}

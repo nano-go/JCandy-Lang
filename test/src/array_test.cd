@@ -327,6 +327,26 @@ fun indexof_test() {
 	assert !arr.contains(CustomClass(false))
 }
 
+fun map_test() {
+	var empty_arr = []
+	empty_arr.map(lambda i, e -> assert false)
+	
+	var one_element_arr = [1]
+	one_element_arr.map(lambda i, e -> e * 2 + (i+1)*2)
+	assert one_element_arr[0] == 4
+
+	var random_arr = []
+	for (i in range(50, 1000)) random_arr.append(range(0, 100).rand())
+
+	var mapper = lambda i, e -> e*2/3 + i
+	fun ans() {
+		var ansArr = random_arr.copy()
+		ansArr.foreach(lambda i, e -> ansArr[i] = mapper(i, e))
+		return ansArr
+	}
+	assert ans() == random_arr.map(mapper)
+}
+
 fun misc_0_test() {
 	var arr = [1, 2]
 	arr.swap(0, 1)
@@ -394,6 +414,7 @@ operator_str_test()
 insertion_deletion_0_test()
 insertion_deletion_1_test()
 set_get_foreach_test()
+map_test()
 indexof_test()
 misc_0_test()
 clear_test()
