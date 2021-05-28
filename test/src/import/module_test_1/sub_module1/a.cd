@@ -1,0 +1,4 @@
+
+fun im_a() {
+	return "a"
+}

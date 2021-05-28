@@ -1,5 +1,0 @@
-import "sample" as sample
-assert "sample" == sample.name()
-
-sample.genRandArr(100, range(0, 15))
-sample.genRandInteger(0, 15)

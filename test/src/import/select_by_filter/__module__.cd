@@ -1,4 +1,0 @@
-var moduleNames =
-	selectByFilter(lambda name -> !name.endWith("test.cd"))
-	
-assert moduleNames.size() == 3

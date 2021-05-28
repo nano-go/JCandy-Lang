@@ -1,0 +1,66 @@
+import (
+	"file_module1" as fm1
+	"unit" as unit
+)
+
+class TestImport : unit.TestCase {
+
+	fun import_test() {
+		import "sub_module1" as sm1
+		this.assertEquals("a", sm1.im_a())
+		this.assertEquals("b", sm1.im_b())
+		this.expectedErrorRaised(AttributeError, lambda -> sm1.im_c())
+
+		import "sub_module2" as sm2
+		this.assertTrue(sm2.INCLUDE_IMPOET_ME_1)
+		this.assertTrue(sm2.INCLUDE_IMPOET_ME_2)
+		this.assertEquals("foo", sm2.FOO)
+		this.expectedErrorRaised(AttributeError, lambda -> sm2.EXCLUDE_ME)
+	}
+
+	fun methods_test() {
+		this.assertTrue(fm1.test1())
+		this.assertTrue(fm1.test2()())
+		this.assertTrue(fm1.test3())
+		this.expectedErrorRaised(Error, lambda -> fm1.raiseError())
+	}
+
+	fun variables_test() {
+		this.assertEquals("Hello.",fm1.A)
+		this.assertEquals(6, fm1.B)
+	}
+
+	fun cache_test() {
+		fm1.B = 5
+		fm1.A = "Hello World."
+		import "file_module1" as tmp
+		this.assertEquals(fm1, tmp)
+		this.assertEquals(5, tmp.B)
+		this.assertEquals("Hello World.", tmp.A)
+		this.assertEquals(tmp.A, fm1.A)
+		this.assertEquals(tmp.B, fm1.B)
+
+		tmp.B = 6
+		tmp.A = "Hello."
+
+		import "sub_module2" as sm2
+		sm2.FOO = "foo1"
+		import "sub_module2" as tmp
+		this.assertEquals(sm2, tmp)
+		this.assertEquals("foo1", tmp.FOO)
+
+		// sm2.FOO is from here
+		import "sub_module2/sub_module/main" as main
+		this.assertEquals("foo1", main.FOO)
+
+		tmp.FOO = "foo"
+		this.assertEquals("foo", sm2.FOO)
+	}
+
+	fun error_module_test() {
+		this.expectedErrorRaised(ModuleError, lambda -> import "error1_module" as em)
+		this.expectedErrorRaised(ModuleError, lambda -> import "error2_module" as em)
+		this.expectedErrorRaised(ModuleError, lambda -> import "error3_module" as em)
+		import "raise_but_catched_module" as rbcm
+	}
+}

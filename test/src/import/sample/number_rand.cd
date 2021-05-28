@@ -1,3 +1,0 @@
-fun genRandInteger(from, to) {
-	range(from, to).rand()
-}

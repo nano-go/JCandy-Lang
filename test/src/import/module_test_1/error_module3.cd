@@ -1,0 +1,4 @@
+// runtime error
+
+var a = Object()
+a += 5

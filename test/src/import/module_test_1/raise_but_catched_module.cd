@@ -1,0 +1,6 @@
+var intercepted	= false
+try {
+	raise Error("raise raise")
+} intercept {
+	intercepted = true
+}

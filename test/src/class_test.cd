@@ -1,0 +1,92 @@
+import "unit" as unit
+
+class ClassTest : unit.TestCase {
+	fun declr_test() {
+		class Foo {
+			fun init(value) {
+				this.value = value
+			}
+			fun incrase() {
+				return this.value += 1
+			}
+		}
+		var foo = Foo(15)
+		this.assertEquals(15, foo.value)
+		this.assertEquals(16, foo.incrase())
+	}
+
+	fun simple_inherit_test() {
+		class Super {
+			fun init(value) {
+				this.super_value = value
+			}
+
+			fun getSuperValue() {
+				return this.super_value
+			}
+		}
+
+		class Subclass : Super {
+			fun init(value) {
+				super.init(value)
+				this.value = value
+			}
+			fun getValue() {
+				return this.value
+			}
+		}
+		var foo = Subclass(15)
+		this.assertEquals(15, foo.value)
+		foo.value += 1
+		this.assertEquals(15, foo.super_value)
+		this.assertEquals(15, foo.getSuperValue())
+		this.assertEquals(16, foo.value)
+		this.assertEquals(16, foo.getValue())
+
+		class Foo {
+			fun init() {
+				this.value = 0
+			}
+		}
+		class Bar : Foo {}
+		this.assertEquals(0, Bar().value)
+	}
+
+	fun inherit_test() {
+		class Foo {
+			fun init(value) {}
+		}
+		class Bar : Foo {}
+		class Baz : Bar {}
+		this.expectedErrorRaised(ArgumentError, lambda -> Bar())
+		this.expectedErrorRaised(ArgumentError, lambda -> Baz())
+	
+		class Foo {
+			fun init(value) {
+				this.value = value
+			}
+			fun returnFoo() { return "Foo"; }
+		}
+		class Bar : Foo {
+			fun returnBar() { return "Bar"; }
+		}
+		class Baz : Bar {
+			fun returnBaz() { return "Baz"; }
+		}
+		this.expectedErrorRaised(ArgumentError, lambda -> Bar())
+		this.expectedErrorRaised(ArgumentError, lambda -> Baz())
+		this.assertEquals("Bar", Baz(0).returnBar())
+		this.assertEquals("Baz", Baz(0).returnBaz())
+		this.assertEquals("Foo", Baz(0).returnFoo())
+
+		class Foo {
+			fun init(value) {
+				raise TypeError(str(value))
+			}
+		}
+		class Bar : Foo {}
+		class Baz : Bar {}
+		this.expectedErrorRaised(TypeError, lambda -> Baz(0))
+		this.expectedErrorRaised(TypeError, lambda -> Bar(0))
+	}
+}

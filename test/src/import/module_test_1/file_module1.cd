@@ -1,0 +1,28 @@
+fun test1() {
+	return true
+}
+
+fun test2() {
+	return test1
+}
+
+fun test3() {
+	return test2()() && test1()
+}
+
+fun raiseError() {
+	raise Error("")
+}
+
+var A = Object()
+var B = 6
+
+A = "Hello."
+
+fun getA() {
+	return A
+}
+
+fun getB() {
+	return B
+}

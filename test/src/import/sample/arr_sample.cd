@@ -1,3 +1,0 @@
-fun genRandArr(size, range) {
-	Array(size, lambda i -> range.rand())
-}

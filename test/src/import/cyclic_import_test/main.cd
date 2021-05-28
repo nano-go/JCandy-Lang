@@ -1,0 +1,29 @@
+import "unit" as unit
+
+class CyclicTest : unit.TestCase {
+
+	fun assert_import_module(name) {
+		try {
+			import name as n
+		} intercept ModuleError as e {
+			this.assertTrue(e.getMessage().startWith("cyclic"), name +": "+ e.getMessage())
+		}
+
+		try {
+			importModule(name)
+		} intercept ModuleError as e {
+			this.assertTrue(e.getMessage().startWith("cyclic"), name +": "+ e.getMessage())
+		}
+	}
+
+	fun cyclic_import_test() {
+		this.assert_import_module("file_a")
+		this.assert_import_module("file_b")
+		this.assert_import_module("file_c")
+		this.assert_import_module("dir_a")
+		this.assert_import_module("dir_b")
+		this.assert_import_module("dir_c")
+		this.assert_import_module("import_self")
+		this.assert_import_module("sub_module")
+	}
+}

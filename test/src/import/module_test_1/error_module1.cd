@@ -1,0 +1,2 @@
+// raise an error
+raise Error("error_module1.cd")
