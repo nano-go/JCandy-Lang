@@ -375,6 +375,12 @@ public class CodeGenerator implements AstVisitor<Void, Void> {
 	public void visit(Program node) {	
 		walkBlock(node.block);
 	}
+
+	@Override
+	public Void visit(Stmt.Empty node) {
+		// nothing to do.
+		return null;
+	}
 	
 	@Override
 	public Void visit(Stmt.ClassDef node) {

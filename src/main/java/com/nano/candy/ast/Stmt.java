@@ -6,7 +6,6 @@ import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Optional;
-import java.util.Iterator;
 
 public abstract class Stmt extends ASTreeNode {
 	
@@ -47,6 +46,14 @@ public abstract class Stmt extends ASTreeNode {
 		
 		public Stmt getAt(int index) {
 			return stmts.get(index);
+		}
+	}
+	
+	public static class Empty extends Stmt {
+
+		@Override
+		public <S extends Object> S accept(AstVisitor<S, ?> visitor) {
+			return visitor.visit(this);
 		}
 	}
 	

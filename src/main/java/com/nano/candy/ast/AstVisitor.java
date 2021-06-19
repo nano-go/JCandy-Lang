@@ -1,10 +1,11 @@
 package com.nano.candy.ast;
-import com.nano.candy.ast.Expr.TernaryOperator;
+
 
 public interface AstVisitor<S, E> {
 
 	public void visit(Program node);
 	
+	public S visit(Stmt.Empty node);
 	public S visit(Stmt.ErrorStmt node);
 	public S visit(Stmt.Import node);
 	public S visit(Stmt.ImportList node);
