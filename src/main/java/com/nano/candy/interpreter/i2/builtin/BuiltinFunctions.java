@@ -1,11 +1,9 @@
 package com.nano.candy.interpreter.i2.builtin;
 import com.nano.candy.interpreter.i2.builtin.type.ArrayObj;
 import com.nano.candy.interpreter.i2.builtin.type.CallableObj;
-import com.nano.candy.interpreter.i2.builtin.type.DoubleObj;
 import com.nano.candy.interpreter.i2.builtin.type.IntegerObj;
 import com.nano.candy.interpreter.i2.builtin.type.MethodObj;
 import com.nano.candy.interpreter.i2.builtin.type.ModuleObj;
-import com.nano.candy.interpreter.i2.builtin.type.NullPointer;
 import com.nano.candy.interpreter.i2.builtin.type.Range;
 import com.nano.candy.interpreter.i2.builtin.type.StringObj;
 import com.nano.candy.interpreter.i2.builtin.type.error.IOError;
@@ -17,11 +15,13 @@ import com.nano.candy.interpreter.i2.cni.NativeFunc;
 import com.nano.candy.interpreter.i2.cni.NativeLibraryLoader;
 import com.nano.candy.interpreter.i2.rtda.module.ModuleManager;
 import com.nano.candy.interpreter.i2.vm.VM;
+import com.nano.candy.interpreter.i2.vm.VMExitException;
 import com.nano.candy.std.Names;
 import com.nano.candy.sys.CandySystem;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Scanner;
 
 public class BuiltinFunctions {
 
@@ -36,6 +36,11 @@ public class BuiltinFunctions {
 		System.out.println(ObjectHelper.callStr(vm, args[0]));
 		return null;
 	}
+	
+	@NativeFunc(name = "readLine")
+	public static CandyObject read(VM vm, CandyObject[] args) {
+		return StringObj.valueOf(new Scanner(System.in).nextLine());
+	}
 
 	@NativeFunc(name = "range", arity = 2)
 	public static CandyObject range(VM vm, CandyObject[] args) {
@@ -43,6 +48,16 @@ public class BuiltinFunctions {
 			ObjectHelper.asInteger(args[0]),
 			ObjectHelper.asInteger(args[1])
 		);
+	}
+	
+	@NativeFunc(name = "sleep", arity = 1)
+	public static CandyObject shelp(VM vm, CandyObject[] args) {
+		try {
+			Thread.sleep(ObjectHelper.asInteger(args[0]));
+		} catch (InterruptedException e) {
+			new NativeError(e).throwSelfNative();
+		}
+		return null;
 	}
 	
 	@NativeFunc(name = "clock", arity = 0)
