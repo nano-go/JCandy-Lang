@@ -17,7 +17,6 @@ import com.nano.candy.interpreter.i2.builtin.type.classes.ClassSignature;
 import com.nano.candy.interpreter.i2.builtin.type.classes.ObjectClass;
 import com.nano.candy.interpreter.i2.builtin.type.error.ErrorObj;
 import com.nano.candy.interpreter.i2.builtin.type.error.NameError;
-import com.nano.candy.interpreter.i2.builtin.type.error.NativeError;
 import com.nano.candy.interpreter.i2.builtin.type.error.TypeError;
 import com.nano.candy.interpreter.i2.builtin.utils.ObjectHelper;
 import com.nano.candy.interpreter.i2.rtda.FileScope;
@@ -493,34 +492,28 @@ public final class VM {
 			try {
 				// OP_EXIT will help VM to exit runFrame method.
 				runFrame(false);
+				ModuleObj moudleObj = 
+					global.curFileScope().generateModuleObject();
+				popFrame();
+				return moudleObj;
 			} catch (VMExitException e) {
 				throw e;
 			} catch (ContinueRunException e) {
+				if (stack.sp() >= deepth) {
+					continue;
+				}
+				throw e;
+			} catch (Throwable e) {
+				if (!tryToHandleError(ErrorObj.asErrorObj(e), true)) {
+					// unable to catch the thrown error and 
+					// throws the exception to exit the VM.
+					throw new VMExitException(70);
+				}
 				if (stack.sp() < deepth) {
-					throw e;
+					throw new ContinueRunException();
 				}
 				continue;
-			} catch (Throwable e) {
-				ErrorObj err;
-				if (e instanceof CarrierErrorException) {
-					err = ((CarrierErrorException) e).getErrorObj();
-				} else {
-					err = new NativeError(e);
-				}
-				if (tryToHandleError(err, true)) {
-					if (stack.sp() < deepth) {
-						throw new ContinueRunException();
-					} else {
-						continue;
-					}
-				}
-				if (DEBUG) e.printStackTrace();
-				throw new VMExitException(70);
-			}
-			ModuleObj moudleObj = 
-				global.curFileScope().generateModuleObject();
-			popFrame();
-			return moudleObj;
+			}		
 		}
 	}
 	
@@ -562,35 +555,23 @@ public final class VM {
 				 * Label Instructions.
 				 */
 				case OP_POP_JUMP_IF_FALSE: {
-					if (!pop().boolValue(this).value()) {
-						pc += readJumpOffset();
-					} else {
-						pc += 2;
-					}
+					pc += !pop().boolValue(this).value() ?
+						readJumpOffset() : 2;
 					break;
 				}	
 				case OP_POP_JUMP_IF_TRUE: {
-					if (pop().boolValue(this).value()) {
-						pc += readJumpOffset();
-					} else {
-						pc += 2;
-					}
+					pc += pop().boolValue(this).value() ?
+						readJumpOffset() : 2;
 					break;
 				}		
 				case OP_JUMP_IF_FALSE: {
-					if (!peek(0).boolValue(this).value()) {
-						pc += readJumpOffset();
-					} else {
-						pc += 2;
-					}
+					pc += !peek(0).boolValue(this).value() ?
+						readJumpOffset() : 2;
 					break;
 				}		
 				case OP_JUMP_IF_TRUE: {
-					if (peek(0).boolValue(this).value()) {
-						pc += readJumpOffset();
-					} else {
-						pc += 2;
-					}
+					pc += peek(0).boolValue(this).value() ?
+						readJumpOffset() : 2;
 					break;
 				}		
 				case OP_JUMP: {

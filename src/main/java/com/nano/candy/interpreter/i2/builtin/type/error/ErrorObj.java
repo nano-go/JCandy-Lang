@@ -21,6 +21,15 @@ public class ErrorObj extends CandyObjEntity {
 	public static final CandyClass ERROR_CLASS = 
 		NativeClassRegister.generateNativeClass(ErrorObj.class);
 	
+	public static ErrorObj asErrorObj(Throwable t) {
+		if (t instanceof CarrierErrorException) {
+			// This is Candy level exception.
+			return ((CarrierErrorException) t).getErrorObj();
+		}
+		// Java level exception.
+		return new NativeError(t);
+	}
+		
 	protected StackTraceElementObj[] stackTraceElements;
 	protected String message;
 	
