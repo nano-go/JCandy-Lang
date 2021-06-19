@@ -208,4 +208,14 @@ public class StringObj extends BuiltinObject {
 	public CandyObject toLowerCase(VM vm, CandyObject[] args){
 		return valueOf(value.toLowerCase());
 	}
+	
+	@NativeMethod(name = "toInt")
+	public CandyObject toInt(VM vm, CandyObject[] args){
+		return IntegerObj.valueOf(Integer.valueOf(value));
+	}
+	
+	@NativeMethod(name = "toDouble")
+	public CandyObject toDouble(VM vm, CandyObject[] args){
+		return DoubleObj.valueOf(Double.valueOf(value));
+	}
 }
