@@ -1,7 +1,6 @@
 package com.nano.candy.interpreter.i2.tool;
 import com.nano.candy.ast.ASTreeNode;
 import com.nano.candy.ast.Program;
-import com.nano.candy.comp.Checker;
 import com.nano.candy.interpreter.InterpreterOptions;
 import com.nano.candy.interpreter.i2.builtin.type.error.CompilerError;
 import com.nano.candy.interpreter.i2.builtin.type.error.IOError;
@@ -38,7 +37,6 @@ public class Compiler {
 	}
 
 	public static Chunk compileTree(ASTreeNode tree, InterpreterOptions options, boolean clearMsg) {
-		Checker.check(tree);
 		checkLogger(clearMsg);
 		return new CodeGenerator(options.isInteractionMode(), 
 			options.isDebugMode()).genCode(tree);

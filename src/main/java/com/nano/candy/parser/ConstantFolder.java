@@ -1,15 +1,14 @@
-package com.nano.candy.comp;
+package com.nano.candy.parser;
 
 import com.nano.candy.ast.ASTreeNode;
 import com.nano.candy.ast.Expr;
-import com.nano.candy.parser.TokenKind;
 import com.nano.candy.std.StringFunctions;
 import com.nano.candy.utils.Position;
 
 public class ConstantFolder {
-	
+
 	private static final boolean DEBUG_CONSTANT_FOLDING_TRACE = false;
-	
+
 	private static void reportDebug(ASTreeNode node, String message, Object... args) {
 		Position pos = node.pos;
 		System.out.printf("%s at [%d | %s]\n", 
@@ -17,35 +16,35 @@ public class ConstantFolder {
 			pos.getLine(), pos.getLineFromSource().get()
 		);
 	}
-	
+
 	private static boolean isString(Expr expr) {
 		return expr instanceof Expr.StringLiteral;
 	}
-	
+
 	private static boolean isInteger(Expr expr) {
 		return expr instanceof Expr.IntegerLiteral;
 	}
-	
+
 	private static boolean isDouble(Expr expr) {
 		return expr instanceof Expr.DoubleLiteral;
 	}
-	
+
 	private static long intVal(Expr expr) {
 		return ((Expr.IntegerLiteral)expr).value;
 	}
-	
+
 	private static Expr.BooleanLiteral makeBooleanNode(boolean value, ASTreeNode node) {
 		Expr.BooleanLiteral ret = new Expr.BooleanLiteral(value);
 		ret.pos = node.pos;
 		return ret;
 	}
-	
+
 	private static Expr.StringLiteral makeStrLiteralNode(String str, ASTreeNode node) {
 		Expr.StringLiteral ret = new Expr.StringLiteral(str);
 		ret.pos = node.pos;
 		return ret;
 	}
-	
+
 	/**
 	 * Try to fold unary expression.
 	 */
@@ -55,14 +54,14 @@ public class ConstantFolder {
 		if (!expr.isConstant()) {
 			return unaryExpr;
 		}
-		
+
 		Expr ret = foldUnaryExpr(operator, expr);
 		if (ret == null) {
 			return unaryExpr;
 		}
 		if (DEBUG_CONSTANT_FOLDING_TRACE) {
 			reportDebug(unaryExpr, "eval %s%s -> %s", 
-				operator.getLiteral(), expr, ret);
+						operator.getLiteral(), expr, ret);
 		}
 		return ret;
 	}
@@ -95,7 +94,7 @@ public class ConstantFolder {
 		}
 		return null;
 	}
-	
+
 	/**
 	 * Try to fold binary expression.
 	 */
@@ -103,31 +102,31 @@ public class ConstantFolder {
 		Expr left = binaryExpr.left;
 		Expr right = binaryExpr.right;
 		TokenKind operator = binaryExpr.operator;
-		
+
 		// left expression must be a constant
 		if (!left.isConstant()) {
 			return binaryExpr;
 		}
-		
+
 		Expr ret = foldBinaryExpr(left, operator, right);
 		if (ret == null) { 
 			return binaryExpr;
 		}
 		if (DEBUG_CONSTANT_FOLDING_TRACE) {
 			reportDebug(binaryExpr, "eval (%s %s %s) -> %s",
-				left, operator.getLiteral(), right, ret);
+						left, operator.getLiteral(), right, ret);
 		}
 		return ret;
 	}
 
 	private static Expr foldBinaryExpr(Expr left, TokenKind operator, Expr right) {
-		
+
 		if (TokenKind.isLogicalOperator(operator)) {
 			return evalLogicalOperation(left, operator, right);
 		}
-		
+
 		if (!right.isConstant()) return null;
-		
+
 		if (left.isNumber() && right.isNumber()) {
 			Expr.Number leftN = (Expr.Number) left;
 			Expr.Number rightN = (Expr.Number) right;
@@ -137,7 +136,7 @@ public class ConstantFolder {
 			Expr ret = evalString(left, operator, right);
 			if (ret != null) return ret;
 		}
-		
+
 		switch (operator) {
 			case NOT_EQUAL:
 				return makeBooleanNode(!left.equals(right), left);
@@ -159,7 +158,7 @@ public class ConstantFolder {
 				throw new Error("Unknown logical operator: " + operator.getLiteral());
 		}
 	}
-	
+
 	private static Expr evalNumber(Expr.Number left, TokenKind operator, Expr.Number right) {
 		double leftV = left.value();
 		double rightV = right.value();
@@ -198,17 +197,17 @@ public class ConstantFolder {
 			default:
 				throw new Error("Unknown binary operator: " + operator.getLiteral());
 		}
-		
+
 		if (isDouble(left) || isDouble(right)) {
 			ret = new Expr.DoubleLiteral(leftV); 
 		} else {
 			ret = new Expr.IntegerLiteral((long)leftV);
 		}
 		ret.pos = left.pos;
-		
+
 		return ret;
 	}
-	
+
 	private static Expr evalString(Expr left, TokenKind operator, Expr right) {
 		switch (operator) {
 			case PLUS:
@@ -224,6 +223,5 @@ public class ConstantFolder {
 		}
 		return null;
 	}
-	
-}
 
+}
