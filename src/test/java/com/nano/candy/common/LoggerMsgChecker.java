@@ -9,9 +9,13 @@ public class LoggerMsgChecker {
 	static final Logger logger = Logger.getLogger() ;
 	
 	public static void expectedErrors(boolean output, boolean clear) {
+		expectedErrors(output, clear, "");
+	}
+	
+	public static void expectedErrors(boolean output, boolean clear, String msg) {
 		try {
 			if (!logger.hadErrors()) {
-				fail("expected errors.") ;
+				fail("expected errors: " + msg) ;
 			}
 			if (output) {
 				logger.printErrors(System.err) ;
