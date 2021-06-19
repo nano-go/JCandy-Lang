@@ -33,7 +33,7 @@ public final class Frame implements Recyclable {
 	
 	private String name;
 	private CodeAttribute codeAttr;
-	private boolean isTopFrame;
+	private boolean isSourceFileFrame;
 	
 	/**
 	 * see VM.runFrame(boolean)
@@ -68,7 +68,7 @@ public final class Frame implements Recyclable {
 		this.codeAttr = chunk.getCodeAttr();
 		this.pc = 0;
 		this.fileScope = scope;
-		this.isTopFrame = true;
+		this.isSourceFileFrame = true;
 		return this;
 	}
 	
@@ -81,7 +81,7 @@ public final class Frame implements Recyclable {
 		this.pc = prototypeFunc.pc;
 		this.fileScope = prototypeFunc.fileScope;
 		this.capturedUpvalues = prototypeFunc.upvalues;
-		this.isTopFrame = false;
+		this.isSourceFileFrame = false;
 		return this;
 	}
 	
@@ -179,8 +179,8 @@ public final class Frame implements Recyclable {
 		return codeAttr.maxStack;
 	}
 	
-	public boolean isTopFrame() {
-		return isTopFrame;
+	public boolean isSourceFileFrame() {
+		return isSourceFileFrame;
 	}
 	
 	public int currentLine() {
@@ -244,7 +244,7 @@ public final class Frame implements Recyclable {
 		this.fileScope = null;
 		this.codeAttr = null;	
 		this.pc = 0;
-		this.isTopFrame = false;
+		this.isSourceFileFrame = false;
 		this.exitMethodAtReturn = false;
 	}
 }

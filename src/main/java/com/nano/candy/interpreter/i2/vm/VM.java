@@ -198,7 +198,7 @@ public final class VM {
 	
 	private final Frame fastPopFrame() {
 		Frame old = stack.popFrame();
-		if (old.isTopFrame()) {
+		if (old.isSourceFileFrame()) {
 			SourceFileInfo.unmarkRunning(old.chunk.getSourceFileName());
 		}
 		return old;
