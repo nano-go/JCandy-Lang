@@ -6,4 +6,5 @@ build
 
 *.bak
 *.sh
+*.swp
 test/candy.jar
