@@ -1,4 +1,4 @@
-package com.nano.candy.main;
+package com.nano.candy.cmd;
 import com.nano.candy.cmd.CandyTool;
 import com.nano.candy.interpreter.InterpreterOptions;
 import com.nano.candy.sys.CandySystem;
@@ -19,16 +19,7 @@ public class CandyOptions {
 	protected CandyOptions() {}
 
 	public void checkHasSrcFile() {
-		if (srcFile == null) {
-			throw new Options.ParseException("Missing source files.");
-		}
-		if (srcFile.isDirectory()) {
-			throw new Options.ParseException("Can't open a directory.");
-		}
-		if (!CandySystem.isCandySource(srcFile.getName())) {
-			throw new Options.ParseException
-				("Can't open non-candy source file.");
-		}
+		CandySystem.checkSourceFile(getSourceFile());
 	}
 	
 	public File getSourceFile() {

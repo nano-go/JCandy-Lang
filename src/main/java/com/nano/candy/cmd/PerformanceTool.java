@@ -2,7 +2,6 @@ package com.nano.candy.cmd;
 
 import com.nano.candy.ast.ASTreeNode;
 import com.nano.candy.interpreter.Interpreter;
-import com.nano.candy.main.CandyOptions;
 import com.nano.candy.parser.ParserFactory;
 import com.nano.candy.utils.Logger;
 import com.nano.candy.utils.Options;

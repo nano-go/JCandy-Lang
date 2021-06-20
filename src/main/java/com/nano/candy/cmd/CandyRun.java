@@ -1,4 +1,4 @@
-package com.nano.candy.main;
+package com.nano.candy.cmd;
 import com.nano.candy.interpreter.Interpreter;
 import com.nano.candy.interpreter.InterpreterFactory;
 import com.nano.candy.sys.CandySystem;

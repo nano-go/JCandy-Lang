@@ -2,7 +2,6 @@ package com.nano.candy.cmd;
 
 import com.nano.candy.ast.Program;
 import com.nano.candy.interpreter.Interpreter;
-import com.nano.candy.main.CandyOptions;
 import com.nano.candy.parser.ParserFactory;
 import com.nano.candy.std.Names;
 import com.nano.candy.sys.CandySystem;

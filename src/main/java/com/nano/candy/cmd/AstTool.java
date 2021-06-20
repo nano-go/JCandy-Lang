@@ -4,7 +4,6 @@ import com.nano.candy.ast.Program;
 import com.nano.candy.ast.printer.AstPrinter;
 import com.nano.candy.ast.printer.AstPrinters;
 import com.nano.candy.interpreter.Interpreter;
-import com.nano.candy.main.CandyOptions;
 import com.nano.candy.parser.ParserFactory;
 import com.nano.candy.utils.CommandLine;
 import com.nano.candy.utils.Logger;

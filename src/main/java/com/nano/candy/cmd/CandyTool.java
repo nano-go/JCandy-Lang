@@ -1,7 +1,6 @@
 package com.nano.candy.cmd;
 
 import com.nano.candy.interpreter.Interpreter;
-import com.nano.candy.main.CandyOptions;
 import com.nano.candy.utils.Options;
 
 public interface CandyTool {

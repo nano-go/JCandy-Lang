@@ -1,5 +1,6 @@
 package com.nano.candy.interpreter.i2.tool.debug;
 
+import com.nano.candy.cmd.CandyOptions;
 import com.nano.candy.cmd.CandyTool;
 import com.nano.candy.cmd.ToolException;
 import com.nano.candy.interpreter.Interpreter;
@@ -10,7 +11,6 @@ import com.nano.candy.interpreter.i2.rtda.chunk.Chunk;
 import com.nano.candy.interpreter.i2.tool.Compiler;
 import com.nano.candy.interpreter.i2.vm.CarrierErrorException;
 import com.nano.candy.interpreter.i2.vm.VM;
-import com.nano.candy.main.CandyOptions;
 import com.nano.candy.utils.Logger;
 import com.nano.candy.utils.Options;
 import java.io.File;

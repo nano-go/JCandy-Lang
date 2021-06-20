@@ -1,4 +1,4 @@
-package com.nano.candy.main;
+package com.nano.candy.cmd;
 
 import com.nano.candy.cmd.CandyTool;
 import com.nano.candy.cmd.CandyToolFactory;
@@ -19,12 +19,13 @@ public class CandyOptionsParser {
 
 	private static Options defineOptions(Options options) {
 		return options
-			.addOption("-h", false, "Print command line helper.").build();
+			.addOption("--help", false, "Print command line helper.")
+			.addOption("-h", false, "Short '--help'").build();
 	}
 	
 	private static CommandLine parseOptions(CandyOptions candyOptions, Options cmdOptions, String[] args) {
 		CommandLine cmd = new CommandLine(cmdOptions, args);
-		if (cmd.hasOption("-h")) {
+		if (cmd.hasOption("-h") || cmd.hasOption("--help")) {
 			prepareHelper(candyOptions, cmdOptions);
 			return cmd;
 		}
@@ -59,12 +60,7 @@ public class CandyOptionsParser {
 		if (args.length == 0) {
 			return null;
 		}
-		File f = new File(args[0]);
-		if (!f.exists()) {
-			throw new Options.ParseException(
-				"Can't open file: " + f.getAbsolutePath());
-		}
-		return f;
+		return new File(args[0]);
 	}
 
 	private static void prepareHelper(CandyOptions candyOptions, Options options) {
@@ -81,7 +77,7 @@ public class CandyOptionsParser {
 		String groupName = tool.groupName();
 		String[] aliases = tool.aliases();
 		if (aliases != null) {	
-			groupName += String.format("(%s)", String.join(", ", aliases));
+			groupName += String.format("(aliases: [%s])", String.join(", ", aliases));
 		}
 		options.newGroup(groupName, groupHelper);
 		tool.defineOptions(options);
