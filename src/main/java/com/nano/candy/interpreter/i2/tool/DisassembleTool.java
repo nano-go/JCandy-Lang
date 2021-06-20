@@ -1,5 +1,6 @@
 package com.nano.candy.interpreter.i2.tool;
 
+import com.nano.candy.cmd.CandyTool;
 import com.nano.candy.interpreter.Interpreter;
 import com.nano.candy.interpreter.InterpreterOptions;
 import com.nano.candy.interpreter.i2.rtda.chunk.Chunk;
@@ -8,7 +9,6 @@ import com.nano.candy.interpreter.i2.tool.dis.DisassInsDumper;
 import com.nano.candy.interpreter.i2.tool.dis.Disassembler;
 import com.nano.candy.interpreter.i2.vm.CarrierErrorException;
 import com.nano.candy.main.CandyOptions;
-import com.nano.candy.tool.CandyTool;
 import com.nano.candy.utils.Options;
 import java.io.File;
 
@@ -32,7 +32,7 @@ public class DisassembleTool implements CandyTool {
 	@Override
 	public void defineOptions(Options options) {
 		options.addOption("-c", false, "Disassemble the function code.")
-			.addOption("-v", false, "Disassemble the additional information.");
+			.addOption("-v", false, "Show the additional information.");
 	}
 	
 	@Override

@@ -1,4 +1,5 @@
-package com.nano.candy.tool;
+package com.nano.candy.cmd;
+
 import com.nano.candy.ast.Program;
 import com.nano.candy.ast.printer.AstPrinter;
 import com.nano.candy.ast.printer.AstPrinters;
@@ -16,7 +17,7 @@ public class AstTool implements CandyTool {
 	public String groupName() {
 		return "Abstract-Tree-Printer";
 	}
-	
+
 	@Override
 	public String groupHelper() {
 		return "Print the AST of the specified source files.";
@@ -26,14 +27,14 @@ public class AstTool implements CandyTool {
 	public String[] aliases() {
 		return new String[] {"ast"};
 	}
-	
+
 	@Override
 	public void defineOptions(Options options) {
 		options.addOption("-f", true, 
-				"Print AST in the specified format.\nFormats:" +
-				"\n    json/Json");
+						  "Print AST in the specified format.\nFormats:" +
+						  "\n    json/Json");
 	}
-	
+
 	@Override
 	public void run(Interpreter interpreter, CandyOptions options) throws Exception {	
 		CommandLine cmd = options.getCmd();
@@ -58,5 +59,6 @@ public class AstTool implements CandyTool {
 		}
 		return AstPrinters.PRINT_AST_IN_JSON_MASK;
 	}
-	
+
 }
+

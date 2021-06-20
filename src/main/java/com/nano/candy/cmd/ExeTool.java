@@ -1,8 +1,11 @@
-package com.nano.candy.tool;
+package com.nano.candy.cmd;
+
 import com.nano.candy.ast.Program;
 import com.nano.candy.interpreter.Interpreter;
 import com.nano.candy.main.CandyOptions;
 import com.nano.candy.parser.ParserFactory;
+import com.nano.candy.std.Names;
+import com.nano.candy.sys.CandySystem;
 import com.nano.candy.utils.Logger;
 import com.nano.candy.utils.Options;
 import com.nano.common.io.FileUtils;
@@ -29,13 +32,28 @@ public class ExeTool implements CandyTool {
 	}
 	
 	@Override
-	public void defineOptions(Options options) {}
+	public void defineOptions(Options options) {
+		options.addOption("-m", false, 
+			"Search source files from candy library directory.");
+	}
 
 	@Override
 	public void run(Interpreter interpreter, CandyOptions options) throws Exception {
 		File srcFile = options.getSourceFile();
-		options.checkHasSrcFile();
+		if (options.getCmd().hasOption("-m")) {
+			CandySystem.checkEnv();
+			srcFile = getSrcFile(srcFile, CandySystem.getCandyLibsPath());
+		}
+		CandySystem.checkSourceFile(srcFile);
 		interpret(interpreter, srcFile);
+	}
+	
+	private File getSrcFile(File userCmdArg, String fromPath) {
+		File srcFile = new File(fromPath, userCmdArg.getPath());
+		if (srcFile.isDirectory()) {
+			srcFile = new File(srcFile, Names.MAIN_FILE_NAME);
+		}
+		return srcFile;
 	}
 
 	private void interpret(Interpreter interpreter, File srcFile) throws IOException {

@@ -1,6 +1,6 @@
 package com.nano.candy;
+import com.nano.candy.cmd.ToolException;
 import com.nano.candy.main.CandyRun;
-import com.nano.candy.tool.ToolException;
 import com.nano.candy.utils.Options;
 
 public class Main {

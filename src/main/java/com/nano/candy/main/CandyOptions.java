@@ -1,7 +1,7 @@
 package com.nano.candy.main;
+import com.nano.candy.cmd.CandyTool;
 import com.nano.candy.interpreter.InterpreterOptions;
 import com.nano.candy.sys.CandySystem;
-import com.nano.candy.tool.CandyTool;
 import com.nano.candy.utils.CommandLine;
 import com.nano.candy.utils.Options;
 import java.io.File;
