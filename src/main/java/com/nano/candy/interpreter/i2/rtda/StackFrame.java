@@ -44,7 +44,7 @@ public final class StackFrame {
 	
 	public void pushFrame(Frame frame) {
 		if (sp > maxStackDeepth) {
-			new StackOverflowError().throwSelfNative();
+			new StackOverflowError(maxStackDeepth).throwSelfNative();
 		}
 		if (sp >= stack.length) {
 			stack = Arrays.copyOf(stack, stack.length*2);
