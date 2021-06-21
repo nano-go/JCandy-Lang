@@ -8,33 +8,34 @@ import java.io.File;
 import java.io.IOException;
 
 /**
- * The default loader could load modules from the '$CANDY_HOME/libs' and
- * the directory where the current running file is in.
+ * The default loader could load modules from the '$CANDY_HOME/libs',
+ * the directory where the current running file is in and the current user
+ * directory.
+ *
+ * Directory Priority:
+ *    1. $CANDY_HOME/libs
+ *    2. The directory where the current running file is in
+ *    3. The current user directory.
  */
 public class CandyPathModuleLoader extends ModuleLoader {
-	
-	private static void checkModule(Module module, 
-	                                String relativePath) 
-		throws ModuleNotFoundException {
-		if (module == null) {
-			throw new ModuleNotFoundException
-				("The module " + relativePath + " could not be found.");
-		}
-	}
 	
 	@Override
 	protected Module findModule(VM vm, String relativePath) 
 		throws ModuleNotFoundException {
-		Module module = findFrom(vm.getCurrentDirectory(), relativePath);
-		if (module != null) {
-			return module;
+		Module module = null;
+		String[] paths = {
+			CandySystem.getCandyLibsPath(),
+			vm.getCurrentDirectory(),
+			System.getProperty("user.dir")
+		};
+		for (String path : paths) {
+			if (path != null &&
+				(module = findFrom(path, relativePath)) != null) {
+				return module;
+			}
 		}
-		String libsPath = CandySystem.getCandyLibsPath();
-		if (libsPath != null) {
-			module = findFrom(libsPath, relativePath);
-		}
-		checkModule(module, relativePath);
-		return module;
+		throw new ModuleNotFoundException
+			("The module " + relativePath + " could not be found.");
 	}
 
 	private Module findFrom(String envDirectory, String relativePath) {
