@@ -104,6 +104,10 @@ public class ErrorObj extends CandyObjEntity {
 					" (%s:%d)\n", e.getFileName(), e.getLineNumber()
 				));
 		}
+		if (stackTraceElements.length > max) {
+			builder.append("More ").append(stackTraceElements.length-max)
+				.append(" ...\n");
+		}
 		return builder.toString();
 	}
 	

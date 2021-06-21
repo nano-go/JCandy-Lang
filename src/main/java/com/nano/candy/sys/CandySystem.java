@@ -9,7 +9,7 @@ public class CandySystem {
 	public static final String END_OF_LINE = "end of line";
 	
 	public static final String DEFAULT_USER_DIR = getUserDirectory();
-	public static final int DEFAULT_MAX_STACK = 1024 * 8;
+	public static final int DEFAULT_MAX_STACK = 1024;
 	
 	private static String CANDY_HOME;
 	private static String CANDY_LIBS;
