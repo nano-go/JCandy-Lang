@@ -21,6 +21,7 @@ import com.nano.candy.sys.CandySystem;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.NoSuchElementException;
 import java.util.Scanner;
 
 public class BuiltinFunctions {
@@ -39,7 +40,12 @@ public class BuiltinFunctions {
 	
 	@NativeFunc(name = "readLine")
 	public static CandyObject read(VM vm, CandyObject[] args) {
-		return StringObj.valueOf(new Scanner(System.in).nextLine());
+		try {
+			return StringObj.valueOf(new Scanner(System.in).nextLine());
+		} catch (NoSuchElementException e) {
+			new IOError("No line found").throwSelfNative();
+		}
+		return null;
 	}
 
 	@NativeFunc(name = "range", arity = 2)
