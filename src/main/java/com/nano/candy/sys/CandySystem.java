@@ -1,5 +1,6 @@
 package com.nano.candy.sys;
 
+import com.nano.candy.utils.Options;
 import com.nano.common.io.FilePathUtils;
 import java.io.File;
 
@@ -18,6 +19,34 @@ public class CandySystem {
 		if (CANDY_HOME != null) {
 			String libs = CANDY_HOME.endsWith("/") ? "libs" : "/libs";
 			CANDY_LIBS = CANDY_HOME + libs;
+		}
+	}
+	
+	public static void checkEnv() {
+		if (CANDY_HOME == null) {
+			throw new Options.ParseException("Missing CANDY_HOME path.");
+		}
+		File candyHome = new File(CANDY_HOME);
+		if (!candyHome.isDirectory()) {
+			throw new Options.ParseException("Invalid CANDY_HOME directory.");
+		}
+		File candyLibraries = new File(CANDY_LIBS);
+		if (!candyLibraries.isDirectory()) {
+			throw new Options.ParseException("'$CANDY_HOME/libs' is corrupted.");
+		}
+	}
+	
+	public static void checkSourceFile(File srcFile) {
+		if (srcFile == null) {
+			throw new Options.ParseException("Missing source files.");
+		}
+		if (srcFile.isDirectory()) {
+			throw new Options.ParseException
+				("Can't open file: " + srcFile.getPath());
+		}
+		if (!CandySystem.isCandySource(srcFile.getName())) {
+			throw new Options.ParseException
+				("Can't open non-candy source file: " + srcFile.getPath());
 		}
 	}
 	
