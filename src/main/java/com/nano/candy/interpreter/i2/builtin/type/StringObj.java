@@ -199,6 +199,20 @@ public class StringObj extends BuiltinObject {
 		return valueOf(builder.toString());
 	}
 	
+	@NativeMethod(name = "lastIndexOf", argc=1) 
+	public CandyObject lastIndexOf(VM vm, CandyObject[] args){
+		return IntegerObj.valueOf(
+			value.lastIndexOf(ObjectHelper.asString(args[0]))
+		);
+	}
+	
+	@NativeMethod(name = "indexOf", argc=1) 
+	public CandyObject indexOf(VM vm, CandyObject[] args){
+		return IntegerObj.valueOf(
+			value.indexOf(ObjectHelper.asString(args[0]))
+		);
+	}
+	
 	@NativeMethod(name = "toUpperCase") 
 	public CandyObject toUpperCase(VM vm, CandyObject[] args){
 		return valueOf(value.toUpperCase());
