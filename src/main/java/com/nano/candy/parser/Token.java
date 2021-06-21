@@ -44,12 +44,13 @@ public class Token {
 	@Override
 	public String toString() {
 		StringBuilder builder = new StringBuilder();
-		builder.append("token: ").append(kind);
-		builder.append("\nliteral: ").append(literal);
+		builder.append("{token: ").append(kind);
+		builder.append(String.format(", literal: \"%s\"", literal));
 		if (pos != null) {
-			builder.append("\nrow: ").append(pos.getLine());
-			builder.append("\ncol: ").append(pos.getCol());
+			builder.append(", row: ").append(pos.getLine());
+			builder.append(", col: ").append(pos.getCol());
 		}
+		builder.append("}");
 		return builder.toString();
 	}
 	
