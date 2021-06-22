@@ -230,7 +230,6 @@ class CandyParser implements Parser {
 			Stmt.FuncDef initialzier = node.initializer.get();
 			insertSuperInitCall(initialzier.pos, initialzier.body.stmts);
 		}
-		checkMethodNames(node);
 		return node;
 	}
 	
@@ -273,21 +272,6 @@ class CandyParser implements Parser {
 			return !stmts.isEmpty() && isSuperCallInit(stmts.getFirstStmt());
 		}
 		return false;
-	}
-	
-
-	private void checkMethodNames(Stmt.ClassDef classDef) {
-		HashSet<String> duplicatedNameHelper = new HashSet<>(classDef.methods.size());
-		for (Stmt.FuncDef method : classDef.methods) {
-			String name = method.name.get();
-			if (duplicatedNameHelper.contains(name)) {
-				reportWarn(
-					method, 
-					"Duplicated method name '%s' in the class '%s'.",
-					name, classDef.name
-				);
-			} else duplicatedNameHelper.add(name);
-		}
 	}
 	
 	
