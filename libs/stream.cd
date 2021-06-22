@@ -127,7 +127,7 @@ class Stream {
 
 	fun toArray() {	
 		var arr = []
-		for (e in stream) arr.append(e)
+		for (e in this) arr.append(e)
 		return arr
 	}
 	

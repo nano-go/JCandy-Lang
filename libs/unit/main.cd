@@ -17,7 +17,7 @@ fun main() {
 			.map(lambda e -> e[1])
 			.filter(lambda e -> e is tc.TestCase or e is ts.TestSuite)
 			.map(lambda e -> e._class() == e ? e() : e)
-			.collect(stream.arrayCollector)
+			.toArray()
 		var runner = tr.TestRunner()
 		runner.run(ts.TestSuite(null, *tests))
 	} intercept ModuleError as e {

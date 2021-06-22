@@ -116,7 +116,7 @@ class StreamTest : unit.TestCase {
 			stream.Stream(tscase)
 				.filter(lambda e -> e.id % 2 == 0)
 				.map(lambda e -> e.name)
-				.collect(stream.arrayCollector)
+				.toArray()	
 		)	
 	}
 
