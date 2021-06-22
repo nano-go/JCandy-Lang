@@ -1,7 +1,6 @@
 package com.nano.candy.ast;
 import com.nano.candy.parser.Token;
 import com.nano.candy.parser.TokenKind;
-import com.nano.candy.std.BoolFunctions;
 import com.nano.candy.std.StringFunctions;
 import com.nano.candy.utils.Position;
 import java.util.List;
@@ -151,7 +150,7 @@ public abstract class Expr extends ASTreeNode {
 
 		@Override
 		public boolean isFalsely() {
-			return !BoolFunctions.valueOf(literal);
+			return false;
 		}
 		
 		@Override
@@ -161,7 +160,7 @@ public abstract class Expr extends ASTreeNode {
 
 		@Override
 		public String toString() {
-			return StringFunctions.valueOf(literal);
+			return literal;
 		}
 
 		@Override
@@ -193,7 +192,7 @@ public abstract class Expr extends ASTreeNode {
 		
 		@Override
 		public boolean isFalsely() {
-			return !BoolFunctions.valueOf(value);
+			return false;
 		}
 
 		@Override
@@ -230,7 +229,7 @@ public abstract class Expr extends ASTreeNode {
 		
 		@Override
 		public boolean isFalsely() {
-			return !BoolFunctions.valueOf(value);
+			return false;
 		}
 
 		@Override
@@ -288,7 +287,7 @@ public abstract class Expr extends ASTreeNode {
 
 		@Override
 		public boolean isFalsely() {
-			return !BoolFunctions.nilBoolValue();
+			return true;
 		}
 
 		@Override

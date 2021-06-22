@@ -17,10 +17,6 @@ public class StringFunctions {
 		return str1.equals(str2);
 	}
 	
-	public static String valueOf(String str) {
-		return str;
-	}
-	
 	public static String valueOf(long l) {
 		return String.valueOf(l);
 	}

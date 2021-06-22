@@ -79,7 +79,7 @@ public class StringObj extends BuiltinObject {
 
 	@Override
 	public String toString() {
-		return StringFunctions.valueOf(value);
+		return value;
 	}
 
 	@Override
