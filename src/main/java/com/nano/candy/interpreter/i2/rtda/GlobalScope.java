@@ -86,11 +86,11 @@ public class GlobalScope {
 			Variable.getVariable(clazz.getClassName(), clazz));
 	}
 	
-	private HashMap<String, FileScope> fileScopePool;
+	private HashMap<String, FileScope> fileScopeCache;
 	private FileScope curFileScope;
 	
 	public GlobalScope() {
-		fileScopePool = new HashMap<>();
+		fileScopeCache = new HashMap<>();
 		curFileScope = null;
 	}
 	
@@ -103,10 +103,10 @@ public class GlobalScope {
 		} else {
 			absPath = compiledFileInfo.getAbsPath();
 		}
-		fs = fileScopePool.get(absPath);
+		fs = fileScopeCache.get(absPath);
 		if (fs == null) {
 			fs = new FileScope(compiledFileInfo);
-			fileScopePool.put(absPath, fs);
+			fileScopeCache.put(absPath, fs);
 		}
 		return fs;
 	}
@@ -128,8 +128,8 @@ public class GlobalScope {
 		curFileScope = null;
 	}
 	
-	public CandyObject getVar(String name) {
-		CandyObject obj = curFileScope.getVar(name);
+	public CandyObject getVarValue(String name) {
+		CandyObject obj = curFileScope.getVarValue(name);
 		if (obj != null) {
 			return obj;
 		}

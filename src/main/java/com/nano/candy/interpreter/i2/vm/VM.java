@@ -444,7 +444,7 @@ public final class VM {
 	}
 	
 	private CandyObject getGlobalVariable(String name, boolean throwsErrorIfNotFound) {
-		CandyObject obj = global.getVar(name);
+		CandyObject obj = global.getVarValue(name);
 		if (obj == null && throwsErrorIfNotFound) {
 			new NameError("the variable '%s' not found.", name)
 				.throwSelfNative();
@@ -453,7 +453,7 @@ public final class VM {
 	}
 	
 	private boolean setGlobalVariable(String name, CandyObject val, boolean throwsErrorIfNotFound) {
-		if (global.getVar(name) == null) {
+		if (global.getVarValue(name) == null) {
 			if (throwsErrorIfNotFound) {
 				new NameError("the variable '%s' not found.", name)
 					.throwSelfNative();

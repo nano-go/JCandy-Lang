@@ -29,7 +29,7 @@ public class FileScope {
 		vars.put(name, Variable.getVariable(name, value));
 	}
 
-	public CandyObject getVar(String name) {
+	public CandyObject getVarValue(String name) {
 		Variable variable = vars.get(name);
 		if (variable != null) return variable.getValue();
 		return null;
