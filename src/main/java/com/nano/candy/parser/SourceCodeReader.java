@@ -124,6 +124,9 @@ public class SourceCodeReader {
 			case '\\':
 			case '\'': 
 			case '\"':
+			case '{':
+			case '}':
+			case '$':
 				return ch;
 				
 			case 't': return '\t';

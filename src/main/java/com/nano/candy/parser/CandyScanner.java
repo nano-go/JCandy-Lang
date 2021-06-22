@@ -3,12 +3,19 @@ package com.nano.candy.parser;
 import com.nano.candy.sys.CandySystem;
 import com.nano.candy.utils.Characters;
 import com.nano.candy.utils.Position;
+import java.util.LinkedList;
+import java.util.Queue;
 
 class CandyScanner implements Scanner {
 
 	private SourceCodeReader reader;
 	private Position startPos;
 	private Token tok;
+	
+	/**
+	 * Matched tokens that stores parsed tokens in interpolated string literals.
+	 */
+	private Queue<Token> macthedToken = new LinkedList<>();
 	
 	private Position basePos;
 	
@@ -40,7 +47,11 @@ class CandyScanner implements Scanner {
 
 	@Override
 	public Token nextToken() {
-		this.tok = privateNextToken();
+		if (!macthedToken.isEmpty()) {
+			this.tok = macthedToken.poll();
+		} else {
+			this.tok = privateNextToken();
+		}
 		return tok;
 	}
 
@@ -83,14 +94,14 @@ class CandyScanner implements Scanner {
 					break;
 					
 				case '"':
-					isInsertSemi = true;
-					literal = readStringLiteral();
-					if (literal == null) {
+					readStringLiteral(false);
+					if (macthedToken.isEmpty()) {
 						continue scanAgain;
+					} else {
+						this.insertSemi = true;
+						return macthedToken.poll();
 					}
-					kind = TokenKind.STRING;
-					break;
-				
+					
 				case '/' :
 					ch = reader.peek();
 					if (ch == '/') {
@@ -211,6 +222,10 @@ class CandyScanner implements Scanner {
 	}
 	
 	private void skipWhitespace() {
+		skipWhitespace(false);
+	}
+	
+	private void skipWhitespace(boolean stopAtNewLine) {
 		while (true) {
 			switch (reader.peek()) {
 				case ' ':
@@ -219,7 +234,7 @@ class CandyScanner implements Scanner {
 					reader.consume();
 					continue;
 				case '\n':
-					if (insertSemi) return;
+					if (insertSemi || stopAtNewLine) return;
 					reader.consume();
 					continue;
 			}
@@ -384,18 +399,125 @@ class CandyScanner implements Scanner {
 		}
 	}
 	
-	private String readStringLiteral() {
+	private void readStringLiteral(boolean inInterpolatedStr) {
 		char ch = reader.peek();
-		while (ch != '"') {
-			if (ch == '\n' || ch == Characters.EOF) {
-				reader.error("Unterminated string literal.");
-				return null;
+		outloop: while (true) {
+			switch (ch) {
+				case '\n': case Characters.EOF:
+					reader.error("Unterminated string literal.");
+					macthedToken.clear();
+					return;
+				
+				case '"':
+					if (inInterpolatedStr) {
+						reader.error("Unterminated string literal in " + 
+							" the interpolated string.");
+						return;
+					}
+					break outloop;
+					
+				case '$':
+					reader.consume();
+					if (reader.peek() == '{') {
+						reader.consume();
+						readInterpolatedString();
+						startPos = reader.pos();	
+					} else {
+						reader.error("Expect '{' after '$'.");
+					}
+					ch = reader.peek();
+					break;
+					
+				default:
+					ch = reader.escapeChar();
+					if (!inInterpolatedStr || ch != '"') {
+						reader.putChar(ch);
+						ch = reader.readNextChar();
+					} else {
+						break outloop;
+					}	
 			}
-			reader.putChar(reader.escapeChar());
-			ch = reader.readNextChar();
 		}
 		reader.consume();
-		return reader.savedString();
+		macthedToken.offer(
+			new Token(startPos, reader.savedString(), TokenKind.STRING));
+	}
+
+	/**
+	 * If we find an interpolated string, we treat the saved string as a 
+	 * INTERPOLATION and the interpolated string between '${' and '}'
+	 * will be treat as a serial of the normal token and put them into the 
+	 * matchedToken list.
+	 *
+	 * This string:
+	 *
+	 *     "abcd${a + b}"
+	 *
+	 * is tokenized to:
+	 *
+	 *     (INTERPOLATION, "abcd")
+	 *     (IDENTIFIER,    "a")
+	 *     (PLUS,          "+")
+	 *     (IDENTIFIER,    "b")
+	 *     (STRING,        "")
+	 *
+	 * The last string token tells the parser to end the interpolated
+	 * string parsing.
+	 *
+	 * If you want to use string literals in the interpolated string, 
+	 * you would use '\' to escape '"'.
+	 */
+	private void readInterpolatedString() {
+		macthedToken.offer(
+			new Token(startPos, reader.savedString(), TokenKind.INTERPOLATION));
+		int previousNumToks = macthedToken.size();
+		outloop: while (true) {
+			skipWhitespace(true);
+			switch (reader.peek()) {
+				case '\n': case Characters.EOF: 
+				case '"':
+					reader.error("Missing '}'.");
+					break outloop;
+					
+				case '}':
+					if (previousNumToks == macthedToken.size()) {
+						reader.error("Empty interpolation string.");
+						// Insert an empty string to prevent errors in the parser.
+						macthedToken.offer(
+							new Token(reader.pos(), "", TokenKind.STRING));
+					}
+					reader.consume();
+					break outloop;
+				
+				case '\\':
+					reader.consume();
+					readEscapeInInterpolationContext();
+					break;
+					
+				default: 
+					macthedToken.offer(privateNextToken());
+					break;
+			}
+		}
+	}
+
+	private void readEscapeInInterpolationContext() {
+		switch (reader.peek()) {
+			case '"':
+				reader.consume();
+				readStringLiteral(true);
+				break;
+				
+			case '{': case '}':
+				macthedToken.offer(privateNextToken());
+				break;
+				
+			default:
+				reader.error(
+					"Can't escape char %s in interpolation contexts.", 
+					reader.peek()
+				);
+		}
 	}
 	
 	private void skipSingleLineComment() {

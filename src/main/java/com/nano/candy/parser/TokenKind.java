@@ -70,7 +70,8 @@ public enum TokenKind {
 	IDENTIFIER,
 	DOUBLE,
 	INTEGER,
-	STRING;
+	STRING,
+	INTERPOLATION;
 	
 	private static final HashMap<String, TokenKind> KEYWORD_KINDS = 
 		new HashMap<String, TokenKind>();

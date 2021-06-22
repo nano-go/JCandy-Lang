@@ -1084,6 +1084,7 @@ class CandyParser implements Parser {
 	 *            | Array
 	 *            | "this"
 	 *            | ( "super" "." <IDENTIFIER> )
+	 *            | InterpolatedString
 	 *            )
 	 *            ExprSuffix
 	 */
@@ -1169,12 +1170,72 @@ class CandyParser implements Parser {
 					reportError(expr, "The 'super' outside class.");
 				}
 				break;
-
+				
+			case INTERPOLATION:
+				expr = parseInterpolatedString();
+				break;
+				
 			default: 
 				reportError(suitableErrorPosition(), "Expected a expression terminal.");
 				panic();
 		}
 		return parseExprSuffix(expr);
+	}
+	
+	/**
+	 * InterpolatedString = ( <INTERPOLATION> Expr )+ <STRING>
+	 *
+	 * Interpolation is syntatic sugar for calling "".join(...)
+	 * So that the string:
+	 *
+	 *     "a${b+c}d${e}" 
+	 *
+	 * will be compiled to the:
+	 *
+	 *     "".join(["a", b+c, "d", e])
+	 *
+	 * Empty strings will be ignored.
+	 */
+	private Expr parseInterpolatedString() {
+		ArrayList<Expr> arr = new ArrayList<>();
+		Token first = peek();
+		while (true) {
+			Token tok = peek();
+			if (tok.getKind() == INTERPOLATION) {
+				consume();
+				if (!"".equals(tok.getLiteral())) {
+					arr.add(strLitNode(tok));
+				}		
+				arr.add(parseExpr());
+				continue;
+			}
+			if (peekKind() == STRING) {
+				consume();
+				if (!"".equals(tok.getLiteral())) {
+					arr.add(strLitNode(tok));
+				}
+				break;
+			}	
+			reportError(tok, "Syntax error in the interpolated string.");
+			break;
+		}
+		return joinExprArr(first, arr);
+	}
+	
+	private Expr.StringLiteral strLitNode(Token tok) {
+		return strLitNode(tok, tok.getLiteral());
+	}
+
+	private Expr.StringLiteral strLitNode(Token tok, String lit) {
+		return locate(tok, new Expr.StringLiteral(lit));
+	}
+	
+	private Expr joinExprArr(Token location, ArrayList<Expr> exprArr) {
+		Expr array = locate(location, new Expr.Array(exprArr));
+		Expr joinMet = new Expr.GetAttr(strLitNode(location, ""), "join");
+		List<Expr.Argument> args = new ArrayList<>();
+		args.add(new Expr.Argument(array, false));
+		return locate(location, new Expr.CallFunc(joinMet, args));
 	}
 
 	/**

@@ -7,7 +7,6 @@ import com.nano.candy.utils.Logger;
 import com.nano.candy.utils.Position;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Arrays;
 
 import static com.nano.candy.parser.TokenKind.*;
 import static org.junit.Assert.*;
@@ -130,6 +129,41 @@ public class ScannerTestCase {
 		),
 		newTKCase("\"\"", str(""), SEMIEOF),
 		
+		/* ===== Interpolated String ===== */
+		
+		newTKCase("\"a${a+b}c\"", 
+			istr("a"), id("a"), PLUS, id("b"), str("c"), SEMIEOF
+		),
+		newTKCase("\"${a+b}\"", 
+			istr(""), id("a"), PLUS, id("b"), str(""), SEMIEOF
+		),
+		newTKCase("\"aa${get(\\\"${bc} d\\\")} e\"", 
+			istr("aa"), id("get"), LPAREN, istr(""), id("bc"),
+			str(" d"), RPAREN, str(" e"), SEMIEOF
+		),
+		newTKCase("\"a${b\\\"c${\\\"d\\\"}\\\"}\"", 
+			istr("a"), id("b"), istr("c"), str("d"), 
+			str(""), str(""), SEMIEOF
+		),
+		newTKCase("\"a${\\\"b${\\\"c${\\\"d${\\\"\\\"}\\\"}\\\"}\\\"}\"",
+			istr("a"), istr("b"), istr("c"), istr("d"),
+			str(""), str(""), str(""), str(""), str(""),
+			SEMIEOF
+		),
+		newTKCase("\"Lmabda: ${foreach(lambda -> {return a;\\})}\"",
+			istr("Lmabda: "), id("foreach"), LPAREN, LAMBDA,
+			ARROW, LBRACE, RETURN, id("a"), SEMI, RBRACE, RPAREN,
+			str(""), SEMIEOF
+		),
+		newTKCase("\"The a value is ${a}, The a.b value is ${a.b}.\"",
+			istr("The a value is "), id("a"), istr(", The a.b value is "),
+			id("a"), DOT, id("b"), str("."), SEMIEOF
+		),
+		newTKCase("\"${\\\"\\\" + \\\"${a + \\\"\\\"}\\\"} ${a}\"",
+			istr(""), str(""), PLUS, istr(""), id("a"), PLUS, str(""), str(""),
+			istr(" "), id("a"), str(""), SEMIEOF
+		),
+		
 		/*===== InsertSemi Test Case =====*/
 		
 		newTKCase(
@@ -247,8 +281,12 @@ public class ScannerTestCase {
 		return tk(STRING, str);
 	}
 	
+	private static Token istr(String str) {
+		return tk(INTERPOLATION, str);
+	}
+	
 	private static Token tk(TokenKind tk) {
-		return tk(tk, null) ;
+		return tk(tk, tk.literal) ;
 	}
 
 	private static Token tk(TokenKind tk, String literal) {
@@ -326,6 +364,18 @@ public class ScannerTestCase {
 		newPECase("\"\\788\"", true, pos(1, 4)),
 		newPECase("\"\\777\"", true, pos(1, 5)),
 		
+		/* Interpolated String */
+		newPECase("\"${}\"", true, pos(1, 4)),
+		newPECase("\"a${\"", true, pos(1, 5)),
+		newPECase("\"a$\"", true, pos(1, 4)),
+		newPECase("\"$\"", true, pos(1, 3)),
+		newPECase("\"${-", true, pos(1, 5), pos(1, 5)),
+		newPECase("\"${- ", true, pos(1, 6), pos(1, 6)),
+		newPECase("\"${a ", true, pos(1, 6), pos(1, 6)),
+		newPECase("\"${\\\"}\"", true, pos(1, 7), pos(1, 7)),
+		newPECase("\"${\\a}\"", true, pos(1, 5)),
+		newPECase("\"${\n", true, pos(1, 4), pos(1, 4)),
+		
 		/* Number Literal */	
 		newPECase("0bFFFF", true, pos(1, 3), pos(1, 4), pos(1, 5), pos(1, 6)),
 		newPECase("0b002", true, pos(1, 5)),
@@ -390,8 +440,18 @@ public class ScannerTestCase {
 		
 		private String msg() {
 			return "Input: <" + input +  
-			       ">\nExpected: " + Arrays.toString(expectedToks) +
-				   "\nWas: " + actualToks.toString() + "\n" ;
+			       ">\nExpected: " + 
+				   tokArr2Str(expectedToks) +
+				   "\nWas: " + tokArr2Str(actualToks.toArray(new Token[0]));
+		}
+		
+		private static String tokArr2Str(Token[] toks) {
+			StringBuilder builder = new StringBuilder();
+			int i = 0;
+			for (Token tok : toks) {
+				builder.append(i ++).append(": ").append(tok).append("\n");
+			}
+			return builder.toString();
 		}
 	}
 	
