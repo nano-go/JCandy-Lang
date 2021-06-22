@@ -40,7 +40,6 @@ import static com.nano.candy.interpreter.i2.instruction.Instructions.*;
 public final class VM {
 	
 	public static final boolean DEBUG = false;
-	
 	private static final byte WIDE_INDEX_MARK = (byte) 0xFF;
 	
 	private int maxStackDeepth = CandySystem.DEFAULT_MAX_STACK;
@@ -48,14 +47,10 @@ public final class VM {
 	private GlobalScope global;
 	
 	/**
-	 * This is used to import source files as moudle to manage.
+	 * This is used to import source files as moudles to manage.
 	 */
 	private ModuleManager moudleManager;
 	
-	/**
-	 * Trace code execution and the change of stack. Lazily initalized
-	 * upon needed.
-	 */
 	private TracerManager tracerManager;
 	
 	private StackFrame stack;
@@ -239,6 +234,23 @@ public final class VM {
 
 	/* -------------------- Execution Helper -------------------- */
 	
+	private int readJumpOffset() {
+		return (code[pc] << 8) & 0xFFFF | code[pc + 1] & 0xFF;
+	}
+
+	private int readUint8() {
+		return code[pc ++] & 0xFF;
+	}
+
+	private int readIndex(){
+		if (code[pc] != WIDE_INDEX_MARK) {
+			return code[pc ++] & 0xFF;
+		}
+		// wide index: 2 unsigned bytes.
+		pc ++;
+		return (code[pc ++] << 8) & 0xFFFF | code[pc ++] & 0xFF;
+	}
+	
 	public CandyObject pop() {
 		return opStack.pop();
 	}
@@ -258,25 +270,8 @@ public final class VM {
 	private void store(int slot, CandyObject value) {
 		slots[slot] = value;
 	}
-
-	private int readJumpOffset() {
-		return (code[pc] << 8) & 0xFFFF | code[pc + 1] & 0xFF;
-	}
-
-	private int readUint8() {
-		return code[pc ++] & 0xFF;
-	}
-
-	private int readIndex(){
-		if (code[pc] != WIDE_INDEX_MARK) {
-			return code[pc ++] & 0xFF;
-		}
-		// wide index: 2 unsigned bytes.
-		pc ++;
-		return (code[pc ++] << 8) & 0xFFFF | code[pc ++] & 0xFF;
-	}
 	
-	public boolean tryToHandleError(ErrorObj err, boolean printError) {
+	private boolean tryToHandleError(ErrorObj err, boolean printError) {
 		syncPcToTopFrame();
 		if (err.getStackTraceElements() == null) {
 			err.setStackTraceElements(stack);
@@ -308,7 +303,7 @@ public final class VM {
 		return null;
 	}
 
-	public void handleError(ErrorObj err, ErrorHandlerTable.ErrorHandler handler) {	
+	private void handleError(ErrorObj err, ErrorHandlerTable.ErrorHandler handler) {	
 		opStack.clear();
 		pc = handler.handlerPc;
 		push(err);
@@ -521,7 +516,6 @@ public final class VM {
 		if (exitMethodAtFrameEnd) {
 			frame().exitMethodAtReturn = true;
 		}
-		
 		loop: for (;;) {
 			if (tracerManager != null)
 				tracerManager.notifyInsStarted(this, pc);
@@ -756,54 +750,28 @@ public final class VM {
 				/**
 				 * Local Operations.
 				 */
-				case OP_LOAD: {
+				case OP_LOAD:
 					push(load(readUint8()));
 					break;
-				}
-				case OP_LOAD0: {
-					push(load(0));
+				case OP_LOAD0:
+				case OP_LOAD1:
+				case OP_LOAD2:
+				case OP_LOAD3:
+				case OP_LOAD4: 
+					push(load(code[pc-1]-OP_LOAD0));
 					break;
-				}
-				case OP_LOAD1: {
-					push(load(1));
-					break;
-				}
-				case OP_LOAD2: {
-					push(load(2));
-					break;
-				}
-				case OP_LOAD3: {
-					push(load(3));
-					break;
-				}
-				case OP_LOAD4: {
-					push(load(4));
-					break;
-				}
-				case OP_STORE: {
+				
+				case OP_STORE:
 					store(readUint8(), peek(0));
 					break;
-				}
-				case OP_STORE0: {
-					store(0, peek(0));
-					break;
-				}
-				case OP_STORE1: {
-					store(1, peek(0));
-					break;
-				}
-				case OP_STORE2: {
-					store(2, peek(0));
-					break;
-				}
-				case OP_STORE3: {
-					store(3, peek(0));
-					break;
-				}
-				case OP_STORE4: {
-					store(4, peek(0));
-					break;
-				}
+				case OP_STORE0: 
+				case OP_STORE1: 
+				case OP_STORE2: 
+				case OP_STORE3: 
+				case OP_STORE4:
+					store(code[pc-1]-OP_STORE0, peek(0));
+					break;	
+				
 				case OP_POP_STORE: {
 					store(readUint8(), pop());
 					break;
