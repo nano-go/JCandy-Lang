@@ -28,4 +28,16 @@ public class Characters {
 	public static char lower(char letter) {
 		return (char)(('a' - 'A') | letter);
 	}
+	
+	public static String toEscapeChar(char ch) {
+		switch (ch) {
+			case '\t': return "\\t"; 
+			case '\r': return "\\r";
+			case '\f': return "\\f";
+			case '\b': return "\\b";
+			case '\n': return "\\n";
+			case '\"': return "\\\"";
+			default  : return String.valueOf(ch);
+		}
+	}
 }

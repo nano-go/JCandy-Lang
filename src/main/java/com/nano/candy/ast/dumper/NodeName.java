@@ -1,4 +1,5 @@
-package com.nano.candy.ast.printer;
+package com.nano.candy.ast.dumper;
+
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;

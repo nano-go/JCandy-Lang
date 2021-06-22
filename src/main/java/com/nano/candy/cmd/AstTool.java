@@ -1,14 +1,17 @@
 package com.nano.candy.cmd;
 
+import com.nano.candy.ast.ASTreeNode;
 import com.nano.candy.ast.Program;
-import com.nano.candy.ast.printer.AstPrinter;
-import com.nano.candy.ast.printer.AstPrinters;
+import com.nano.candy.ast.dumper.AstDumper;
+import com.nano.candy.ast.dumper.AstDumpers;
+import com.nano.candy.ast.dumper.DumperOptions;
 import com.nano.candy.interpreter.Interpreter;
 import com.nano.candy.parser.ParserFactory;
 import com.nano.candy.utils.CommandLine;
 import com.nano.candy.utils.Logger;
 import com.nano.candy.utils.Options;
 import java.io.File;
+import java.io.IOException;
 
 public class AstTool implements CandyTool {
 
@@ -19,7 +22,7 @@ public class AstTool implements CandyTool {
 
 	@Override
 	public String groupHelper() {
-		return "Print the AST of the specified source files.";
+		return "Print the AST of the specified source file.";
 	}
 
 	@Override
@@ -32,18 +35,23 @@ public class AstTool implements CandyTool {
 		options.addOption("-f", true, 
 						  "Print AST in the specified format.\nFormats:" +
 						  "\n    json/Json");
+		options.addOption("-p", false, "Print the position of AST nodes.");
 	}
 
 	@Override
 	public void run(Interpreter interpreter, CandyOptions options) throws Exception {	
 		CommandLine cmd = options.getCmd();
-		int flag = parseFlag(cmd);
+		AstDumper dumper = AstDumpers.newPrinter(parseFlag(cmd));
+		DumperOptions dumperOptions = getDumperOptions(cmd);
+		dumper.dump(dumperOptions, getAstTreeNode(options));
+	}
+
+	private ASTreeNode getAstTreeNode(CandyOptions options) throws IOException {
 		options.checkHasSrcFile();
-		AstPrinter printer = AstPrinters.newPrinter(flag);
 		File src = options.getSourceFile();
 		Program program = ParserFactory.newParser(src).parse();
 		Logger.getLogger().printAllMessage(true);
-		printer.print(System.out, program);
+		return program;
 	}
 
 	private int parseFlag(CommandLine cmd) {
@@ -51,13 +59,18 @@ public class AstTool implements CandyTool {
 			String format = cmd.getOptionArg("-f");
 			switch (format) {
 				case "json": case "Json":
-					return AstPrinters.PRINT_AST_IN_JSON_MASK;
+					return AstDumpers.JSON_MASK;
 				default:
 					throw new Options.ParseException("Unknown ast format: " + format);
 			}
 		}
-		return AstPrinters.PRINT_AST_IN_JSON_MASK;
+		return AstDumpers.JSON_MASK;
 	}
-
+	
+	private DumperOptions getDumperOptions(CommandLine cmd) {
+		DumperOptions dumperOptions = new DumperOptions();
+		dumperOptions.setIsDumpPosition(cmd.hasOption("-p"));
+		return dumperOptions;
+	}
 }
 

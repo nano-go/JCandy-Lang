@@ -1,6 +1,6 @@
 package com.nano.candy.ast;
 
-import com.nano.candy.ast.printer.FieldName;
+import com.nano.candy.ast.dumper.FieldName;
 import com.nano.candy.utils.Position;
 import java.util.Collections;
 import java.util.LinkedList;
