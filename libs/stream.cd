@@ -8,7 +8,7 @@ class Stream {
 		this.iterable = iterable
 		this.evalfs = []
 	}
-	
+
 	fun collect(collector) {
 		return collector(this)
 	}
@@ -124,6 +124,12 @@ class Stream {
 			return e2
 		})
 	}
+
+	fun toArray() {	
+		var arr = []
+		for (e in stream) arr.append(e)
+		return arr
+	}
 	
 	fun foreach(fn) {
 		var flag_break = FLAG_BREAK
@@ -190,10 +196,4 @@ class Stream {
 		}
 		return iterator
 	}
-}
-
-fun arrayCollector(stream) {
-	var arr = []
-	for (e in stream) arr.append(e)
-	return arr
 }
