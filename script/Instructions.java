@@ -90,14 +90,16 @@ public class Instructions {
 	public static final byte OP_NEW_ARRAY         = (byte)70;
 	public static final byte OP_BUILT_TUPLE       = (byte)71;
 	public static final byte OP_APPEND            = (byte)72;
-	public static final byte OP_ASSERT            = (byte)73;
-	public static final byte OP_PRINT             = (byte)74;
+	public static final byte OP_NEW_MAP           = (byte)73;
+	public static final byte OP_PUT               = (byte)74;
+	public static final byte OP_ASSERT            = (byte)75;
+	public static final byte OP_PRINT             = (byte)76;
 
-	public static final byte OP_EXIT              = (byte)75;
+	public static final byte OP_EXIT              = (byte)77;
 
-	public static final byte INSTRUCTION_NUMBER = 76;
+	public static final byte INSTRUCTION_NUMBER = 78;
 
-	public static final String[] INSTRUCTION_NAMES = new String[76];
+	public static final String[] INSTRUCTION_NAMES = new String[78];
 	static {
 		INSTRUCTION_NAMES[OP_NOP]               = "nop";
 		INSTRUCTION_NAMES[OP_POP]               = "pop";
@@ -172,6 +174,8 @@ public class Instructions {
 		INSTRUCTION_NAMES[OP_NEW_ARRAY]         = "new_array";
 		INSTRUCTION_NAMES[OP_BUILT_TUPLE]       = "built_tuple";
 		INSTRUCTION_NAMES[OP_APPEND]            = "append";
+		INSTRUCTION_NAMES[OP_NEW_MAP]           = "new_map";
+		INSTRUCTION_NAMES[OP_PUT]               = "put";
 		INSTRUCTION_NAMES[OP_ASSERT]            = "assert";
 		INSTRUCTION_NAMES[OP_PRINT]             = "print";
 		INSTRUCTION_NAMES[OP_EXIT]              = "exit";

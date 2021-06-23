@@ -1,4 +1,5 @@
 package com.nano.candy.ast;
+import com.nano.candy.ast.Expr.Map;
 
 
 public interface AstVisitor<S, E> {
@@ -35,6 +36,7 @@ public interface AstVisitor<S, E> {
 	public E visit(Expr.NullLiteral node);
 	public E visit(Expr.Array node);
 	public E visit(Expr.Tuple node);
+	public E visit(Expr.Map node);
 	public E visit(Expr.VarRef node);
 	public E visit(Expr.Unary node);
 	public E visit(Expr.TernaryOperator node);

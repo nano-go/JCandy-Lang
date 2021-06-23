@@ -7,6 +7,7 @@ import com.nano.candy.interpreter.i2.builtin.type.BoolObj;
 import com.nano.candy.interpreter.i2.builtin.type.CallableObj;
 import com.nano.candy.interpreter.i2.builtin.type.DoubleObj;
 import com.nano.candy.interpreter.i2.builtin.type.IntegerObj;
+import com.nano.candy.interpreter.i2.builtin.type.MapObj;
 import com.nano.candy.interpreter.i2.builtin.type.ModuleObj;
 import com.nano.candy.interpreter.i2.builtin.type.NullPointer;
 import com.nano.candy.interpreter.i2.builtin.type.PrototypeFunction;
@@ -382,6 +383,21 @@ public final class VM {
 	}
 	
 	/**
+	 * Instruction: OP_PUT
+	 *
+	 * Append {readUint8()} KV(key and value) to the bottom map object.
+	 */
+	private void evalOpPut() {
+		int numKVs = readUint8();
+		MapObj map = (MapObj) peek(numKVs*2);
+		for (int i = 0; i < numKVs; i ++) {
+			CandyObject key = pop();
+			CandyObject value = pop();
+			map.put(this, key, value);
+		}
+	}
+	
+	/**
 	 * Instruction: OP_BUILT_TUPLE
 	 *
 	 * Build a tuple to stack-top.
@@ -712,6 +728,18 @@ public final class VM {
 				}
 				case OP_APPEND: {
 					evalOpAppned();
+					break;
+				}
+				
+				/**
+				 * Map
+				 */
+				case OP_NEW_MAP: {
+					push(new MapObj(cp.getInteger(readIndex())));
+					break;
+				}
+				case OP_PUT: {
+					evalOpPut();
 					break;
 				}
 				

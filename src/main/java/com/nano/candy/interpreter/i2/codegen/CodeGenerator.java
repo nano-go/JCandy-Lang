@@ -968,6 +968,26 @@ public class CodeGenerator implements AstVisitor<Void, Void> {
 	}
 
 	@Override
+	public Void visit(Expr.Map node) {
+		builder.emitop(OP_NEW_MAP, line(node));
+		builder.emitIntegerConstant(node.keys.size());
+		int size = node.keys.size();
+		int p = 0;
+		while (size > 0) {
+			int c = Math.min(size, 250/2);
+			p += c;
+			for (int i = 1; i <= c; i ++) {
+				node.values.get(p-i).accept(this);
+				node.keys.get(p-i).accept(this);
+			}
+			size -= c;
+			builder.state().pop(c*2);
+			builder.emitopWithArg(OP_PUT, c);
+		}
+		return null;
+	}
+
+	@Override
 	public Void visit(Expr.Tuple node) {
 		final int SIZE = node.elements.size();
 		if (SIZE > 255) {

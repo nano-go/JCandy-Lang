@@ -87,6 +87,8 @@ OP_IMPORT import
 OP_NEW_ARRAY new_array
 OP_BUILT_TUPLE built_tuple
 OP_APPEND append
+OP_NEW_MAP new_map
+OP_PUT put
 OP_ASSERT assert
 OP_PRINT print
 

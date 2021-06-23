@@ -6,6 +6,7 @@ import com.nano.candy.interpreter.i2.builtin.type.ArrayObj;
 import com.nano.candy.interpreter.i2.builtin.type.BoolObj;
 import com.nano.candy.interpreter.i2.builtin.type.DoubleObj;
 import com.nano.candy.interpreter.i2.builtin.type.IntegerObj;
+import com.nano.candy.interpreter.i2.builtin.type.MapObj;
 import com.nano.candy.interpreter.i2.builtin.type.ModuleObj;
 import com.nano.candy.interpreter.i2.builtin.type.NumberObj;
 import com.nano.candy.interpreter.i2.builtin.type.Range;
@@ -52,6 +53,7 @@ public class GlobalScope {
 		defineClass(BoolObj.BOOL_CLASS);
 		defineClass(TupleObj.TUPLE_CLASS);
 		defineClass(ModuleObj.MOUDLE_CLASS);
+		defineClass(MapObj.MAP_CLASS);
 		defineClass(ObjectClass.getObjClass());
 	}
 

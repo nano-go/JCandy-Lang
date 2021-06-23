@@ -4,6 +4,7 @@ import com.nano.candy.parser.TokenKind;
 import com.nano.candy.std.StringFunctions;
 import com.nano.candy.utils.Position;
 import java.util.List;
+import java.util.Collections;
 
 public abstract class Expr extends ASTreeNode {
 	
@@ -336,6 +337,34 @@ public abstract class Expr extends ASTreeNode {
 			return visitor.visit(this);
 		}
 
+		@Override
+		public boolean isConstant() {
+			return false;
+		}
+	}
+	
+	public static class Map extends Literal {
+		
+		public List<Expr> keys;
+		public List<Expr> values;
+		
+		public Map() {
+			this(
+				Collections.<Expr>emptyList(),
+				Collections.<Expr>emptyList()
+			);
+		}
+
+		public Map(List<Expr> keys, List<Expr> values) {
+			this.keys = keys;
+			this.values = values;
+		}
+		
+		@Override
+		public <R extends Object> R accept(AstVisitor<?, R> visitor) {
+			return visitor.visit(this);
+		}
+		
 		@Override
 		public boolean isConstant() {
 			return false;

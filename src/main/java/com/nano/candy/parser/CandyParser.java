@@ -426,7 +426,8 @@ class CandyParser implements Parser {
 	}
 	
 	/**
-	 * LAMBDA is an expression but it can't be treated as a statement.
+	 * Lambda or Map is an expression but it can't be treated as
+	 * a statement(ExprStmt).
 	 */
 	private boolean isFirstSetOfExpr(TokenKind tk) {
 		switch (tk) {
@@ -1069,6 +1070,7 @@ class CandyParser implements Parser {
 	 *            | <IDENTIFIER>
 	 *            | ( "(" [ Expr [ "," Tuple ] ] ")" )
 	 *            | Array
+	 *            | Map
 	 *            | "this"
 	 *            | ( "super" "." <IDENTIFIER> )
 	 *            | InterpolatedString
@@ -1136,6 +1138,10 @@ class CandyParser implements Parser {
 			
 			case LBRACKET:
 				expr = parseArray();
+				break;
+			
+			case LBRACE:
+				expr = parseMap();
 				break;
 				
 			case THIS:
@@ -1259,6 +1265,7 @@ class CandyParser implements Parser {
 			return locate(location, new Expr.Array(elements));
 		}
 		do {
+			// Trailing commas
 			if (peekKind() == TokenKind.RBRACKET) {
 				break;
 			}
@@ -1267,6 +1274,37 @@ class CandyParser implements Parser {
 		ignorableLinebreak();
 		matchIf(RBRACKET, true);
 		return locate(location, new Expr.Array(elements));
+	}
+	
+	/**
+	 * Map = "{" [ KV ( "," KV )* ] [ <SEMI> ] "}"
+	 */
+	private Expr parseMap() {
+		Token location = match(LBRACE);
+		if (matchIf(RBRACE)) {
+			return locate(location, new Expr.Map());
+		}
+		List<Expr> keys = new ArrayList<>(8);
+		List<Expr> values = new ArrayList<>(8);
+		do {
+			// Trailing commas
+			if (peekKind() == TokenKind.RBRACE) {
+				break;
+			}
+			parseKV(keys, values);
+		} while (matchIf(COMMA));
+		ignorableLinebreak();
+		matchIf(RBRACE, true);
+		return locate(location, new Expr.Map(keys, values));
+	}
+	
+	/**
+	 * KV = Expr ":" Expr
+	 */
+	private void parseKV(List<Expr> keys, List<Expr> values) {
+		keys.add(parseExpr());
+		matchIf(COLON, true);
+		values.add(parseExpr());
 	}
 
 	/**
