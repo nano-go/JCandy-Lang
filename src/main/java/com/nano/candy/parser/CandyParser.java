@@ -425,6 +425,9 @@ class CandyParser implements Parser {
 		return block;
 	}
 	
+	/**
+	 * LAMBDA is an expression but it can't be treated as a statement.
+	 */
 	private boolean isFirstSetOfExpr(TokenKind tk) {
 		switch (tk) {
 			case IDENTIFIER: case NULL: 
@@ -795,13 +798,13 @@ class CandyParser implements Parser {
 	}
 
 	/**
-	 * Return = "return" [ ExprOrLambda ] <SEMI>
+	 * Return = "return" [ Expr ] <SEMI>
 	 */
 	private Stmt.Return parseReturn() {
 		Token location = match(RETURN);
 		Expr expr = null;
 		if (peekKind() != SEMI) {
-			expr = parseExprOrLambda();
+			expr = parseExpr();
 		}
 		if (this.curFunctionType == FunctionType.NONE) {
 			reportError(location, "The 'return' outside function.");
@@ -811,14 +814,14 @@ class CandyParser implements Parser {
 	}
 	
 	/**
-	 * VarDef = "var" <IDENTIFIER> [ "=" ExprOrLambda ] <SEMI>
+	 * VarDef = "var" <IDENTIFIER> [ "=" Expr ] <SEMI>
 	 */
 	private Stmt.VarDef parseVarDef() {
 		Token position = match(VAR);
 		Token identifier = match(IDENTIFIER, "Expected variable name.");
 		Expr initializer = null;
 		if (matchIf(ASSIGN)) {
-			initializer = parseExprOrLambda();
+			initializer = parseExpr();
 		}
 		matchSEMI();
 		return locate(position, 
@@ -984,13 +987,13 @@ class CandyParser implements Parser {
 	}
 	
 	/**
-	 * Assignment = AssignOp ExprOrLambda
+	 * Assignment = AssignOp Expr
 	 * AssignOp = "+=" | "-=" | "*=" | "/=" | "%=" | "="
 	 */
 	private Expr parseeAssignment(Expr lhs) {
 		TokenKind assOperator = peek().getKind();
 		consume();
-		Expr rhs = parseExprOrLambda();
+		Expr rhs = parseExpr();
 		
 		if (lhs instanceof Expr.VarRef) { 
 			return new Expr.Assign(((Expr.VarRef) lhs).name, assOperator, rhs);
@@ -1064,7 +1067,7 @@ class CandyParser implements Parser {
 	 *            | <INTEGER>
 	 *            | <DOUBLE>
 	 *            | <IDENTIFIER>
-	 *            | ( "(" [ ExprOrLambda [ "," Tuple ] ] ")" )
+	 *            | ( "(" [ Expr [ "," Tuple ] ] ")" )
 	 *            | Array
 	 *            | "this"
 	 *            | ( "super" "." <IDENTIFIER> )
@@ -1124,7 +1127,7 @@ class CandyParser implements Parser {
 					locate(location, expr);
 					break;
 				}
-				expr = parseExprOrLambda();
+				expr = parseExpr();
 				if (matchIf(COMMA)) {
 					expr = parseTuple(expr, location);
 				}
@@ -1157,6 +1160,10 @@ class CandyParser implements Parser {
 				
 			case INTERPOLATION:
 				expr = parseInterpolatedString();
+				break;
+				
+			case LAMBDA:
+				expr = parseLambdaExpr();
 				break;
 				
 			default: 
@@ -1223,7 +1230,7 @@ class CandyParser implements Parser {
 	}
 
 	/**
-	 * Tuple = [ ExprOrLambda ( "," ExprOrLambda )* [ "," ] [ SEMI ] ]
+	 * Tuple = [ Expr ( "," Expr )* [ "," ] [ SEMI ] ]
 	 */
 	private Expr parseTuple(Expr expr, Token location) {
 		List<Expr> tuple = new ArrayList<>();
@@ -1232,7 +1239,7 @@ class CandyParser implements Parser {
 			if (peekKind() == RPAREN) {
 				break;
 			}
-			tuple.add(parseExprOrLambda());
+			tuple.add(parseExpr());
 		} while (matchIf(COMMA));
 		ignorableLinebreak();
 		if (tuple.size() > 255) {
@@ -1243,7 +1250,7 @@ class CandyParser implements Parser {
 	}
 	
 	/**
-	 * Array = "[" [ ExprOrLambda ( "," ExprOrLambda )* ] [ SEMI ] "]"
+	 * Array = "[" [ Expr ( "," Expr )* ] [ SEMI ] "]"
 	 */
 	private Expr.Array parseArray() {
 		ArrayList<Expr> elements = new ArrayList<>();
@@ -1255,7 +1262,7 @@ class CandyParser implements Parser {
 			if (peekKind() == TokenKind.RBRACKET) {
 				break;
 			}
-			elements.add(parseExprOrLambda());
+			elements.add(parseExpr());
 		} while (matchIf(COMMA));
 		ignorableLinebreak();
 		matchIf(RBRACKET, true);
@@ -1306,7 +1313,7 @@ class CandyParser implements Parser {
 	}
 
 	/**
-	 * Agruments = "(" [ [ "*" ] ExprOrLambda ( "," [ "*" ] ExprOrLambda )* ] 
+	 * Agruments = "(" [ [ "*" ] Expr ( "," [ "*" ] Expr )* ] 
 	 *             [ <SEMI> ] ")"
 	 */
 	private List<Expr.Argument> parseArguments(Position pos) {
@@ -1320,7 +1327,7 @@ class CandyParser implements Parser {
 				break;
 			}
 			boolean isUnpack = matchIf(STAR);
-			Expr arg = parseExprOrLambda();
+			Expr arg = parseExpr();
 			args.add(new Expr.Argument(arg, isUnpack));
 		} while (matchIf(COMMA));
 		ignorableLinebreak();
@@ -1329,17 +1336,6 @@ class CandyParser implements Parser {
 			reportError(pos, "Too many arguments.");
 		}
 		return args;
-	}
-	
-	/**
-	 * ExprOrLambda = LambdaExpr | Expr
-	 */
-	private Expr parseExprOrLambda() {
-		if (peekKind() == TokenKind.LAMBDA) {
-			return parseLambdaExpr();
-		} else {
-			return parseExpr();
-		}
 	}
 	
 	/**
