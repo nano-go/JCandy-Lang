@@ -13,7 +13,7 @@ public class CandyToolFactory {
 	static {
 		CandyToolFactory.register(new PerformanceTool());
 		CandyToolFactory.register(new ExeTool());
-		CandyToolFactory.register(new AstTool());	
+		CandyToolFactory.register(new AstTool());
 		CandyToolFactory.register(new DisassembleTool());
 		CandyToolFactory.register(new DebugerTool());
 	}

@@ -6,6 +6,8 @@ import java.util.Optional;
 
 public class Options {
 	
+	private static final String TAB = "    ";
+	
 	public static class ParseException extends RuntimeException {
 		public ParseException(String msg) {
 			super(msg);
@@ -109,7 +111,6 @@ public class Options {
 		return this;
 	}
 	
-	private static final String TAB = "    ";
 	public String helper() {
 		StringBuilder builder = new StringBuilder();
 		for (Group group : groups) {
