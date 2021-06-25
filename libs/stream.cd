@@ -1,199 +1,241 @@
 
-var FLAG_CONTINUE = Object()
-var FLAG_BREAK = Object()
-var FLAG_NULL = Object()
+var EMPTY_STREAM = Object()
 
-class Stream {
-	fun init(iterable) {
-		this.iterable = iterable
-		this.evalfs = []
+class StreamInterface {
+	fun init(eval) {
+		this.eval = eval
+	}
+
+	fun map(mapper) {
+		var eval = this.eval
+		this.eval = lambda -> {
+			var value = eval()
+			return EMPTY_STREAM == value ? value : mapper(value)
+		}
+		return this
+	}
+
+	fun peek(consumer) {	
+		var eval = this.eval
+		this.eval = lambda -> {
+			var value = eval()
+			if (EMPTY_STREAM != value) consumer(value)
+			return value
+		}
+		return this
+	}	
+
+	fun filter(filter) {
+		var eval = this.eval
+		this.eval = lambda -> {
+			var value = eval()
+			while (EMPTY_STREAM != value && !filter(value)) {
+				value = eval()
+			}
+			return value
+		}
+		return this
+	}
+
+	fun skip(n) {
+		var eval = this.eval
+		this.eval = lambda -> {
+			var value = eval()
+			while (n > 0 && EMPTY_STREAM != value) {
+				n -= 1
+				value = eval()
+			}
+			return value
+		}
+		return this
+	}
+
+	fun limit(n) {
+		var eval = this.eval
+		this.eval = lambda -> {
+			if (n <= 0) return EMPTY_STREAM
+			n -= 1
+			return eval()
+		}
+		return this
+	}
+
+	fun distinct() {
+		var eval = this.eval
+		var set = {}
+		this.eval = lambda -> {
+			var value = eval()
+			while (EMPTY_STREAM != value && set.contains(value)) {
+				value = eval()
+			}
+			set[value] = null
+			return value
+		}
+		return this
+	}	
+
+	fun sort() {
+		var eval = this.eval
+		var sortedArr = null
+		var p = 1
+		var size = 0
+		var emptyStream = EMPTY_STREAM
+
+		fun getElement(p, sortedArr) {
+			var value = sortedArr[p]
+			sortedArr[p] = null
+			return value
+		}
+
+		this.eval = lambda -> {
+			if (sortedArr) {
+				if (p >= size) return emptyStream
+				p += 1
+				return getElement(p-1, sortedArr)
+			}
+			sortedArr = []
+			var value
+			while (emptyStream != (value = eval())) {
+				sortedArr.append(value)
+			}
+			sortedArr.sort()
+			size = sortedArr.size()
+			return size != 0 ? getElement(0, sortedArr) : emptyStream
+		}
+		return this
+	}
+
+	fun foreach(consumer) {
+		var eval = this.eval
+		var emptyStream = EMPTY_STREAM;
+		var value
+		while (emptyStream != (value = eval())) {
+			consumer(value)
+		}
+	}
+
+	fun reduce(initVal, operator) {
+		var eval = this.eval
+		var emptyStream = EMPTY_STREAM;
+		var value
+		var result = initVal
+		while (emptyStream != (value = eval())) {
+			result = operator(result, value)
+		}
+		return result
+	}
+
+	fun fold(operator) {
+		var eval = this.eval
+		var emptyStream = EMPTY_STREAM;
+		var value = eval()
+		if (value == emptyStream) return null;
+		var result = value
+		while (emptyStream != (value = eval())) {
+			result = operator(result, value)
+		}
+		return result
+	}
+
+	fun max() {
+		return this.fold(lambda x, y -> x > y ? x : y)
+	}
+
+	fun min() {
+		return this.fold(lambda x, y -> x < y ? x : y)
+	}
+
+	fun sum() {
+		return this.fold(lambda x, y -> x + y)
+	}
+
+	fun count() {
+		var eval = this.eval
+		var emptyStream = EMPTY_STREAM;
+		var value
+		var count = 0
+		while (emptyStream != (value = eval())) {
+			count += 1
+		}
+		return count
+	}
+
+	fun allMatch(matcher) {
+		var eval = this.eval
+		var emptyStream = EMPTY_STREAM;
+		var value
+		while (emptyStream != (value = eval())) {
+			if (!matcher(value)) return false
+		}
+		return true
+	}
+
+	fun anyMatch(matcher) {
+		var eval = this.eval
+		var emptyStream = EMPTY_STREAM;
+		var value
+		while (emptyStream != (value = eval())) {
+			if (matcher(value)) return true
+		}
+		return false
+	}
+
+	fun noneMatch(matcher) {
+		var eval = this.eval
+		var emptyStream = EMPTY_STREAM;
+		var value
+		while (emptyStream != (value = eval())) {
+			if (matcher(value)) return false
+		}
+		return true
+	}
+
+	fun findFirst() {
+		var value = this.eval()
+		return EMPTY_STREAM != value ? value : null
+	}
+
+	fun _collect(suppiler, accumulator, finisher) {
+		var eval = this.eval
+		var emptyStream = EMPTY_STREAM;
+		var value
+		while (emptyStream != (value = eval())) {
+			accumulator(suppiler, value)
+		}
+		return finisher(suppiler)
 	}
 
 	fun collect(collector) {
-		return collector(this)
+		return this._collect(collect.suppiler, collector.accumulator, collector.finisher)
 	}
 
-	fun filter(accepter) {
-		this.evalfs.append(lambda e -> {
-			if (accepter(e)) {
-				return e
-			}
-			return FLAG_CONTINUE
-		})
-		return this
-	}
-	
-	fun map(convertor) {
-		this.evalfs.append(convertor)
-		return this
-	}
-	
-	fun limit(n) {
-		this.evalfs.append(lambda e -> {
-			if (n <= 0) {
-				return FLAG_BREAK
-			}
-			n -= 1
-			return e
-		})
-		return this
-	}
-	
-	fun skip(n) {
-		this.evalfs.append(lambda e -> {
-			if (n > 0) {
-				n -= 1
-				return FLAG_CONTINUE
-			}
-			return e
-		})
-		return this
-	}
-	
-	fun anyMatch(matcher) {
-		var matched = false
-		for (e in this) {
-			if (matcher(e)) {
-				matched = true
-				break
-			}
-		}
-		return matched
-	}
-	
-	fun allMatch(matcher) {
-		var matched = true
-		for (e in this) {
-			if (!matcher(e)) {
-				matched = false
-				break
-			}
-		}
-		return matched
-	}
-	
-	fun noneMatch(matcher) {
-		var noneMatch = true
-		for (e in this) {
-			if (matcher(e)) {
-				noneMatch = false
-				break
-			}
-		}
-		return noneMatch
-	}
-	
-	fun count() {
-		var n = 0
-		this.foreach(lambda e -> n += 1)
-		return n
-	}
-	
-	fun reduce(begainningPos, binaryOperator) {
-		var iterator = this._iterator()
-		var hasNext = iterator._hasNext
-		if (!hasNext()) {
-			return null
-		}
-		var next = iterator._next
-		var element = next()
-		if (begainningPos > 0) {
-			for (i in range(0, begainningPos)) {
-				if (!hasNext()) {
-					return null
-				}
-				element = next()
-			}
-		}
-		while (hasNext()) {
-			element = binaryOperator(element, next())
-		}
-		return element
-	}
-	
-	fun max() {
-		return this.reduce(0, lambda e1, e2 -> {
-			if (e1 > e2) return e1
-			return e2
-		})
-	}
-	
-	fun min() {
-		return this.reduce(0, lambda e1, e2 -> {
-			if (e1 < e2) return e1
-			return e2
-		})
+	fun toArray() {
+		return this._collect([], 
+			lambda arr, e -> arr.append(e), 
+			lambda arr -> arr)
 	}
 
-	fun toArray() {	
-		var arr = []
-		for (e in this) arr.append(e)
-		return arr
+	fun toTuple() {
+		return this._collect([], 
+			lambda arr, e -> arr.append(e), 
+			lambda arr -> arr.toTuple())
 	}
-	
-	fun foreach(fn) {
-		var flag_break = FLAG_BREAK
-		var flag_continue = FLAG_CONTINUE
-		var evalfs = this.evalfs
-		if (evalfs.size() == 0) {
-			for (e in this.iterable) fn(e)
-			return this
-		}
-		for (e in this.iterable) {
-			for (eval in evalfs) {
-				e = eval(e)
-				if (e == flag_continue || e == flag_break) {
-					break
-				}
-			}
-			if (e == flag_continue) continue
-			if (e == flag_break) break
-			fn(e)
-		}
-		return this
+
+	fun toMap(accumulator) {
+		return this._collect({}, 
+			accumulator,
+			lambda map -> map)
 	}
-	
-	fun _iterator() {
-		var flag_break = FLAG_BREAK
-		var flag_continue = FLAG_CONTINUE
-		var flag_null = FLAG_NULL
-		
-		var eIterator = this.iterable._iterator()
-		var iHasNext = eIterator._hasNext
-		var iNext = eIterator._next
-		
-		var evalfs = this.evalfs
-		var nextElement = flag_null
-		
-		fun advance() {
-			while (iHasNext()) {
-				var e = iNext()
-				for (eval in evalfs) {
-					e = eval(e)
-					if (e == flag_continue || e == flag_break) {
-						break
-					}
-				}
-				if (e == flag_continue) {
-					continue
-				}
-				if (e == flag_break) {
-					break
-				}
-				nextElement = e
-				return
-			}
-			nextElement = flag_null
-		}
-		
-		advance()
-		var iterator = Object()
-		iterator._hasNext = lambda -> nextElement != flag_null
-		iterator._next = lambda -> {
-			var n = nextElement
-			advance()
-			return n
-		}
-		return iterator
+
+	fun join(seperator) {
+		return this._collect([],
+			lambda arr, e -> arr.append(e),
+			lambda arr -> seperator.join(arr))
 	}
+}
+
+fun Stream(iterable) {
+	var iterator = iterable._iterator()
+	return StreamInterface(lambda -> 
+		iterator._hasNext() ? iterator._next() : EMPTY_STREAM);
 }

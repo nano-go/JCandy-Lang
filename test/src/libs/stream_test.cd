@@ -120,39 +120,103 @@ class StreamTest : unit.TestCase {
 		)	
 	}
 
-	fun skip_limit_reduce_test() {
-		var tscase = Array(1000, lambda e -> range(1, 2).rand())
-		
-		fun expected(arr) {
-			var skip = 10
-			var limit = 50
-			var s = 0
-			var total = 0
+	fun distinct_test() {
+		var arr = Array(50, lambda e -> range(0, 10).rand())
+		fun expectedAns(arr) {
+			var ans = []
+			var map = {}
 			for (e in arr) {
-				if (skip > 0) {
-					skip -= 1
-					continue
-				}
-				if (limit <= 0) {
-					break
-				}
-				limit -= 1
-				if (s < 10) {
-					s += 1
-					continue
-				}
-				total += e
+				if (map.contains(e)) continue
+				map[e] = true
+				ans.append(e)
 			}
-			return total
+			return ans
+		}
+		this.assertEquals(expectedAns(arr), stream.Stream(arr).distinct().toArray())
+		this.assertEquals([0], stream.Stream([0]).distinct().toArray())
+		this.assertEquals([], stream.Stream([]).distinct().toArray())
+	}
+
+	fun fold_test() {
+		var arr = Array(10, lambda e -> e)
+		this.assertEquals(
+			12,
+			stream.Stream(arr)
+				.filter(lambda e -> e%2==0)
+				.map(lambda e -> e*2)
+				.fold(lambda x, y -> (x+y)/2)
+		)
+
+		this.assertEquals(
+			0,
+			stream.Stream([0])
+				.fold(lambda x, y -> this.assertFail("Unexpect reach here."))
+		)
+
+		this.assertEquals(
+			null,
+			stream.Stream([])
+				.fold(lambda x, y -> this.assertFail("Unexpect reach here."))
+		)
+	}
+
+	fun sort_test() {
+		var arr = Array(100, lambda e -> range(0, 1000).rand())
+		
+		fun expectedAns(arr) {
+			var ans = []
+			for (e in arr) {
+				if (e % 2 == 0) {
+					ans.append(e*2)
+				}
+			}
+			ans.sort()
+			return ans
+		}
+		
+		this.assertEquals(
+			expectedAns(arr),
+			stream.Stream(arr)
+				.filter(lambda e -> e%2==0)
+				.map(lambda e -> e*2)
+				.sort().toArray()
+		)
+
+		this.assertEquals(5, stream.Stream([5]).sort().max())
+		this.assertEquals(null, stream.Stream([]).sort().max())
+	}
+
+	fun skip_limit_reduce_test() {
+		var tscase = Array(1000, lambda e -> e)	
+		fun expected() {
+			var sum = 10
+			for (i in range(10, 60)) {
+				sum += i
+			}
+			return sum
 		}
 		this.assertEquals(
-			expected(tscase),
+			expected(),
 			stream.Stream(tscase)
 				.skip(10).limit(50).reduce(10, lambda e1, e2 -> e1 + e2)
 		)
 		
 		var singleElement = [ 0 ]
-		this.assertEquals(0, stream.Stream(singleElement).reduce(0, null))
+		this.assertEquals(10, stream.Stream(singleElement).reduce(10, lambda x, y -> x + y))
+		this.assertEquals(500, stream.Stream([]).reduce(500, null))
+	}
+
+	fun find_test() {
+		var arr = Array(100, lambda e -> range(0, 1000).rand())
+		fun findFirstAns(arr) {
+			for (e in arr) 
+				if (e%4 == 0) return e
+			return null
+		}
+		this.assertEquals(findFirstAns(arr), 
+			stream.Stream(arr)
+				.filter(lambda e -> e % 4 == 0)
+				.findFirst())
 	}
 
 	fun match_test() {
@@ -189,4 +253,26 @@ class StreamTest : unit.TestCase {
 			stream.Stream(randData).noneMatch(lambda e -> e == 50),
 		)
 	}
+
+	fun toMap_test() {
+		var arr = Array(50, lambda e -> e)
+		var map = stream.Stream(arr).toMap(lambda map, e -> map[e]=e*2)
+		var ans = Map(50)
+		for (i in range(0, 50)) ans[i] = i*2
+		this.assertEquals(ans, map)
+		this.assertEquals({}, stream.Stream([]).toMap(null))
+	}
+
+	fun toTuple_test() {
+		var arr = Array(50, lambda e -> e)
+		this.assertEquals(arr.toTuple(), stream.Stream(arr).toTuple())
+		this.assertEquals((), stream.Stream([]).toTuple())
+	}
+
+	fun join_test() {
+		var arr = Array(50, lambda e -> e)
+		this.assertEquals(str(arr), "["+stream.Stream(arr).join(", ")+"]")
+		this.assertEquals("", stream.Stream([]).join(","))
+	}
+
 }
