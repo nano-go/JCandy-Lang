@@ -95,7 +95,7 @@ public final class MapObj extends BuiltinObject {
 	}
 
 	private void setInitCapacity(long initCapacity) {
-		if (initCapacity <= 0 || initCapacity > MAXIMUM_CAPACITY) {
+		if (initCapacity < 0 || initCapacity > MAXIMUM_CAPACITY) {
 			new ArgumentError("Illegal inital capacity: " + initCapacity)
 				.throwSelfNative();
 		}
