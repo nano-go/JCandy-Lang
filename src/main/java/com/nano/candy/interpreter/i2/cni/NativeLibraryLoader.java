@@ -8,11 +8,25 @@ import java.net.URLClassLoader;
 
 public class NativeLibraryLoader {
 	
-	public static NativeContext loadLibrary(String filePath, String className) throws IOException, ClassNotFoundException {
-		return loadLibrary(new File(filePath), className);
+	public static NativeContext loadLibrary(String[] libraryPaths, 
+	                                        String jarFilePath, 
+											String className) throws IOException, ClassNotFoundException 
+	{
+		File f = findFile(libraryPaths, jarFilePath);
+		return loadLibrary(f, className);
+	}
+
+	private static File findFile(String[] libraryPaths, String filePath) {
+		for (String dirPath : libraryPaths) {
+			if (dirPath != null) {
+				File f = new File(dirPath, filePath);
+				if (f.isFile()) return f;
+			}
+		}
+		return new File(filePath);
 	}
 	
-	public static NativeContext loadLibrary(File file, String className) throws IOException, ClassNotFoundException {
+	private static NativeContext loadLibrary(File file, String className) throws IOException, ClassNotFoundException {
 		URLClassLoader classLoader = new URLClassLoader(new URL[]{
 			file.toURI().toURL(),
 		}, Thread.currentThread().getContextClassLoader());

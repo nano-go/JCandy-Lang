@@ -189,7 +189,7 @@ public class BuiltinFunctions {
 		String className = ObjectHelper.asString(args[1]);
 		try {
 			NativeContext context = NativeLibraryLoader
-				.loadLibrary(vm.getFile(path), className);
+				.loadLibrary(vm.getJavaLibraryPaths(), path, className);
 			context.action(vm.getGlobalScope().curFileScope());
 		} catch (IOException e) {
 			new IOError(e).throwSelfNative();

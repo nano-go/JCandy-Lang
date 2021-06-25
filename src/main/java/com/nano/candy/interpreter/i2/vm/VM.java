@@ -109,6 +109,17 @@ public final class VM {
 		return new File(getCurrentDirectory(), relativePath);
 	}
 	
+	/**
+	 * Returns java library paths used to load .jar files in
+	 * Candy language level.
+	 */
+	public String[] getJavaLibraryPaths() {
+		return new String[] {
+			getCurrentDirectory(),
+			CandySystem.getCandyLibsPath()
+		};
+	}
+	
 	public GlobalScope getGlobalScope() {
 		return global;
 	}
