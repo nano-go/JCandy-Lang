@@ -145,7 +145,7 @@ public class StringObj extends BuiltinObject {
 				lines.add(valueOf(String.valueOf(buffer, 0, bp)));
 				bp = 0;
 			} else {
-				ArrayUtils.growCapacity(buffer, bp);
+				buffer = ArrayUtils.growCapacity(buffer, bp);
 				buffer[bp ++] = chars[i];
 			}
 		}
