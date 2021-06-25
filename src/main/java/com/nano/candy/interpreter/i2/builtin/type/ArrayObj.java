@@ -473,4 +473,9 @@ public final class ArrayObj extends BuiltinObject {
 		size = 0;
 		return this;
 	}
+	
+	@NativeMethod(name = "isEmpty")
+	public CandyObject isEmpty(VM vm, CandyObject[] args) {
+		return BoolObj.valueOf(size == 0);
+	}
 }

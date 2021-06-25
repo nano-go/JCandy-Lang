@@ -27,8 +27,25 @@ public class StringObj extends BuiltinObject {
 	public static final StringObj EMPTY_LIST = new StringObj("[]");
 	public static final StringObj EMPTY_TUPLE = new StringObj("()");
 	
+	public static StringObj[] CHARS = null;
+	
+	public static void initChars() {
+		CHARS = new StringObj[128];
+		for (int i = 0; i < CHARS.length; i ++) {
+			CHARS[i] = valueOf(String.valueOf((char)i));
+		}
+	}
+	
 	public static StringObj valueOf(String val) {
 		return new StringObj(val);
+	}
+	
+	public static StringObj valueOf(char ch) {
+		if (ch < 128) {
+			if (CHARS == null) initChars();
+			return CHARS[ch];
+		}
+		return valueOf(String.valueOf(ch));
 	}
 	
 	private String value;
@@ -101,6 +118,14 @@ public class StringObj extends BuiltinObject {
 		}
 		return valueOf(value.substring(
 			(int) beginIndex, (int) endIndex));
+	}
+	
+	@NativeMethod(name = "charAt", argc = 1)
+	public CandyObject charAt(VM vm, CandyObject[] args) {
+		long index = ObjectHelper.asInteger(args[0]);
+		final int size = value.length();
+		RangeError.checkIndex(index, size);
+		return valueOf(value.charAt((int)index));
 	}
 	
 	@NativeMethod(name = "length")
