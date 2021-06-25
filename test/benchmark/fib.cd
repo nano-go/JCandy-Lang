@@ -1,0 +1,12 @@
+import "common" as common
+
+fun fib() {
+	fun get(n) {
+		if (n < 2) return n
+		return get(n-1) + get(n-2)
+	}
+	for (i in range(0, 5)) {
+		get(27)
+	}
+}
+common.test("fib", fib)

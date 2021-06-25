@@ -1,0 +1,26 @@
+import "stream" as stream
+import "common" as common
+
+var arr = Array(1000, lambda i -> i)
+for (i in range(0, 5)) {
+	stream.Stream(arr)
+		.filter(lambda e -> e > 50)
+		.map(lambda e -> e/2)
+		.skip(15)
+		.limit(800)
+		.max()
+}
+
+fun stream_test() {
+	var arr = Array(1000, lambda i -> i)
+	for (i in range(0, 5)) {
+		stream.Stream(arr)
+			.filter(lambda e -> e > 50)
+			.map(lambda e -> e/2)
+			.skip(15)
+			.limit(800)
+			.max()
+	}
+}
+
+common.test("stream", stream_test)

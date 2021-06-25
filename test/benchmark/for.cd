@@ -1,0 +1,14 @@
+import "common" as common
+
+fun for_test() {
+	var list = []
+	for (i in range(0, 10000)) {
+		list.append(i)
+	}
+	var sum = 0
+	for (e in list) {
+		sum += e
+	}
+}
+
+common.test("for", for_test)

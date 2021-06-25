@@ -1,0 +1,5 @@
+fun test(name, fn) {
+	var s = clock()
+	fn()
+	println("${name}: ${clock()-s} ms.")
+}
