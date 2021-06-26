@@ -27,6 +27,10 @@ public final class ArrayObj extends BuiltinObject {
 	
 	public static final CandyObject[] EMPTY_ARRAY = new CandyObject[0];
 	
+	public static final ArrayObj emptyArray() {
+		return new ArrayObj(EMPTY_ARRAY); 
+	}
+	
 	/**
 	 * Requested maximum array size.
 	 */

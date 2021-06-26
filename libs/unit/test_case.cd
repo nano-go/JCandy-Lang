@@ -124,7 +124,7 @@ class TestCase {
 	 * Raise an error to report the running method is failure.
 	 */
 	fun assertFail(*msg) {
-		msg = msg ? msg[0] : ""
+		msg = msg.isEmpty() ? "" : msg[0]
 		raise AssertionError(msg)
 	}
 	
@@ -135,7 +135,7 @@ class TestCase {
 	 */
 	fun assertEquals(expected, actual, *msg) {
 		if (expected != actual) {
-			msg = msg ? msg[0] : ""
+			msg = msg.isEmpty() ? "" : msg[0]
 			this.assertFail("Expected " + expected + ", but was " + 
 				actual + ": [" + msg + "]")
 		}
@@ -148,7 +148,7 @@ class TestCase {
 	 */
 	fun assertNotEquals(unexpected, actual, *msg) {
 		if (unexpected == actual) {
-			msg = msg ? msg[0] : ""
+			msg = msg.isEmpty() ? "" : msg[0]
 			this.assertFail("Unexpected " + actual + ": [" + msg + "]")
 		}
 	}
@@ -191,7 +191,7 @@ class TestCase {
 	 * Test that the 'obj' is an instance of 'cls'.
 	 */
 	fun assertIsInstance(cls, obj, *msg) {
-		msg = msg ? msg[0] : ""
+		msg = msg.isEmpty() ? "" : msg[0]
 		if (!(obj is cls)) {
 			this.assertFail(
 				"Expected the obj is an instance of the class '" +
@@ -205,7 +205,7 @@ class TestCase {
 	 * Test that the 'obj' is not an instance of 'cls'.
 	 */
 	fun assertIsNotInstance(cls, obj, *msg) {
-		msg = msg ? msg[0] : ""
+		msg = msg.isEmpty() ? "" : msg[0]
 		if (obj is cls) {
 			this.assertFail(
 				"Expected the obj is not an instance of the class '" +
@@ -227,7 +227,7 @@ class TestCase {
 	 * If the 'errType' is null, it represents any error.
 	 */
 	fun expectedErrorRaised(errType, fn, *msg) {
-		msg = msg ? msg[0] : ""
+		msg = msg.isEmpty() ? "" : msg[0]
 		if (errType == null) {
 			errType = Error
 		} else if (!(errType is Error)) {

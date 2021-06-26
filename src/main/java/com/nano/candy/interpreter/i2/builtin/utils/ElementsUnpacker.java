@@ -65,7 +65,7 @@ public class ElementsUnpacker {
 		}
 		if (i == starIndex) {
 			// the buffer is empty;
-			elements[i ++] = NullPointer.nil();
+			elements[i ++] = ArrayObj.emptyArray();
 		}
 		return i < targetLen ? null : elements;
 	}
@@ -87,8 +87,9 @@ public class ElementsUnpacker {
 		for (i = 0; i < starIndex; i ++, n --) {
 			elements[i] = vm.pop();
 		}
+		// StarIndex Assign
 		if (nextTargetElements >= n) {
-			elements[i] = NullPointer.nil();
+			elements[i] = ArrayObj.emptyArray();
 		} else {
 			ArrayObj arr = new ArrayObj(8);
 			while (nextTargetElements < n) {
@@ -120,8 +121,7 @@ public class ElementsUnpacker {
 	
 	/**
 	 * Unpacks the specified element (must be a iterable object) into 
-	 * the buffer. If the element is empty, the {@link NullPointer#nil()}
-	 * will be offered to the buffer.
+	 * the buffer. 
 	 *
 	 * If the element is {@link NullPointer.nil()}, the {@code null} will
 	 * not be unpacked, but it will be offered to the buffer.
@@ -146,15 +146,12 @@ public class ElementsUnpacker {
 			buffer.offer(e);
 			size ++;
 		}
-		if (size == 0) {
-			buffer.offer(NullPointer.nil());
-		}
 	}
 	
 	/**
 	 * Fetchs greedily the elements from the buffer as the array and 
 	 * returns it. If the buffer has not enough elements to fetch, 
-	 * it returns {@link NullPointer#nil()}.
+	 * it returns an empty Candy array.
 	 */
 	public static CandyObject greedilyFetchElements(LinkedList<CandyObject> buffer, 
 	                                                int starIndex, 
@@ -164,7 +161,7 @@ public class ElementsUnpacker {
 		// For example: a, *b, c, d nextTargetElements = 2 (c and d)
 		int nextTargetElements = targetLen - starIndex - 1;
 		if (nextTargetElements >= buffer.size()) {
-			return NullPointer.nil();
+			return ArrayObj.emptyArray();
 		}
 		ArrayObj arr = new ArrayObj(8);
 		while (nextTargetElements < buffer.size()) {

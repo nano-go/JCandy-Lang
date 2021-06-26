@@ -8,7 +8,7 @@ class TestSuite {
 	
 	fun init(name, *subtests) {
 		this.name = name
-		this.subtests = subtests or []
+		this.subtests = subtests
 	}
 	
 	fun getName() {

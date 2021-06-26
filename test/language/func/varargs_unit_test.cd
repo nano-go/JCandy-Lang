@@ -1,0 +1,141 @@
+import "unit" as unit
+
+class VarargsTest : unit.TestCase {
+	
+	fun varargsFun1(*a) {
+		return [a]
+	}
+
+	fun varargsFun2(a, *b) {
+		return [a, b]
+	}
+
+	fun varargsFun3(*a, b) {
+		return [a, b]
+	}
+
+	fun varargsFun4(a, *b, c) {
+		return [a, b, c]
+	}
+
+	fun assertFun(fnRes, *expectedArgs) {
+		this.assertEquals(expectedArgs, fnRes)
+	}
+
+	fun expectedError(fn) {
+		this.expectedErrorRaised(ArgumentError, fn)
+	}
+
+	fun varagrs_test() {
+		this.assertFun(this.varargsFun1(5, 6), [5, 6])
+		this.assertFun(this.varargsFun1(5), [5])
+		this.assertFun(this.varargsFun1(), [])
+
+		this.assertFun(this.varargsFun2([5, 6]), [5, 6], [])
+		this.assertFun(this.varargsFun2(5, 6), 5, [6])
+		this.assertFun(this.varargsFun2(5), 5, [])
+		this.expectedError(lambda -> this.varargsFun2())
+
+		this.assertFun(this.varargsFun3(5, 6), [5], 6)
+		this.assertFun(this.varargsFun3([5, 6]), [], [5, 6])
+		this.assertFun(this.varargsFun3(5), [], 5)
+		this.expectedError(lambda -> this.varargsFun3())
+
+		this.assertFun(this.varargsFun4(5, 6, 7), 5, [6], 7)
+		this.assertFun(this.varargsFun4(5, 6, 7, 8), 5, [6, 7], 8)
+		this.assertFun(this.varargsFun4(5, 8), 5, [], 8)
+		this.expectedError(lambda -> this.varargsFun4(4))
+		this.expectedError(lambda -> this.varargsFun4())
+	}
+
+	fun unpack_test() {
+		this.assertFun(this.varargsFun1(*[5, 6]), [5, 6])
+		this.assertFun(this.varargsFun1(*[5]), [5])
+		this.assertFun(this.varargsFun1(*[]), [])
+		this.assertFun(this.varargsFun1(5, *[]), [5])
+		this.assertFun(this.varargsFun1(*[], 5, 6), [5, 6])
+		this.assertFun(this.varargsFun1(5, *[], 6), [5, 6])
+		this.assertFun(this.varargsFun1(5, *[1, 2], 6), [5, 1, 2, 6])
+
+		this.assertFun(this.varargsFun2(*[5, 6]), 5, [6])
+		this.assertFun(this.varargsFun2(4, *[5, 6]), 4, [5, 6])
+		this.assertFun(this.varargsFun2(*[5, 6], 7), 5, [6, 7])
+		this.assertFun(this.varargsFun2(4, *[5, 6], 7), 4, [5, 6, 7])
+		this.assertFun(this.varargsFun2(4, *[], 7), 4, [7])
+		this.assertFun(this.varargsFun2(4, *[]), 4, [])
+		this.assertFun(this.varargsFun2(*[], 4), 4, [])
+		this.assertFun(this.varargsFun2(*[4]), 4, [])
+		this.expectedError(lambda -> this.varargsFun2(*[]))
+		this.expectedError(lambda -> this.varargsFun2(*()))
+		this.expectedError(lambda -> this.varargsFun2(*{}))
+		this.expectedError(lambda -> this.varargsFun2())
+
+		this.assertFun(this.varargsFun3(*[5, 6]), [5], 6)
+		this.assertFun(this.varargsFun3(4, *[5, 6]), [4, 5], 6)
+		this.assertFun(this.varargsFun3(*[5, 6], 7), [5, 6], 7)
+		this.assertFun(this.varargsFun3(4, *[5, 6], 7), [4, 5, 6], 7)
+		this.assertFun(this.varargsFun3(4, *[], 7), [4], 7)
+		this.assertFun(this.varargsFun3(4, *[]), [], 4)
+		this.assertFun(this.varargsFun3(*[], 4), [], 4)
+		this.assertFun(this.varargsFun3(*[4]), [], 4)
+		this.expectedError(lambda -> this.varargsFun3(*[]))
+		this.expectedError(lambda -> this.varargsFun3())
+
+		this.assertFun(this.varargsFun4(5, *[], 7), 5, [], 7)
+		this.assertFun(this.varargsFun4(5, 7, *[]), 5, [], 7)
+		this.assertFun(this.varargsFun4(*[], 5, 7), 5, [], 7)
+		this.assertFun(this.varargsFun4(*[3, 4], 5, 7), 3, [4, 5], 7)
+		this.assertFun(this.varargsFun4(5, 7, *[8, 9]), 5, [7, 8], 9)
+		this.assertFun(this.varargsFun4(5, *[6], 7), 5, [6], 7)
+		this.expectedError(lambda -> this.varargsFun4(*[]))
+		this.expectedError(lambda -> this.varargsFun4(5, *[]))
+		this.expectedError(lambda -> this.varargsFun4(*[], 5))
+		this.expectedError(lambda -> this.varargsFun4())
+	}
+
+	fun multi_unpack_test() {
+		this.assertFun(this.varargsFun1(*[5, 6], *[7, 8]), [5, 6, 7, 8])
+		this.assertFun(this.varargsFun1(*[5, 6], *[]), [5, 6])
+		this.assertFun(this.varargsFun1(*[], *[5, 6]), [5, 6])
+		this.assertFun(this.varargsFun1(*[], *[5, 6], 7), [5, 6, 7])
+		this.assertFun(this.varargsFun1(4, *[], *[5, 6]), [4, 5, 6])
+
+		this.assertFun(this.varargsFun2(*[5, 6], *[7, 8]), 5, [6, 7, 8])
+		this.assertFun(this.varargsFun2(*[5, 6], *[]), 5, [6])
+		this.assertFun(this.varargsFun2(*[], *[5, 6]), 5, [6])
+		this.assertFun(this.varargsFun2(*[], *[5, 6], 7), 5, [6, 7])
+		this.assertFun(this.varargsFun2(4, *[], *[5, 6]), 4, [5, 6])
+		this.expectedError(lambda -> this.varargsFun2(*[], *{}, *()))
+	}
+
+	fun unpackToNoVaragrgsFun_test() {
+		fun test1() {
+			return []
+		}
+		fun test2(a) {
+			return [a]
+		}
+		fun test3(a, b) {
+			return [a, b]
+		}
+
+		this.assertFun(test1(*[]))
+		// The redundant argument will be discarded.
+		test1(*[1])
+
+		this.assertFun(test2(*[1]), 1)
+		this.assertFun(test2(*[1, 2]), 1)
+		this.assertFun(test2(1, *[2, 3]), 1)
+		this.assertFun(test2(*[], 1), 1)
+		this.expectedError(lambda -> test2(*[]))
+		this.expectedError(lambda -> test2(*[], *{}, *()))
+
+		this.assertFun(test3(*[4, 5]), 4, 5)
+		this.assertFun(test3(*[4, 5, 6]), 4, 5)
+		this.assertFun(test3(*[4], 5, 6), 4, 5)
+		this.assertFun(test3(*[], 5, 6), 5, 6)
+		this.expectedError(lambda -> test3(5, *[]))
+		this.expectedError(lambda -> test3(*[]))
+		this.expectedError(lambda -> test3(*[], *{}, *(), 6))
+	}
+}
