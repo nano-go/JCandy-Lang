@@ -5,24 +5,41 @@ import (
 	"stream" as stream
 )
 
-fun main() {
-	var flags = cmdArgs()
-	var module = "test"
-	if (flags.size() != 0) {
-		module = flags[0]
-	}
-	try {
-		var module = importModule(module)
-		var tests = stream.Stream(module)
+fun importTestClasses(modules) {
+	fun getTestClasses(module) {
+		return stream.Stream(module)
 			.map(lambda e -> e[1])
 			.filter(lambda e -> e is tc.TestCase or e is ts.TestSuite)
+			.filter(lambda e -> e._class() != tc.TestCase and e._class() != ts.TestSuite)
 			.map(lambda e -> e._class() == e ? e() : e)
 			.toArray()
-		var runner = tr.TestRunner()
-		runner.run(ts.TestSuite(null, *tests))
-	} intercept ModuleError as e {
-		println(e.getMessage())
 	}
+	
+	var testClasses = []
+	for (m in modules) {
+		try {
+			var module = importModule(m)
+			testClasses.appendAll(*getTestClasses(module))
+		} intercept ModuleError as e {
+			println(e.getMessage())
+		} 
+	}
+	return testClasses
+}
+
+fun runTestClasses(testClasses) {
+	if (testClasses.isEmpty()) {
+		println("No test class found.")
+		return;
+	}
+	tr.TestRunner().run(ts.TestSuite(null, *testClasses))
+}
+
+fun main() {
+	var flags = cmdArgs()
+	var modules = !flags.isEmpty() ? flags : ["test"]
+	var testClasses = importTestClasses(modules)
+	runTestClasses(testClasses)
 }
 
 main()
