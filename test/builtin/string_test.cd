@@ -1,0 +1,29 @@
+import "unit" as unit
+
+class StringTest : unit.TestCase {
+
+	fun splitlines_test() {
+		fun genString() {
+			var str = []
+			for (i in range(0, 100)) {
+				str.append("${\"1\"*1000}\n")
+			}
+			return "".join(str)
+		}
+		for (line in genString().splitlines()) {
+			this.assertEquals("1"*1000, line)
+		}
+
+		this.assertEquals([], "".splitlines())
+		this.assertEquals(["", ""], "\n\n".splitlines())
+		this.assertEquals(["abcdefg"], "abcdefg".splitlines())
+		this.assertEquals(["abcdefg"], "abcdefg\n".splitlines())
+	}
+
+	fun join_test() {
+		this.assertEquals("", "".join([]))
+		this.assertEquals("", ",".join([]))
+		this.assertEquals("5", ",".join([5]))
+		this.assertEquals("5, 6", ", ".join([5, 6]))
+	}
+}

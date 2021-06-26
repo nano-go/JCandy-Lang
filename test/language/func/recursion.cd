@@ -1,3 +1,9 @@
+fun a(b, c) {
+	if (b * c >= 15) return b * c
+	return a(b + 1, c + 1)
+}
+
+a(1, 2)
 
 fun pow(x, n) {
 	fun quickPow(x, n) {
@@ -38,3 +44,10 @@ assertHelper(-2.5, 9, -3814.697265625)
 assertHelper(5, -2, 0.04)
 assertHelper(0.15, -5, 13168.724279835391)
 assertHelper(2, -4, 0.0625)
+
+fun fibonacci_sequenece(n) {
+	if (n <= 3) return 1
+	return fibonacci_sequenece(n - 2) + fibonacci_sequenece(n - 1)
+}
+
+assert fibonacci_sequenece(10) == 34

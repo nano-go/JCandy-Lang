@@ -21,7 +21,6 @@ class MapTest : unit.TestCase {
 
 	fun init_test() {
 		this.expectedErrorRaised(ArgumentError, lambda -> Map(-1))
-		this.expectedErrorRaised(ArgumentError, lambda -> Map(0))
 		this.expectedErrorRaised(ArgumentError, lambda -> Map(1073741825))
 		Map(1073741824)
 	}
@@ -141,4 +140,5 @@ class MapTest : unit.TestCase {
 			this.failure("Iterating an empty map.")
 		}
 	}
+
 }

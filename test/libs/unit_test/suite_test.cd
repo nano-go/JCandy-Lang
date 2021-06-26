@@ -1,6 +1,6 @@
 import "unit" as unit
 
-class TestSuite : unit.TestCase {
+class SuiteTestCase : unit.TestCase {
 
 	fun init_test() {
 		fun assertionTestSuite(ts, taskCount){
@@ -42,7 +42,7 @@ class TestSuite : unit.TestCase {
 
 	fun add_testcase_test() {
 		var ts = unit.TestSuite(null)
-		ts.addTest(TestSuite())
+		ts.addTest(SuiteTestCase())
 		this.assertEquals(1, ts.getTestCount())
 
 		this.expectedErrorRaised(TypeError, lambda -> ts.addTest(unit.TestCase()))
