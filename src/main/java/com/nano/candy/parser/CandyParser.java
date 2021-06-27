@@ -809,6 +809,9 @@ class CandyParser implements Parser {
 		}
 		if (this.curFunctionType == FunctionType.NONE) {
 			reportError(location, "The 'return' outside function.");
+		} else if (this.curFunctionType == FunctionType.INIT &&
+		            expr != null) {
+			reportError(location, "Can't return a value from an initializer.");
 		}
 		matchSEMI();
 		return locate(location, new Stmt.Return(expr));

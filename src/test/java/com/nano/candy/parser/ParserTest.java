@@ -145,6 +145,7 @@ public class ParserTest {
 		newPECase("class A { fun a(){\n return a \na -;\n}}\nreturn", loc(3, 4), loc(5, 1)),
 		newPECase("class A { fun test() {super.a(); super.b();}\nfalse\n"
 			+ "fun testB() {super.a();this.b();} }", loc(2, 1)),
+		newPECase("class A {\nfun init() {\nreturn a; }}", loc(3, 1))
 		
 	};
 	 
