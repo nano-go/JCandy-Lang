@@ -13,8 +13,8 @@ import java.io.IOException;
  * directory.
  *
  * Directory Priority:
- *    1. $CANDY_HOME/libs
- *    2. The directory where the current running file is in
+ *    1. The directory where the current running file is in
+ *    2. $CANDY_HOME/libs
  *    3. The current user directory.
  */
 public class CandyPathModuleLoader extends ModuleLoader {
@@ -24,8 +24,8 @@ public class CandyPathModuleLoader extends ModuleLoader {
 		throws ModuleNotFoundException {
 		Module module = null;
 		String[] paths = {
-			CandySystem.getCandyLibsPath(),
 			vm.getCurrentDirectory(),
+			CandySystem.getCandyLibsPath(),
 			System.getProperty("user.dir")
 		};
 		for (String path : paths) {
