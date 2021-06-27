@@ -180,6 +180,7 @@ public class ChunkBuilder {
 			case OP_FALSE:
 			case OP_NULL:
 			case OP_NEW_ARRAY:
+			case OP_NEW_MAP:
 			case OP_BUILT_TUPLE:
 			case OP_GLOBAL_GET:
 			case OP_CALL_SLOT:

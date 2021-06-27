@@ -64,6 +64,7 @@ public class Disassembler {
 			case OP_GET_ATTR:
 			case OP_SUPER_GET:
 			case OP_NEW_ARRAY:
+			case OP_NEW_MAP:
 			case OP_IMPORT:
 			case OP_CLOSE:
 				return disassSimpleInsWithConst(pc);
@@ -86,6 +87,7 @@ public class Disassembler {
 			case OP_CALL:
 			case OP_BUILT_TUPLE:
 			case OP_APPEND:
+			case OP_PUT:
 				return disassSimpleInsWithArg(pc, 1, true);
 			case OP_POP_JUMP_IF_FALSE:
 			case OP_POP_JUMP_IF_TRUE:
