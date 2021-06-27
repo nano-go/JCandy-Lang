@@ -27,11 +27,14 @@ class MapTest : unit.TestCase {
 
 	fun simpleOperation_test() {
 		var map = Map(16)
-		map.put("15", 15)
 		map.put("Apple", 20)
+		map.putIfAbsent("Apple", 0)
+		map.putIfAbsent("15", 15)
 		this.assertEquals(2, map.size())
 		this.assertEquals(20, map.get("Apple"))
 		this.assertEquals(15, map.get("15"))
+		this.assertEquals(0, map.getOrDefault("Appl", 0))
+		this.assertEquals(20, map.getOrDefault("Apple", 0))
 		this.assertTrue(map.contains("15"))
 		this.assertTrue(map.contains("Apple"))
 		this.assertFalse(map.contains("Appl"))
@@ -40,6 +43,7 @@ class MapTest : unit.TestCase {
 		this.assertEquals(1, map.size())
 		map.clear()
 		this.assertEquals(0, map.size())
+		this.assertTrue(map.isEmpty())
 
 		var arr = [
 			(0, str(0)), 
@@ -139,6 +143,21 @@ class MapTest : unit.TestCase {
 		for (e in map) {
 			this.failure("Iterating an empty map.")
 		}
+	}
+
+	fun putAll_test() {	
+		var map = {"a": 0, "b": 1}
+		map.putAll({"c":2, "d": 3})
+		this.assertEquals({"a":0, "b":1, "c":2, "d": 3}, map)
+		map.putAll({})
+		this.assertEquals({"a":0, "b":1, "c":2, "d": 3}, map)
+
+		var map1 = {}
+		var map2 = {}
+		for (i in range(0, 100)) {	
+			map2.put(i, i)
+		}
+		this.assertEquals(map2, map1.putAll(map2))
 	}
 
 }

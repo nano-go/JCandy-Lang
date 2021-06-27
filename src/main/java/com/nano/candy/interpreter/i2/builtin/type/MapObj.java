@@ -4,6 +4,7 @@ import com.nano.candy.interpreter.i2.builtin.BuiltinObject;
 import com.nano.candy.interpreter.i2.builtin.CandyObject;
 import com.nano.candy.interpreter.i2.builtin.type.classes.CandyClass;
 import com.nano.candy.interpreter.i2.builtin.type.error.ArgumentError;
+import com.nano.candy.interpreter.i2.builtin.type.error.TypeError;
 import com.nano.candy.interpreter.i2.builtin.utils.ObjectHelper;
 import com.nano.candy.interpreter.i2.cni.NativeClass;
 import com.nano.candy.interpreter.i2.cni.NativeClassRegister;
@@ -156,7 +157,39 @@ public final class MapObj extends BuiltinObject {
 		return null;
 	}
 	
+	public CandyObject putIfAbsent(VM vm, CandyObject key, CandyObject value) {
+		if (value == null) {
+			value = NullPointer.nil();
+		}
+		ensureTableSize();
+		int hash = hash(vm, key);
+		int index = hash & (this.table.length-1);
+		Entry entry;
+		if (table[index] != null && 
+			(entry = table[index].findByKey(vm, key, hash)) != null) {
+			return entry.value;
+		}
+		Entry newEntry = new Entry(key, value, hash);
+		newEntry.next = table[index];
+		table[index] = newEntry;
+		this.size ++;
+		return null;
+	}
+	
+	public CandyObject putAll(VM vm, MapObj map) {
+		EntryIterator i = new EntryIterator(map.table);
+		while (i.hasNext(vm)) {
+			put(vm, i.currentEntry.key, i.currentEntry.value);
+			i.next(vm);
+		}
+		return this;
+	}
+	
 	public CandyObject get(VM vm, CandyObject key) {
+		return getOrDefault(vm, key, null);
+	}
+	
+	public CandyObject getOrDefault(VM vm, CandyObject key, CandyObject def) {
 		if (table == null) return null;
 		Entry entry;
 		int hash = hash(vm, key);
@@ -165,7 +198,7 @@ public final class MapObj extends BuiltinObject {
 			(entry = table[index].findByKey(vm, key, hash)) != null) {
 			return entry.value;
 		}
-		return null;
+		return def;
 	}
 	
 	public boolean contains(VM vm, CandyObject key) {
@@ -212,6 +245,11 @@ public final class MapObj extends BuiltinObject {
 	public CandyObject get(VM vm, CandyObject[] args) {
 		return get(vm, args[0]);
 	}
+	
+	@NativeMethod(name = "getOrDefault", argc = 2)
+	public CandyObject getOrDefault(VM vm, CandyObject[] args) {
+		return getOrDefault(vm, args[0], args[1]);
+	}
 
 	@Override
 	public CandyObject getItem(VM vm, CandyObject key) {
@@ -219,13 +257,25 @@ public final class MapObj extends BuiltinObject {
 	}
 	
 	@NativeMethod(name = "put", argc = 2)
-	public CandyObject set(VM vm, CandyObject[] args) {
+	public CandyObject put(VM vm, CandyObject[] args) {
 		return put(vm, args[0], args[1]);
 	}
-
+	
+	@NativeMethod(name = "putIfAbsent", argc = 2)
+	public CandyObject putIfAbsent(VM vm, CandyObject[] args) {
+		return putIfAbsent(vm, args[0], args[1]);
+	}
+	
+	@NativeMethod(name = "putAll", argc = 1) 
+	public CandyObject putAll(VM vm, CandyObject[] args) {
+		TypeError.checkTypeMatched(MAP_CLASS, args[0]);
+		return putAll(vm, (MapObj) args[0]);
+	}
+	
 	@Override
 	public CandyObject setItem(VM vm, CandyObject key, CandyObject value) {
-		return put(vm, key, value);
+		put(vm, key, value);
+		return value;
 	}
 	
 	@NativeMethod(name = "remove", argc = 1)
@@ -241,6 +291,11 @@ public final class MapObj extends BuiltinObject {
 	@NativeMethod(name = "size", argc = 0)
 	public CandyObject size(VM vm, CandyObject[] args) {
 		return IntegerObj.valueOf(size);
+	}
+	
+	@NativeMethod(name = "isEmpty", argc = 0)
+	public CandyObject isEmpty(VM vm, CandyObject[] args) {
+		return BoolObj.valueOf(size == 0);
 	}
 	
 	@NativeMethod(name = "clear", argc = 0)
