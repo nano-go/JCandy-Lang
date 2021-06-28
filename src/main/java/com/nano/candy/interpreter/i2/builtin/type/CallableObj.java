@@ -125,25 +125,12 @@ public abstract class CallableObj extends CandyObject {
 		return getParameter().getArity();
 	}
 	
-	@NativeMethod(name = "arity")
-	public final CandyObject arity(VM vm, CandyObject[] args) {
-		return IntegerObj.valueOf(arity());
-	}
-	
-	@NativeMethod(name = "name")
-	public final CandyObject name(VM vm, CandyObject[] args) {
-		return StringObj.valueOf(declaredName());
-	}
-	
 	public final CandyObject callExeUser(VM vm, CandyObject... args) {
 		return callExeUser(vm, EMPTY_UNPACK_FLAGS, args);
 	}
 	
 	/**
-	 * Execute this callable object and returns result.
-	 *
-	 * If this callable object is a prototype function, vm will run
-	 * the frame after the prototype function calls.
+	 * Execute this callable object.
 	 *
 	 * @param unpackFlags See {@link ElementsUnpacker#unpackFromStack}
 	 */
@@ -187,12 +174,22 @@ public abstract class CallableObj extends CandyObject {
 		}
 		return args;
 	}
-	
-	@Override
-	public CandyClass getCandyClass() {
-		return getCallableClass();
-	}
 
+	@Override
+	public CandyObject getAttr(VM vm, String name) {
+		switch (name) {
+			case "name":
+				return StringObj.valueOf(declaredName);
+			case "fullName":
+				return StringObj.valueOf(fullName);
+			case "arity":
+				return IntegerObj.valueOf(arity());
+			case "vararg":
+				return IntegerObj.valueOf(varArgsIndex());
+		}
+		return super.getAttr(vm, name);
+	}
+	
 	@Override
 	public final boolean isCallable() {
 		return true;

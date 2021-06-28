@@ -46,10 +46,10 @@ fun functions_test() {
 	fun test3(a, *b) { return (a, b); }
 	fun test4(a, *b, c) { return (a, b, c); }
 	
-	expectedError(test2.name(), 2, 0, lambda -> test2())
-	expectedError(test3.name(), 2, 0, lambda -> test3())
-	expectedError(test4.name(), 3, 1, lambda -> test4(1))
-	expectedError(test4.name(), 3, 0, lambda -> test4())
+	expectedError(test2.name, 2, 0, lambda -> test2())
+	expectedError(test3.name, 2, 0, lambda -> test3())
+	expectedError(test4.name, 3, 1, lambda -> test4(1))
+	expectedError(test4.name, 3, 0, lambda -> test4())
 	
 	varargs1_test(test1)
 	varargs2_left_test(test2)
@@ -119,7 +119,7 @@ fun expectedError(name, arity, argc, fn) {
 fun t1(a, b) {
 	return (a, b)
 }
-expectedError(t1.name(), 2, 1, lambda -> t1(*[1]))
+expectedError(t1.name, 2, 1, lambda -> t1(*[1]))
 expected(t1(*[1, 2]), 1, 2)
 
 

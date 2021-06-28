@@ -33,7 +33,7 @@ class TestCase {
 	 * Returns the name of this test case.
 	 */
 	fun name() {
-		return this._class().name
+		return this._class().className
 	}
 	
 	fun run(result) {
@@ -41,7 +41,7 @@ class TestCase {
 		var ms = methods(this)
 		var filter = this.filter()
 		for (m in ms) {
-			if (filter(m.name())) {
+			if (filter(m.name)) {
 				this._exeMethod(result, m)
 			}
 		}
@@ -49,7 +49,7 @@ class TestCase {
 	}
 	
 	fun _exeMethod(result, m) {
-		var name = m.name()
+		var name = m.name
 		// execute setUp. It represents error if returns false.
 		if (!this._exeSpecialMethod(this.setUp, result, name, 0)) {
 			return
@@ -196,7 +196,7 @@ class TestCase {
 			this.assertFail(
 				"Expected the obj is an instance of the class '" +
 				cls.name, "', but the obj's class is '" +
-				obj._class().name
+				obj._class().className
 		 )
 		}
 	}
@@ -209,7 +209,7 @@ class TestCase {
 		if (obj is cls) {
 			this.assertFail(
 				"Expected the obj is not an instance of the class '" +
-				cls.name + "'."
+				cls.className + "'."
 			)
 		}
 	}
@@ -231,17 +231,17 @@ class TestCase {
 		if (errType == null) {
 			errType = Error
 		} else if (!(errType is Error)) {
-			raise Assertion("The '" + errType._class().name +
+			raise Assertion("The '" + errType._class().className +
 			 "' is not an 'Error' type.")
 		}
-		var name = errType._class().name
+		var name = errType._class().className
 		try {
 			fn()
 		} intercept errType {
 			return
 		} intercept as e {
 			this.assertFail("Expect that the '" + name +
-			 "' raised, but the '" + e._class().name + 
+			 "' raised, but the '" + e._class().className + 
 			 "' raised: [" + msg + "]")
 		} else {
 			this.assertFail("Expect that the '" + name +
