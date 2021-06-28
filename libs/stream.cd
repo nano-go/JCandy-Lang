@@ -15,6 +15,28 @@ class StreamInterface {
 		return this
 	}
 
+	fun flatMap(mapper) {
+		var eval = this.eval
+		var stream = null
+		this.eval = lambda -> {
+			while (true){
+				if (stream) {	
+					var value = stream.eval()
+					if (EMPTY_STREAM != value) {
+						return value;
+					}
+				}
+				var value = eval()
+				if (EMPTY_STREAM == value) {
+					return EMPTY_STREAM
+				}
+				stream = mapper(value)
+				stream = stream is StreamInterface ? stream : Stream(stream)
+			}
+		}
+		return this
+	}
+
 	fun peek(consumer) {	
 		var eval = this.eval
 		this.eval = lambda -> {

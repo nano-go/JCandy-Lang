@@ -120,6 +120,18 @@ class StreamTest : unit.TestCase {
 		)	
 	}
 
+	fun flatMap_test() {
+		var arr =[[0, 1, 2, 3], [4, 5, 6, 7], [8, 9]]	
+		var res = stream.Stream(arr)
+			.flatMap(lambda e -> e)
+			.filter(lambda e -> e%2==0)
+			.toArray()
+		this.assertEquals([0, 2, 4, 6, 8], res)
+
+		this.expectedErrorRaised(TypeError, 
+			lambda -> stream.Stream(arr).flatMap(lambda e->null).count())
+	}
+
 	fun distinct_test() {
 		var arr = Array(50, lambda e -> range(0, 10).rand())
 		fun expectedAns(arr) {
