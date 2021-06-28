@@ -1,21 +1,21 @@
 package com.nano.candy.interpreter.i2.builtin.type;
-import com.nano.candy.interpreter.i2.builtin.BuiltinObject;
+import com.nano.candy.interpreter.i2.builtin.CandyClass;
 import com.nano.candy.interpreter.i2.builtin.CandyObject;
 import com.nano.candy.interpreter.i2.builtin.type.NumberObj;
-import com.nano.candy.interpreter.i2.builtin.type.classes.CandyClass;
 import com.nano.candy.interpreter.i2.cni.NativeClass;
 import com.nano.candy.interpreter.i2.cni.NativeClassRegister;
 import com.nano.candy.interpreter.i2.cni.NativeMethod;
 import com.nano.candy.interpreter.i2.vm.VM;
 
 @NativeClass(name = "Number")
-public abstract class NumberObj extends BuiltinObject {
+public abstract class NumberObj extends CandyObject {
 	
 	public static final CandyClass NUMBER_CLASS = 
 		NativeClassRegister.generateNativeClass(NumberObj.class);
 	
 	public NumberObj(CandyClass clazz) {
 		super(clazz);
+		freeze();
 	}
 	
 	public static boolean isNumber(CandyObject obj) {

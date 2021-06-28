@@ -1,9 +1,8 @@
 package com.nano.candy.interpreter.i2.builtin.type;
 
-import com.nano.candy.interpreter.i2.builtin.BuiltinObject;
+import com.nano.candy.interpreter.i2.builtin.CandyClass;
 import com.nano.candy.interpreter.i2.builtin.CandyObject;
 import com.nano.candy.interpreter.i2.builtin.type.ArrayObj;
-import com.nano.candy.interpreter.i2.builtin.type.classes.CandyClass;
 import com.nano.candy.interpreter.i2.builtin.type.error.ArgumentError;
 import com.nano.candy.interpreter.i2.builtin.type.error.NativeError;
 import com.nano.candy.interpreter.i2.builtin.type.error.RangeError;
@@ -20,7 +19,7 @@ import java.util.Arrays;
 import java.util.Random;
 
 @NativeClass(name = "Array")
-public final class ArrayObj extends BuiltinObject {
+public final class ArrayObj extends CandyObject {
 	
 	public static final CandyClass ARRAY_CLASS = 
 		NativeClassRegister.generateNativeClass(ArrayObj.class);
@@ -48,7 +47,7 @@ public final class ArrayObj extends BuiltinObject {
 	
 	private boolean isInProcessOfStr;
 	
-	public ArrayObj() {
+	protected ArrayObj() {
 		super(ARRAY_CLASS);
 	}
 	
@@ -149,7 +148,7 @@ public final class ArrayObj extends BuiltinObject {
 	
 	private int indexOf(VM vm, CandyObject obj) {
 		for (int i = 0; i < size; i ++) {
-			if (elements[i].equalsApiExeUser(vm, obj).value()) {
+			if (elements[i].callEquals(vm, obj).value()) {
 				return i;
 			}
 		}
@@ -158,7 +157,7 @@ public final class ArrayObj extends BuiltinObject {
 	
 	private int lastIndexOf(VM vm, CandyObject obj) {
 		for (int i = size-1; i >= 0; i --) {
-			if (elements[i].equalsApiExeUser(vm, obj).value()) {
+			if (elements[i].callEquals(vm, obj).value()) {
 				return i;
 			}
 		}
@@ -244,7 +243,7 @@ public final class ArrayObj extends BuiltinObject {
 		int hash = 0;
 		for (int i = 0; i < size; i ++) {
 			hash = hash * 31 + 
-				(int) elements[i].hashCodeApiExeUser(vm).intValue();
+				(int) elements[i].callHashCode(vm).intValue();
 		}
 		return IntegerObj.valueOf(hash);
 	}
@@ -263,7 +262,7 @@ public final class ArrayObj extends BuiltinObject {
 		}
 		final int SIZE = this.size;
 		for (int i = 0; i < SIZE; i ++) {	
-			BoolObj result = get(i).equalsApiExeUser(vm, arr.get(i));
+			BoolObj result = get(i).callEquals(vm, arr.get(i));
 			if (!result.value()) {
 				return BoolObj.FALSE;
 			}

@@ -28,13 +28,13 @@ public class BuiltinFunctions {
 
 	@NativeFunc(name = "print", arity = 1)
 	public static CandyObject print(VM vm, CandyObject[] args) {
-		System.out.print(ObjectHelper.callStr(vm, args[0]));
+		System.out.print(args[0].callStr(vm).value());
 		return null;
 	}
 
 	@NativeFunc(name = "println", arity = 1)
 	public static CandyObject println(VM vm, CandyObject[] args) {
-		System.out.println(ObjectHelper.callStr(vm, args[0]));
+		System.out.println(args[0].callStr(vm).value());
 		return null;
 	}
 	
@@ -93,27 +93,27 @@ public class BuiltinFunctions {
 	@NativeFunc(name = "setAttr", arity = 3)
 	public static CandyObject setAttr(VM vm, CandyObject[] args) {
 		CandyObject obj = args[0];
-		obj.checkIsFrozen();
 		String attrStr = ObjectHelper.asString(args[1]);
+		obj.checkFrozen();
 		obj.setAttr(vm, attrStr, args[2]);
 		return args[2];
 	}
 	
 	@NativeFunc(name = "max", arity = 2)
 	public static CandyObject max(VM vm, CandyObject[] args) {
-		return args[0].gtApiExeUser(vm, args[1]).value()
+		return args[0].callGt(vm, args[1]).value()
 			? args[0] : args[1];
 	}
 	
 	@NativeFunc(name = "min", arity = 2)
 	public static CandyObject min(VM vm, CandyObject[] args) {
-		return args[0].ltApiExeUser(vm, args[1]).value()
+		return args[0].callLt(vm, args[1]).value()
 			? args[0] : args[1];
 	}
 	
 	@NativeFunc(name = "str", arity = 1)
 	public static CandyObject str(VM vm, CandyObject[] args) {
-		return args[0].strApiExeUser(vm);
+		return args[0].callStr(vm);
 	}
 
 	@NativeFunc(name = "importModule", arity = 1)

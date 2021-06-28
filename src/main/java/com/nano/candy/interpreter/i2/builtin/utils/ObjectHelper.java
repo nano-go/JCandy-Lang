@@ -1,12 +1,12 @@
 package com.nano.candy.interpreter.i2.builtin.utils;
 
+import com.nano.candy.interpreter.i2.builtin.CandyClass;
 import com.nano.candy.interpreter.i2.builtin.CandyObject;
 import com.nano.candy.interpreter.i2.builtin.type.CallableObj;
 import com.nano.candy.interpreter.i2.builtin.type.IntegerObj;
 import com.nano.candy.interpreter.i2.builtin.type.NullPointer;
 import com.nano.candy.interpreter.i2.builtin.type.NumberObj;
 import com.nano.candy.interpreter.i2.builtin.type.StringObj;
-import com.nano.candy.interpreter.i2.builtin.type.classes.CandyClass;
 import com.nano.candy.interpreter.i2.builtin.type.error.AttributeError;
 import com.nano.candy.interpreter.i2.builtin.type.error.TypeError;
 import com.nano.candy.interpreter.i2.vm.VM;
@@ -20,10 +20,10 @@ public class ObjectHelper {
 		return new Comparator<CandyObject>() {
 			@Override
 			public int compare(CandyObject obj1, CandyObject obj2) {
-				if (obj1.equalsApiExeUser(vm, obj2).value()) {
+				if (obj1.callEquals(vm, obj2).value()) {
 					return 0;
 				}
-				if (obj1.gtApiExeUser(vm, obj2).value()) {
+				if (obj1.callGt(vm, obj2).value()) {
 					return 1;
 				}
 				return -1;
@@ -46,31 +46,11 @@ public class ObjectHelper {
 	}
 	
 	public static String methodName(CandyClass clazz, String methodName) {
-		return methodName(clazz.getClassName(), methodName);
+		return methodName(clazz.getName(), methodName);
 	}
 	
 	public static String methodName(String className, String methodName) {
 		return className + "." + methodName;
-	}
-	
-	public static String callStr(VM vm, CandyObject obj) {
-		return obj.strApiExeUser(vm).value();
-	}
-	
-	public static CandyObject setAttr(VM vm, CandyObject obj, String attr, CandyObject value) {
-		return obj.setAttrApiExeUser(vm, attr, value);
-	}
-	
-	public static CandyObject getAttr(VM vm, CandyObject obj, String attr) {
-		return obj.getAttrApiExeUser(vm, attr);
-	}
-	
-	public static CandyObject setItem(VM vm, CandyObject obj, CandyObject key, CandyObject value) {
-		return obj.setItemApiExeUser(vm, key, value);
-	}
-
-	public static CandyObject getItem(VM vm, CandyObject obj, CandyObject key) {
-		return obj.getItemApiExeUser(vm, key);
 	}
 	
 	public static long asInteger(CandyObject obj) {

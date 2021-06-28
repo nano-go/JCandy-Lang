@@ -1,8 +1,6 @@
-package com.nano.candy.interpreter.i2.builtin.type.classes;
+package com.nano.candy.interpreter.i2.builtin;
 
 import com.esotericsoftware.reflectasm.ConstructorAccess;
-import com.nano.candy.interpreter.i2.builtin.CandyObjEntity;
-import com.nano.candy.interpreter.i2.builtin.CandyObject;
 import com.nano.candy.interpreter.i2.builtin.type.CallableObj;
 import com.nano.candy.interpreter.i2.builtin.type.MethodObj;
 import com.nano.candy.interpreter.i2.builtin.type.NullPointer;
@@ -14,35 +12,53 @@ import java.util.Collection;
 import java.util.HashMap;
 
 /**
- * A candy class provides language level class objects.
+ * A candy class provides a language level class object.
  *
- * It's also a callable object. When you call it, an instance will be created
- * and the initalizer of the class will be called.
+ * It's also a callable object. You call it just like calling a
+ * function that can return an instance of this class.
  */
 public class CandyClass extends CallableObj {
+
+	/**
+	 * See Constructor.
+	 */
+	private static ParametersInfo genParamtersInfo(CallableObj initalizer) {
+		return new ParametersInfo(
+			initalizer == null ? 0 : initalizer.arity()-1,
+			initalizer == null ? -1 : initalizer.varArgsIndex()-1
+		);
+	}
 	
 	/**
-	 * A Candy object instance is created by the constructor.
+	 * Use ReflectASM to call reflectly the no-args constructor of CandyObject
 	 */
 	protected final ConstructorAccess<? extends CandyObject> constructorAccess;
-	
+
 	/**
-	 * False if the object entity class (java class) has no a constructor 
-	 * with empty parameters or the constructor is private or protected.
+	 * False if the object class (java class) has no a constructor 
+	 * with no-args or the constructor is private or protected.
 	 *
-	 * This class cannot create instances if false.
+	 * This class can't create instances if false.
 	 */
 	protected final boolean canBeCreated;
 	
+	/**
+	 * You can't interit this class from the Candy language level if false.
+	 *
+	 * Some built-in classes don't allow themselves to be inherited by the
+	 * prototype class(wrote by the Candy programer).
+	 */
+	protected final boolean isInheritable;
+
 	protected final CandyClass superClass;
 	protected final String className;
-	protected final boolean isInheritable;
-	
+
 	protected final HashMap<String, CallableObj> methods;
 	protected final CallableObj initializer;
-	
+
 	protected CandyClass(ClassSignature signature) {
-		super(null, signature.className, null);	
+		super(null, signature.className, genParamtersInfo(signature.initializer));
+		this.setCandyClass(this);
 		this.superClass = signature.superClass;
 		this.className = signature.className;
 		this.isInheritable = signature.isInheritable;
@@ -50,15 +66,12 @@ public class CandyClass extends CallableObj {
 		this.initializer = signature.initializer;
 		this.constructorAccess = signature.constructorAccess;
 		this.canBeCreated = signature.canBeCreated;
-		super.parameter = new ParametersInfo(
-			arity(), varArgsIndex()
-		);
 	}
-	
+
 	public Collection<CallableObj> getMethods() {
 		return methods.values();
 	}
-	
+
 	public CallableObj getMethod(String name) {
 		CallableObj method = methods.get(name);
 		if (method != null) {
@@ -69,7 +82,12 @@ public class CandyClass extends CallableObj {
 		}
 		return null;
 	}
-	
+
+	/**
+	 * Returns a method bound with the specified instance. The method
+	 * is executable and the specified instance is treated as the first
+	 * argument of the method to be passed when the method is called.
+	 */
 	public MethodObj getBoundMethod(String name, CandyObject instance) {
 		CallableObj method = getMethod(name);
 		if (method != null) {
@@ -77,7 +95,7 @@ public class CandyClass extends CallableObj {
 		}
 		return null;
 	}
-	
+
 	public final boolean isInheritable() {
 		return isInheritable;
 	}
@@ -85,11 +103,11 @@ public class CandyClass extends CallableObj {
 	public final CallableObj getInitializer() {
 		return this.initializer;
 	}
-	
-	public final String getClassName() {
+
+	public final String getName() {
 		return className;
 	}
-	
+
 	public final boolean isSuperClassOf(CandyClass clazz) {
 		while (clazz != null) {
 			if (clazz == this) {
@@ -103,33 +121,22 @@ public class CandyClass extends CallableObj {
 	public final boolean isSubClassOf(CandyClass clazz) {
 		return clazz.isSuperClassOf(this);
 	}
-	
+
 	public final CandyClass getSuperClass() {
 		return superClass;
 	}
-	
-	@Override
-	public final CandyClass getCandyClass() {
-		return this;
-	}
-	
-	@Override
-	public final String getCandyClassName() {
-		return getClassName();
-	}
 
 	@Override
-	public CandyObject getAttr(VM vm, String attr) {
-		switch (attr) {
-			case "name":
-				return StringObj.valueOf(getCandyClassName());
-			case "superClass":
-				return superClass == null ?
-					NullPointer.nil() : superClass;
+	public CandyObject getAttr(VM vm, String name) {
+		switch (name) {
+			case "className": 
+				return StringObj.valueOf(className);
+			case "superClass": 
+				return superClass == null ? NullPointer.nil() : superClass;
 		}
-		return super.getAttr(vm, attr);
+		return super.getAttr(vm, name);
 	}
-
+	
 	@Override
 	public int arity() {
 		return initializer == null ? 0 : initializer.arity()-1;
@@ -139,12 +146,12 @@ public class CandyClass extends CallableObj {
 	public int varArgsIndex() {
 		return initializer == null ? -1 : initializer.varArgsIndex()-1;
 	}
-	
+
 	@Override
 	public boolean isBuiltin() {
 		return initializer == null ? true : initializer.isBuiltin();
 	}
-	
+
 	@Override
 	protected void onCall(VM vm, int argc, int unpackFlags) {
 		throw new Error("Supported");
@@ -155,7 +162,7 @@ public class CandyClass extends CallableObj {
 		CandyObject instance = createInstance(vm);
 		new MethodObj(instance, initializer).call(vm, argc, unpackFlags);
 	}
-	
+
 	protected CandyObject createInstance(VM vm) {		
 		if (!canBeCreated) {
 			new NativeError(
@@ -163,10 +170,11 @@ public class CandyClass extends CallableObj {
 				+ getCandyClassName()
 			).throwSelfNative();
 		}
-		
 		if (constructorAccess == null) {
-			return new CandyObjEntity(this);
+			return new CandyObject(this);
 		}
+		// We can't reflectly call the constructor with a CandyClass
+		// due to the restriction of ReflectASM.
 		CandyObject obj = constructorAccess.newInstance();
 		obj.setCandyClass(this);
 		return obj;

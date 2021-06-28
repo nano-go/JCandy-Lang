@@ -1,7 +1,10 @@
 package com.nano.candy.interpreter.i2.vm;
 
 import com.nano.candy.interpreter.InterpreterOptions;
+import com.nano.candy.interpreter.i2.builtin.CandyClass;
 import com.nano.candy.interpreter.i2.builtin.CandyObject;
+import com.nano.candy.interpreter.i2.builtin.ClassSignature;
+import com.nano.candy.interpreter.i2.builtin.ObjectClass;
 import com.nano.candy.interpreter.i2.builtin.type.ArrayObj;
 import com.nano.candy.interpreter.i2.builtin.type.BoolObj;
 import com.nano.candy.interpreter.i2.builtin.type.CallableObj;
@@ -13,9 +16,6 @@ import com.nano.candy.interpreter.i2.builtin.type.NullPointer;
 import com.nano.candy.interpreter.i2.builtin.type.PrototypeFunction;
 import com.nano.candy.interpreter.i2.builtin.type.StringObj;
 import com.nano.candy.interpreter.i2.builtin.type.TupleObj;
-import com.nano.candy.interpreter.i2.builtin.type.classes.CandyClass;
-import com.nano.candy.interpreter.i2.builtin.type.classes.ClassSignature;
-import com.nano.candy.interpreter.i2.builtin.type.classes.ObjectClass;
 import com.nano.candy.interpreter.i2.builtin.type.error.ErrorObj;
 import com.nano.candy.interpreter.i2.builtin.type.error.NameError;
 import com.nano.candy.interpreter.i2.builtin.type.error.TypeError;
@@ -442,8 +442,8 @@ public final class VM {
 		if (method == null) {
 			new TypeError(
 				"'%s->%s' class has no method '%s'.",
-				instance.getCandyClass().getClassName(),
-				superClass.getClassName(), methodName
+				instance.getCandyClass().getName(),
+				superClass.getName(), methodName
 			).throwSelfNative();
 		}
 		method.call(this, argc);
@@ -612,11 +612,11 @@ public final class VM {
 				 * Unary Operations.
 				 */
 				case OP_NEGATIVE: {
-					pop().negativeApi(this);
+					push(pop().callNegative(this));
 					break;
 				}
 				case OP_POSITIVE: {
-					pop().positiveApi(this);
+					push(pop().callPositive(this));
 					break;
 				}
 				case OP_NOT: {
@@ -630,31 +630,31 @@ public final class VM {
 				case OP_ADD: {
 					CandyObject val2 = pop();
 					CandyObject val1 = pop();
-					val1.addApi(this, val2);
+					push(val1.callAdd(this, val2));
 					break;
 				}
 				case OP_SUB: {
 					CandyObject val2 = pop();
 					CandyObject val1 = pop();
-					val1.subApi(this, val2);
+					push(val1.callSub(this, val2));
 					break;
 				}				
 				case OP_MUL: {
 					CandyObject val2 = pop();
 					CandyObject val1 = pop();
-					val1.mulApi(this, val2);
+					push(val1.callMul(this, val2));
 					break;
 				}				
 				case OP_DIV: {
 					CandyObject val2 = pop();
 					CandyObject val1 = pop();
-					val1.divApi(this, val2);
+					push(val1.callDiv(this, val2));
 					break;
 				}
 				case OP_MOD: {
 					CandyObject val2 = pop();
 					CandyObject val1 = pop();
-					val1.modApi(this, val2);
+					push(val1.callMod(this, val2));
 					break;
 				}
 				
@@ -672,37 +672,37 @@ public final class VM {
 				case OP_GT: {
 					CandyObject val2 = pop();
 					CandyObject val1 = pop();
-					val1.gtApi(this, val2);
+					push(val1.callGt(this, val2));
 					break;
 				}
 				case OP_GTEQ: {
 					CandyObject val2 = pop();
 					CandyObject val1 = pop();
-					val1.gteqApi(this, val2);
+					push(val1.callGteq(this, val2));
 					break;
 				}
 				case OP_LT: {
 					CandyObject val2 = pop();
 					CandyObject val1 = pop();
-					val1.ltApi(this, val2);
+					push(val1.callLt(this, val2));
 					break;
 				}
 				case OP_LTEQ: {
 					CandyObject val2 = pop();
 					CandyObject val1 = pop();
-					val1.lteqApi(this, val2);
+					push(val1.callLteq(this, val2));
 					break;
 				}
 				case OP_EQ: {
 					CandyObject val2 = pop();
 					CandyObject val1 = pop();
-					val1.equalsApi(this, val2);
+					push(val1.callEquals(this, val2));
 					break;
 				}
 				case OP_NOTEQ: {
 					CandyObject val2 = pop();
 					CandyObject val1 = pop();
-					push(val1.equalsApiExeUser(this, val2).not(this));
+					push(val1.callEquals(this, val2).not(this));
 					break;
 				}
 
@@ -847,24 +847,24 @@ public final class VM {
 				 * Object Operations.
 				 */
 				case OP_GET_ATTR: {
-					pop().getAttrApi(this, cp.getString(readIndex()));
+					push(pop().callGetAttr(this, cp.getString(readIndex())));
 					break;
 				}		
 				case OP_SET_ATTR: {
 					CandyObject obj = pop();
 					CandyObject value = pop();
-					obj.setAttrApi(this, cp.getString(readIndex()), value);
+					push(obj.callSetAttr(this, cp.getString(readIndex()), value));
 					break;
 				}
 				case OP_GET_ITEM: {
-					pop().getItemApi(this, pop());
+					push(pop().callGetItem(this, pop()));
 					break;
 				}
 				case OP_SET_ITEM: {
 					CandyObject obj = pop();
 					CandyObject key = pop();
 					CandyObject value = pop();
-					obj.setItemApi(this, key, value);
+					push(obj.callSetItem(this, key, value));
 					break;
 				}
 					
@@ -909,7 +909,7 @@ public final class VM {
 				case OP_INVOKE: {
 					int arity = readUint8();
 					String attr = cp.getString(readIndex());
-					CandyObject method = pop().getAttrApiExeUser(this, attr);
+					CandyObject method = pop().callGetAttr(this, attr);
 					TypeError.requiresCallable(method).call(this, arity);
 					break;
 				}
@@ -966,7 +966,7 @@ public final class VM {
 				}
 				case OP_ASSERT: {
 					new com.nano.candy.interpreter.i2.builtin.type.error.
-						AssertionError(pop().strApiExeUser(this).value()).throwSelfNative();
+						AssertionError(pop().callStr(this).value()).throwSelfNative();
 					break;
 				}
 				case OP_PRINT: {
@@ -974,7 +974,7 @@ public final class VM {
 					if (obj == NullPointer.nil()) {
 						break;
 					}
-					System.out.println(obj.strApiExeUser(this).value());
+					System.out.println(obj.callStr(this).value());
 					break;
 				}
 				case OP_RETURN: {

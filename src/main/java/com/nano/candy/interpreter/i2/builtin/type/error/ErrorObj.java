@@ -1,10 +1,10 @@
 package com.nano.candy.interpreter.i2.builtin.type.error;
 
-import com.nano.candy.interpreter.i2.builtin.CandyObjEntity;
+import com.nano.candy.interpreter.i2.builtin.CandyClass;
 import com.nano.candy.interpreter.i2.builtin.CandyObject;
 import com.nano.candy.interpreter.i2.builtin.type.ArrayObj;
 import com.nano.candy.interpreter.i2.builtin.type.StringObj;
-import com.nano.candy.interpreter.i2.builtin.type.classes.CandyClass;
+import com.nano.candy.interpreter.i2.builtin.type.error.ErrorObj;
 import com.nano.candy.interpreter.i2.builtin.utils.ObjectHelper;
 import com.nano.candy.interpreter.i2.cni.NativeClass;
 import com.nano.candy.interpreter.i2.cni.NativeClassRegister;
@@ -16,7 +16,7 @@ import com.nano.candy.std.Names;
 import java.util.Arrays;
 
 @NativeClass(name = "Error", isInheritable = true)
-public class ErrorObj extends CandyObjEntity {
+public class ErrorObj extends CandyObject {
 	
 	public static final CandyClass ERROR_CLASS = 
 		NativeClassRegister.generateNativeClass(ErrorObj.class);

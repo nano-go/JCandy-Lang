@@ -1,9 +1,9 @@
 package com.nano.candy.interpreter.i2.rtda;
 
+import com.nano.candy.interpreter.i2.builtin.CandyClass;
 import com.nano.candy.interpreter.i2.builtin.CandyObject;
 import com.nano.candy.interpreter.i2.builtin.type.CallableObj;
 import com.nano.candy.interpreter.i2.builtin.type.ModuleObj;
-import com.nano.candy.interpreter.i2.builtin.type.classes.CandyClass;
 import com.nano.candy.interpreter.i2.vm.CompiledFileInfo;
 import java.util.Collection;
 import java.util.HashMap;

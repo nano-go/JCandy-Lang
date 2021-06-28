@@ -1,4 +1,4 @@
-package com.nano.candy.interpreter.i2.builtin.type.classes;
+package com.nano.candy.interpreter.i2.builtin;
 import com.nano.candy.interpreter.i2.builtin.CandyObject;
 import com.nano.candy.interpreter.i2.cni.CNativeMethod;
 import com.nano.candy.interpreter.i2.cni.NativeMethodRegister;

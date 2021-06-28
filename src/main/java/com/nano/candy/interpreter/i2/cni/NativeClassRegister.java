@@ -1,9 +1,9 @@
 package com.nano.candy.interpreter.i2.cni;
 
+import com.nano.candy.interpreter.i2.builtin.CandyClass;
 import com.nano.candy.interpreter.i2.builtin.CandyObject;
-import com.nano.candy.interpreter.i2.builtin.type.classes.CandyClass;
-import com.nano.candy.interpreter.i2.builtin.type.classes.ClassSignature;
-import com.nano.candy.interpreter.i2.builtin.type.classes.ObjectClass;
+import com.nano.candy.interpreter.i2.builtin.ClassSignature;
+import com.nano.candy.interpreter.i2.builtin.ObjectClass;
 import com.nano.candy.std.Names;
 
 public class NativeClassRegister {

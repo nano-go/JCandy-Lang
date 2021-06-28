@@ -1,8 +1,7 @@
 package com.nano.candy.interpreter.i2.builtin.type;
-import com.nano.candy.interpreter.i2.builtin.BuiltinObject;
 import com.nano.candy.interpreter.i2.builtin.CandyObject;
+import com.nano.candy.interpreter.i2.builtin.ObjectClass;
 import com.nano.candy.interpreter.i2.builtin.type.IteratorObj;
-import com.nano.candy.interpreter.i2.builtin.type.classes.ObjectClass;
 import com.nano.candy.interpreter.i2.cni.FasterNativeMethod;
 import com.nano.candy.interpreter.i2.rtda.Variable;
 import com.nano.candy.interpreter.i2.vm.VM;
@@ -10,7 +9,7 @@ import com.nano.candy.std.Names;
 import java.util.Iterator;
 import java.util.Map;
 
-public abstract class IteratorObj extends BuiltinObject {
+public abstract class IteratorObj extends CandyObject {
 	
 	public static class RangeIterator extends IteratorObj {
 		private int v;

@@ -9,15 +9,21 @@ import com.nano.candy.interpreter.i2.vm.VM;
  */
 public class MethodObj extends CallableObj {
 	
+	// the 'method' always takes an extra parameter representing
+	// the 'this' pointer.
+	private static ParametersInfo genParametersInfo(CallableObj method) {
+		int varargsIndex = method.varArgsIndex();
+		varargsIndex = varargsIndex < 0 ? varargsIndex : varargsIndex-1;
+		return new ParametersInfo(method.arity()-1, varargsIndex);
+	}
+	
 	private CandyObject receiver;
 	private CallableObj method;
 	
-	// the 'method' always takes an extra parameter representing
-	// the 'this' pointer.
 	public MethodObj(CandyObject receiver, CallableObj method) {
 		super(
 			method.declaredName(), method.fullName(), 
-			new ParametersInfo(method.arity()-1, method.varArgsIndex()-1)
+			genParametersInfo(method)
 		);
 		this.receiver = receiver;
 		this.method = method;

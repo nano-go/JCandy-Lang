@@ -1,8 +1,8 @@
 package com.nano.candy.interpreter.i2.builtin.type;
 
-import com.nano.candy.interpreter.i2.builtin.BuiltinObject;
+import com.nano.candy.interpreter.i2.builtin.CandyClass;
 import com.nano.candy.interpreter.i2.builtin.CandyObject;
-import com.nano.candy.interpreter.i2.builtin.type.classes.CandyClass;
+import com.nano.candy.interpreter.i2.builtin.type.MapObj;
 import com.nano.candy.interpreter.i2.builtin.type.error.ArgumentError;
 import com.nano.candy.interpreter.i2.builtin.type.error.TypeError;
 import com.nano.candy.interpreter.i2.builtin.utils.ObjectHelper;
@@ -13,7 +13,7 @@ import com.nano.candy.interpreter.i2.vm.VM;
 import com.nano.candy.std.Names;
 
 @NativeClass(name = "Map")
-public final class MapObj extends BuiltinObject {
+public final class MapObj extends CandyObject {
 
 	public static final CandyClass MAP_CLASS = 
 		NativeClassRegister.generateNativeClass(MapObj.class);
@@ -61,12 +61,12 @@ public final class MapObj extends BuiltinObject {
 		
 		protected boolean equals(VM vm, CandyObject key, int hash) {
 			return this.hash == hash &&
-				this.key.equalsApiExeUser(vm, key).value();
+				this.key.callEquals(vm, key).value();
 		}
 	}
 	
 	private static int hash(VM vm, CandyObject obj) {
-		int hash = (int) obj.hashCodeApiExeUser(vm).value;
+		int hash = (int) obj.callHashCode(vm).value;
 		return (hash >> 16) ^ hash;
 	}
 	
@@ -312,8 +312,8 @@ public final class MapObj extends BuiltinObject {
 		}
 		StringBuilder builder = new StringBuilder("{");
 		while (true) {
-			String key = i.currentEntry.key.strApiExeUser(vm).value();
-			String value = i.currentEntry.value.strApiExeUser(vm).value();
+			String key = i.currentEntry.key.callStr(vm).value();
+			String value = i.currentEntry.value.callStr(vm).value();
 			builder.append(key).append(": ").append(value);
 			i.moveToNext();
 			if (!i.hasNext(vm)) {
@@ -337,7 +337,7 @@ public final class MapObj extends BuiltinObject {
 			while (i.hasNext(vm)) {
 				CandyObject value = map.get(vm, i.currentEntry.key);
 				if (value == null ||
-					 !value.equalsApiExeUser(vm, i.currentEntry.value).value()) {
+					 !value.callEquals(vm, i.currentEntry.value).value()) {
 					return BoolObj.FALSE;
 				}
 				i.moveToNext();

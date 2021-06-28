@@ -1,9 +1,8 @@
 package com.nano.candy.interpreter.i2.builtin.type;
 
-import com.nano.candy.interpreter.i2.builtin.BuiltinObject;
+import com.nano.candy.interpreter.i2.builtin.CandyClass;
 import com.nano.candy.interpreter.i2.builtin.CandyObject;
 import com.nano.candy.interpreter.i2.builtin.type.TupleObj;
-import com.nano.candy.interpreter.i2.builtin.type.classes.CandyClass;
 import com.nano.candy.interpreter.i2.builtin.type.error.TypeError;
 import com.nano.candy.interpreter.i2.builtin.utils.ArrayHelper;
 import com.nano.candy.interpreter.i2.builtin.utils.ObjectHelper;
@@ -15,7 +14,7 @@ import com.nano.candy.utils.ArrayUtils;
 import java.util.Objects;
 
 @NativeClass(name = "Tuple")
-public final class TupleObj extends BuiltinObject {
+public final class TupleObj extends CandyObject {
 	public static final CandyClass TUPLE_CLASS = 
 		NativeClassRegister.generateNativeClass(TupleObj.class);
 	
@@ -74,7 +73,7 @@ public final class TupleObj extends BuiltinObject {
 			}
 			for (int i = 0; i < es.length; i ++) {
 				BoolObj res = 
-					this.elements[i].equalsApiExeUser(vm, es[i]);
+					this.elements[i].callEquals(vm, es[i]);
 				if (!res.value()) {
 					return BoolObj.FALSE;
 				}

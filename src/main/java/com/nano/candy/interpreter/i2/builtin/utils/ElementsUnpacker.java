@@ -132,11 +132,11 @@ public class ElementsUnpacker {
 			buffer.offer(element);
 			return;
 		}
-		CandyObject obj = element.iteratorApiExeUser(vm);
+		CandyObject obj = element.callIterator(vm);
 		CandyObject hasNext =
-			obj.getAttrApiExeUser(vm, Names.METHOD_ITERATOR_HAS_NEXT);
+			obj.callGetAttr(vm, Names.METHOD_ITERATOR_HAS_NEXT);
 		CandyObject next =
-			obj.getAttrApiExeUser(vm, Names.METHOD_ITERATOR_NEXT);
+			obj.callGetAttr(vm, Names.METHOD_ITERATOR_NEXT);
 		TypeError.checkIsCallable(hasNext);
 		TypeError.checkIsCallable(next);
 		int size = 0;

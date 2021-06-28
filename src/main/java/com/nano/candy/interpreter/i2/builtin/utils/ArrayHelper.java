@@ -14,7 +14,7 @@ public class ArrayHelper {
 		int hash = 0;
 		for (int i = from; i < to; i ++) {
 			hash = hash * 31 + 
-				(int) arr[i].hashCodeApiExeUser(vm).intValue();
+				(int) arr[i].callHashCode(vm).intValue();
 		}
 		return hash;
 	}
@@ -30,7 +30,7 @@ public class ArrayHelper {
 		int iMax = to-1;
 		if (i <= iMax) {
 			for (;;) {
-				str.append(arr[i].strApiExeUser(vm).value());
+				str.append(arr[i].callStr(vm).value());
 				if (i >= iMax) {
 					break;
 				}

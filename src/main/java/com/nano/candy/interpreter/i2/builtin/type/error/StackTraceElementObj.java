@@ -1,10 +1,10 @@
 package com.nano.candy.interpreter.i2.builtin.type.error;
 
-import com.nano.candy.interpreter.i2.builtin.BuiltinObject;
+import com.nano.candy.interpreter.i2.builtin.CandyClass;
 import com.nano.candy.interpreter.i2.builtin.CandyObject;
 import com.nano.candy.interpreter.i2.builtin.type.IntegerObj;
 import com.nano.candy.interpreter.i2.builtin.type.StringObj;
-import com.nano.candy.interpreter.i2.builtin.type.classes.CandyClass;
+import com.nano.candy.interpreter.i2.builtin.type.error.StackTraceElementObj;
 import com.nano.candy.interpreter.i2.cni.NativeClass;
 import com.nano.candy.interpreter.i2.cni.NativeClassRegister;
 import com.nano.candy.interpreter.i2.cni.NativeMethod;
@@ -13,7 +13,7 @@ import com.nano.candy.interpreter.i2.rtda.StackFrame;
 import com.nano.candy.interpreter.i2.vm.VM;
 
 @NativeClass(name = "StackTraceElement")
-public class StackTraceElementObj extends BuiltinObject {
+public class StackTraceElementObj extends CandyObject {
 	
 	public static final CandyClass STACK_TRACE_ELEMENT_CLASS = 
 		NativeClassRegister.generateNativeClass(StackTraceElementObj.class);

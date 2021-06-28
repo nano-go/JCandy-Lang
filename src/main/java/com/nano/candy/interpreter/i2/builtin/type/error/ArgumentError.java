@@ -1,8 +1,9 @@
 package com.nano.candy.interpreter.i2.builtin.type.error;
 
+import com.nano.candy.interpreter.i2.builtin.CandyClass;
 import com.nano.candy.interpreter.i2.builtin.CandyObject;
 import com.nano.candy.interpreter.i2.builtin.type.CallableObj;
-import com.nano.candy.interpreter.i2.builtin.type.classes.CandyClass;
+import com.nano.candy.interpreter.i2.builtin.type.error.ArgumentError;
 import com.nano.candy.interpreter.i2.cni.NativeClass;
 import com.nano.candy.interpreter.i2.cni.NativeClassRegister;
 
@@ -43,7 +44,7 @@ public class ArgumentError extends ErrorObj {
 		if (obj instanceof CallableObj) {
 			return ((CallableObj) obj).fullName();
 		}
-		return obj.getCandyClass().getClassName();
+		return obj.getCandyClass().getName();
 	}
 	
 	public ArgumentError() {

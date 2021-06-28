@@ -1,4 +1,4 @@
-package com.nano.candy.interpreter.i2.builtin.type.classes;
+package com.nano.candy.interpreter.i2.builtin;
 
 import com.esotericsoftware.reflectasm.ConstructorAccess;
 import com.nano.candy.interpreter.i2.builtin.CandyObject;

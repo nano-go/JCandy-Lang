@@ -1,8 +1,7 @@
 package com.nano.candy.interpreter.i2.builtin.type;
 
-import com.nano.candy.interpreter.i2.builtin.BuiltinObject;
+import com.nano.candy.interpreter.i2.builtin.CandyClass;
 import com.nano.candy.interpreter.i2.builtin.CandyObject;
-import com.nano.candy.interpreter.i2.builtin.type.classes.CandyClass;
 import com.nano.candy.interpreter.i2.builtin.type.error.ArgumentError;
 import com.nano.candy.interpreter.i2.builtin.utils.ElementsUnpacker;
 import com.nano.candy.interpreter.i2.builtin.utils.ObjectHelper;
@@ -14,11 +13,11 @@ import com.nano.candy.interpreter.i2.rtda.chunk.ConstantValue;
 import com.nano.candy.interpreter.i2.vm.VM;
 
 /**
- * A callable represents a candy callable object (a function, a method
+ * A CallablObj represents a candy callable object (a function, a method
  * or a class).
  */
 @NativeClass(name = "Callable")
-public abstract class CallableObj extends BuiltinObject {
+public abstract class CallableObj extends CandyObject {
 	
 	public static final byte EMPTY_UNPACK_FLAGS = 0;
 	
@@ -32,7 +31,7 @@ public abstract class CallableObj extends BuiltinObject {
 	}
 	
 	/**
-	 * Push arguments into the operand stack in right-to-left order.
+	 * Push arguments into the operand stack in the right-to-left order.
 	 */
 	public final static void pushArguments(OperandStack opStack,
 	                                       CandyObject... args) {
@@ -46,18 +45,19 @@ public abstract class CallableObj extends BuiltinObject {
 	}
 	
 	public static class ParametersInfo {
+		
 		/**
-		 * The number of arguments that a callable object can take.
+		 * The number of arguments.
 		 */
-		private int arity;
+		private final int arity;
 
 		/**
-		 * The parameter that the index is entry can accept zero or 
+		 * The parameter that this index is entry can accept zero or 
 		 * more arguments.
 		 *
 		 * If this value is -1, it means no such parameters.
 		 */
-		private int varArgsIndex;
+		private final int varArgsIndex;
 
 		public ParametersInfo(int arity, int varArgsIndex) {
 			this.arity = arity;
@@ -78,28 +78,31 @@ public abstract class CallableObj extends BuiltinObject {
 		}
 	}
 	
-	/**
-	 * The name is declared in programe.
-	 */
-	protected String declaredName;
 	
 	/**
-	 * The name is full name of a method, for example: LinkedList#append.
+	 * Full name of a method. For example: LinkedList#append.
 	 */
-	protected String fullName;
+	protected final String fullName;
 	
-	protected ParametersInfo parameter;
+	protected final String declaredName;
+	
+	protected final ParametersInfo parameter;
 	
 	public CallableObj(String name, ParametersInfo parameter) {
 		this(name, name, parameter);
 	}
 	
 	public CallableObj(String declredName,
-	                   String name, ParametersInfo parameter) {
-		super(null);
+	                   String fullName, ParametersInfo parameter) {
 		this.declaredName = declredName;
-		this.fullName = name;
+		this.fullName = fullName;
 		this.parameter = parameter;
+		freeze();
+	}
+
+	@Override
+	protected CandyClass initSelfCandyClass() {
+		return getCallableClass();
 	}
 	
 	public String declaredName() {
@@ -151,7 +154,6 @@ public abstract class CallableObj extends BuiltinObject {
 		}
 		call(vm, args == null ? 0 : args.length, unpackFlags);
 		if (!isBuiltin()) {
-			
 			vm.runFrame(true);
 		}
 		return vm.pop();
@@ -201,13 +203,13 @@ public abstract class CallableObj extends BuiltinObject {
 		return ObjectHelper.toString(
 			strTag(), "%s(%d)", fullName, arity());
 	}
-
-	protected abstract void onCall(VM vm, int argc, int unpackFlags);
-	
-	public abstract boolean isBuiltin();
-	
+		
 	/**
 	 * @see {@link #toString()}
 	 */
 	protected abstract String strTag();
+
+	protected abstract void onCall(VM vm, int argc, int unpackFlags);
+	
+	public abstract boolean isBuiltin();
 }

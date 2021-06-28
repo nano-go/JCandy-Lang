@@ -1,6 +1,8 @@
 package com.nano.candy.interpreter.i2.builtin.type.error;
 
-import com.nano.candy.interpreter.i2.builtin.type.classes.CandyClass;
+import com.nano.candy.interpreter.i2.builtin.CandyClass;
+import com.nano.candy.interpreter.i2.builtin.type.error.ErrorObj;
+import com.nano.candy.interpreter.i2.builtin.type.error.ModuleError;
 import com.nano.candy.interpreter.i2.cni.NativeClass;
 import com.nano.candy.interpreter.i2.cni.NativeClassRegister;
 

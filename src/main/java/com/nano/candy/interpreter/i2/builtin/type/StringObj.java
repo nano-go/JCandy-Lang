@@ -1,10 +1,9 @@
 package com.nano.candy.interpreter.i2.builtin.type;
 
-import com.nano.candy.interpreter.i2.builtin.BuiltinObject;
+import com.nano.candy.interpreter.i2.builtin.CandyClass;
 import com.nano.candy.interpreter.i2.builtin.CandyObject;
 import com.nano.candy.interpreter.i2.builtin.type.ArrayObj;
 import com.nano.candy.interpreter.i2.builtin.type.StringObj;
-import com.nano.candy.interpreter.i2.builtin.type.classes.CandyClass;
 import com.nano.candy.interpreter.i2.builtin.type.error.RangeError;
 import com.nano.candy.interpreter.i2.builtin.type.error.TypeError;
 import com.nano.candy.interpreter.i2.builtin.utils.ObjectHelper;
@@ -17,7 +16,7 @@ import com.nano.candy.utils.ArrayUtils;
 import java.util.ArrayList;
 
 @NativeClass(name = "String")
-public class StringObj extends BuiltinObject {
+public class StringObj extends CandyObject {
 
 	public static final CandyClass STRING_CLASS =
 		NativeClassRegister.generateNativeClass(StringObj.class);
@@ -62,7 +61,7 @@ public class StringObj extends BuiltinObject {
 	
 	@Override
 	public CandyObject add(VM vm, CandyObject operand) {
-		StringObj str = operand.strApiExeUser(vm);
+		StringObj str = operand.callStr(vm);
 		return valueOf(value + str.value);
 	}
 
@@ -135,13 +134,13 @@ public class StringObj extends BuiltinObject {
 	
 	@NativeMethod(name = "startWith", argc = 1)
 	public CandyObject startWith(VM vm, CandyObject[] args) {
-		String str = args[0].strApiExeUser(vm).value;
+		String str = args[0].callStr(vm).value;
 		return BoolObj.valueOf(value.startsWith(str));
 	}
 	
 	@NativeMethod(name = "endWith", argc = 1)
 	public CandyObject endWith(VM vm, CandyObject[] args) {
-		String str = args[0].strApiExeUser(vm).value;
+		String str = args[0].callStr(vm).value;
 		return BoolObj.valueOf(value.endsWith(str));
 	}
 	
@@ -188,7 +187,7 @@ public class StringObj extends BuiltinObject {
 	@NativeMethod(name = "replaceFirst", argc = 2)
 	public CandyObject replace(VM vm, CandyObject[] args) {
 		String regex = ObjectHelper.asString(args[0]);
-		String replacement = args[1].strApiExeUser(vm).value;
+		String replacement = args[1].callStr(vm).value;
 		return valueOf(value.replaceFirst(regex, replacement));
 	}
 	
@@ -196,7 +195,7 @@ public class StringObj extends BuiltinObject {
 	@NativeMethod(name = "replaceAll", argc = 2)
 	public CandyObject replaceAll(VM vm, CandyObject[] args) {
 		String regex = ObjectHelper.asString(args[0]);
-		String replacement = args[1].strApiExeUser(vm).value;
+		String replacement = args[1].callStr(vm).value;
 		return valueOf(value.replaceAll(regex, replacement));
 	}
 	
@@ -214,7 +213,7 @@ public class StringObj extends BuiltinObject {
 		int i = 0;
 		int iMax = size-1;
 		for (;;) {
-			builder.append(array.get(i).strApiExeUser(vm).value);
+			builder.append(array.get(i).callStr(vm).value);
 			if (i == iMax) {
 				break;
 			}

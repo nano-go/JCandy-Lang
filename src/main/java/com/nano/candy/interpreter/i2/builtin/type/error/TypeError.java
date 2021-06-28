@@ -1,11 +1,12 @@
 package com.nano.candy.interpreter.i2.builtin.type.error;
 
+import com.nano.candy.interpreter.i2.builtin.CandyClass;
 import com.nano.candy.interpreter.i2.builtin.CandyObject;
-import com.nano.candy.interpreter.i2.builtin.type.classes.CandyClass;
+import com.nano.candy.interpreter.i2.builtin.type.CallableObj;
 import com.nano.candy.interpreter.i2.builtin.type.error.ErrorObj;
+import com.nano.candy.interpreter.i2.builtin.type.error.TypeError;
 import com.nano.candy.interpreter.i2.cni.NativeClass;
 import com.nano.candy.interpreter.i2.cni.NativeClassRegister;
-import com.nano.candy.interpreter.i2.builtin.type.CallableObj;
 
 @NativeClass(name = "TypeError", isInheritable = true)
 public class TypeError extends ErrorObj {
@@ -28,7 +29,7 @@ public class TypeError extends ErrorObj {
 	public static void checkClassMatched(CandyClass expected, CandyClass clazz) {
 		if (clazz != expected) {
 			new TypeError("The '%s' class can't apply to '%s' class.",
-				clazz.getCandyClassName(), expected.getClassName()
+				clazz.getCandyClassName(), expected.getName()
 			).throwSelfNative();
 		}
 	}
@@ -37,7 +38,7 @@ public class TypeError extends ErrorObj {
 		if (instance.isCandyClass() || !expected.isSuperClassOf(instance.getCandyClass())) {
 			new TypeError(
 				"The '%s' can't apply to '%s' obj.",
-				instance.getCandyClassName(), expected.getClassName()
+				instance.getCandyClassName(), expected.getName()
 			).throwSelfNative();	
 		}
 	}

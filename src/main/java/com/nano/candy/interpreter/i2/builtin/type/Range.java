@@ -1,9 +1,8 @@
 package com.nano.candy.interpreter.i2.builtin.type;
 
-import com.nano.candy.interpreter.i2.builtin.BuiltinObject;
+import com.nano.candy.interpreter.i2.builtin.CandyClass;
 import com.nano.candy.interpreter.i2.builtin.CandyObject;
 import com.nano.candy.interpreter.i2.builtin.type.Range;
-import com.nano.candy.interpreter.i2.builtin.type.classes.CandyClass;
 import com.nano.candy.interpreter.i2.builtin.type.error.TypeError;
 import com.nano.candy.interpreter.i2.builtin.utils.ObjectHelper;
 import com.nano.candy.interpreter.i2.cni.NativeClass;
@@ -14,7 +13,7 @@ import com.nano.candy.std.Names;
 import java.util.Objects;
 
 @NativeClass(name = "Range")
-public class Range extends BuiltinObject {
+public class Range extends CandyObject {
 	
 	public static final CandyClass RANGE_CLASS = 
 		NativeClassRegister.generateNativeClass(Range.class);

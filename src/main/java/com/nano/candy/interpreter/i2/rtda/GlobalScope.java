@@ -1,7 +1,9 @@
 package com.nano.candy.interpreter.i2.rtda;
 
 import com.nano.candy.interpreter.i2.builtin.BuiltinFunctions;
+import com.nano.candy.interpreter.i2.builtin.CandyClass;
 import com.nano.candy.interpreter.i2.builtin.CandyObject;
+import com.nano.candy.interpreter.i2.builtin.ObjectClass;
 import com.nano.candy.interpreter.i2.builtin.type.ArrayObj;
 import com.nano.candy.interpreter.i2.builtin.type.BoolObj;
 import com.nano.candy.interpreter.i2.builtin.type.DoubleObj;
@@ -12,8 +14,6 @@ import com.nano.candy.interpreter.i2.builtin.type.NumberObj;
 import com.nano.candy.interpreter.i2.builtin.type.Range;
 import com.nano.candy.interpreter.i2.builtin.type.StringObj;
 import com.nano.candy.interpreter.i2.builtin.type.TupleObj;
-import com.nano.candy.interpreter.i2.builtin.type.classes.CandyClass;
-import com.nano.candy.interpreter.i2.builtin.type.classes.ObjectClass;
 import com.nano.candy.interpreter.i2.builtin.type.error.ArgumentError;
 import com.nano.candy.interpreter.i2.builtin.type.error.AssertionError;
 import com.nano.candy.interpreter.i2.builtin.type.error.AttributeError;
@@ -84,8 +84,8 @@ public class GlobalScope {
 	}
 
 	private static void defineClass(CandyClass clazz) {
-		BUILTIN_VARS.put(clazz.getClassName(),
-			Variable.getVariable(clazz.getClassName(), clazz));
+		BUILTIN_VARS.put(clazz.getName(),
+			Variable.getVariable(clazz.getName(), clazz));
 	}
 	
 	private HashMap<String, FileScope> fileScopeCache;

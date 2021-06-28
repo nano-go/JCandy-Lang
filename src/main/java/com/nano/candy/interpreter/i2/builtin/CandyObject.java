@@ -2,176 +2,227 @@ package com.nano.candy.interpreter.i2.builtin;
 
 import com.nano.candy.interpreter.i2.builtin.type.BoolObj;
 import com.nano.candy.interpreter.i2.builtin.type.IntegerObj;
+import com.nano.candy.interpreter.i2.builtin.type.MethodObj;
 import com.nano.candy.interpreter.i2.builtin.type.StringObj;
-import com.nano.candy.interpreter.i2.builtin.type.classes.CandyClass;
-import com.nano.candy.interpreter.i2.builtin.type.classes.ObjectClass;
 import com.nano.candy.interpreter.i2.builtin.type.error.AttributeError;
-import com.nano.candy.interpreter.i2.builtin.type.error.NativeError;
 import com.nano.candy.interpreter.i2.builtin.type.error.TypeError;
 import com.nano.candy.interpreter.i2.builtin.utils.ObjectHelper;
 import com.nano.candy.interpreter.i2.cni.NativeClass;
 import com.nano.candy.interpreter.i2.cni.NativeMethod;
 import com.nano.candy.interpreter.i2.vm.VM;
 import com.nano.candy.std.Names;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Objects;
 
 @NativeClass(name = "Object")
-public abstract class CandyObject {
+public class CandyObject {
 
 	public static final boolean DEBUG = false;
-
-	private CandyClass clazz;
+	
+	private static final int SET_ATTR_MASK = 1;
+	private static final int GET_ATTR_MASK = 1 << 1;
+	private static final int GET_UNKNOWN_ATTR_MASK = 1 << 2;
+	private static final int SET_ITEM_MASK = 1 << 3;
+	private static final int GET_ITEM_MASK = 1 << 4;
+	private static final int POSTIVE_MASK = 1 << 5;
+	private static final int NEGATIVE_MASK = 1 << 6;
+	private static final int ADD_MASK = 1 << 7;
+	private static final int SUB_MASK = 1 << 8;
+	private static final int MUL_MASK = 1 << 9;
+	private static final int DIV_MASK = 1 << 10;
+	private static final int MOD_MASK = 1 << 11;
+	private static final int GT_MASK = 1 << 12;
+	private static final int GTEQ_MASK = 1 << 13;
+	private static final int LT_MASK = 1 << 14;
+	private static final int LTEQ_MASK = 1 << 15;
+	private static final int EQ_MASK = 1 << 16;
+	private static final int HASH_MASK = 1 << 17;
+	private static final int STR_MASK = 1 << 18;
+	private static final int ITERATOR_MASK = 1 << 19;
+	
+	private Map<String, CandyObject> metaData = Collections.emptyMap();
+	private CandyClass klass;
 	private boolean frozen;
 	
-	public CandyObject() {
-		this(ObjectClass.getObjClass());
+	/**
+	 * (builtinMethodFlags & methodMask) means the method is a builtin method.
+	 */
+	private int builtinMethodFlags;
+	
+	/**
+	 * Every Candy object have a constructor with no-args.
+	 * 
+	 * If the constructor with no-args is missing, the object can't
+	 * be created in the Candy language level.
+	 *
+	 * This constructor is called by a CandyClass object when an
+	 * instance of this class is created.
+	 */
+	protected CandyObject() {
+		this(null);
 	}
 
-	public CandyObject(CandyClass clazz) {
-		this.clazz = clazz;
+	public CandyObject(CandyClass klass) {
+		this.klass = klass;
+	}
+	
+	protected final void setCandyClass(CandyClass klass) {
+		this.klass = Objects.requireNonNull(klass);
+	}
+	
+	protected CandyClass initSelfCandyClass() {
+		return null;
+	}
+	
+	public final CandyClass getCandyClass() {
+		if (klass == null) klass = initSelfCandyClass();
+		return klass;
 	}
 
-	public void setCandyClass(CandyClass clazz) {
-		if (this.clazz != null && DEBUG) {
-			if (!clazz.isSubClassOf(this.clazz)) {
-				new NativeError("Error Type.").throwSelfNative();
-			}
-		}
-		this.clazz = clazz;
+	public final String getCandyClassName() {
+		return getCandyClass().getName();
 	}
-
-	public CandyClass getCandyClass() {
-		return clazz;
-	}
-
-	public boolean isCandyClass() {
+	
+	public final boolean isCandyClass() {
 		return getCandyClass() == this;
 	}
+	
+	public final void freeze() {
+		this.frozen = true;
+	}
 
-	public String getCandyClassName() {
-		return getCandyClass().getCandyClassName();
+	public final boolean frozen() {
+		return frozen;
+	}
+	
+	public final void checkFrozen() {
+		if (frozen) {
+			new AttributeError("The frozen object can't be changed.")
+				.throwSelfNative();
+		}
 	}
 	
 	public boolean isCallable() {
 		return false;
 	}
+	
+	public void setMetaData(String name, CandyObject value) {
+		if (metaData.isEmpty()) {
+			metaData = new HashMap<>();
+		}
+		metaData.put(name, value);
+	}
+	
+	public CandyObject getMetaData(String name) {
+		return metaData.get(name);
+	}
+	
+	public CandyObject removeMetaData(String name) {
+		return metaData.remove(name);
+	}
+	
 	@NativeMethod(name = "isCallable")
 	public CandyObject isCallable(VM vm, CandyObject[] args) {
 		return BoolObj.valueOf(isCallable());
 	}
 	
-	/**
-	 * freeze() method prevents you from changing an object, thereby turning
-	 * an object into a constant.
-	 *
-	 * <pre>
-	 * After freeze an object, any attempt to modify its attributes results 
-	 * in AttributeError.
-	 * </pre>
-	 */
-	public void freeze() {
-		this.frozen = true;
-	}
 	@NativeMethod(name = "freeze")
 	public CandyObject freeze(VM vm, CandyObject[] args) {
 		freeze();
 		return null;
 	}
 
-	
-	public boolean frozen() {
-		return frozen;
-	}
 	@NativeMethod(name = "frozen")
 	public CandyObject frozen(VM vm, CandyObject[] args) {
 		return BoolObj.valueOf(frozen());
 	}
-	public final void checkIsFrozen() {
-		if (frozen) {
-			new AttributeError("The frozen object can't be changed.")
-				.throwSelfNative();
+	
+	private final boolean isBuiltinMetnod(int mask) {
+		return (builtinMethodFlags & mask) != 0;
+	}
+	
+	private MethodObj getBoundMethod(String name, int mask) {
+		MethodObj metObj = getCandyClass().getBoundMethod(name, this);
+		if (metObj.isBuiltin()) {
+			builtinMethodFlags |= mask;
 		}
+		return metObj;
 	}
 
-	//  XXXApi: Usually call by VM. the method will not be executed 
-	//          if it's a prototype method.
-	//  XXXApiExeUser: The method will be executed if it's a prototype method.
-
-	/**
-	 * This is overloading method of the operator 'obj.attrName = value'.
-	 *
-	 * <pre>
-	 * _setAttr(attrName, value) associates an attribute name (must be a string) with 
-	 * an object.
-	 *
-	 * If this object is frozen, _setAttr(attrName, value) will raise an AttributeError
-	 * to warn users that the object is immutable.
-	 * </pre>
-	 */
-	public abstract void setAttrApi(VM vm, String attr, CandyObject value);
-	public abstract CandyObject setAttrApiExeUser(VM vm, String attr, CandyObject value);
-	public abstract CandyObject setAttr(VM vm, String attr, CandyObject value);
+	
+	public final CandyObject callSetAttr(VM vm, String name, CandyObject value) {
+		if (isBuiltinMetnod(SET_ATTR_MASK)) {
+			checkFrozen();
+			setAttr(vm, name, value);
+			return value;
+		}
+		return getBoundMethod(Names.METHOD_SET_ATTR, SET_ATTR_MASK)
+			.callExeUser(vm, StringObj.valueOf(name), value);
+	}
+	public CandyObject setAttr(VM vm, String name, CandyObject value) {
+		setMetaData(name, value);
+		return value;
+	}
 	@NativeMethod(name = Names.METHOD_SET_ATTR, argc = 2)
-	public CandyObject setAttr(VM vm, CandyObject[] args) {
-		String attr = ObjectHelper.asString(args[0]);
-		checkIsFrozen();
-		return setAttr(vm, attr, args[1]);
+	public final CandyObject setAttrMet(VM vm, CandyObject[] args) {
+		checkFrozen();
+		return setAttr(vm, ObjectHelper.asString(args[0]), args[1]);	
 	}
 
-	/**
-	 * This is overloading method of the operator 'obj.attrName'.
-	 *
-	 * <pre>
-	 * _getAttr(attrName) returns the value to which the specified attribute
-	 * name is mapped.
-	 *
-	 * if the specified attribute is not found, the default implementation
-	 * of the _getAttr(attrName) will invoke _getUnknownAttr(name) and return its result.
-	 * </pre>
-	 *
-	 * @see #getAttr(VM)
-	 */
-	public abstract void getAttrApi(VM vm, String attr);
-	public abstract CandyObject getAttrApiExeUser(VM vm, String attr);
 	
-	/**
-	 * Returns the value to which the attribute name is mapped or null 
-	 * if the specified attribute is not found.
-	 */
-	public abstract CandyObject getAttr(VM vm, String attr);
-	@NativeMethod(name = Names.METHOD_GET_ATTR, argc = 1)
-	public final CandyObject getAttr(VM vm, CandyObject[] args) {
-		return nativeGetAttr(vm, ObjectHelper.asString(args[0]));
-	}
-	protected final CandyObject nativeGetAttr(VM vm, String attr) {
-		CandyObject ret = getAttr(vm, attr);
-		if (ret != null) {
-			return ret;
+	public final CandyObject callGetAttr(VM vm, String name) {
+		if (isBuiltinMetnod(GET_ATTR_MASK)) {
+			return getAttrMet(vm, new CandyObject[]{StringObj.valueOf(name)});
 		}
-		return getUnknownAttrApiExeUser(vm, attr);
+		return getBoundMethod(Names.METHOD_GET_ATTR, GET_ATTR_MASK)
+			.callExeUser(vm, StringObj.valueOf(name));
+	}
+	public CandyObject getAttr(VM vm, String name) {
+		CandyObject val = getMetaData(name);
+		if (val == null) {
+			val = getCandyClass().getBoundMethod(name, this);
+		}
+		return val;
+	}
+	@NativeMethod(name = Names.METHOD_GET_ATTR, argc = 1)
+	public final CandyObject getAttrMet(VM vm, CandyObject[] args) {
+		String name = ObjectHelper.asString(args[0]);
+		CandyObject val = getAttr(vm, name);
+		if (val != null) {
+			return val; 
+		}
+		return callGetUnknownAttr(vm, name);
 	}
 	
-	public abstract void getUnknownAttrApi(VM vm, String attr);
-	public abstract CandyObject getUnknownAttrApiExeUser(VM vm, String attr);
-	public CandyObject getUnknownAttr(VM vm, String attr) {
-		AttributeError.checkAttributeNull(this, attr, null);
-		throw new Error();
+	
+	public CandyObject callGetUnknownAttr(VM vm, String name) {
+		if (isBuiltinMetnod(GET_UNKNOWN_ATTR_MASK)) {
+			return getUnknownAttr(vm, name);
+		}
+		return getBoundMethod(Names.METHOD_GET_UNKNOWN_ATTR, GET_UNKNOWN_ATTR_MASK)
+			.callExeUser(vm, StringObj.valueOf(name));
+	}
+	protected CandyObject getUnknownAttr(VM vm, String name) {
+		AttributeError.checkAttributeNull(this, name, null);
+		return null;
 	}
 	@NativeMethod(name = Names.METHOD_GET_UNKNOWN_ATTR, argc = 1)
-	public final CandyObject getUnknownAttr(VM vm, CandyObject[] args) {
+	public final CandyObject getUnknownAttrMet(VM vm, CandyObject[] args) {
 		return getUnknownAttr(vm, ObjectHelper.asString(args[0]));
 	}
-
-	/**
-	 * This is overloading method of the operator 'obj[key] = value'.
-	 *
-	 * <pre>
-	 * _setItem(key, value) associates the specified key with the specified value.
-	 * the key and the value can be any object.
-	 * </pre>
-	 */
-	public abstract void setItemApi(VM vm, CandyObject key, CandyObject value);
-	public abstract CandyObject setItemApiExeUser(VM vm, CandyObject key, CandyObject value);
-	public CandyObject setItem(VM vm, CandyObject key, CandyObject value) {
+	
+	
+	public CandyObject callSetItem(VM vm, CandyObject key, CandyObject value) {
+		if (isBuiltinMetnod(SET_ITEM_MASK)) {
+			checkFrozen();
+			return setItem(vm, key, value);
+		}
+		return getBoundMethod(Names.METHOD_SET_ITEM, SET_ITEM_MASK)
+			.callExeUser(vm, key, value);
+	}
+	protected CandyObject setItem(VM vm, CandyObject key, CandyObject value) {
 		new TypeError(
 			"'%s'['%s'] = '%s'", 
 			getCandyClassName(),
@@ -181,36 +232,249 @@ public abstract class CandyObject {
 		return null;
 	}
 	@NativeMethod(name = Names.METHOD_SET_ITEM, argc = 2)
-	public final CandyObject setItem(VM vm, CandyObject[] args) {
-		checkIsFrozen();
-		setItem(vm, args[0], args[1]);
-		return args[1];
+	public final CandyObject setItemMet(VM vm, CandyObject[] args) {
+		checkFrozen();
+		return setItem(vm, args[0], args[1]);
 	}
-
 	
-	/**
-	 * This is overloading method of the operator 'obj[key]'.
-	 *
-	 * <pre>
-	 * _getItem(key) returns the value to which the key is mapped.
-	 * </pre>
-	 */
-	public abstract void getItemApi(VM vm, CandyObject key);
-	public abstract CandyObject getItemApiExeUser(VM vm, CandyObject key);
-	public CandyObject getItem(VM vm, CandyObject key) {
+	
+	public CandyObject callGetItem(VM vm, CandyObject key) {
+		if (isBuiltinMetnod(GET_ITEM_MASK)) {
+			checkFrozen();
+			return getItem(vm, key);
+		}
+		return getBoundMethod(Names.METHOD_GET_ITEM, GET_ITEM_MASK)
+			.callExeUser(vm, key);
+	}
+	protected CandyObject getItem(VM vm, CandyObject key) {
 		new TypeError(
 			"'%s'['%s']", getCandyClassName(), key.getCandyClassName()
 		).throwSelfNative();
 		return null;
 	}
 	@NativeMethod(name = Names.METHOD_GET_ITEM, argc = 1)
-	public final CandyObject getItem(VM vm, CandyObject[] args) {
+	public final CandyObject getItemMet(VM vm, CandyObject[] args) {
 		return getItem(vm, args[0]);
+	}
+	
+	
+	public CandyObject callPositive(VM vm) {
+		if (isBuiltinMetnod(POSTIVE_MASK)) {
+			return positive(vm);
+		}
+		return getBoundMethod(Names.METHOD_OP_POSITIVE, POSTIVE_MASK)
+			.callExeUser(vm);
+	}
+	protected CandyObject positive(VM vm) {
+		new TypeError("+").throwSelfNative();
+		return null;
+	}
+	@NativeMethod(name = Names.METHOD_OP_POSITIVE)
+	public final CandyObject positiveMet(VM vm, CandyObject[] args) {
+		return positive(vm);
 	}
 
 	
-	public abstract void equalsApi(VM vm, CandyObject operand);
-	public abstract BoolObj equalsApiExeUser(VM vm, CandyObject operand);
+	public CandyObject callNegative(VM vm) {
+		if (isBuiltinMetnod(NEGATIVE_MASK)) {
+			return negative(vm);
+		}
+		return getBoundMethod(Names.METHOD_OP_NEGATIVE, NEGATIVE_MASK)
+			.callExeUser(vm);
+	}
+	protected CandyObject negative(VM vm) {
+		new TypeError("-").throwSelfNative();
+		return null;
+	}
+	@NativeMethod(name = Names.METHOD_OP_NEGATIVE)
+	public final CandyObject negativeMet(VM vm, CandyObject[] args) {
+		return negative(vm);
+	}
+	
+	
+	private void throwUnsupportBinaryOperator(String operator, CandyObject operand) {
+		new TypeError(
+			"The operator '%s' can't apply to types: %s and %s.",
+			operator, getCandyClassName(), operand.getCandyClassName()
+		).throwSelfNative();
+	}
+	
+	private CandyObject callBinaryOp(VM vm, CandyObject operand,
+	                                 String name, int mask) {
+		return getBoundMethod(name, mask).callExeUser(vm, operand);
+	}
+	
+	private BoolObj callRelativeBinaryOp(VM vm, CandyObject operand,
+	                                     String name, int mask) {
+		CandyObject obj = getBoundMethod(name, mask).callExeUser(vm, operand);
+		return obj.boolValue(vm);
+	}
+	
+	private void checkReturnedType(String name, CandyObject obj, CandyClass expectedType) {
+		if (obj.getCandyClass().isSubClassOf(expectedType)) {
+			return;
+		}
+		new TypeError(
+			"%s expects to return a(n) %s value, but %s value returned.",
+			name, expectedType.getName(), obj.getCandyClassName()
+		).throwSelfNative();
+		throw new Error();
+	}
+	
+	public CandyObject callAdd(VM vm, CandyObject operand) {
+		if (isBuiltinMetnod(ADD_MASK)) {
+			return add(vm, operand);
+		}
+		return callBinaryOp(vm, operand, Names.METHOD_OP_ADD, ADD_MASK);
+	}
+	protected CandyObject add(VM vm, CandyObject operand) {
+		if (operand instanceof StringObj || this instanceof StringObj) {
+			return callStr(vm).add(vm, operand);
+		}
+		throwUnsupportBinaryOperator("+", operand);
+		return null;
+	}
+	@NativeMethod(name = Names.METHOD_OP_ADD, argc = 1)
+	public final CandyObject addMet(VM vm, CandyObject[] args) {
+		return add(vm, args[0]);
+	}
+	
+	
+	public CandyObject callSub(VM vm, CandyObject operand) {
+		if (isBuiltinMetnod(SUB_MASK)) {
+			return sub(vm, operand);
+		}
+		return callBinaryOp(vm, operand, Names.METHOD_OP_SUB, SUB_MASK);
+	}
+	protected CandyObject sub(VM vm, CandyObject operand) {
+		throwUnsupportBinaryOperator("-", operand);
+		return null;
+	}
+	@NativeMethod(name = Names.METHOD_OP_SUB, argc = 1)
+	public final CandyObject subMet(VM vm, CandyObject[] args) {
+		return sub(vm, args[0]);
+	}
+	
+	
+	public CandyObject callMul(VM vm, CandyObject operand) {
+		if (isBuiltinMetnod(MUL_MASK)) {
+			return mul(vm, operand);
+		}
+		return callBinaryOp(vm, operand, Names.METHOD_OP_MUL, MUL_MASK);
+	}
+	protected CandyObject mul(VM vm, CandyObject operand) {
+		throwUnsupportBinaryOperator("*", operand);
+		return null;
+	}
+	@NativeMethod(name = Names.METHOD_OP_MUL, argc = 1)
+	public final CandyObject mulMet(VM vm, CandyObject[] args) {
+		return mul(vm, args[0]);
+	}
+	
+	
+	public CandyObject callDiv(VM vm, CandyObject operand) {
+		if (isBuiltinMetnod(DIV_MASK)) {
+			return div(vm, operand);
+		}
+		return callBinaryOp(vm, operand, Names.METHOD_OP_DIV, DIV_MASK);
+	}
+	protected CandyObject div(VM vm, CandyObject operand) {
+		throwUnsupportBinaryOperator("/", operand);
+		return null;
+	}
+	@NativeMethod(name = Names.METHOD_OP_DIV, argc = 1)
+	public final CandyObject divMet(VM vm, CandyObject[] args) {
+		return div(vm, args[0]);
+	}
+	
+	
+	public CandyObject callMod(VM vm, CandyObject operand) {
+		if (isBuiltinMetnod(MOD_MASK)) {
+			return mod(vm, operand);
+		}
+		return callBinaryOp(vm, operand, Names.METHOD_OP_MOD, MOD_MASK);
+	}
+	protected CandyObject mod(VM vm, CandyObject operand) {
+		throwUnsupportBinaryOperator("%", operand);
+		return null;
+	}
+	@NativeMethod(name = Names.METHOD_OP_MOD, argc = 1)
+	public final CandyObject modMet(VM vm, CandyObject[] args) {
+		return mod(vm, args[0]);
+	}
+	
+	
+	public BoolObj callGt(VM vm, CandyObject operand) {
+		if (isBuiltinMetnod(GT_MASK)) {
+			return gt(vm, operand);
+		}
+		return callRelativeBinaryOp(vm, operand, Names.METHOD_OP_GT, GT_MASK);
+	}
+	protected BoolObj gt(VM vm, CandyObject operand) {
+		throwUnsupportBinaryOperator(">", operand);
+		return null;
+	}
+	@NativeMethod(name = Names.METHOD_OP_GT, argc = 1)
+	public final CandyObject gtMet(VM vm, CandyObject[] args) {
+		return gt(vm, args[0]);
+	}
+	
+	
+	public BoolObj callGteq(VM vm, CandyObject operand) {
+		if (isBuiltinMetnod(GTEQ_MASK)) {
+			return gteq(vm, operand);
+		}
+		return callRelativeBinaryOp(vm, operand, Names.METHOD_OP_GTEQ, GTEQ_MASK);
+	}
+	protected BoolObj gteq(VM vm, CandyObject operand) {
+		throwUnsupportBinaryOperator(">=", operand);
+		return null;
+	}
+	@NativeMethod(name = Names.METHOD_OP_GTEQ, argc = 1)
+	public final CandyObject gteqMet(VM vm, CandyObject[] args) {
+		return gteq(vm, args[0]);
+	}
+	
+	
+	public BoolObj callLt(VM vm, CandyObject operand) {
+		if (isBuiltinMetnod(LT_MASK)) {
+			return lt(vm, operand);
+		}
+		return callRelativeBinaryOp(vm, operand, Names.METHOD_OP_LT, LT_MASK);
+	}
+	protected BoolObj lt(VM vm, CandyObject operand) {
+		throwUnsupportBinaryOperator("<", operand);
+		return null;
+	}
+	@NativeMethod(name = Names.METHOD_OP_LT, argc = 1)
+	public final CandyObject ltMet(VM vm, CandyObject[] args) {
+		return lt(vm, args[0]);
+	}
+	
+	
+	public BoolObj callLteq(VM vm, CandyObject operand) {
+		if (isBuiltinMetnod(LTEQ_MASK)) {
+			return lteq(vm, operand);
+		}
+		return callRelativeBinaryOp(vm, operand, Names.METHOD_OP_LTEQ, LTEQ_MASK);
+	}
+	protected BoolObj lteq(VM vm, CandyObject operand) {
+		throwUnsupportBinaryOperator("<=", operand);
+		return null;
+	}
+	@NativeMethod(name = Names.METHOD_OP_LTEQ, argc = 1)
+	public final CandyObject lteqMet(VM vm, CandyObject[] args) {
+		return lteq(vm, args[0]);
+	}
+	
+	
+	public BoolObj callEquals(VM vm, CandyObject operand) {
+		if (isBuiltinMetnod(EQ_MASK)) {
+			return equals(vm, operand);
+		}
+		return getBoundMethod(Names.METHOD_EQUALS, EQ_MASK)
+			.callExeUser(vm, operand).boolValue(vm);
+	}
 	public BoolObj equals(VM vm, CandyObject operand) {
 		return BoolObj.valueOf(this == operand);
 	}
@@ -218,10 +482,17 @@ public abstract class CandyObject {
 	public final CandyObject equals(VM vm, CandyObject[] args) {
 		return equals(vm, args[0]);
 	}
-
 	
-	public abstract void hashCodeApi(VM vm);
-	public abstract IntegerObj hashCodeApiExeUser(VM vm);
+	
+	public IntegerObj callHashCode(VM vm) {
+		if (isBuiltinMetnod(HASH_MASK)) {
+			return hashCode(vm);
+		}
+		CandyObject obj = getBoundMethod(Names.METHOD_HASH_CODE, HASH_MASK)
+			.callExeUser(vm);
+		checkReturnedType(Names.METHOD_HASH_CODE, obj, IntegerObj.INTEGER_CLASS);
+		return (IntegerObj) obj;
+	}
 	public IntegerObj hashCode(VM vm) {
 		return IntegerObj.valueOf(super.hashCode());
 	}
@@ -229,28 +500,24 @@ public abstract class CandyObject {
 	public final CandyObject hashCodeMethod(VM vm, CandyObject[] args) {
 		return hashCode(vm);
 	}
-
-
-	public BoolObj not(VM vm) { 
-		return boolValue(vm).not(vm); 
+	
+	
+	public StringObj callStr(VM vm) {
+		if (isBuiltinMetnod(STR_MASK)) {
+			return str(vm);
+		}
+		CandyObject obj = getBoundMethod(Names.METHOD_STR_VALUE, STR_MASK)
+			.callExeUser(vm);
+		checkReturnedType(Names.METHOD_STR_VALUE, obj, StringObj.STRING_CLASS);
+		return obj.str(vm);
 	}
-	public BoolObj boolValue(VM vm) {	
-		return BoolObj.TRUE;
-	}
-
-
-	/**
-	 * _str() returns a string representation of an object.
-	 */
-	public abstract StringObj strApiExeUser(VM vm);
 	public StringObj str(VM vm) {
 		return StringObj.valueOf(this.toString());
 	}
 	@NativeMethod(name = Names.METHOD_STR_VALUE)
-	public final CandyObject stringValue(VM vm, CandyObject[] args) {
+	public final CandyObject strMet(VM vm, CandyObject[] args) {
 		return str(vm);
 	}
-	
 	@Override
 	public String toString() {
 		return ObjectHelper.toString(
@@ -259,149 +526,39 @@ public abstract class CandyObject {
 	}
 	
 	
-	public abstract CandyObject iteratorApiExeUser(VM vm);
+	public CandyObject callIterator(VM vm) {
+		if (isBuiltinMetnod(ITERATOR_MASK)) {
+			return iterator(vm);
+		}
+		return getBoundMethod(Names.METHOD_ITERATOR, ITERATOR_MASK)
+			.callExeUser(vm);
+	}
 	public CandyObject iterator(VM vm) {
 		new TypeError("the object is not iterable.")
 			.throwSelfNative();
 		return null;
 	}
 	@NativeMethod(name = Names.METHOD_ITERATOR)
-	public final CandyObject iteratorMethod(VM vm, CandyObject[] args) {
+	public final CandyObject iteratorMet(VM vm, CandyObject[] args) {
 		return iterator(vm);
 	}
 	
 	
+	public BoolObj not(VM vm) { 
+		return boolValue(vm).not(vm); 
+	}
+	public BoolObj boolValue(VM vm) {	
+		return BoolObj.TRUE;
+	}
+	
+
 	@NativeMethod(name = Names.METHOD_INITALIZER)
-	public final CandyObject objDefaultInitializer (VM vm, CandyObject[] args) { return this; }
+	public final CandyObject objDefaultInitializer(VM vm, CandyObject[] args) { 
+		return this; 
+	}
 
 	@NativeMethod(name = "_class")
 	public final CandyObject getClass(VM vm, CandyObject[] args) {
 		return getCandyClass();
 	}
-
-
-	public abstract void positiveApi(VM vm);
-	public abstract CandyObject positiveApiExeUser(VM vm);
-	public CandyObject positive(VM vm) {
-		new TypeError("+").throwSelfNative();
-		return null;
-	}
-	@NativeMethod(name = Names.METHOD_OP_POSITIVE)
-	public final CandyObject positiveMethod(VM vm, CandyObject[] args) {
-		return positive(vm);
-	}
-
-	public abstract void negativeApi(VM vm);
-	public abstract CandyObject negativeApiExeUser(VM vm);
-	public CandyObject negative(VM vm) {
-		new TypeError("-").throwSelfNative();
-		return null;
-	}
-	@NativeMethod(name = Names.METHOD_OP_NEGATIVE)
-	public final CandyObject negativeMethod(VM vm, CandyObject[] args) {
-		return negative(vm);
-	}
-
-	public abstract void addApi(VM vm, CandyObject operand);
-	public abstract CandyObject addApiExeUser(VM vm, CandyObject operand);
-	public CandyObject add(VM vm, CandyObject operand) {
-		if (operand instanceof StringObj || this instanceof StringObj) {
-			return strApiExeUser(vm).add(vm, operand);
-		}
-		new TypeError("+").throwSelfNative();
-		return null;
-	}
-	@NativeMethod(name = Names.METHOD_OP_ADD, argc = 1)
-	public final CandyObject addMethod(VM vm, CandyObject[] args) {
-		return add(vm, args[0]);
-	}
-
-	public abstract void subApi(VM vm, CandyObject operand);
-	public abstract CandyObject subApiExeUser(VM vm, CandyObject operand);
-	public CandyObject sub(VM vm, CandyObject operand) {
-		new TypeError("-").throwSelfNative();
-		return null;
-	}
-	@NativeMethod(name = Names.METHOD_OP_SUB, argc = 1)
-	public final CandyObject subMethod(VM vm, CandyObject[] args) {
-		return sub(vm, args[0]);
-	}
-
-	public abstract void mulApi(VM vm, CandyObject operand);
-	public abstract CandyObject mulApiExeUser(VM vm, CandyObject operand);
-	public CandyObject mul(VM vm, CandyObject operand) {
-		new TypeError("*").throwSelfNative();
-		return null;
-	}
-	@NativeMethod(name = Names.METHOD_OP_MUL, argc = 1)
-	public final CandyObject mulMethod(VM vm, CandyObject[] args) {
-		return mul(vm, args[0]);
-	}
-
-	public abstract void divApi(VM vm, CandyObject operand);
-	public abstract CandyObject divApiExeUser(VM vm, CandyObject operand);
-	public CandyObject div(VM vm, CandyObject operand) {
-		new TypeError("/").throwSelfNative();
-		return null;
-	}
-	@NativeMethod(name = Names.METHOD_OP_DIV, argc = 1)
-	public final CandyObject divMethod(VM vm, CandyObject[] args) {
-		return div(vm, args[0]);
-	}
-
-	public abstract void modApi(VM vm, CandyObject operand);
-	public abstract CandyObject modApiExeUser(VM vm, CandyObject operand);
-	public CandyObject mod(VM vm, CandyObject operand) {
-		new TypeError("%").throwSelfNative();
-		return null;
-	}
-	@NativeMethod(name = Names.METHOD_OP_MOD, argc = 1)
-	public final CandyObject modMethod(VM vm, CandyObject[] args) {
-		return mod(vm, args[0]);
-	}
-
-	public abstract void gtApi(VM vm, CandyObject operand);
-	public abstract BoolObj gtApiExeUser(VM vm, CandyObject operand);
-	public BoolObj gt(VM vm, CandyObject operand) {
-		new TypeError(">").throwSelfNative();
-		return null;
-	}
-	@NativeMethod(name = Names.METHOD_OP_GT, argc = 1)
-	public final CandyObject gtMethod(VM vm, CandyObject[] args) {
-		return gt(vm, args[0]);
-	}
-
-	public abstract void gteqApi(VM vm, CandyObject operand);
-	public abstract BoolObj gteqApiExeUser(VM vm, CandyObject operand);
-	public BoolObj gteq(VM vm, CandyObject operand) {
-		new TypeError(">=").throwSelfNative();
-		return null;
-	}
-	@NativeMethod(name = Names.METHOD_OP_GTEQ, argc = 1)
-	public final CandyObject gteqMethod(VM vm, CandyObject[] args) {
-		return gteq(vm, args[0]);
-	}
-
-	public abstract void ltApi(VM vm, CandyObject operand);
-	public abstract BoolObj ltApiExeUser(VM vm, CandyObject operand);
-	public BoolObj lt(VM vm, CandyObject operand) {
-		new TypeError("<").throwSelfNative();
-		return null;
-	}
-	@NativeMethod(name = Names.METHOD_OP_LT, argc = 1)
-	public final CandyObject ltMethod(VM vm, CandyObject[] args) {
-		return lt(vm, args[0]);
-	}
-
-	public abstract void lteqApi(VM vm, CandyObject operand);
-	public abstract BoolObj lteqApiExeUser(VM vm, CandyObject operand);
-	public BoolObj lteq(VM vm, CandyObject operand) {
-		new TypeError("<=").throwSelfNative();
-		return null;
-	}
-	@NativeMethod(name = Names.METHOD_OP_LTEQ, argc = 1)
-	public final CandyObject lteqMethod(VM vm, CandyObject[] args) {
-		return lteq(vm, args[0]);
-	}
-
 }
