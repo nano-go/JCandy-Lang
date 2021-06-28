@@ -15,17 +15,17 @@ public class NativeMethodRegister {
 			if (!m.isAnnotationPresent(NativeMethod.class)) {
 				continue;
 			}
-			nativeMethods.add(generateNativeMethod(clazz, m));
+			nativeMethods.add(generateNativeMethod(clazz, className, m));
 		}
 		return nativeMethods.toArray(new CNativeMethod[nativeMethods.size()]);
 	}
 	
-	public static CNativeMethod generateNativeMethod(Class clazz, Method m) {
+	public static CNativeMethod generateNativeMethod(Class clazz, String className, Method m) {
 		verifyNativeMethod(m);
 		String name = m.getName();
 		MethodAccess method = MethodAccess.get(clazz);
 		NativeMethod nativeMethod = m.getAnnotation(NativeMethod.class);
-		String fullName = clazz.getSimpleName() + "." + nativeMethod.name();
+		String fullName = className + "." + nativeMethod.name();
 		return new CNativeMethod(
 			nativeMethod.name(), fullName, nativeMethod.argc(),
 			nativeMethod.varArgsIndex(), method, 
