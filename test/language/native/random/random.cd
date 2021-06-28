@@ -1,1 +1,0 @@
-loadLibrary("/lib/random.jar", "com.nano.random.RandomLib")
