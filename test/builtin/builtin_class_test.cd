@@ -1,0 +1,53 @@
+import "unit" as unit
+
+var BUILTIN_ERROR_CLASSES = [
+	Error, ArgumentError, AssertionError, AttributeError, 
+	CompilerError, IOError, NameError, NativeError, RangeError,
+	StackOverflowError, TypeError,
+]
+
+class BuiltinClassTest : unit.TestCase {
+
+	/**
+	 * Some built-in class can't create instances.
+	 */
+	fun create_test() {
+		fun assertCreate(klass) {
+			this.expectedErrorRaised(NativeError, lambda -> klass())
+		}
+
+		assertCreate(Integer)
+		assertCreate(Double)
+		assertCreate(String)
+		assertCreate(Bool)
+		assertCreate(Module)
+		assertCreate(null._class())
+		// callable
+		assertCreate((lambda -> {})._class())
+	}
+
+	/**
+	 * All error classes are inheritable.
+	 */
+	fun extendsErrorClass_test() {
+		fun testInheritance(builtinErrorClass) {
+			class MyError : builtinErrorClass {
+				fun init() { super.init("MyError"); }
+			}
+			var err = MyError()
+			this.assertEquals(MyError, err._class())
+			this.assertEquals(builtinErrorClass, err._class().superClass)
+			
+			try {
+				raise err
+			} intercept MyError as e {
+				this.assertEquals("MyError", e.getMessage())
+				this.assertEquals("testInheritance", 
+					e.getStackTraceElements()[0].getFrameName())
+			}
+		}
+
+		BUILTIN_ERROR_CLASSES.foreach(lambda i, e -> testInheritance(e))
+	}
+
+}
