@@ -505,19 +505,26 @@ public final class VM {
 	}
 	
 	public ModuleObj run() {
-		int deepth = stack.sp();
 		SourceFileInfo srcFileInfo = getCurSourceFileInfo();
 		if (srcFileInfo != null) {
 			srcFileInfo.markRunning();
 		}
+		runFrame(false);
+		ModuleObj moudleObj = 
+			global.curFileScope().generateModuleObject();
+		popFrame();
+		return moudleObj;
+	}
+	
+	public void runFrame(boolean exitMethodAtFrameEnd) {
+		if (exitMethodAtFrameEnd) {
+			frame().exitMethodAtReturn = true;
+		}
+		int deepth = stack.sp();
 		while (true) {
 			try {
-				// OP_EXIT will help VM to exit runFrame method.
-				runFrame(false);
-				ModuleObj moudleObj = 
-					global.curFileScope().generateModuleObject();
-				popFrame();
-				return moudleObj;
+				runCore();
+				break;
 			} catch (VMExitException e) {
 				throw e;
 			} catch (ContinueRunException e) {
@@ -539,10 +546,7 @@ public final class VM {
 		}
 	}
 	
-	public void runFrame(boolean exitMethodAtFrameEnd) {
-		if (exitMethodAtFrameEnd) {
-			frame().exitMethodAtReturn = true;
-		}
+	private void runCore() {
 		loop: for (;;) {
 			if (tracerManager != null)
 				tracerManager.notifyInsStarted(this, pc);
