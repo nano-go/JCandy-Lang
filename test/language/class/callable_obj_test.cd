@@ -1,0 +1,41 @@
+import "unit" as unit
+
+class Foo {
+	fun bar1() {}
+	fun bar2(a) {}
+	fun bar3(a, *b) {}
+}
+
+fun bar1() {}
+fun bar2(a) {}
+fun bar3(a, *b) {}
+
+class CallableObjTest : unit.TestCase {
+	fun access_attrs_test() {	
+		fun assertAttrs(fn, name, fullName, arity, vararg)	{
+			this.assertEquals(name, fn.name)
+			this.assertEquals(fullName, fn.fullName)
+			this.assertEquals(arity, fn.arity)
+			this.assertEquals(vararg, fn.vararg)
+		}
+
+		assertAttrs(bar1, "bar1", "bar1", 0, -1)
+		assertAttrs(bar2, "bar2", "bar2", 1, -1)
+		assertAttrs(bar3, "bar3", "bar3", 2, 1)
+
+		assertAttrs(Foo().bar1, "bar1", "Foo.bar1", 0, -1)
+		assertAttrs(Foo().bar2, "bar2", "Foo.bar2", 1, -1)
+		assertAttrs(Foo().bar3, "bar3", "Foo.bar3", 2, 1)
+
+		assertAttrs([].append, "append", "Array.append", 1, -1)
+		assertAttrs([].appendAll, "appendAll", "Array.appendAll", 1, 0)
+	}
+
+	fun callable_class_test() {
+		this.assertEquals("Callable", bar1._class().className)
+		this.assertEquals("Callable", Foo().bar1._class().className)
+		this.expectedErrorRaised(AttributeError, lambda -> bar1.a = 0)
+		this.expectedErrorRaised(AttributeError, lambda -> bar2.a = 0)
+		this.expectedErrorRaised(AttributeError, lambda -> Foo().bar1.a = 0)
+	}
+}
