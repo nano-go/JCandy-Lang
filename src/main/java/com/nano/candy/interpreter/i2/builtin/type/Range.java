@@ -28,6 +28,9 @@ public class Range extends CandyObject {
 		super(RANGE_CLASS);
 		this.left = left;
 		this.right = right;
+		setMetaData("left", IntegerObj.valueOf(right));
+		setMetaData("right", IntegerObj.valueOf(right));
+		freeze();
 	}
 
 	public long getLeft() {
@@ -48,30 +51,6 @@ public class Range extends CandyObject {
 	}
 	
 	@Override
-	public CandyObject setAttr(VM vm, String attr, CandyObject ref) {
-		switch (attr) {
-			case "left":
-				left = ObjectHelper.asInteger(ref);
-				return ref;
-			case "right":
-				right = ObjectHelper.asInteger(ref);
-				return ref;
-		}
-		return super.setAttr(vm, attr, ref);
-	}
-
-	@Override
-	public CandyObject getAttr(VM vm, String attr) {
-		switch (attr) {
-			case "left":
-				return IntegerObj.valueOf(left);
-			case "right":
-				return IntegerObj.valueOf(right);
-		}
-		return super.getAttr(vm, attr);
-	}
-	
-	@Override
 	public String toString() {
 		return String.format("[%d, %d)", left, right);
 	}
@@ -87,6 +66,9 @@ public class Range extends CandyObject {
 	public CandyObject initializer(VM vm, CandyObject[] args) {
 		this.left = ObjectHelper.asInteger(args[0]);
 		this.right = ObjectHelper.asInteger(args[1]);
+		setMetaData("left", args[0]);
+		setMetaData("right", args[1]);
+		freeze();
 		return this;
 	}
 

@@ -13,12 +13,24 @@ fun equals(arr1, arr2) {
 	return true
 }
 
-fun changeAttrTest() {
-	var r = range(0, 1000)
-	r.left = 15
-	r.right = 10
-	var arr = r.toArray()
-	assert equals(arr, range(15, 10).toArray())
+fun expectedError(fn) {
+	try { fn(); }
+	intercept AttributeError as e {
+		return
+	} intercept {
+		assert false : "Expect that an attribute error is raised."
+	}
+	else {
+		assert false : "Expect that an attribute error is raised."
+	}
+}
+
+fun immutableObjTest() {
+	var r = range(0, 15)
+	assert r.left == 0
+	assert r.right == 15
+	expectedError(lambda -> r.left =15)
+	expectedError(lambda -> r.right =15)
 }
 
 fun iteratorTest() {
@@ -47,7 +59,6 @@ fun emptySetTest() {
 }
 
 fun main() {
-	changeAttrTest()
 	iteratorTest()
 	emptySetTest()
 }
