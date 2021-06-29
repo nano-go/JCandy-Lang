@@ -610,9 +610,6 @@ public class CodeGenerator implements AstVisitor<Void, Void> {
 		for (int lable : lablesJumpOutOfIAE) {
 			builder.backpatch(lable);
 		}
-		if (node.finallyBlock.isPresent()) {
-			node.finallyBlock.get().accept(this);
-		}	
 		return null;
 	}
 	

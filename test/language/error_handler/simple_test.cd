@@ -69,30 +69,6 @@ fun tryIntercept_test() {
 	expectedError1(sample3, NativeError)
 }
 
-fun tryFinally_test() {
-	fun sample1() {
-		try {
-			[][1]
-		} finally {
-			return
-		}
-		assert false
-	}
-	
-	fun sample2() {
-		try {
-			[][1]
-		} intercept RangeError as e {
-		} finally {
-			return
-		}
-		assert false
-	}
-	
-	sample1()
-	sample2()
-}
-
 fun directlyRaise_test() {
 	fun sample1() {
 		try {
@@ -139,10 +115,9 @@ fun tryElse_test() {
 		try {
 		} else {
 			flag = false
-		} finally {
-			flag = true
 		}
-	}
+		flag = true
+	}	
 	sample1()
 	sample2()
 	sample3()
@@ -262,7 +237,6 @@ fun stackOverflow_test() {
 }
 
 tryIntercept_test()
-tryFinally_test()
 directlyRaise_test()
 tryElse_test()
 nestedTryInterception()

@@ -904,18 +904,14 @@ class CandyParser implements Parser {
 		Stmt.Block tryBlock = parseBlock();
 		List<Stmt.Interception> interceptionStmts = null;
 		Stmt.Block elseBlock = null;
-		Stmt.Block finallyBlock = null;
 		if (matchIf(INTERCEPT)) {
 			interceptionStmts = parseInterceptionStmts();
 		}
 		if (matchIf(ELSE)) {
 			elseBlock = parseBlock();
 		}
-		if (matchIf(FINALLY)) {
-			finallyBlock = parseBlock();
-		}
 		return locate(location, new Stmt.TryIntercept(
-			tryBlock, interceptionStmts, elseBlock, finallyBlock
+			tryBlock, interceptionStmts, elseBlock
 		));
 	}
 

@@ -114,14 +114,12 @@ public abstract class Stmt extends ASTreeNode {
 
 		public Block tryBlock;
 		public Optional<Block> elseBlock;
-		public Optional<Block> finallyBlock;
 		public List<Interception> interceptionBlocks;
 
 		public TryIntercept(Block tryBlock, List<Interception> interceptBlocks, 
-		                    Block elseBlock, Block finallyBlock) {
+		                    Block elseBlock) {
 			this.tryBlock = tryBlock;
 			this.elseBlock = Optional.ofNullable(elseBlock);
-			this.finallyBlock = Optional.ofNullable(finallyBlock);
 			if (interceptBlocks == null) {
 				this.interceptionBlocks = Collections.emptyList();
 			} else {

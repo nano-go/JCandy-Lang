@@ -48,7 +48,6 @@ public class ParserTest {
 		"try {\n\n} intercept IOException as e {} intercept e { if(true) {}} else {}",
 		"try {\n\n} \n intercept IOException as e \n {}",
 		"try {\n\n} \n intercept IOException as e \n {} else {}",
-		"try {\n\n} \n intercept IOException as e \n {} else {} finally {}",
 		"raise Exception(4,3)",
 		"raise AnyException() + 5",
 		"for (i in range(0, 7)) break",
