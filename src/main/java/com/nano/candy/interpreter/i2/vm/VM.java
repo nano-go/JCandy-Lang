@@ -44,8 +44,6 @@ public final class VM {
 	public static final boolean DEBUG = false;
 	private static final byte WIDE_INDEX_MARK = (byte) 0xFF;
 	
-	private int maxStackDeepth = CandySystem.DEFAULT_MAX_STACK;
-	
 	private GlobalScope global;
 	
 	/**
@@ -70,7 +68,7 @@ public final class VM {
 	public void reset(InterpreterOptions options) {
 		this.global = new GlobalScope();
 		this.moudleManager = new ModuleManager();
-		this.stack = new StackFrame(maxStackDeepth);
+		this.stack = new StackFrame(CandySystem.DEFAULT_MAX_STACK);
 		this.options = options;
 		this.tracerManager = null;
 	}
@@ -104,10 +102,6 @@ public final class VM {
 			return CandySystem.DEFAULT_USER_DIR;
 		}
 		return parent.getAbsolutePath();
-	}
-	
-	public File getFile(String relativePath) {
-		return new File(getCurrentDirectory(), relativePath);
 	}
 	
 	/**
