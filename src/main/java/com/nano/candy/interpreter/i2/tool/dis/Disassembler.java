@@ -6,7 +6,7 @@ import com.nano.candy.interpreter.i2.rtda.chunk.attrs.CodeAttribute;
 import java.util.ArrayList;
 
 import static com.nano.candy.interpreter.i2.rtda.chunk.ConstantValue.*;
-import static com.nano.candy.interpreter.i2.instruction.Instructions.*;
+import static com.nano.candy.interpreter.i2.code.OpCodes.*;
 
 public class Disassembler {
 	

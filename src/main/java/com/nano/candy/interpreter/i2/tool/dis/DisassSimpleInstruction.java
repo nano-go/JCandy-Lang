@@ -1,6 +1,6 @@
 package com.nano.candy.interpreter.i2.tool.dis;
 
-import com.nano.candy.interpreter.i2.instruction.Instructions;
+import com.nano.candy.interpreter.i2.code.OpCodes;
 import com.nano.candy.interpreter.i2.rtda.chunk.Chunk;
 
 public class DisassSimpleInstruction implements DisassInstruction {
@@ -51,6 +51,6 @@ public class DisassSimpleInstruction implements DisassInstruction {
 	}
 	
 	public String getInsName() {
-		return Instructions.getName(getInsByte());
+		return OpCodes.getName(getInsByte());
 	}
 }

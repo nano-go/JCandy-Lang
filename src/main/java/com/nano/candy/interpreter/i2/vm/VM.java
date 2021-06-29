@@ -16,6 +16,7 @@ import com.nano.candy.interpreter.i2.builtin.type.NullPointer;
 import com.nano.candy.interpreter.i2.builtin.type.PrototypeFunction;
 import com.nano.candy.interpreter.i2.builtin.type.StringObj;
 import com.nano.candy.interpreter.i2.builtin.type.TupleObj;
+import com.nano.candy.interpreter.i2.builtin.type.error.AttributeError;
 import com.nano.candy.interpreter.i2.builtin.type.error.ErrorObj;
 import com.nano.candy.interpreter.i2.builtin.type.error.NameError;
 import com.nano.candy.interpreter.i2.builtin.type.error.TypeError;
@@ -36,8 +37,7 @@ import com.nano.candy.interpreter.i2.vm.tracer.TracerManager;
 import com.nano.candy.sys.CandySystem;
 import java.io.File;
 
-import static com.nano.candy.interpreter.i2.instruction.Instructions.*;
-import com.nano.candy.interpreter.i2.builtin.type.error.AttributeError;
+import static com.nano.candy.interpreter.i2.code.OpCodes.*;
 
 public final class VM {
 	

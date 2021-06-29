@@ -1,6 +1,5 @@
 package com.nano.candy.interpreter.i2.code;
 
-import com.nano.candy.interpreter.i2.instruction.Instructions;
 import com.nano.candy.interpreter.i2.rtda.chunk.Chunk;
 import com.nano.candy.interpreter.i2.rtda.chunk.ConstantValue;
 import com.nano.candy.interpreter.i2.rtda.chunk.attrs.CodeAttribute;
@@ -11,7 +10,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.LinkedList;
 
-import static com.nano.candy.interpreter.i2.instruction.Instructions.*;
+import static com.nano.candy.interpreter.i2.code.OpCodes.*;
 import static com.nano.candy.interpreter.i2.rtda.chunk.ConstantValue.*;
 
 public class ChunkBuilder {
@@ -161,7 +160,7 @@ public class ChunkBuilder {
 	public void updateState(byte opcode) {
 		if (DEBUG) {
 			System.out.printf(
-				"%s: %d-> ", Instructions.getName(opcode), state.curStackSize
+				"%s: %d-> ", OpCodes.getName(opcode), state.curStackSize
 			);
 		}
 		switch (opcode) {

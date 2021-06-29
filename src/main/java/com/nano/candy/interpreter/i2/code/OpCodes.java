@@ -1,6 +1,6 @@
-package com.nano.candy.interpreter.i2.instruction;
+package com.nano.candy.interpreter.i2.code;
 
-public class Instructions {
+public class OpCodes {
 	public static final byte OP_NOP               = (byte)0;
 
 	public static final byte OP_POP               = (byte)1;

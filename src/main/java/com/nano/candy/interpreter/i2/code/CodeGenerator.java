@@ -14,7 +14,7 @@ import java.util.Collections;
 import java.util.LinkedList;
 import java.util.Optional;
 
-import static com.nano.candy.interpreter.i2.instruction.Instructions.*;
+import static com.nano.candy.interpreter.i2.code.OpCodes.*;
 import static com.nano.candy.interpreter.i2.rtda.chunk.ConstantValue.*;
 
 /**
