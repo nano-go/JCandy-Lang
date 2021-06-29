@@ -89,4 +89,39 @@ class ClassTest : unit.TestCase {
 		this.expectedErrorRaised(TypeError, lambda -> Baz(0))
 		this.expectedErrorRaised(TypeError, lambda -> Bar(0))
 	}
+
+	fun callSuperMethod_test() {
+		class Foo {
+			fun init(value) {
+				this.value = value
+			}
+
+			fun returnFoo() { return "Foo"; }
+		}
+
+		class Bar : Foo {
+			fun init() {
+				super.init(5)
+			}
+
+			fun callSuperMethodError() {
+				super.value();
+			}
+
+			fun getSuperMethodError() {
+				super.value
+			}
+
+			fun superReturnFoo() { return super.returnFoo(); }
+
+			fun returnFoo() {
+				return "FooFoo"
+			}
+		}
+
+		this.assertEquals("FooFoo", Bar().returnFoo())
+		this.assertEquals("Foo", Bar().superReturnFoo())
+		this.expectedErrorRaised(AttributeError, Bar().getSuperMethodError)
+		this.expectedErrorRaised(AttributeError, Bar().callSuperMethodError)
+	}
 }

@@ -37,6 +37,7 @@ import com.nano.candy.sys.CandySystem;
 import java.io.File;
 
 import static com.nano.candy.interpreter.i2.instruction.Instructions.*;
+import com.nano.candy.interpreter.i2.builtin.type.error.AttributeError;
 
 public final class VM {
 	
@@ -435,18 +436,30 @@ public final class VM {
 		int argc = readUint8();
 		CandyClass superClass = (CandyClass) pop();
 		CandyObject instance = pop();
-		String methodName = cp.getString(readIndex());
-		CallableObj method= superClass.getBoundMethod(
-			methodName, instance
-		);
+		String name = cp.getString(readIndex());
+		CallableObj method= superClass.getBoundMethod(name, instance);
 		if (method == null) {
-			new TypeError(
-				"'%s->%s' class has no method '%s'.",
-				instance.getCandyClass().getName(),
-				superClass.getName(), methodName
+			new AttributeError(
+				"The attribute '%s' is not found in the super class '%s'.",
+				name, superClass.getName()
 			).throwSelfNative();
 		}
 		method.call(this, argc);
+	}
+	
+	/**
+	 * Instruction: OP_SUPER_GET
+	 */
+	private void evalSuperGet() {
+		CandyClass superClass = (CandyClass) pop();
+		String name = cp.getString(readIndex());
+		CandyObject superMethod = superClass.getBoundMethod(name, pop());
+		if (superMethod == null) {
+			new AttributeError(
+				"The attribute '%s' is not found in the super class '%s'.",
+				name, superClass.getName()
+			).throwSelfNative();
+		}
 	}
 	
 	/**
@@ -468,7 +481,7 @@ public final class VM {
 		if (!matched) {
 			pc += offset-3;
 		}
-	}
+	}	
 	
 	private CandyObject getGlobalVariable(String name, boolean throwsErrorIfNotFound) {
 		CandyObject obj = global.getVarValue(name);
@@ -891,11 +904,7 @@ public final class VM {
 				}
 				
 				case OP_SUPER_GET: {
-					CandyClass clazz = (CandyClass) pop();
-					push(clazz.getBoundMethod(
-						cp.getString(readIndex()), 
-						pop()
-					));
+					evalSuperGet();
 					break;
 				}
 				
