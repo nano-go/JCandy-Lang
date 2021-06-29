@@ -62,7 +62,7 @@ public final class Frame implements Recyclable {
 	
 	private Frame init(Chunk chunk, FileScope scope) {
 		adaptForSlots(chunk.getMaxLocal());
-		this.opStack = new FixedOperandStack(chunk.getMaxStack());
+		this.opStack = new OperandStack(chunk.getMaxStack());
 		this.name = chunk.getSimpleName();
 		this.chunk = chunk;
 		this.codeAttr = chunk.getCodeAttr();
@@ -74,7 +74,7 @@ public final class Frame implements Recyclable {
 	
 	private Frame init(PrototypeFunction prototypeFunc) {
 		adaptForSlots(prototypeFunc.getMaxLocal());
-		this.opStack = new FixedOperandStack(prototypeFunc.getMaxStack());
+		this.opStack = new OperandStack(prototypeFunc.getMaxStack());
 		this.name = prototypeFunc.declaredName();
 		this.chunk = prototypeFunc.chunk;
 		this.codeAttr = prototypeFunc.metInfo.attrs;

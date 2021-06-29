@@ -1,23 +1,49 @@
 package com.nano.candy.interpreter.i2.rtda;
 import com.nano.candy.interpreter.i2.builtin.CandyObject;
 
-public interface OperandStack {
+public class OperandStack {
 	
-	public CandyObject pop();
-	public CandyObject peek(int k);
-	public void push(CandyObject operand);
+	private CandyObject[] opStack;
+	private int sp;
+
+	public OperandStack(int slots) {
+		opStack = new CandyObject[slots];
+	}
 	
-	/**
-	 * Swaps the two-stack operands.
-	 */
-	public void swap();
+	public void rotThree() {
+		int sp = this.sp-1;
+		CandyObject top = opStack[sp];
+		opStack[sp] = opStack[sp-1];
+		opStack[sp-1] = opStack[sp-2];
+		opStack[sp-2] = top;
+	}
 	
-	/**
-	 * Lifts the second and third operands one position up, moves top
-	 * operand down position three.
-	 */
-	public void rotThree();
+	public void swap() {
+		CandyObject tmp = opStack[sp-1];
+		opStack[sp-1] = opStack[sp-2];
+		opStack[sp-2] = tmp;
+	}
 	
-	public int size();
-	public void clear();
+	public final CandyObject pop() {
+		return opStack[-- sp];
+	}
+	
+	public final CandyObject peek(int k) {
+		return opStack[sp - k - 1];
+	}
+	
+	public final void push(CandyObject operand) {
+		opStack[sp ++] = operand;
+	}
+	
+	public final int size() {
+		return sp;
+	}
+	
+	public void clear() {
+		for (int i = 0; i < sp; i ++) {
+			opStack[i] = null;
+		}
+		sp = 0;
+	}
 }
