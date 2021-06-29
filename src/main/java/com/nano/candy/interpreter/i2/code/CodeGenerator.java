@@ -1,4 +1,4 @@
-package com.nano.candy.interpreter.i2.codegen;
+package com.nano.candy.interpreter.i2.code;
 
 import com.nano.candy.ast.ASTreeNode;
 import com.nano.candy.ast.AstVisitor;

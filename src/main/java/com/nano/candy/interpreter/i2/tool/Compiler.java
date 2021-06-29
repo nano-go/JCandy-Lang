@@ -4,7 +4,7 @@ import com.nano.candy.ast.Program;
 import com.nano.candy.interpreter.InterpreterOptions;
 import com.nano.candy.interpreter.i2.builtin.type.error.CompilerError;
 import com.nano.candy.interpreter.i2.builtin.type.error.IOError;
-import com.nano.candy.interpreter.i2.codegen.CodeGenerator;
+import com.nano.candy.interpreter.i2.code.CodeGenerator;
 import com.nano.candy.interpreter.i2.rtda.chunk.Chunk;
 import com.nano.candy.interpreter.i2.vm.CompiledFileInfo;
 import com.nano.candy.parser.Parser;

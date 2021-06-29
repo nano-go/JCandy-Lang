@@ -1,4 +1,4 @@
-package com.nano.candy.interpreter.i2.codegen;
+package com.nano.candy.interpreter.i2.code;
 
 import com.nano.candy.interpreter.i2.instruction.Instructions;
 import com.nano.candy.interpreter.i2.rtda.chunk.Chunk;
