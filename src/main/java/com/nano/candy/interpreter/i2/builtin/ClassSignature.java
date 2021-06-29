@@ -6,7 +6,7 @@ import com.nano.candy.interpreter.i2.builtin.type.CallableObj;
 import java.util.HashMap;
 
 /**
- * Builds a candy class with this signature.
+ * Builds a Candy class with this signature.
  */
 public class ClassSignature {
 	protected ConstructorAccess<? extends CandyObject> constructorAccess;
@@ -48,7 +48,7 @@ public class ClassSignature {
 	public boolean isInheritable() {
 		return isInheritable;
 	}
-
+	
 	public ClassSignature setObjEntityClass(Class<? extends CandyObject> objEntityClass) {
 		try {
 			this.constructorAccess = ConstructorAccess.get(objEntityClass);			

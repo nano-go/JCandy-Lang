@@ -5,7 +5,7 @@ import com.nano.candy.interpreter.i2.builtin.type.CallableObj;
 import com.nano.candy.interpreter.i2.vm.VM;
 
 /**
- * A MethodObj binds an object and a method.
+ * The MethodObj bound with an object.
  */
 public class MethodObj extends CallableObj {
 	

@@ -47,7 +47,7 @@ public class CandyObject {
 	private boolean frozen;
 	
 	/**
-	 * (builtinMethodFlags & methodMask) means the method is a builtin method.
+	 * (builtinMethodFlags & methodMask) means a builtin method.
 	 */
 	private int builtinMethodFlags;
 	
@@ -58,7 +58,7 @@ public class CandyObject {
 	 * be created in the Candy language level.
 	 *
 	 * This constructor is called by a CandyClass object when an
-	 * instance of this class is created.
+	 * instance of the class is created.
 	 */
 	protected CandyObject() {
 		this(null);

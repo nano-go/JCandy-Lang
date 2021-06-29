@@ -14,7 +14,6 @@ public class DoubleObj extends NumberObj {
 	public static final CandyClass DOUBLE_CLASS = 
 		NativeClassRegister.generateNativeClass(DoubleObj.class, NumberObj.NUMBER_CLASS);
 	
-	
     public static DoubleObj valueOf(double val) {
 		return new DoubleObj(val);
 	}
