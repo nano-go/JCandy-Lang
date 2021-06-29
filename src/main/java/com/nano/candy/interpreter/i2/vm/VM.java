@@ -160,7 +160,7 @@ public final class VM {
 		}
 	}
 	
-	public void pushFrame(Frame frame) {
+	private void pushFrame(Frame frame) {
 		syncPcToTopFrame();
 		stack.pushFrame(frame);
 		syncFrameData();
@@ -168,7 +168,7 @@ public final class VM {
 			tracerManager.notifyStackPushed(this, stack);
 	}
 	
-	public void popFrame() {
+	private void popFrame() {
 		Frame old = fastPopFrame();
 		if (stack.isEmpty()) {
 			resetFrameData();
@@ -180,7 +180,7 @@ public final class VM {
 		old.recycleSelf();
 	}
 	
-	public void popFrameWithRet() {
+	private void popFrameWithRet() {
 		Frame old = fastPopFrame();
 		syncFrameData();
 		// push return value to operand stack.
@@ -190,19 +190,19 @@ public final class VM {
 		old.recycleSelf();
 	}
 	
-	public void clearFrameStack() {
-		while (!stack.isEmpty()) {
-			fastPopFrame();
-		}
-		resetFrameData();
-	}
-	
 	private final Frame fastPopFrame() {
 		Frame old = stack.popFrame();
 		if (old.isSourceFileFrame()) {
 			SourceFileInfo.unmarkRunning(old.chunk.getSourceFileName());
 		}
 		return old;
+	}
+	
+	private void clearFrameStack() {
+		while (!stack.isEmpty()) {
+			fastPopFrame();
+		}
+		resetFrameData();
 	}
 	
 	private void syncFrameData() {
@@ -235,7 +235,7 @@ public final class VM {
 		stack.peek().push(NullPointer.nil());
 	}
 	
-	public  Frame frame() {
+	public Frame frame() {
 		return stack.peek();
 	}
 
@@ -499,6 +499,14 @@ public final class VM {
 	}
 	
 	/* -------------------- Execution --------------------*/
+	
+	public void runProtytypeFunction(PrototypeFunction func, int argc) {
+		Frame newFrame = Frame.fetchFrame(func);	
+		for (int i = 0; i < argc; i ++) {
+			newFrame.store(i, pop());
+		}
+		pushFrame(newFrame);
+	}
 	
 	public int runHandleError() {
 		int code = 0;

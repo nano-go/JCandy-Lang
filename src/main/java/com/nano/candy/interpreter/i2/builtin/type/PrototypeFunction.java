@@ -70,11 +70,7 @@ public class PrototypeFunction extends CallableObj {
 
 	@Override
 	protected void onCall(VM vm, int argc, int unpackingBits) {
-		Frame newFrame = Frame.fetchFrame(this);	
-		for (int i = 0; i < argc; i ++) {
-			newFrame.store(i, vm.pop());
-		}
-		vm.pushFrame(newFrame);
+		vm.runProtytypeFunction(this, argc);
 	}
 	
 	@Override
