@@ -4,6 +4,10 @@
 # Ignore Gradle build output directory
 build
 
+# Ignore packaged directory
+/candy/
+/release-libs
+
 *.bak
 *.sh
 *.swp
