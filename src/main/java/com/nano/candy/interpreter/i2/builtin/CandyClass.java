@@ -66,6 +66,10 @@ public class CandyClass extends CallableObj {
 		this.initializer = signature.initializer;
 		this.constructorAccess = signature.constructorAccess;
 		this.canBeCreated = signature.canBeCreated;
+		
+		if (this.initializer != null) {
+			methods.put(Names.METHOD_INITALIZER, initializer);
+		}
 	}
 
 	public Collection<CallableObj> getMethods() {
@@ -73,14 +77,7 @@ public class CandyClass extends CallableObj {
 	}
 
 	public CallableObj getMethod(String name) {
-		CallableObj method = methods.get(name);
-		if (method != null) {
-			return method;
-		}
-		if (initializer != null && Names.METHOD_INITALIZER.equals(name)) {
-			return initializer;
-		}
-		return null;
+		return methods.get(name);
 	}
 
 	/**
