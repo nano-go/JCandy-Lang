@@ -33,18 +33,47 @@ public final class Frame implements Recyclable {
 	
 	private String name;
 	private CodeAttribute codeAttr;
+	
+	/**
+	 * True if this fream is the top fream of a Candy source file.
+	 */
 	private boolean isSourceFileFrame;
 	
 	/**
-	 * see VM.runFrame(boolean)
+	 * True if you want to end the VM.runFrame Java method at the end of
+	 * this fream execution.
+	 *
+	 * The field can be used to call Candy methods in the Java language level.
 	 */
 	public boolean exitMethodAtReturn;
 	
-	public Chunk chunk;
+	/**
+	 * The PC points to the current instruction of this frame.
+	 */
 	public int pc;
+	
+	public Chunk chunk;
+	
+	/**
+	 * The operand stack holds the operand used by operators to
+	 * perform operation.
+	 *
+	 * The operand stack is a fixed size that Candy compiler can compute
+	 * the max depth of the operand stack.
+	 */
 	public OperandStack opStack;
+	
+	/**
+	 * This slots used to hold the all local variables in this frame.
+	 */
 	public CandyObject[] slots;
 	
+	/**
+	 * The file environment when the frame was created.
+	 *
+	 * The file environment is required for reference to the variables
+	 * correctly when you call a method in other modules, 
+	 */
 	public FileEnvironment fileEnv;
 	
 	/**
@@ -114,7 +143,6 @@ public final class Frame implements Recyclable {
 		if (openUpvalues == null) { /* lazy init */
 			openUpvalues = new LinkedList<>();
 		}
-		
 		// Find the same upvalue.
 		Upvalue openUpvalue = null;
 		for (int i = openUpvalues.size()-1; i >= 0; i --) {
