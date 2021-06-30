@@ -57,8 +57,7 @@ public class CandyObject {
 	 * If the constructor with no-args is missing, the object can't
 	 * be created in the Candy language level.
 	 *
-	 * This constructor is called by a CandyClass object when an
-	 * instance of the class is created.
+	 * This constructor is reflectly called by the CandyClass.
 	 */
 	protected CandyObject() {
 		this(null);
