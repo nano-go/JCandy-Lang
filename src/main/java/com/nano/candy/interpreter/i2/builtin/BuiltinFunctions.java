@@ -134,7 +134,7 @@ public class BuiltinFunctions {
 		for (int i = 0; i < size; i ++) {
 			ModuleObj moduleObj =
 				m.importModule(vm, ObjectHelper.asString(files.get(i)));
-			moduleObj.addToScope(vm.getGlobalScope());
+			moduleObj.addToEnv(vm.getCurrentFileEnv());
 		}
 		return null;
 	}
@@ -166,7 +166,7 @@ public class BuiltinFunctions {
 				(vm, filter, StringObj.valueOf(f.getName()));
 			if (accept.boolValue(vm).value()) {
 				ModuleObj moduleObj = m.importModule(vm, f.getName());
-				moduleObj.addToScope(vm.getGlobalScope());
+				moduleObj.addToEnv(vm.getCurrentFileEnv());
 				selectedFiles.add(StringObj.valueOf(f.getName()));
 			}
 		}
@@ -190,7 +190,7 @@ public class BuiltinFunctions {
 		try {
 			NativeContext context = NativeLibraryLoader
 				.loadLibrary(vm.getJavaLibraryPaths(), path, className);
-			context.action(vm.getGlobalScope().curFileScope());
+			context.action(vm.getGlobalEnv());
 		} catch (IOException e) {
 			new IOError(e).throwSelfNative();
 		} catch (ClassNotFoundException e) {

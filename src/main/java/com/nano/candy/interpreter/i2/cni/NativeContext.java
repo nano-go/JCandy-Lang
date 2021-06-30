@@ -1,6 +1,6 @@
 package com.nano.candy.interpreter.i2.cni;
-import com.nano.candy.interpreter.i2.rtda.FileScope;
+import com.nano.candy.interpreter.i2.rtda.GlobalEnvironment;
 
 public interface NativeContext {
-	public void action(FileScope curFileScope);
+	public void action(GlobalEnvironment env);
 }

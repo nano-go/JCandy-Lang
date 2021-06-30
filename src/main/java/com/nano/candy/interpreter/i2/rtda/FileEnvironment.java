@@ -9,30 +9,29 @@ import java.util.Collection;
 import java.util.HashMap;
 
 /**
- * This is the top scope of a Candy source file.
+ * An environment stores all variables in a Candy source file.
  */
-public class FileScope {
+public class FileEnvironment {
 
 	private CompiledFileInfo compiledFileInfo;
 	private HashMap<String, Variable> vars;
 
-	protected FileScope(CompiledFileInfo compiledFileInfo) {
+	protected FileEnvironment(CompiledFileInfo compiledFileInfo) {
 		this.compiledFileInfo = compiledFileInfo;
-		this.vars = new HashMap<>();
+		this.vars = new HashMap<>(BuiltinVariables.getVariables());
 	}
 	
 	public CompiledFileInfo getCompiledFileInfo() {
 		return compiledFileInfo;
 	}
 
-	public void setVar(String name, CandyObject value) {
+	public void setVariable(String name, CandyObject value) {
 		vars.put(name, Variable.getVariable(name, value));
 	}
 
-	public CandyObject getVarValue(String name) {
+	public CandyObject getVariableValue(String name) {
 		Variable variable = vars.get(name);
-		if (variable != null) return variable.getValue();
-		return null;
+		return variable != null ? variable.getValue() : null;
 	}
 	
 	public Variable getVariable(String name) {
@@ -40,11 +39,11 @@ public class FileScope {
 	}
 	
 	public void defineCallable(CallableObj callableObj) {
-		setVar(callableObj.declaredName(), callableObj);
+		setVariable(callableObj.declaredName(), callableObj);
 	}
 	
 	public void defineClass(CandyClass clazz) {
-		setVar(clazz.getCandyClassName(), clazz);
+		setVariable(clazz.getCandyClassName(), clazz);
 	}
 	
 	public void defineVeriable(Variable variable) {

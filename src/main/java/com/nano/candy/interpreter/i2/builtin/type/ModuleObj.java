@@ -7,7 +7,7 @@ import com.nano.candy.interpreter.i2.builtin.type.error.AttributeError;
 import com.nano.candy.interpreter.i2.cni.NativeClass;
 import com.nano.candy.interpreter.i2.cni.NativeClassRegister;
 import com.nano.candy.interpreter.i2.cni.NativeMethod;
-import com.nano.candy.interpreter.i2.rtda.GlobalScope;
+import com.nano.candy.interpreter.i2.rtda.FileEnvironment;
 import com.nano.candy.interpreter.i2.rtda.Variable;
 import com.nano.candy.interpreter.i2.vm.VM;
 import java.util.HashMap;
@@ -63,9 +63,9 @@ public class ModuleObj extends CandyObject {
 		moudleObj.attrs.putAll(this.attrs);
 	}
 	
-	public void addToScope(GlobalScope gs) {
+	public void addToEnv(FileEnvironment env) {
 		for (Variable v : attrs.values()) {
-			gs.curFileScope().defineVeriable(v);
+			env.defineVeriable(v);
 		}
 	}
 
@@ -85,8 +85,7 @@ public class ModuleObj extends CandyObject {
 	
 	@NativeMethod(name = "addToCurEnv")
 	public CandyObject addToCurEnv(VM vm, CandyObject[] args) {
-		GlobalScope gs = vm.getGlobalScope();
-		addToScope(gs);
+		addToEnv(vm.getCurrentFileEnv());
 		return null;
 	}
 }

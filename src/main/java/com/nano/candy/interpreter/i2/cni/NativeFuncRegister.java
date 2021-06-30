@@ -1,15 +1,15 @@
 package com.nano.candy.interpreter.i2.cni;
 import com.esotericsoftware.reflectasm.MethodAccess;
-import com.nano.candy.interpreter.i2.rtda.FileScope;
+import com.nano.candy.interpreter.i2.rtda.FileEnvironment;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.List;
 
 public class NativeFuncRegister {
 	
-	public static void register(FileScope fileScope, Class<?> nativeFunctionSet) {
+	public static void register(FileEnvironment env, Class<?> nativeFunctionSet) {
 		for (CNativeFunction nativeFunc : getNativeFunctions(nativeFunctionSet)) {
-			fileScope.defineCallable(nativeFunc);
+			env.defineCallable(nativeFunc);
 		}
 	}
 	

@@ -1,8 +1,7 @@
 package com.nano.candy.interpreter.i2.builtin.type;
 
 import com.nano.candy.interpreter.i2.builtin.type.CallableObj;
-import com.nano.candy.interpreter.i2.rtda.FileScope;
-import com.nano.candy.interpreter.i2.rtda.Frame;
+import com.nano.candy.interpreter.i2.rtda.FileEnvironment;
 import com.nano.candy.interpreter.i2.rtda.Upvalue;
 import com.nano.candy.interpreter.i2.rtda.chunk.Chunk;
 import com.nano.candy.interpreter.i2.rtda.chunk.ConstantValue;
@@ -15,14 +14,14 @@ public class PrototypeFunction extends CallableObj {
 	public ConstantValue.MethodInfo metInfo;
 	public int pc;
 	
-	public FileScope fileScope;
+	public FileEnvironment fileEnv;
 	public Upvalue[] upvalues;
 	
 	public PrototypeFunction(Chunk chunk, int pc, 
 	                         Upvalue[] upvalues, 
 	                         String fullName, 
 	                         ConstantValue.MethodInfo methodInfo, 
-	                         FileScope fileScope)
+	                         FileEnvironment fileEnv)
 	{
 		super(
 			methodInfo.name, fullName, 
@@ -32,7 +31,7 @@ public class PrototypeFunction extends CallableObj {
 		this.pc = pc;
 		this.upvalues = upvalues;
 		this.metInfo = methodInfo;
-		this.fileScope = fileScope;
+		this.fileEnv = fileEnv;
 	}
 
 	public Chunk getChunk() {

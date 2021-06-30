@@ -15,12 +15,12 @@ public final class Frame implements Recyclable {
 	private static final GenericObjectPool<Frame> FRAME_POOL =
 		new GenericObjectPool<Frame>(100, new Frame[0]);
 	
-	public static Frame fetchFrame(Chunk chunk, FileScope scope)  {
+	public static Frame fetchFrame(Chunk chunk, FileEnvironment env)  {
 		Frame f = FRAME_POOL.fetch();
 		if (f == null) {
 			f = new Frame();
 		}
-		return f.init(chunk, scope);
+		return f.init(chunk, env);
 	}
 	
 	public static Frame fetchFrame(PrototypeFunction prototypeFunc) {
@@ -45,7 +45,7 @@ public final class Frame implements Recyclable {
 	public OperandStack opStack;
 	public CandyObject[] slots;
 	
-	public FileScope fileScope;
+	public FileEnvironment fileEnv;
 	
 	/**
 	 * Captured upvalues from the upper frame.
@@ -60,14 +60,14 @@ public final class Frame implements Recyclable {
 	
 	private Frame() {}
 	
-	private Frame init(Chunk chunk, FileScope scope) {
+	private Frame init(Chunk chunk, FileEnvironment env) {
 		adaptForSlots(chunk.getMaxLocal());
 		this.opStack = new OperandStack(chunk.getMaxStack());
 		this.name = chunk.getSimpleName();
 		this.chunk = chunk;
 		this.codeAttr = chunk.getCodeAttr();
 		this.pc = 0;
-		this.fileScope = scope;
+		this.fileEnv = env;
 		this.isSourceFileFrame = true;
 		return this;
 	}
@@ -79,7 +79,7 @@ public final class Frame implements Recyclable {
 		this.chunk = prototypeFunc.chunk;
 		this.codeAttr = prototypeFunc.metInfo.attrs;
 		this.pc = prototypeFunc.pc;
-		this.fileScope = prototypeFunc.fileScope;
+		this.fileEnv = prototypeFunc.fileEnv;
 		this.capturedUpvalues = prototypeFunc.upvalues;
 		this.isSourceFileFrame = false;
 		return this;
@@ -241,7 +241,7 @@ public final class Frame implements Recyclable {
 		this.name = null;
 		this.opStack = null;
 		this.capturedUpvalues = null;
-		this.fileScope = null;
+		this.fileEnv = null;
 		this.codeAttr = null;	
 		this.pc = 0;
 		this.isSourceFileFrame = false;

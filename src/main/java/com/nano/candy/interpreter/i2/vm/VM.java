@@ -21,9 +21,9 @@ import com.nano.candy.interpreter.i2.builtin.type.error.ErrorObj;
 import com.nano.candy.interpreter.i2.builtin.type.error.NameError;
 import com.nano.candy.interpreter.i2.builtin.type.error.TypeError;
 import com.nano.candy.interpreter.i2.builtin.utils.ObjectHelper;
-import com.nano.candy.interpreter.i2.rtda.FileScope;
+import com.nano.candy.interpreter.i2.rtda.FileEnvironment;
 import com.nano.candy.interpreter.i2.rtda.Frame;
-import com.nano.candy.interpreter.i2.rtda.GlobalScope;
+import com.nano.candy.interpreter.i2.rtda.GlobalEnvironment;
 import com.nano.candy.interpreter.i2.rtda.OperandStack;
 import com.nano.candy.interpreter.i2.rtda.StackFrame;
 import com.nano.candy.interpreter.i2.rtda.Upvalue;
@@ -44,7 +44,7 @@ public final class VM {
 	public static final boolean DEBUG = false;
 	private static final byte WIDE_INDEX_MARK = (byte) 0xFF;
 	
-	private GlobalScope global;
+	private GlobalEnvironment globalEnv;
 	
 	/**
 	 * This is used to import source files as moudles to manage.
@@ -66,7 +66,7 @@ public final class VM {
 	public VM() {}
 	
 	public void reset(InterpreterOptions options) {
-		this.global = new GlobalScope();
+		this.globalEnv = new GlobalEnvironment();
 		this.moudleManager = new ModuleManager();
 		this.stack = new StackFrame(CandySystem.DEFAULT_MAX_STACK);
 		this.options = options;
@@ -78,11 +78,11 @@ public final class VM {
 	}
 	
 	public CompiledFileInfo getCurRunningFile() {
-		return global.curFileScope().getCompiledFileInfo();
+		return globalEnv.getCurrentFileEnv().getCompiledFileInfo();
 	}
 	
 	public SourceFileInfo getCurSourceFileInfo() {
-		CompiledFileInfo compiledFileInfo = global.curFileScope().getCompiledFileInfo();
+		CompiledFileInfo compiledFileInfo = getCurRunningFile();
 		if (compiledFileInfo.isRealFile()) {
 			return SourceFileInfo.get(compiledFileInfo.getFile());
 		}
@@ -115,8 +115,12 @@ public final class VM {
 		};
 	}
 	
-	public GlobalScope getGlobalScope() {
-		return global;
+	public GlobalEnvironment getGlobalEnv() {
+		return globalEnv;
+	}
+	
+	public FileEnvironment getCurrentFileEnv() {
+		return globalEnv.getCurrentFileEnv();
 	}
 	
 	public ModuleManager getModuleManager() {
@@ -146,8 +150,8 @@ public final class VM {
 	 * VM allows to load and run a compiled file at runtime.
 	 */
 	public void loadFile(CompiledFileInfo file) {
-		global.setFileScope(file);
-		pushFrame(Frame.fetchFrame(file.getChunk(), global.curFileScope()));
+		globalEnv.setCurrentFileEnv(file);
+		pushFrame(Frame.fetchFrame(file.getChunk(), globalEnv.getCurrentFileEnv()));
 	}
 	
 	public StackFrame getFrameStack() {
@@ -212,7 +216,7 @@ public final class VM {
 		this.code = frame.chunk.getByteCode();
 		this.pc = frame.pc;
 		this.opStack = frame.opStack;
-		global.setFileScope(frame.fileScope);
+		globalEnv.setCurrentFileEnv(frame.fileEnv);
 	}
 	
 	private void resetFrameData() {
@@ -221,7 +225,7 @@ public final class VM {
 		this.code = null;
 		this.pc = 0;
 		this.opStack = null;
-		global.setFileScope((FileScope) null);
+		globalEnv.setCurrentFileEnv((FileEnvironment) null);
 	}
 	
 	public void returnFromVM(CandyObject returnValue) {
@@ -371,7 +375,7 @@ public final class VM {
 		return new PrototypeFunction(
 			frame().chunk, pc, // Start pc.
 			upvalues, tagName, 
-			methodInfo, global.curFileScope()
+			methodInfo, globalEnv.getCurrentFileEnv()
 		);
 	}
 	
@@ -478,7 +482,7 @@ public final class VM {
 	}	
 	
 	private CandyObject getGlobalVariable(String name, boolean throwsErrorIfNotFound) {
-		CandyObject obj = global.getVarValue(name);
+		CandyObject obj = globalEnv.getVariableValue(name);
 		if (obj == null && throwsErrorIfNotFound) {
 			new NameError("the variable '%s' not found.", name)
 				.throwSelfNative();
@@ -487,14 +491,14 @@ public final class VM {
 	}
 	
 	private boolean setGlobalVariable(String name, CandyObject val, boolean throwsErrorIfNotFound) {
-		if (global.getVarValue(name) == null) {
+		if (globalEnv.getVariableValue(name) == null) {
 			if (throwsErrorIfNotFound) {
 				new NameError("the variable '%s' not found.", name)
 					.throwSelfNative();
 			}
 			return false;
 		}
-		global.setVar(name, val);
+		globalEnv.setVariable(name, val);
 		return true;
 	}
 	
@@ -526,7 +530,7 @@ public final class VM {
 		}
 		runFrame(false);
 		ModuleObj moudleObj = 
-			global.curFileScope().generateModuleObject();
+			globalEnv.getCurrentFileEnv().generateModuleObject();
 		popFrame();
 		return moudleObj;
 	}
@@ -785,7 +789,7 @@ public final class VM {
 				 * Global Operarions.
 				 */
 				case OP_GLOBAL_DEFINE: {
-					global.setVar(
+					globalEnv.setVariable(
 						cp.getString(readIndex()), /* name */
 						pop()                      /* value */
 					);
@@ -972,7 +976,7 @@ public final class VM {
 					ModuleObj moudleObj = moudleManager.importModule(
 						this, ObjectHelper.asString(pop())
 					);
-					global.setVar(cp.getString(readIndex()), moudleObj);
+					globalEnv.setVariable(cp.getString(readIndex()), moudleObj);
 					break;
 				}
 				case OP_ASSERT: {

@@ -27,7 +27,7 @@ public class InfoGlobal extends AbstractCommand {
 	public void startToExe(VMTracer tracer, CommandLine cmdLine) throws CommandLine.ParserException {
 		VM vm = tracer.getVM();
 		CmdHelper.printVariables(
-			tracer.getConsole(), vm.getFrameStack().peek().fileScope.getVariables()
+			tracer.getConsole(), vm.getFrameStack().peek().fileEnv.getVariables()
 		);
 	}
 }
