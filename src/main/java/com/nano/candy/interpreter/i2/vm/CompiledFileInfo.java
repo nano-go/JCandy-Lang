@@ -13,7 +13,7 @@ public class CompiledFileInfo {
 	private final Chunk chunk;
 
 	/**
-	 * Whether this file is existed and is a source file.
+	 * True if this file is a source file instead of a chunk.
 	 */
 	private final boolean isRealFile;
 
