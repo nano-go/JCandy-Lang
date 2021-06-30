@@ -54,35 +54,25 @@ public class SourceFileInfo {
 	}
 	
 	private String name;
-	private boolean isImported;
 	private boolean isRunning;
 	private File file;
 	
 	private SourceFileInfo(String canonicalPath) {
 		this.file = new File(canonicalPath);
 		this.name = this.file.getName();
-		this.isImported = false;
 		this.isRunning = false;
 	}
 	
-	public synchronized void markRunning() {
+	public void markRunning() {
 		this.isRunning = true;
 	}
 	
-	public synchronized void unmarkRunning() {
+	public void unmarkRunning() {
 		this.isRunning = false;
-	}
-	
-	public synchronized void markImported() {
-		this.isImported = true;
 	}
 	
 	public boolean isRunning() {
 		return this.isRunning;
-	}
-	
-	public boolean isImported() {
-		return this.isImported;
 	}
 	
 	public File getFile() {
