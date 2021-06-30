@@ -7,8 +7,6 @@ import com.nano.candy.interpreter.i2.rtda.chunk.attrs.CodeAttribute;
 import com.nano.candy.interpreter.i2.rtda.chunk.attrs.ErrorHandlerTable;
 import com.nano.candy.utils.objpool.GenericObjectPool;
 import com.nano.candy.utils.objpool.Recyclable;
-import java.util.LinkedList;
-import java.util.ListIterator;
 
 public final class Frame implements Recyclable {
 	
@@ -85,7 +83,7 @@ public final class Frame implements Recyclable {
 	 * The open upvalues are captured by other frame in the current
 	 * frame.
 	 */
-	private LinkedList<Upvalue> openUpvalues;
+	private Upvalue[] openUpvalues;
 	
 	private Frame() {}
 	
@@ -141,19 +139,12 @@ public final class Frame implements Recyclable {
 	 */
 	private Upvalue captureUpvalue(int index) {
 		if (openUpvalues == null) { /* lazy init */
-			openUpvalues = new LinkedList<>();
-		}
-		// Find the same upvalue.
-		Upvalue openUpvalue = null;
-		for (int i = openUpvalues.size()-1; i >= 0; i --) {
-			openUpvalue = openUpvalues.get(i);
-			if (index == openUpvalue.index()) {
-				return openUpvalue;
-			}
-		}
-		
-		openUpvalue = new Upvalue(this.slots, index);
-		openUpvalues.add(openUpvalue);
+			openUpvalues = new Upvalue[slots.length];
+		} else if (openUpvalues[index] != null) { // Find the same upvalue.
+			return openUpvalues[index];
+		}	
+		Upvalue openUpvalue = new Upvalue(this.slots, index);
+		openUpvalues[index] = openUpvalue;
 		return openUpvalue;
 	}
 	
@@ -161,12 +152,10 @@ public final class Frame implements Recyclable {
 		if (openUpvalues == null) {
 			return;
 		}
-		ListIterator<Upvalue> i = openUpvalues.listIterator();
-		while (i.hasNext()) {
-			Upvalue upvalue = i.next();
-			if (closeInfo.hasUpvalueIndex(upvalue.index())) {
-				upvalue.close();
-				i.remove();
+		for (int i = 0; i < openUpvalues.length; i ++) {
+			if (closeInfo.hasUpvalueIndex(i) && openUpvalues[i] != null) {
+				openUpvalues[i].close();
+				openUpvalues[i] = null;
 			}
 		}
 	}
@@ -175,12 +164,11 @@ public final class Frame implements Recyclable {
 		if (openUpvalues == null) {
 			return;
 		}
-		ListIterator<Upvalue> i = openUpvalues.listIterator();
-		while (i.hasNext()) {
-			Upvalue upvalue = i.next();
-			upvalue.close();
-			i.remove();
+		for (Upvalue upvalue : openUpvalues) {
+			if (upvalue != null)
+				upvalue.close();
 		}
+		openUpvalues = null;
 	}
 	
 	public String getName() {
