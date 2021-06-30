@@ -500,7 +500,7 @@ public final class VM {
 	
 	/* -------------------- Execution --------------------*/
 	
-	public void runProtytypeFunction(PrototypeFunction func, int argc) {
+	public void runPrototypeFunction(PrototypeFunction func, int argc) {
 		Frame newFrame = Frame.fetchFrame(func);	
 		for (int i = 0; i < argc; i ++) {
 			newFrame.store(i, pop());

@@ -70,7 +70,7 @@ public class PrototypeFunction extends CallableObj {
 
 	@Override
 	protected void onCall(VM vm, int argc, int unpackingBits) {
-		vm.runProtytypeFunction(this, argc);
+		vm.runPrototypeFunction(this, argc);
 	}
 	
 	@Override
