@@ -10,6 +10,7 @@ import com.nano.candy.interpreter.i2.builtin.type.StringObj;
 import com.nano.candy.interpreter.i2.builtin.type.error.AttributeError;
 import com.nano.candy.interpreter.i2.builtin.type.error.TypeError;
 import com.nano.candy.interpreter.i2.vm.VM;
+import java.util.ArrayList;
 import java.util.Comparator;
 
 public class ObjectHelper {
@@ -66,6 +67,15 @@ public class ObjectHelper {
 	public static String asString(CandyObject obj) {
 		TypeError.checkTypeMatched(StringObj.STRING_CLASS, obj);
 		return ((StringObj) obj).value();
+	}
+	
+	public static CandyObject[] iterableObjToArray(VM vm, CandyObject iterableObj) {
+		CandyObjectIterator iterator = new CandyObjectIterator(vm, iterableObj);
+		ArrayList<CandyObject> elements = new ArrayList<>();
+		while (iterator.hasNext()) {
+			elements.add(iterator.next());
+		}
+		return elements.toArray(new CandyObject[elements.size()]);
 	}
 	
 	public static CandyObject callFunction(VM vm, CallableObj callable, CandyObject... args) {
