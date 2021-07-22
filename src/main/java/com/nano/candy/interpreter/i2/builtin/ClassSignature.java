@@ -4,6 +4,7 @@ import com.esotericsoftware.reflectasm.ConstructorAccess;
 import com.nano.candy.interpreter.i2.builtin.CandyObject;
 import com.nano.candy.interpreter.i2.builtin.type.CallableObj;
 import java.util.HashMap;
+import java.lang.reflect.Modifier;
 
 /**
  * Builds a Candy class with this signature.
@@ -28,13 +29,12 @@ public class ClassSignature {
 		
 		if (this.superClass == null) {
 			this.methods = new HashMap<>();
-			this.canBeCreated = true;
 		} else {
 			this.methods = new HashMap<>(superClass.methods);
 			this.initializer = superClass.initializer;
 			this.constructorAccess = superClass.constructorAccess;
-			this.canBeCreated = superClass.canBeCreated;
 		}
+		this.canBeCreated = true;
 	}
 
 	public CandyClass getSuperClass() {
@@ -51,6 +51,11 @@ public class ClassSignature {
 	
 	public ClassSignature setObjEntityClass(Class<? extends CandyObject> objEntityClass) {
 		try {
+			// Abstract class can't create instances!
+			if (Modifier.isAbstract(objEntityClass.getClass().getModifiers())) {
+				this.canBeCreated = false;
+				return this;
+			}
 			this.constructorAccess = ConstructorAccess.get(objEntityClass);			
 		} catch (RuntimeException e) {
 			this.constructorAccess = null;

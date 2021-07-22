@@ -10,17 +10,19 @@ import com.nano.candy.interpreter.i2.cni.NativeClass;
 import com.nano.candy.interpreter.i2.cni.NativeClassRegister;
 import com.nano.candy.interpreter.i2.cni.NativeMethod;
 import com.nano.candy.interpreter.i2.vm.VM;
+import com.nano.candy.std.Names;
 import com.nano.candy.utils.ArrayUtils;
+import java.util.Arrays;
 import java.util.Objects;
 
-@NativeClass(name = "Tuple")
+@NativeClass(name = "Tuple", isInheritable=true)
 public final class TupleObj extends CandyObject {
 	public static final CandyClass TUPLE_CLASS = 
 		NativeClassRegister.generateNativeClass(TupleObj.class);
 	
 	public static final TupleObj EMPTY_TUPLE = new TupleObj(ArrayObj.EMPTY_ARRAY);
 	
-	private final CandyObject[] elements;
+	private CandyObject[] elements;
 	private IntegerObj hash;
 
 	public TupleObj() {
@@ -92,6 +94,24 @@ public final class TupleObj extends CandyObject {
 		builder.append(ArrayHelper.toString(vm, elements, ", "));
 		builder.append(")");
 		return StringObj.valueOf(builder.toString());
+	}
+	
+	@NativeMethod(name = Names.METHOD_INITALIZER, argc = 1)
+	public CandyObject init(VM vm, CandyObject[] args) {
+		if (args[0] instanceof  TupleObj) {
+			TupleObj tuple = (TupleObj) args[0];
+			this.elements = Arrays.copyOf(
+				tuple.elements, tuple.elements.length
+			);
+		} else if (args[0] instanceof ArrayObj) {
+			ArrayObj arr = (ArrayObj) args[0];
+			this.elements = Arrays.copyOfRange(
+				arr.getBuiltinArray(), 0, arr.size()
+			);
+		} else {
+			this.elements = ObjectHelper.iterableObjToArray(vm, args[0]);
+		}
+		return this;
 	}
 	
 	@NativeMethod(name = "len")

@@ -12,7 +12,7 @@ import com.nano.candy.interpreter.i2.cni.NativeMethod;
 import com.nano.candy.interpreter.i2.vm.VM;
 import com.nano.candy.std.Names;
 
-@NativeClass(name = "Map")
+@NativeClass(name = "Map", isInheritable=true)
 public final class MapObj extends CandyObject {
 
 	public static final CandyClass MAP_CLASS = 

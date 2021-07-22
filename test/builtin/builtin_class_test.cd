@@ -8,28 +8,36 @@ var BUILTIN_ERROR_CLASSES = [
 
 class BuiltinClassTest : unit.TestCase {
 
-	/**
-	 * Some built-in class can't create instances.
-	 */
-	fun create_test() {
+	fun instantiation_test() {
 		fun assertCreate(klass) {
 			this.expectedErrorRaised(NativeError, lambda -> klass())
 		}
 
-		assertCreate(Integer)
-		assertCreate(Double)
-		assertCreate(String)
+		// Some built-in classes can't create instances.
 		assertCreate(Bool)
 		assertCreate(Module)
 		assertCreate(null._class())
-		// callable
+		// Callable class
 		assertCreate((lambda -> {})._class())
+
+		// Test the classes that can create instances.
+		@assertEquals(50, Integer(50))
+		@assertEquals(50.0, Integer(50))
+		@assertEquals(50.5, Double(50.5))
+		@assertEquals(50, Double(50))
+		@assertEquals("", String(""))
+		@assertEquals("abc", String("abc"))
+		@assertEquals(range(0, 15), Range(0, 15))
+		@assertEquals({}, Map(16))
+		@assertEquals((1, 2, 3), Tuple([1, 2, 3]))
+		@assertEquals((), Tuple(range(0, 0)))
+		@assertEquals((4, 5, 6), Tuple((4, 5, 6)))
 	}
 
 	/**
 	 * All error classes are inheritable.
 	 */
-	fun extendsErrorClass_test() {
+	fun InheritableErrorClasses_test() {
 		fun testInheritance(builtinErrorClass) {
 			class MyError : builtinErrorClass {
 				fun init() { super.init("MyError"); }
@@ -50,4 +58,141 @@ class BuiltinClassTest : unit.TestCase {
 		BUILTIN_ERROR_CLASSES.foreach(lambda i, e -> testInheritance(e))
 	}
 
+	/**
+	 * Almost builtin classes are inheritable.
+	 */
+	fun inheritBuiltinClass_test() {
+		
+		// Integer
+		class MyInteger : Integer {
+			fun init(value) {
+				super.init(value)
+			}
+
+			fun repeat(code) {
+				var i = 1
+				while (i <= this) {
+					code(i)
+					i += 1	
+				}
+			}
+		}
+
+		var myInt = MyInteger(6)
+		var sum = 0
+		myInt.repeat(lambda i -> sum += i)
+		@assertEquals(21, sum)
+		@assertEquals(6, myInt)
+		@assertEquals(range(0, 6), range(0, myInt))
+
+		// Double
+		class MyDouble : Double {
+			fun init(value) {
+				super.init(value)
+			}
+
+			fun my_round() {
+				return MyDouble(this + 0.5).my_floor()
+			}
+
+			fun my_floor() {
+				return @intVal()
+			}
+		}
+		@assertEquals(1.25, MyDouble(1.25))
+		@assertEquals(1.5, MyDouble(1.25)+0.25)
+		@assertEquals(2, MyDouble(1.5).my_round())
+	
+		// Tuple
+		class MyTuple : Tuple {
+			fun init(elements) {
+				super.init(elements)
+			}
+
+			fun linearlySearch(elements) {
+				for (e in this) {
+					if (e == elements) {
+						return true
+					}
+				}
+				return false
+			}
+		}
+
+		@assertTrue(MyTuple((5, 6, 7)).linearlySearch(7))
+		@assertEquals(3, MyTuple([5, 6, 7]).len())
+		@assertEquals((5, 6, 7), MyTuple([5, 6, 7]))
+
+		// String
+		class MyString : String {
+			fun init(str) {
+				super.init(str)
+			}
+			
+			fun _getItem(index) {
+				return this.charAt(index)
+			}
+
+			fun _iterator() {
+				var iterator = Object()
+				var i = 0
+				iterator._next = lambda -> {
+					var ch = this[i]
+					i += 1
+					return ch
+				}
+
+				iterator._hasNext = lambda -> i < this.length()
+				return iterator
+			}
+		}	
+			
+		var myStr = MyString("abcd")
+		@assertEquals("abcd", myStr)
+		@assertEquals("abcdabcd", myStr*2)
+		@assertEquals("a", myStr[0])
+		@assertEquals("b", myStr[1])
+		@assertEquals("c", myStr[2])
+		@assertEquals("d", myStr[3])
+		@assertNotNull(myStr._getAttr(MyString("length")))
+		var expectedStr = []
+		for (ch in myStr) {
+			expectedStr.append(ch)
+		}
+		@assertEquals("abcd", "".join(expectedStr))
+
+		// Map
+		class MyMap : Map {
+			fun init() {
+				super.init(16)
+			}
+		}
+		@assertEquals("abc", MyMap()["abc"]="abc")
+		
+		// Range
+		class MyRange : Range {
+			fun init() {
+				super.init(0, 15)
+			}
+		}
+		@assertEquals(0, MyRange().left)
+		@assertEquals(15, MyRange().right)
+
+		// Array
+		class MyArray : Array {
+			fun init() {
+				super.init(0, null)
+			}
+		}
+		@assertEquals(0, MyArray().size())
+		var arr = MyArray()
+		arr.append(5)
+		arr.append(6)
+		@assertEquals([5, 6], arr)
+		fun vargs(*elements) {
+			println(elements)
+			return elements
+		}
+		@assertEquals([5, 6], vargs(*arr))
+	}
 }

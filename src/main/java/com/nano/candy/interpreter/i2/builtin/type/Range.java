@@ -12,13 +12,11 @@ import com.nano.candy.interpreter.i2.vm.VM;
 import com.nano.candy.std.Names;
 import java.util.Objects;
 
-@NativeClass(name = "Range")
+@NativeClass(name = "Range", isInheritable = true)
 public class Range extends CandyObject {
 	
 	public static final CandyClass RANGE_CLASS = 
 		NativeClassRegister.generateNativeClass(Range.class);
-	
-	long left, right;
 	
 	public Range() {
 		super(RANGE_CLASS);
@@ -26,54 +24,65 @@ public class Range extends CandyObject {
 
 	public Range(long left, long right) {
 		super(RANGE_CLASS);
-		this.left = left;
-		this.right = right;
-		setMetaData("left", IntegerObj.valueOf(right));
+		setMetaData("left", IntegerObj.valueOf(left));
 		setMetaData("right", IntegerObj.valueOf(right));
-		freeze();
 	}
 
 	public long getLeft() {
-		return left;
+		return ObjectHelper.asInteger(getMetaData("left"));
 	}
 
 	public long getRight() {
-		return right;
+		return ObjectHelper.asInteger(getMetaData("right"));
 	}
 	
 	public long length() {
-		return Math.abs(right - left);
+		return Math.abs(getRight() - getLeft());
 	}
 
 	@Override
 	public CandyObject iterator(VM vm) {
-		return new IteratorObj.RangeIterator(left, right);
+		return new IteratorObj.RangeIterator(getLeft(), getRight());
 	}
 	
 	@Override
 	public String toString() {
-		return String.format("[%d, %d)", left, right);
+		return String.format("[%d, %d)", getLeft(), getRight());
 	}
 
 	@Override
 	public IntegerObj hashCode(VM vm) {
-		return IntegerObj.valueOf(Objects.hash(left, right));
+		return IntegerObj.valueOf(Objects.hash(getLeft(), getRight()));
+	}
+
+	@Override
+	public BoolObj equals(VM vm, CandyObject operand) {
+		if (operand == this) {
+			return BoolObj.TRUE;
+		}
+		if (operand instanceof Range) {
+			Range r = (Range) operand;
+			return BoolObj.valueOf(
+				r.getLeft() == getLeft() &&
+				r.getRight() == getRight()
+			);
+		}
+		return BoolObj.FALSE;
 	}
 
 	/*===================== Native Methods ===================*/
 
 	@NativeMethod(name = Names.METHOD_INITALIZER, argc = 2)
 	public CandyObject initializer(VM vm, CandyObject[] args) {
-		this.left = ObjectHelper.asInteger(args[0]);
-		this.right = ObjectHelper.asInteger(args[1]);
 		setMetaData("left", args[0]);
 		setMetaData("right", args[1]);
-		freeze();
 		return this;
 	}
 
 	@NativeMethod(name = "rand")
 	public CandyObject rand(VM vm, CandyObject[] args) {
+		long left = getLeft();
+		long right = getRight();
 		if (left == right) {
 			new TypeError("Empty set: %s", toString()).throwSelfNative();
 		}
@@ -83,6 +92,8 @@ public class Range extends CandyObject {
 
 	@NativeMethod(name = "toArray")
 	public CandyObject toArray(VM vm, CandyObject[] args) {
+		long left = getLeft();
+		long right = getRight();
 		long length = length();
 		ArrayObj.checkCapacity(length);
 		int size = (int) length;

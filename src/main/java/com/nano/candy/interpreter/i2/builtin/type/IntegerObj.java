@@ -3,12 +3,15 @@ import com.nano.candy.interpreter.i2.builtin.CandyClass;
 import com.nano.candy.interpreter.i2.builtin.CandyObject;
 import com.nano.candy.interpreter.i2.builtin.type.IntegerObj;
 import com.nano.candy.interpreter.i2.builtin.type.NumberObj;
+import com.nano.candy.interpreter.i2.builtin.utils.ObjectHelper;
 import com.nano.candy.interpreter.i2.cni.NativeClass;
 import com.nano.candy.interpreter.i2.cni.NativeClassRegister;
+import com.nano.candy.interpreter.i2.cni.NativeMethod;
 import com.nano.candy.interpreter.i2.vm.VM;
+import com.nano.candy.std.Names;
 import com.nano.candy.std.StringFunctions;
 
-@NativeClass(name = "Integer")
+@NativeClass(name = "Integer", isInheritable=true)
 public class IntegerObj extends NumberObj {
 	
 	public static final CandyClass INTEGER_CLASS = 
@@ -33,9 +36,19 @@ public class IntegerObj extends NumberObj {
 	
 	protected long value;
 	
+	protected IntegerObj() {
+		super(INTEGER_CLASS);
+	}
+	
 	private IntegerObj(long value) {
 		super(INTEGER_CLASS);
 		this.value = value;
+	}
+	
+	@NativeMethod(name = Names.METHOD_INITALIZER, argc = 1)
+	public CandyObject init(VM vm, CandyObject[] args) {
+		this.value = ObjectHelper.asInteger(args[0]);
+		return this;
 	}
 
 	@Override

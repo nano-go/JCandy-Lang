@@ -19,11 +19,12 @@ public abstract class NumberObj extends CandyObject {
 	}
 	
 	public static boolean isNumber(CandyObject obj) {
-		return isNumber(obj.getCandyClass());
+		return obj instanceof IntegerObj || obj instanceof DoubleObj;
 	}
 	
 	public static boolean isNumber(CandyClass clazz) {
-		return clazz == IntegerObj.INTEGER_CLASS || clazz == DoubleObj.DOUBLE_CLASS;
+		if (clazz.isCandyClass()) return false;
+		return clazz.isSubClassOf(NUMBER_CLASS);
 	}
 
 	public abstract long intValue();

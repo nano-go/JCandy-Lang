@@ -9,11 +9,8 @@ fun test(clazz) {
 	}
 }
 
-test(Integer)
-test(Double)
 test(Number)
 test(Module)
-test(String)
 test(Bool)
 
 test(test._class())

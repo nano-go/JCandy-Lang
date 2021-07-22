@@ -13,9 +13,17 @@ assert t == (5, 9)
 assert str(t) == "(5, 9)"
 
 var t = ()
-var t1 = Tuple()
+var t1 = Tuple([])
 assert t == t1
 assert t.len() == 0
+
+var t = (1, 2, 3)
+var t1 = Tuple([1, 2, 3])
+assert t == t1
+
+var t = (1, 2, 3)
+var t1 = Tuple(range(1, 4))
+assert t == t1
 
 var t = (5, 10, 9)
 var sum = 0

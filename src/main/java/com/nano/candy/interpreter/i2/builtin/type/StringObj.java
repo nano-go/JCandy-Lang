@@ -11,11 +11,12 @@ import com.nano.candy.interpreter.i2.cni.NativeClass;
 import com.nano.candy.interpreter.i2.cni.NativeClassRegister;
 import com.nano.candy.interpreter.i2.cni.NativeMethod;
 import com.nano.candy.interpreter.i2.vm.VM;
+import com.nano.candy.std.Names;
 import com.nano.candy.std.StringFunctions;
 import com.nano.candy.utils.ArrayUtils;
 import java.util.ArrayList;
 
-@NativeClass(name = "String")
+@NativeClass(name = "String", isInheritable=true)
 public class StringObj extends CandyObject {
 
 	public static final CandyClass STRING_CLASS =
@@ -31,11 +32,14 @@ public class StringObj extends CandyObject {
 	public static void initChars() {
 		CHARS = new StringObj[128];
 		for (int i = 0; i < CHARS.length; i ++) {
-			CHARS[i] = valueOf(String.valueOf((char)i));
+			CHARS[i] = new StringObj(String.valueOf((char)i));
 		}
 	}
 	
 	public static StringObj valueOf(String val) {
+		if (val.length() == 1) {
+			return valueOf(val.charAt(0));
+		}
 		return new StringObj(val);
 	}
 	
@@ -44,11 +48,15 @@ public class StringObj extends CandyObject {
 			if (CHARS == null) initChars();
 			return CHARS[ch];
 		}
-		return valueOf(String.valueOf(ch));
+		return new StringObj(String.valueOf(ch));
 	}
 	
 	private String value;
 	private IntegerObj hashCode;
+	
+	protected StringObj() {
+		super(STRING_CLASS);
+	}
 	
 	public StringObj(String value) {
 		super(STRING_CLASS);
@@ -103,6 +111,12 @@ public class StringObj extends CandyObject {
 		if (hashCode == null)
 			hashCode = IntegerObj.valueOf(value.hashCode());
 		return hashCode;
+	}
+	
+	@NativeMethod(name = Names.METHOD_INITALIZER, argc = 1)
+	public CandyObject init(VM vm, CandyObject[] args) {
+		this.value = ObjectHelper.asString(args[0]);
+		return this;
 	}
 	
 	@NativeMethod(name = "substr", argc = 2)

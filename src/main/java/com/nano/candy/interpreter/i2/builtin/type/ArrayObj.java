@@ -18,7 +18,7 @@ import com.nano.candy.utils.ArrayUtils;
 import java.util.Arrays;
 import java.util.Random;
 
-@NativeClass(name = "Array")
+@NativeClass(name = "Array", isInheritable=true)
 public final class ArrayObj extends CandyObject {
 	
 	public static final CandyClass ARRAY_CLASS = 

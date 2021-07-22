@@ -25,14 +25,6 @@ fun expectedError(fn) {
 	}
 }
 
-fun immutableObjTest() {
-	var r = range(0, 15)
-	assert r.left == 0
-	assert r.right == 15
-	expectedError(lambda -> r.left =15)
-	expectedError(lambda -> r.right =15)
-}
-
 fun iteratorTest() {
 	var a = range(0, 10)
 	var cmpI = 0
