@@ -68,6 +68,7 @@ public enum TokenKind {
 	
 	EOF,
 	IDENTIFIER,
+	AT_IDENTIFIER,
 	DOUBLE,
 	INTEGER,
 	STRING,

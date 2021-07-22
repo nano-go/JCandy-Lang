@@ -93,6 +93,12 @@ class CandyScanner implements Scanner {
 					literal = CandySystem.END_OF_LINE;
 					break;
 					
+				case '@':
+					isInsertSemi = true;
+					kind = TokenKind.AT_IDENTIFIER;
+					literal = readAtIdentifier();
+					break;
+					
 				case '"':
 					readStringLiteral(false);
 					if (macthedToken.isEmpty()) {
@@ -159,8 +165,7 @@ class CandyScanner implements Scanner {
 					break;		
 				case '=' :
 					kind = switch2('=', TokenKind.EQUAL, TokenKind.ASSIGN);
-					break;	
-					
+					break;
 				
 				case '{' :
 					kind = TokenKind.LBRACE;
@@ -259,6 +264,17 @@ class CandyScanner implements Scanner {
 			return result2;
 		}
 		return def;
+	}
+	
+	private String readAtIdentifier() {
+		if (!Characters.isCandyIdentifierStart(reader.peek())) {
+			reader.error("Unexpected '%s'.", reader.peek());
+			return "";
+		}
+		do {
+			reader.putChar(true);
+		} while (Characters.isCandyIdentifier(reader.peek()));
+		return reader.savedString();
 	}
 	
 	private Token readIdentifier() {

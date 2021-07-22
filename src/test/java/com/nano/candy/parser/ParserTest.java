@@ -82,6 +82,13 @@ public class ParserTest {
 		"class A : a.b {}",
 		"class A : a[c] {}",
 		"class A \n { fun a(a, b) \n {} fun a() \n {} fun a(a, b) {} }",
+		"class A {fun init(value) {\n" + 
+			"@if = a\n" +
+			"@value = value\n" +
+		"}}",
+		"class A {fun a(value) {\n" + 
+			"return @a\n" +
+		"}}",
 		"import \"stream.cd\" as stream;",
 		"import a + b as stream",
 		"import (\n\"stream\" as stream\na + b as stream\n)",

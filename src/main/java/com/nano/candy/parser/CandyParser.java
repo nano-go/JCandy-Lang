@@ -436,7 +436,7 @@ class CandyParser implements Parser {
 			case STRING:     case LPAREN:
 			case TRUE:       case FALSE: 
 			case THIS:       case SUPER:
-			case LBRACKET:
+			case LBRACKET:   case AT_IDENTIFIER:
 				return true;
 		}
 		return TokenKind.isUnaryOperator(tk);
@@ -1067,6 +1067,7 @@ class CandyParser implements Parser {
 	 *            | <INTEGER>
 	 *            | <DOUBLE>
 	 *            | <IDENTIFIER>
+	 *            | <AT_IDENTIFIER>
 	 *            | ( "(" [ Expr [ "," Tuple ] ] ")" )
 	 *            | Array
 	 *            | Map
@@ -1105,6 +1106,15 @@ class CandyParser implements Parser {
 				expr = locate(
 					location, new Expr.VarRef(location.getLiteral())
 				);
+				break;
+			
+			case AT_IDENTIFIER:
+				consume();
+				// @value -> this.value
+				expr = locate(location, new Expr.GetAttr(
+					locate(location, new Expr.This()), 
+					location.getLiteral()
+				));
 				break;
 				
 			case INTEGER:

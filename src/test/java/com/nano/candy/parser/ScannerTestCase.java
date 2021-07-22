@@ -76,6 +76,15 @@ public class ScannerTestCase {
 			"\nabc12_34\n",
 			id("abc12_34"), SEMILN
 		),
+		newTKCase(
+			"@abcd @if @while",
+			atid("abcd"), atid("if"), atid("while"), SEMIEOF
+		),
+		newTKCase(
+			"\n@_abc@_123\n",
+			atid("_abc"), atid("_123"), SEMILN
+		),
+		
 		
 		/*===== String Literal Test Case =====*/
 		
@@ -277,6 +286,10 @@ public class ScannerTestCase {
 		return tk(IDENTIFIER, name);
 	}
 	
+	private static Token atid(String name) {
+		return tk(AT_IDENTIFIER, name);
+	}
+	
 	private static Token str(String str) {
 		return tk(STRING, str);
 	}
@@ -350,6 +363,10 @@ public class ScannerTestCase {
 		newPECase("\n\t\t_abc 123 \n", false, pos(2, 3), pos(2, 8), pos(2,12)),
 		newPECase("\n//\t\t_abc 123\n\t/*abcd*/abcd/**/", false, pos(3, 10), pos(3, 18)),
 		newPECase("\n\"Oh my god! Are you ok?\"\n\n bbbbb", false, pos(2, 1), pos(2, 25), pos(4, 2), pos(4, 7)),
+		
+		/* @ IDENTIFIER */
+		newPECase("@123", true, pos(1, 2)),
+		newPECase("@", true, pos(1, 2)),
 		
 		/* Comment */
 		newPECase("/** abc.\n\n\t\t*/≈≈___╳", true, pos(3, 5), pos(3, 6), pos(3, 10)),
