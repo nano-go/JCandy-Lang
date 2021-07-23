@@ -124,4 +124,15 @@ class ClassTest : unit.TestCase {
 		this.expectedErrorRaised(AttributeError, Bar().getSuperMethodError)
 		this.expectedErrorRaised(AttributeError, Bar().callSuperMethodError)
 	}
+
+	fun callClassInJava_test() {
+		class Foo {
+			fun init(e, i) {
+				@e = e
+				@i = i
+			}
+		}
+		[1, 2, 3, 4, 5].foreach(Range)
+		[1, 2, 3, 4, 5].foreach(Foo)
+	}
 }
