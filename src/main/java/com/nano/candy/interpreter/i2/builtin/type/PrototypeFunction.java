@@ -1,14 +1,17 @@
 package com.nano.candy.interpreter.i2.builtin.type;
 
 import com.nano.candy.interpreter.i2.builtin.type.CallableObj;
-import com.nano.candy.interpreter.i2.rtda.FileEnvironment;
-import com.nano.candy.interpreter.i2.rtda.Upvalue;
-import com.nano.candy.interpreter.i2.rtda.chunk.Chunk;
-import com.nano.candy.interpreter.i2.rtda.chunk.ConstantValue;
-import com.nano.candy.interpreter.i2.rtda.chunk.attrs.CodeAttribute;
-import com.nano.candy.interpreter.i2.vm.VM;
+import com.nano.candy.interpreter.i2.cni.CNIEnv;
+import com.nano.candy.interpreter.i2.runtime.FileEnvironment;
+import com.nano.candy.interpreter.i2.runtime.Frame;
+import com.nano.candy.interpreter.i2.runtime.OperandStack;
+import com.nano.candy.interpreter.i2.runtime.StackFrame;
+import com.nano.candy.interpreter.i2.runtime.Upvalue;
+import com.nano.candy.interpreter.i2.runtime.chunk.Chunk;
+import com.nano.candy.interpreter.i2.runtime.chunk.ConstantValue;
+import com.nano.candy.interpreter.i2.runtime.chunk.attrs.CodeAttribute;
 
-public class PrototypeFunction extends CallableObj {
+public final class PrototypeFunction extends CallableObj {
 
 	public Chunk chunk;
 	public ConstantValue.MethodInfo metInfo;
@@ -68,8 +71,9 @@ public class PrototypeFunction extends CallableObj {
 	}
 
 	@Override
-	protected void onCall(VM vm, int argc, int unpackingBits) {
-		vm.runPrototypeFunction(this, argc);
+	public void onCall(CNIEnv env, OperandStack opStack, StackFrame stack, int argc, int unpackFlags) {
+		Frame newFrame = Frame.fetchFrame(this, argc, opStack);	
+		stack.pushFrame(newFrame);
 	}
 	
 	@Override

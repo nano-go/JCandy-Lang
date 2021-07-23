@@ -5,8 +5,8 @@ import com.nano.candy.ast.AstVisitor;
 import com.nano.candy.ast.Expr;
 import com.nano.candy.ast.Program;
 import com.nano.candy.ast.Stmt;
-import com.nano.candy.interpreter.i2.rtda.chunk.Chunk;
-import com.nano.candy.interpreter.i2.rtda.chunk.ConstantValue;
+import com.nano.candy.interpreter.i2.runtime.chunk.Chunk;
+import com.nano.candy.interpreter.i2.runtime.chunk.ConstantValue;
 import com.nano.candy.parser.TokenKind;
 import com.nano.candy.std.Names;
 import com.nano.candy.utils.ArrayUtils;
@@ -15,7 +15,7 @@ import java.util.LinkedList;
 import java.util.Optional;
 
 import static com.nano.candy.interpreter.i2.code.OpCodes.*;
-import static com.nano.candy.interpreter.i2.rtda.chunk.ConstantValue.*;
+import static com.nano.candy.interpreter.i2.runtime.chunk.ConstantValue.*;
 
 /**
  * This converts a Candy syntax tree to a code chunk.

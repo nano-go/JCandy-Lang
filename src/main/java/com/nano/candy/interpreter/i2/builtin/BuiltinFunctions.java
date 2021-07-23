@@ -10,12 +10,12 @@ import com.nano.candy.interpreter.i2.builtin.type.error.IOError;
 import com.nano.candy.interpreter.i2.builtin.type.error.NativeError;
 import com.nano.candy.interpreter.i2.builtin.type.error.TypeError;
 import com.nano.candy.interpreter.i2.builtin.utils.ObjectHelper;
+import com.nano.candy.interpreter.i2.cni.CNIEnv;
 import com.nano.candy.interpreter.i2.cni.NativeContext;
 import com.nano.candy.interpreter.i2.cni.NativeFunc;
 import com.nano.candy.interpreter.i2.cni.NativeLibraryLoader;
-import com.nano.candy.interpreter.i2.rtda.module.ModuleManager;
-import com.nano.candy.interpreter.i2.vm.VM;
-import com.nano.candy.interpreter.i2.vm.VMExitException;
+import com.nano.candy.interpreter.i2.runtime.VMExitException;
+import com.nano.candy.interpreter.i2.runtime.module.ModuleManager;
 import com.nano.candy.std.Names;
 import com.nano.candy.sys.CandySystem;
 import java.io.File;
@@ -27,19 +27,19 @@ import java.util.Scanner;
 public class BuiltinFunctions {
 
 	@NativeFunc(name = "print", arity = 1)
-	public static CandyObject print(VM vm, CandyObject[] args) {
-		System.out.print(args[0].callStr(vm).value());
+	public static CandyObject print(CNIEnv env, CandyObject[] args) {
+		System.out.print(args[0].callStr(env).value());
 		return null;
 	}
 
 	@NativeFunc(name = "println", arity = 1)
-	public static CandyObject println(VM vm, CandyObject[] args) {
-		System.out.println(args[0].callStr(vm).value());
+	public static CandyObject println(CNIEnv env, CandyObject[] args) {
+		System.out.println(args[0].callStr(env).value());
 		return null;
 	}
 	
 	@NativeFunc(name = "readLine")
-	public static CandyObject read(VM vm, CandyObject[] args) {
+	public static CandyObject read(CNIEnv env, CandyObject[] args) {
 		try {
 			return StringObj.valueOf(new Scanner(System.in).nextLine());
 		} catch (NoSuchElementException e) {
@@ -49,7 +49,7 @@ public class BuiltinFunctions {
 	}
 
 	@NativeFunc(name = "range", arity = 2)
-	public static CandyObject range(VM vm, CandyObject[] args) {
+	public static CandyObject range(CNIEnv env, CandyObject[] args) {
 		return new Range(
 			ObjectHelper.asInteger(args[0]),
 			ObjectHelper.asInteger(args[1])
@@ -57,7 +57,7 @@ public class BuiltinFunctions {
 	}
 	
 	@NativeFunc(name = "sleep", arity = 1)
-	public static CandyObject shelp(VM vm, CandyObject[] args) {
+	public static CandyObject shelp(CNIEnv env, CandyObject[] args) {
 		try {
 			Thread.sleep(ObjectHelper.asInteger(args[0]));
 		} catch (InterruptedException e) {
@@ -67,12 +67,12 @@ public class BuiltinFunctions {
 	}
 	
 	@NativeFunc(name = "clock", arity = 0)
-	public static CandyObject clock(VM vm, CandyObject[] args) {
+	public static CandyObject clock(CNIEnv env, CandyObject[] args) {
 		return IntegerObj.valueOf(System.currentTimeMillis());
 	}
 	
 	@NativeFunc(name = "methods", arity = 1) 
-	public static CandyObject methods(VM vm, CandyObject[] args) {
+	public static CandyObject methods(CNIEnv env, CandyObject[] args) {
 		ArrayObj arr = new ArrayObj(16);
 		for (CallableObj m : args[0].getCandyClass().getMethods()) {
 			arr.append(new MethodObj(args[0], m));
@@ -81,60 +81,60 @@ public class BuiltinFunctions {
 	}
 	
 	@NativeFunc(name = "bool", arity = 1) 
-	public static CandyObject bool(VM vm, CandyObject[] args) {
-		return args[0].boolValue(vm);
+	public static CandyObject bool(CNIEnv env, CandyObject[] args) {
+		return args[0].boolValue(env);
 	}
 
 	@NativeFunc(name = "getAttr", arity = 2)
-	public static CandyObject getAttr(VM vm, CandyObject[] args) {
-		return args[0].getAttr(vm, ObjectHelper.asString(args[1]));
+	public static CandyObject getAttr(CNIEnv env, CandyObject[] args) {
+		return args[0].getAttr(env, ObjectHelper.asString(args[1]));
 	}
 
 	@NativeFunc(name = "setAttr", arity = 3)
-	public static CandyObject setAttr(VM vm, CandyObject[] args) {
+	public static CandyObject setAttr(CNIEnv env, CandyObject[] args) {
 		CandyObject obj = args[0];
 		String attrStr = ObjectHelper.asString(args[1]);
 		obj.checkFrozen();
-		obj.setAttr(vm, attrStr, args[2]);
+		obj.setAttr(env, attrStr, args[2]);
 		return args[2];
 	}
 	
 	@NativeFunc(name = "max", arity = 2)
-	public static CandyObject max(VM vm, CandyObject[] args) {
-		return args[0].callGt(vm, args[1]).value()
+	public static CandyObject max(CNIEnv env, CandyObject[] args) {
+		return args[0].callGt(env, args[1]).value()
 			? args[0] : args[1];
 	}
 	
 	@NativeFunc(name = "min", arity = 2)
-	public static CandyObject min(VM vm, CandyObject[] args) {
-		return args[0].callLt(vm, args[1]).value()
+	public static CandyObject min(CNIEnv env, CandyObject[] args) {
+		return args[0].callLt(env, args[1]).value()
 			? args[0] : args[1];
 	}
 	
 	@NativeFunc(name = "str", arity = 1)
-	public static CandyObject str(VM vm, CandyObject[] args) {
-		return args[0].callStr(vm);
+	public static CandyObject str(CNIEnv env, CandyObject[] args) {
+		return args[0].callStr(env);
 	}
 
 	@NativeFunc(name = "importModule", arity = 1)
-	public static CandyObject importFile(VM vm, CandyObject[] args) {
+	public static CandyObject importFile(CNIEnv env, CandyObject[] args) {
 		String filePath = ObjectHelper.asString(args[0]);
-		return vm.getModuleManager().importModule(vm, filePath);
+		return ModuleManager.getManager().importModule(env, filePath);
 	}
 	
 	/**
 	 * Adds the selected modules to the current file scope.
 	 */
 	@NativeFunc(name = "select", arity = 1)
-	public static CandyObject select(VM vm, CandyObject[] args) {
+	public static CandyObject select(CNIEnv env, CandyObject[] args) {
 		TypeError.checkTypeMatched(ArrayObj.ARRAY_CLASS, args[0]);
 		ArrayObj files = (ArrayObj) args[0];
 		final int size = files.length();
-		final ModuleManager m = vm.getModuleManager();
+		final ModuleManager m = ModuleManager.getManager();
 		for (int i = 0; i < size; i ++) {
 			ModuleObj moduleObj =
-				m.importModule(vm, ObjectHelper.asString(files.get(i)));
-			moduleObj.addToEnv(vm.getCurrentFileEnv());
+				m.importModule(env, ObjectHelper.asString(files.get(i)));
+			moduleObj.addToEnv(env.getEvaluatorEnv().getCurrentFileEnv());
 		}
 		return null;
 	}
@@ -144,15 +144,15 @@ public class BuiltinFunctions {
 	 * file scope.
 	 */
 	@NativeFunc(name = "selectByFilter", arity = 1)
-	public static CandyObject selectByFilter(VM vm, CandyObject[] args) {
+	public static CandyObject selectByFilter(CNIEnv env, CandyObject[] args) {
 		TypeError.checkIsCallable(args[0]);
 		CallableObj filter = (CallableObj) args[0];
-		File currentDirectory = new File(vm.getCurrentDirectory());
+		File currentDirectory = new File(env.getEvaluatorEnv().getCurrentDirectory());
 		File[] subfiles = currentDirectory.listFiles();
 		if (subfiles == null) {
 			return null;
 		}
-		final ModuleManager m = vm.getModuleManager();
+		final ModuleManager m = ModuleManager.getManager();
 		ArrayList<StringObj> selectedFiles = new ArrayList<>();
 		for (File f : subfiles) {
 			// ignore the specific file.
@@ -163,10 +163,10 @@ public class BuiltinFunctions {
 				continue;
 			}
 			CandyObject accept = ObjectHelper.callFunction
-				(vm, filter, StringObj.valueOf(f.getName()));
-			if (accept.boolValue(vm).value()) {
-				ModuleObj moduleObj = m.importModule(vm, f.getName());
-				moduleObj.addToEnv(vm.getCurrentFileEnv());
+				(env, filter, StringObj.valueOf(f.getName()));
+			if (accept.boolValue(env).value()) {
+				ModuleObj moduleObj = m.importModule(env, f.getName());
+				moduleObj.addToEnv(env.getEvaluatorEnv().getCurrentFileEnv());
 				selectedFiles.add(StringObj.valueOf(f.getName()));
 			}
 		}
@@ -174,8 +174,8 @@ public class BuiltinFunctions {
 	}
 
 	@NativeFunc(name = "cmdArgs", arity = 0)
-	public static CandyObject cmd_args(VM vm, CandyObject[] args) {
-		String[] cmdArgsStr = vm.getOptions().getArgs();
+	public static CandyObject cmd_args(CNIEnv env, CandyObject[] args) {
+		String[] cmdArgsStr = env.getEvaluatorEnv().getOptions().getArgs();
 		CandyObject[] cmdArgs = new CandyObject[cmdArgsStr.length];
 		for (int i = 0; i < cmdArgsStr.length; i ++) {
 			cmdArgs[i] = StringObj.valueOf(cmdArgsStr[i]);
@@ -184,13 +184,13 @@ public class BuiltinFunctions {
 	}
 
 	@NativeFunc(name = "loadLibrary", arity = 2)
-	public static CandyObject loadLibrary(VM vm, CandyObject[] args) {
+	public static CandyObject loadLibrary(CNIEnv env, CandyObject[] args) {
 		String path = ObjectHelper.asString(args[0]);
 		String className = ObjectHelper.asString(args[1]);
 		try {
 			NativeContext context = NativeLibraryLoader
-				.loadLibrary(vm.getJavaLibraryPaths(), path, className);
-			context.action(vm.getGlobalEnv());
+				.loadLibrary(env.getEvaluatorEnv().getJavaLibraryPaths(), path, className);
+			context.action(env.getEvaluatorEnv().getGlobalEnv());
 		} catch (IOException e) {
 			new IOError(e).throwSelfNative();
 		} catch (ClassNotFoundException e) {
@@ -201,7 +201,7 @@ public class BuiltinFunctions {
 	}
 	
 	@NativeFunc(name = "exit", arity=1)
-	public static CandyObject exit(VM vm, CandyObject[] args) {
+	public static CandyObject exit(CNIEnv env, CandyObject[] args) {
 		throw new VMExitException((int)ObjectHelper.asInteger(args[0]));
 	}
 }

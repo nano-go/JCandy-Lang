@@ -2,8 +2,10 @@ package com.nano.candy.interpreter.i2.cni;
 
 import com.nano.candy.interpreter.i2.builtin.CandyObject;
 import com.nano.candy.interpreter.i2.builtin.type.CallableObj;
+import com.nano.candy.interpreter.i2.builtin.type.NullPointer;
 import com.nano.candy.interpreter.i2.builtin.utils.ObjectHelper;
-import com.nano.candy.interpreter.i2.vm.VM;
+import com.nano.candy.interpreter.i2.runtime.OperandStack;
+import com.nano.candy.interpreter.i2.runtime.StackFrame;
 
 /**
  * Faster than the native method implemented by the reflection.
@@ -12,7 +14,7 @@ public class FasterNativeMethod extends CallableObj {
 
 	@FunctionalInterface
 	public static interface Callback {
-		public CandyObject onCall(VM vm, int argc);
+		public CandyObject onCall(CNIEnv env, int argc);
 	}
 	
 	private Callback callback;
@@ -30,12 +32,16 @@ public class FasterNativeMethod extends CallableObj {
 		);
 		this.callback = callback;
 	}
-	
-	@Override
-	protected void onCall(VM vm, int argc, int unpackFlags) {
-		vm.returnFromVM(callback.onCall(vm, argc));
-	}
 
+	@Override
+	public void onCall(CNIEnv env, OperandStack opStack, StackFrame stack, int argc, int unpackFlags) {
+		CandyObject retVal = callback.onCall(env, argc);
+		if (retVal == null) {
+			retVal = NullPointer.nil();
+		}
+		opStack.push(retVal);
+	}
+	
 	@Override
 	public boolean isBuiltin() {
 		return true;

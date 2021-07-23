@@ -4,10 +4,10 @@ import com.nano.candy.interpreter.i2.builtin.CandyObject;
 import com.nano.candy.interpreter.i2.builtin.type.IntegerObj;
 import com.nano.candy.interpreter.i2.builtin.type.NumberObj;
 import com.nano.candy.interpreter.i2.builtin.utils.ObjectHelper;
+import com.nano.candy.interpreter.i2.cni.CNIEnv;
 import com.nano.candy.interpreter.i2.cni.NativeClass;
 import com.nano.candy.interpreter.i2.cni.NativeClassRegister;
 import com.nano.candy.interpreter.i2.cni.NativeMethod;
-import com.nano.candy.interpreter.i2.vm.VM;
 import com.nano.candy.std.Names;
 import com.nano.candy.std.StringFunctions;
 
@@ -46,13 +46,13 @@ public class IntegerObj extends NumberObj {
 	}
 	
 	@NativeMethod(name = Names.METHOD_INITALIZER, argc = 1)
-	public CandyObject init(VM vm, CandyObject[] args) {
+	public CandyObject init(CNIEnv env, CandyObject[] args) {
 		this.value = ObjectHelper.asInteger(args[0]);
 		return this;
 	}
 
 	@Override
-	public CandyObject negative(VM vm) {
+	public CandyObject negative(CNIEnv env) {
 		return valueOf(-value);
 	}
 	
@@ -77,7 +77,7 @@ public class IntegerObj extends NumberObj {
 	}
 
 	@Override
-	public IntegerObj hashCode(VM vm) {
+	public IntegerObj hashCode(CNIEnv env) {
 		return IntegerObj.valueOf(Long.hashCode(value));
 	}
 }

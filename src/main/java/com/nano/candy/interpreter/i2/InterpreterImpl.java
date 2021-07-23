@@ -3,20 +3,17 @@ package com.nano.candy.interpreter.i2;
 import com.nano.candy.ast.ASTreeNode;
 import com.nano.candy.interpreter.Interpreter;
 import com.nano.candy.interpreter.InterpreterOptions;
-import com.nano.candy.interpreter.i2.rtda.chunk.Chunk;
+import com.nano.candy.interpreter.i2.runtime.CarrierErrorException;
+import com.nano.candy.interpreter.i2.runtime.EvaluatorEnv;
+import com.nano.candy.interpreter.i2.runtime.chunk.Chunk;
 import com.nano.candy.interpreter.i2.tool.Compiler;
-import com.nano.candy.interpreter.i2.vm.CarrierErrorException;
-import com.nano.candy.interpreter.i2.vm.VM;
 
 public class InterpreterImpl implements Interpreter {
 
-	private static final VM vm = new VM();
+	// private static final VM vm = new VM();
 	private InterpreterOptions options;
+	private Chunk loadedChunk;
 	
-	public VM getVM() {
-		return vm;
-	}
-
 	@Override
 	public void enter(InterpreterOptions options) {
 		this.options = options;
@@ -24,7 +21,7 @@ public class InterpreterImpl implements Interpreter {
 	
 	@Override
 	public void initOrReset() {
-		vm.reset(options);	
+		// vm.reset(options);	
 	}
 
 	@Override
@@ -35,7 +32,7 @@ public class InterpreterImpl implements Interpreter {
 		} catch (CarrierErrorException e) {
 			return;
 		}
-		vm.loadChunk(chunk);
+		this.loadedChunk = chunk;
 	}
 	
 	@Override
@@ -46,12 +43,14 @@ public class InterpreterImpl implements Interpreter {
 		} catch (CarrierErrorException e) {
 			return;
 		}
-		vm.loadChunk(chunk);
+		this.loadedChunk = chunk;
 	}
 
 	@Override
 	public int run() {
-		return vm.runHandleError();
+		EvaluatorEnv env = new EvaluatorEnv(options);
+		env.getEvaluator().eval(loadedChunk);
+		return 0;
 	}
 
 }

@@ -2,7 +2,9 @@ package com.nano.candy.interpreter.i2.builtin.type;
 
 import com.nano.candy.interpreter.i2.builtin.CandyObject;
 import com.nano.candy.interpreter.i2.builtin.type.CallableObj;
-import com.nano.candy.interpreter.i2.vm.VM;
+import com.nano.candy.interpreter.i2.cni.CNIEnv;
+import com.nano.candy.interpreter.i2.runtime.OperandStack;
+import com.nano.candy.interpreter.i2.runtime.StackFrame;
 
 /**
  * The MethodObj bound with an object.
@@ -35,14 +37,9 @@ public class MethodObj extends CallableObj {
 	}
 
 	@Override
-	public void call(VM vm, int argc, int unpackingBits) {
-		vm.push(receiver);
-		method.call(vm, argc + 1, unpackingBits << 1);
-	}
-
-	@Override
-	protected void onCall(VM vm, int argc, int unpackingBits) {
-		throw new Error("Unsupported.");
+	public void onCall(CNIEnv env, OperandStack opStack, StackFrame stack, int argc, int unpackFlags) {
+		opStack.push(receiver);
+		method.onCall(env, opStack, stack, argc + 1, unpackFlags << 1);
 	}
 
 	@Override

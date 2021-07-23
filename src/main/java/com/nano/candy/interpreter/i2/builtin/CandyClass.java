@@ -6,7 +6,9 @@ import com.nano.candy.interpreter.i2.builtin.type.MethodObj;
 import com.nano.candy.interpreter.i2.builtin.type.NullPointer;
 import com.nano.candy.interpreter.i2.builtin.type.StringObj;
 import com.nano.candy.interpreter.i2.builtin.type.error.NativeError;
-import com.nano.candy.interpreter.i2.vm.VM;
+import com.nano.candy.interpreter.i2.cni.CNIEnv;
+import com.nano.candy.interpreter.i2.runtime.OperandStack;
+import com.nano.candy.interpreter.i2.runtime.StackFrame;
 import com.nano.candy.std.Names;
 import java.util.Collection;
 import java.util.HashMap;
@@ -124,14 +126,14 @@ public class CandyClass extends CallableObj {
 	}
 
 	@Override
-	public CandyObject getAttr(VM vm, String name) {
+	public CandyObject getAttr(CNIEnv env, String name) {
 		switch (name) {
 			case "className": 
 				return StringObj.valueOf(className);
 			case "superClass": 
 				return superClass == null ? NullPointer.nil() : superClass;
 		}
-		return super.getAttr(vm, name);
+		return super.getAttr(env, name);
 	}
 	
 	@Override
@@ -150,17 +152,26 @@ public class CandyClass extends CallableObj {
 	}
 
 	@Override
-	protected void onCall(VM vm, int argc, int unpackFlags) {
-		throw new Error("Supported");
+	public void onCall(CNIEnv env, OperandStack opStack, StackFrame stack, int argc, int unpackFlags) {
+		CandyObject instance = createInstance(env);
+		new MethodObj(instance, initializer).onCall(
+			env, opStack, stack, argc, unpackFlags
+		);
+	}
+	
+	@Override
+	public void call(CNIEnv env, int argc, int unpackFlags) {
+		CandyObject instance = createInstance(env);
+		new MethodObj(instance, initializer).call(env, argc, unpackFlags);
 	}
 
 	@Override
-	public void call(VM vm, int argc, int unpackFlags) {
-		CandyObject instance = createInstance(vm);
-		new MethodObj(instance, initializer).call(vm, argc, unpackFlags);
+	public CandyObject callExeUser(CNIEnv env, int unpackFlags, CandyObject[] args) {
+		CandyObject instance = createInstance(env);
+		return new MethodObj(instance, initializer).callExeUser(env, unpackFlags, args);
 	}
 
-	protected CandyObject createInstance(VM vm) {		
+	protected CandyObject createInstance(CNIEnv env) {		
 		if (!canBeCreated) {
 			new NativeError(
 				"The built-in class can't be instantiated: " 

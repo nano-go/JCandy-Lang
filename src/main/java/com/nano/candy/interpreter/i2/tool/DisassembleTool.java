@@ -4,11 +4,11 @@ import com.nano.candy.cmd.CandyOptions;
 import com.nano.candy.cmd.CandyTool;
 import com.nano.candy.interpreter.Interpreter;
 import com.nano.candy.interpreter.InterpreterOptions;
-import com.nano.candy.interpreter.i2.rtda.chunk.Chunk;
+import com.nano.candy.interpreter.i2.runtime.CarrierErrorException;
+import com.nano.candy.interpreter.i2.runtime.chunk.Chunk;
 import com.nano.candy.interpreter.i2.tool.dis.DefaultDisassDumper;
 import com.nano.candy.interpreter.i2.tool.dis.DisassInsDumper;
 import com.nano.candy.interpreter.i2.tool.dis.Disassembler;
-import com.nano.candy.interpreter.i2.vm.CarrierErrorException;
 import com.nano.candy.utils.Options;
 import java.io.File;
 

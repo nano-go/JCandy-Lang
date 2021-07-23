@@ -2,9 +2,9 @@ package com.nano.candy.interpreter.i2.builtin.type;
 import com.nano.candy.interpreter.i2.builtin.CandyObject;
 import com.nano.candy.interpreter.i2.builtin.ObjectClass;
 import com.nano.candy.interpreter.i2.builtin.type.IteratorObj;
+import com.nano.candy.interpreter.i2.cni.CNIEnv;
 import com.nano.candy.interpreter.i2.cni.FasterNativeMethod;
-import com.nano.candy.interpreter.i2.rtda.Variable;
-import com.nano.candy.interpreter.i2.vm.VM;
+import com.nano.candy.interpreter.i2.runtime.Variable;
 import com.nano.candy.std.Names;
 import java.util.Iterator;
 import java.util.Map;
@@ -22,12 +22,12 @@ public abstract class IteratorObj extends CandyObject {
 		}
 
 		@Override
-		public final boolean hasNext(VM vm) {
+		public final boolean hasNext(CNIEnv env) {
 			return left != right;
 		}
 
 		@Override
-		public final CandyObject next(VM vm) {
+		public final CandyObject next(CNIEnv env) {
 			IntegerObj next = IntegerObj.valueOf(left);
 			left += v;
 			return next;
@@ -41,12 +41,12 @@ public abstract class IteratorObj extends CandyObject {
 			this.iterator = iterator;
 		}
 		@Override
-		public final boolean hasNext(VM vm) {
+		public final boolean hasNext(CNIEnv env) {
 			return iterator.hasNext();
 		}
 
 		@Override
-		public final CandyObject next(VM vm) {
+		public final CandyObject next(CNIEnv env) {
 			Map.Entry<String, CandyObject> entry = iterator.next();
 			CandyObject[] kv = {
 				StringObj.valueOf(entry.getKey()), entry.getValue()
@@ -63,12 +63,12 @@ public abstract class IteratorObj extends CandyObject {
 		}
 		
 		@Override
-		public final boolean hasNext(VM vm) {
+		public final boolean hasNext(CNIEnv env) {
 			return iterator.hasNext();
 		}
 
 		@Override
-		public final CandyObject next(VM vm) {
+		public final CandyObject next(CNIEnv env) {
 			Variable variable = iterator.next();
 			CandyObject[] kv = {
 				StringObj.valueOf(variable.getName()), variable.getValue()
@@ -88,12 +88,12 @@ public abstract class IteratorObj extends CandyObject {
 		}
 
 		@Override
-		public final boolean hasNext(VM vm) {
+		public final boolean hasNext(CNIEnv env) {
 			return i < size;
 		}
 
 		@Override
-		public final CandyObject next(VM vm) {
+		public final CandyObject next(CNIEnv env) {
 			return elements[i ++];
 		}
 	}
@@ -115,24 +115,24 @@ public abstract class IteratorObj extends CandyObject {
 	}
 
 	@Override
-	public CandyObject getAttr(VM vm, String attr) {
+	public CandyObject getAttr(CNIEnv env, String attr) {
 		switch (attr) {
 			case Names.METHOD_ITERATOR_NEXT:
 				return next;
 			case Names.METHOD_ITERATOR_HAS_NEXT:
 				return hasNext;
 		}
-		return super.getAttr(vm, attr);
+		return super.getAttr(env, attr);
 	}
 	
-	public final CandyObject hasNext(VM vm, int argc) {
-		return BoolObj.valueOf(hasNext(vm));
+	public final CandyObject hasNext(CNIEnv env, int argc) {
+		return BoolObj.valueOf(hasNext(env));
 	}
 	
-	public final CandyObject next(VM vm, int argc) {
-		return next(vm);
+	public final CandyObject next(CNIEnv env, int argc) {
+		return next(env);
 	}
 	
-	public abstract boolean hasNext(VM vm);
-	public abstract CandyObject next(VM vm);
+	public abstract boolean hasNext(CNIEnv env);
+	public abstract CandyObject next(CNIEnv env);
 }

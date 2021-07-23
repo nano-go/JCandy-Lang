@@ -6,10 +6,10 @@ import com.nano.candy.interpreter.i2.builtin.type.TupleObj;
 import com.nano.candy.interpreter.i2.builtin.type.error.TypeError;
 import com.nano.candy.interpreter.i2.builtin.utils.ArrayHelper;
 import com.nano.candy.interpreter.i2.builtin.utils.ObjectHelper;
+import com.nano.candy.interpreter.i2.cni.CNIEnv;
 import com.nano.candy.interpreter.i2.cni.NativeClass;
 import com.nano.candy.interpreter.i2.cni.NativeClassRegister;
 import com.nano.candy.interpreter.i2.cni.NativeMethod;
-import com.nano.candy.interpreter.i2.vm.VM;
 import com.nano.candy.std.Names;
 import com.nano.candy.utils.ArrayUtils;
 import java.util.Arrays;
@@ -53,30 +53,30 @@ public final class TupleObj extends CandyObject {
 	}
 
 	@Override
-	public CandyObject iterator(VM vm) {
+	public CandyObject iterator(CNIEnv env) {
 		return new IteratorObj.ArrIterator(elements, elements.length);
 	}
 
 	@Override
-	public CandyObject getItem(VM vm, CandyObject key) {
+	public CandyObject getItem(CNIEnv env, CandyObject key) {
 		return elements[(int) ObjectHelper.asInteger(key)];
 	}
 	
 	@Override
-	public CandyObject add(VM vm, CandyObject operand) {
+	public CandyObject add(CNIEnv env, CandyObject operand) {
 		return add(operand);
 	}
 
 	@Override
-	public IntegerObj hashCode(VM vm) {
+	public IntegerObj hashCode(CNIEnv env) {
 		if (hash != null) return hash;
 		return hash = IntegerObj.valueOf(
-			ArrayHelper.hashCode(vm, elements, 0, elements.length)
+			ArrayHelper.hashCode(env, elements, 0, elements.length)
 		);
 	}
 
 	@Override
-	public BoolObj equals(VM vm, CandyObject operand) {
+	public BoolObj equals(CNIEnv env, CandyObject operand) {
 		if (operand == this) {
 			return BoolObj.TRUE;
 		}
@@ -87,29 +87,29 @@ public final class TupleObj extends CandyObject {
 			}
 			for (int i = 0; i < es.length; i ++) {
 				BoolObj res = 
-					this.elements[i].callEquals(vm, es[i]);
+					this.elements[i].callEquals(env, es[i]);
 				if (!res.value()) {
 					return BoolObj.FALSE;
 				}
 			}
 			return BoolObj.TRUE;
 		}
-		return super.equals(vm, operand);
+		return super.equals(env, operand);
 	}
 
 	@Override
-	public StringObj str(VM vm) {
+	public StringObj str(CNIEnv env) {
 		if (elements.length == 0) {
 			return StringObj.EMPTY_TUPLE;
 		}
 		StringBuilder builder = new StringBuilder("(");
-		builder.append(ArrayHelper.toString(vm, elements, ", "));
+		builder.append(ArrayHelper.toString(env, elements, ", "));
 		builder.append(")");
 		return StringObj.valueOf(builder.toString());
 	}
 	
 	@NativeMethod(name = Names.METHOD_INITALIZER, argc = 1)
-	public CandyObject init(VM vm, CandyObject[] args) {
+	public CandyObject init(CNIEnv env, CandyObject[] args) {
 		if (args[0] instanceof  TupleObj) {
 			TupleObj tuple = (TupleObj) args[0];
 			this.elements = Arrays.copyOf(
@@ -121,13 +121,13 @@ public final class TupleObj extends CandyObject {
 				arr.getBuiltinArray(), 0, arr.length()
 			);
 		} else {
-			this.elements = ObjectHelper.iterableObjToArray(vm, args[0]);
+			this.elements = ObjectHelper.iterableObjToArray(env, args[0]);
 		}
 		return this;
 	}
 	
 	@NativeMethod(name = "length")
-	public CandyObject len(VM vm, CandyObject[] args) {
+	public CandyObject len(CNIEnv env, CandyObject[] args) {
 		return IntegerObj.valueOf(elements.length);
 	}
 }

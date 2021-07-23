@@ -2,15 +2,14 @@ package com.nano.candy.interpreter.i2.builtin.type;
 
 import com.nano.candy.interpreter.i2.builtin.CandyClass;
 import com.nano.candy.interpreter.i2.builtin.CandyObject;
-import com.nano.candy.interpreter.i2.builtin.type.error.ArgumentError;
-import com.nano.candy.interpreter.i2.builtin.utils.ElementsUnpacker;
+import com.nano.candy.interpreter.i2.builtin.type.NullPointer;
 import com.nano.candy.interpreter.i2.builtin.utils.ObjectHelper;
+import com.nano.candy.interpreter.i2.cni.CNIEnv;
 import com.nano.candy.interpreter.i2.cni.NativeClass;
 import com.nano.candy.interpreter.i2.cni.NativeClassRegister;
-import com.nano.candy.interpreter.i2.cni.NativeMethod;
-import com.nano.candy.interpreter.i2.rtda.OperandStack;
-import com.nano.candy.interpreter.i2.rtda.chunk.ConstantValue;
-import com.nano.candy.interpreter.i2.vm.VM;
+import com.nano.candy.interpreter.i2.runtime.OperandStack;
+import com.nano.candy.interpreter.i2.runtime.StackFrame;
+import com.nano.candy.interpreter.i2.runtime.chunk.ConstantValue;
 
 /**
  * A CallablObj represents a candy callable object (a function, a method
@@ -125,8 +124,8 @@ public abstract class CallableObj extends CandyObject {
 		return getParameter().getArity();
 	}
 	
-	public final CandyObject callExeUser(VM vm, CandyObject... args) {
-		return callExeUser(vm, EMPTY_UNPACK_FLAGS, args);
+	public final CandyObject callExeUser(CNIEnv env, CandyObject... args) {
+		return callExeUser(env, EMPTY_UNPACK_FLAGS, args);
 	}
 	
 	/**
@@ -134,49 +133,21 @@ public abstract class CallableObj extends CandyObject {
 	 *
 	 * @param unpackFlags See {@link ElementsUnpacker#unpackFromStack}
 	 */
-	public CandyObject callExeUser(VM vm, int unpackFlags, 
+	public CandyObject callExeUser(CNIEnv env, int unpackFlags, 
 	                               CandyObject... args) {
-		if (args != null) {
-			pushArguments(vm.frame().getOperandStack(), args);
-		}
-		call(vm, args == null ? 0 : args.length, unpackFlags);
-		if (!isBuiltin()) {
-			vm.runFrame(true);
-		}
-		return vm.pop();
+		return env.getEvaluator().eval(this, unpackFlags, args);
 	}
 	
-	public final void call(VM vm, int argc) {
-		call(vm, argc, EMPTY_UNPACK_FLAGS);
-	}
-
-	/**
-	 * Usually called by the VM.
-	 */
-	public void call(VM vm, int argc, int unpackFlags) {
-		if (unpackFlags == EMPTY_UNPACK_FLAGS && varArgsIndex() < 0) {
-			if (this.arity() != argc) {
-				ArgumentError.throwsArgumentError(this, argc);
-			}
-			onCall(vm, argc, unpackFlags);
-		} else {
-			CandyObject[] args = unpack(vm, argc, unpackFlags);
-			pushArguments(vm.frame().getOperandStack(), args);
-			onCall(vm, args.length, unpackFlags);
-		}
+	public final void call(CNIEnv env, int argc) {
+		call(env, argc, EMPTY_UNPACK_FLAGS);
 	}
 	
-	protected final CandyObject[] unpack(VM vm, int argc, int unpackFlags) {
-		CandyObject[] args = ElementsUnpacker.unpackFromStack
-			(vm, argc, varArgsIndex(), arity(), unpackFlags);
-		if (args == null) {
-			ArgumentError.throwsArgumentError(this, argc);
-		}
-		return args;
+	public void call(CNIEnv env, int argc, int unpackFlags) {
+		env.getEvaluator().call(this, argc, unpackFlags);
 	}
 
 	@Override
-	public CandyObject getAttr(VM vm, String name) {
+	public CandyObject getAttr(CNIEnv env, String name) {
 		switch (name) {
 			case "name":
 				return StringObj.valueOf(declaredName);
@@ -187,7 +158,7 @@ public abstract class CallableObj extends CandyObject {
 			case "vararg":
 				return IntegerObj.valueOf(varArgsIndex());
 		}
-		return super.getAttr(vm, name);
+		return super.getAttr(env, name);
 	}
 	
 	@Override
@@ -206,7 +177,10 @@ public abstract class CallableObj extends CandyObject {
 	 */
 	protected abstract String strTag();
 
-	protected abstract void onCall(VM vm, int argc, int unpackFlags);
+	public abstract void onCall(CNIEnv env,
+	                            OperandStack opStack, 
+	                            StackFrame stack, 
+								int argc, int unpackFlags);
 	
 	public abstract boolean isBuiltin();
 }

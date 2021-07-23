@@ -5,10 +5,10 @@ import com.nano.candy.interpreter.i2.builtin.CandyObject;
 import com.nano.candy.interpreter.i2.builtin.type.Range;
 import com.nano.candy.interpreter.i2.builtin.type.error.TypeError;
 import com.nano.candy.interpreter.i2.builtin.utils.ObjectHelper;
+import com.nano.candy.interpreter.i2.cni.CNIEnv;
 import com.nano.candy.interpreter.i2.cni.NativeClass;
 import com.nano.candy.interpreter.i2.cni.NativeClassRegister;
 import com.nano.candy.interpreter.i2.cni.NativeMethod;
-import com.nano.candy.interpreter.i2.vm.VM;
 import com.nano.candy.std.Names;
 import java.util.Objects;
 
@@ -41,7 +41,7 @@ public class Range extends CandyObject {
 	}
 
 	@Override
-	public CandyObject iterator(VM vm) {
+	public CandyObject iterator(CNIEnv env) {
 		return new IteratorObj.RangeIterator(getLeft(), getRight());
 	}
 	
@@ -51,12 +51,12 @@ public class Range extends CandyObject {
 	}
 
 	@Override
-	public IntegerObj hashCode(VM vm) {
+	public IntegerObj hashCode(CNIEnv env) {
 		return IntegerObj.valueOf(Objects.hash(getLeft(), getRight()));
 	}
 
 	@Override
-	public BoolObj equals(VM vm, CandyObject operand) {
+	public BoolObj equals(CNIEnv env, CandyObject operand) {
 		if (operand == this) {
 			return BoolObj.TRUE;
 		}
@@ -73,14 +73,14 @@ public class Range extends CandyObject {
 	/*===================== Native Methods ===================*/
 
 	@NativeMethod(name = Names.METHOD_INITALIZER, argc = 2)
-	public CandyObject initializer(VM vm, CandyObject[] args) {
+	public CandyObject initializer(CNIEnv env, CandyObject[] args) {
 		setMetaData("left", args[0]);
 		setMetaData("right", args[1]);
 		return this;
 	}
 
 	@NativeMethod(name = "rand")
-	public CandyObject rand(VM vm, CandyObject[] args) {
+	public CandyObject rand(CNIEnv env, CandyObject[] args) {
 		long left = getLeft();
 		long right = getRight();
 		if (left == right) {
@@ -91,7 +91,7 @@ public class Range extends CandyObject {
 	}
 
 	@NativeMethod(name = "toArray")
-	public CandyObject toArray(VM vm, CandyObject[] args) {
+	public CandyObject toArray(CNIEnv env, CandyObject[] args) {
 		long left = getLeft();
 		long right = getRight();
 		long length = length();

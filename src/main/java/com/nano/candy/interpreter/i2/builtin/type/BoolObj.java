@@ -2,9 +2,9 @@ package com.nano.candy.interpreter.i2.builtin.type;
 import com.nano.candy.interpreter.i2.builtin.CandyClass;
 import com.nano.candy.interpreter.i2.builtin.CandyObject;
 import com.nano.candy.interpreter.i2.builtin.type.BoolObj;
+import com.nano.candy.interpreter.i2.cni.CNIEnv;
 import com.nano.candy.interpreter.i2.cni.NativeClass;
 import com.nano.candy.interpreter.i2.cni.NativeClassRegister;
-import com.nano.candy.interpreter.i2.vm.VM;
 import com.nano.candy.std.StringFunctions;
 
 @NativeClass(name = "Bool")
@@ -33,11 +33,12 @@ public class BoolObj extends CandyObject {
 	}
 
 	@Override
-	public BoolObj not(VM vm) {
+	public BoolObj not(CNIEnv env) {
 		return valueOf(!value);
 	}
 
-	public BoolObj boolValue(VM vm) {
+	@Override
+	public BoolObj boolValue(CNIEnv env) {
 		return this;
 	}
 	

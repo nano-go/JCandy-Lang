@@ -1,7 +1,6 @@
 package com.nano.candy.interpreter.i2.cni;
 import com.esotericsoftware.reflectasm.MethodAccess;
 import com.nano.candy.interpreter.i2.builtin.CandyObject;
-import com.nano.candy.interpreter.i2.vm.VM;
 
 public class CNativeFunction extends CNativeCallable {
 	
@@ -17,8 +16,8 @@ public class CNativeFunction extends CNativeCallable {
 	}
 	
 	@Override
-	protected CandyObject onCall(VM vm, CandyObject instance, CandyObject[] args) throws Exception {
-		return (CandyObject) method.invoke(null, index, vm, args);
+	protected CandyObject onCall(CNIEnv env, CandyObject instance, CandyObject[] args) throws Exception {
+		return (CandyObject) method.invoke(null, index, env, args);
 	}
 
 	@Override

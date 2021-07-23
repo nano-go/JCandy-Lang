@@ -5,7 +5,7 @@ fun expectedError(name, arity, argc, fn) {
 		// println(e.getMessage())
 		assert e.getMessage() == "The " + name +
 		       " takes " + (arity-1) + "+ arguments, but " + 
-		       argc + " were given."
+		       argc + " were given." : e.getMessage()
 	}
 }
 
@@ -94,10 +94,10 @@ fun method_test() {
 	varargs2_right_test(t.test3)
 	varargs3_mid_test(t.test4)
 	
-	expectedError("Test.test2", 3, 1, lambda -> t.test2())
-	expectedError("Test.test3", 3, 1, lambda -> t.test3())
-	expectedError("Test.test4", 4, 1, lambda -> t.test4())
-	expectedError("Test.test4", 4, 2, lambda -> t.test4(1))
+	expectedError("Test.test2", 2, 0, lambda -> t.test2())
+	expectedError("Test.test3", 2, 0, lambda -> t.test3())
+	expectedError("Test.test4", 3, 0, lambda -> t.test4())
+	expectedError("Test.test4", 3, 1, lambda -> t.test4(1))
 }
 method_test()
 

@@ -1,10 +1,10 @@
 package com.nano.candy.interpreter.i2.code;
 
-import com.nano.candy.interpreter.i2.rtda.chunk.ConstantValue;
+import com.nano.candy.interpreter.i2.runtime.chunk.ConstantValue;
 import java.util.ArrayList;
 import java.util.HashMap;
 
-import static com.nano.candy.interpreter.i2.rtda.chunk.ConstantValue.*;
+import static com.nano.candy.interpreter.i2.runtime.chunk.ConstantValue.*;
 
 class ConstantPool {
 	

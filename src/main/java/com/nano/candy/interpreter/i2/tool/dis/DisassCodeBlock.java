@@ -1,5 +1,5 @@
 package com.nano.candy.interpreter.i2.tool.dis;
-import com.nano.candy.interpreter.i2.rtda.chunk.attrs.CodeAttribute;
+import com.nano.candy.interpreter.i2.runtime.chunk.attrs.CodeAttribute;
 
 public class DisassCodeBlock {
 	

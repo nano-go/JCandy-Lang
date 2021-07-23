@@ -1,7 +1,7 @@
 package com.nano.candy.interpreter.i2.tool.dis;
-import com.nano.candy.interpreter.i2.rtda.chunk.Chunk;
-import com.nano.candy.interpreter.i2.rtda.chunk.ConstantPool;
-import com.nano.candy.interpreter.i2.rtda.chunk.ConstantValue;
+import com.nano.candy.interpreter.i2.runtime.chunk.Chunk;
+import com.nano.candy.interpreter.i2.runtime.chunk.ConstantPool;
+import com.nano.candy.interpreter.i2.runtime.chunk.ConstantValue;
 
 public class DisassClass implements DisassInstruction {
 	

@@ -9,7 +9,7 @@ import com.nano.candy.interpreter.i2.builtin.type.NumberObj;
 import com.nano.candy.interpreter.i2.builtin.type.StringObj;
 import com.nano.candy.interpreter.i2.builtin.type.error.AttributeError;
 import com.nano.candy.interpreter.i2.builtin.type.error.TypeError;
-import com.nano.candy.interpreter.i2.vm.VM;
+import com.nano.candy.interpreter.i2.cni.CNIEnv;
 import java.util.ArrayList;
 import java.util.Comparator;
 
@@ -17,14 +17,14 @@ public class ObjectHelper {
 	
 	private ObjectHelper() {}
 	
-	public static Comparator<CandyObject> newComparator(final VM vm) {
+	public static Comparator<CandyObject> newComparator(final CNIEnv env) {
 		return new Comparator<CandyObject>() {
 			@Override
 			public int compare(CandyObject obj1, CandyObject obj2) {
-				if (obj1.callEquals(vm, obj2).value()) {
+				if (obj1.callEquals(env, obj2).value()) {
 					return 0;
 				}
-				if (obj1.callGt(vm, obj2).value()) {
+				if (obj1.callGt(env, obj2).value()) {
 					return 1;
 				}
 				return -1;
@@ -69,8 +69,8 @@ public class ObjectHelper {
 		return ((StringObj) obj).value();
 	}
 	
-	public static CandyObject[] iterableObjToArray(VM vm, CandyObject iterableObj) {
-		CandyObjectIterator iterator = new CandyObjectIterator(vm, iterableObj);
+	public static CandyObject[] iterableObjToArray(CNIEnv env, CandyObject iterableObj) {
+		CandyObjectIterator iterator = new CandyObjectIterator(env, iterableObj);
 		ArrayList<CandyObject> elements = new ArrayList<>();
 		while (iterator.hasNext()) {
 			elements.add(iterator.next());
@@ -78,7 +78,7 @@ public class ObjectHelper {
 		return elements.toArray(new CandyObject[elements.size()]);
 	}
 	
-	public static CandyObject callFunction(VM vm, CallableObj callable, CandyObject... args) {
-		return callable.callExeUser(vm, args);
+	public static CandyObject callFunction(CNIEnv env, CallableObj callable, CandyObject... args) {
+		return callable.callExeUser(env, args);
 	}
 }

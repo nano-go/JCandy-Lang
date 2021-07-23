@@ -1,7 +1,6 @@
 package com.nano.candy.interpreter.i2.cni;
 
 import com.nano.candy.interpreter.i2.builtin.CandyObject;
-import com.nano.candy.interpreter.i2.vm.VM;
 import com.nano.candy.std.Names;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
@@ -61,10 +60,10 @@ class AnnotationSigntureVerifier {
 			error("The method %s must have two paramters.", m.getName());
 		}
 		Parameter[] params = m.getParameters();
-		if (params[0].getType() != VM.class) {
+		if (params[0].getType() != CNIEnv.class) {
 			error(
 				"The first parameter of the method %s must receive a %s instance",
-				m.getName(), VM.class.getSimpleName());
+				m.getName(), CNIEnv.class.getSimpleName());
 		}
 		if (!params[1].getType().isArray() ||
 			params[1].getType().getComponentType() != CandyObject.class) {

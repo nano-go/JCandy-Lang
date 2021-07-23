@@ -1,6 +1,6 @@
 package com.nano.candy.interpreter.i2.cni;
 import com.esotericsoftware.reflectasm.MethodAccess;
-import com.nano.candy.interpreter.i2.rtda.FileEnvironment;
+import com.nano.candy.interpreter.i2.runtime.FileEnvironment;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.List;

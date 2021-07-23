@@ -1,5 +1,5 @@
 package test.com.nano.candy.i2.rtda.chunk;
-import com.nano.candy.interpreter.i2.rtda.chunk.attrs.LineNumberTable;
+import com.nano.candy.interpreter.i2.runtime.chunk.attrs.LineNumberTable;
 import java.util.ArrayList;
 import java.util.Arrays;
 import org.junit.Test;

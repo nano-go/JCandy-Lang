@@ -1,17 +1,16 @@
 package com.nano.candy.interpreter.i2.code;
 
-import com.nano.candy.interpreter.i2.rtda.chunk.Chunk;
-import com.nano.candy.interpreter.i2.rtda.chunk.ConstantValue;
-import com.nano.candy.interpreter.i2.rtda.chunk.attrs.CodeAttribute;
-import com.nano.candy.interpreter.i2.rtda.chunk.attrs.ErrorHandlerTable;
-import com.nano.candy.interpreter.i2.rtda.chunk.attrs.LineNumberTable;
+import com.nano.candy.interpreter.i2.runtime.chunk.Chunk;
+import com.nano.candy.interpreter.i2.runtime.chunk.ConstantValue;
+import com.nano.candy.interpreter.i2.runtime.chunk.attrs.CodeAttribute;
+import com.nano.candy.interpreter.i2.runtime.chunk.attrs.ErrorHandlerTable;
+import com.nano.candy.interpreter.i2.runtime.chunk.attrs.LineNumberTable;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.LinkedList;
 
 import static com.nano.candy.interpreter.i2.code.OpCodes.*;
-import static com.nano.candy.interpreter.i2.rtda.chunk.ConstantValue.*;
 
 public class ChunkBuilder {
 	

@@ -1,15 +1,13 @@
 package com.nano.candy.interpreter.i2.cni;
-import com.nano.candy.interpreter.i2.builtin.CandyClass;
 import com.nano.candy.interpreter.i2.builtin.CandyObject;
 import com.nano.candy.interpreter.i2.builtin.type.CallableObj;
 import com.nano.candy.interpreter.i2.builtin.type.NullPointer;
 import com.nano.candy.interpreter.i2.builtin.type.error.NativeError;
-import com.nano.candy.interpreter.i2.cni.CNativeCallable;
-import com.nano.candy.interpreter.i2.cni.NativeClassRegister;
-import com.nano.candy.interpreter.i2.vm.CarrierErrorException;
-import com.nano.candy.interpreter.i2.vm.ContinueRunException;
-import com.nano.candy.interpreter.i2.vm.VM;
-import com.nano.candy.interpreter.i2.vm.VMExitException;
+import com.nano.candy.interpreter.i2.runtime.CarrierErrorException;
+import com.nano.candy.interpreter.i2.runtime.ContinueRunException;
+import com.nano.candy.interpreter.i2.runtime.OperandStack;
+import com.nano.candy.interpreter.i2.runtime.StackFrame;
+import com.nano.candy.interpreter.i2.runtime.VMExitException;
 import java.lang.reflect.InvocationTargetException;
 
 @NativeClass(name = "NativeCallable")
@@ -26,25 +24,27 @@ public abstract class CNativeCallable extends CallableObj {
 	}
 
 	@Override
-	protected void onCall(VM vm, int argc, int unpackFlags) {
+	public void onCall(CNIEnv env, 
+	                   OperandStack opStack, StackFrame stack,
+					   int argc, int unpackFlags) {
 		CandyObject instance = null;
 		if (isMethod()) {
-			instance = vm.pop();
+			instance = opStack.pop();
 			argc --;
 		}
 		CandyObject[] args = EMPTY_ARGUMENTS;
 		if (argc != 0) {
 			args = new CandyObject[argc];
 			for (int i = 0; i < argc; i ++) {
-				args[i] = vm.pop();
+				args[i] = opStack.pop();
 			}
 		}
 		try {
-			CandyObject ret = onCall(vm, instance, args);
+			CandyObject ret = onCall(env, instance, args);
 			if (ret == null) {
 				ret = NullPointer.nil();
 			}
-			vm.returnFromVM(ret);
+			opStack.push(ret);
 		} catch (CarrierErrorException | VMExitException | ContinueRunException e){
 			throw e;
 		} catch (InvocationTargetException e) {
@@ -63,7 +63,7 @@ public abstract class CNativeCallable extends CallableObj {
 		return true;
 	}
 	
-	protected abstract CandyObject onCall(VM vm,
+	protected abstract CandyObject onCall(CNIEnv env,	         
 	                                      CandyObject instance,
 										  CandyObject[] args) throws Exception;
 	public abstract boolean isMethod();

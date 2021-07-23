@@ -1,23 +1,23 @@
 package com.nano.candy.interpreter.i2.builtin.utils;
 
 import com.nano.candy.interpreter.i2.builtin.CandyObject;
-import com.nano.candy.interpreter.i2.vm.VM;
+import com.nano.candy.interpreter.i2.cni.CNIEnv;
 import java.util.Iterator;
 import java.util.Spliterator;
 
 public class IterableCandyObject implements Iterable<CandyObject> {
 
-	private VM vm;
+	private CNIEnv env;
 	private CandyObject obj;
 
-	public IterableCandyObject(VM vm, CandyObject obj) {
-		this.vm = vm;
+	public IterableCandyObject(CNIEnv env, CandyObject obj) {
+		this.env = env;
 		this.obj = obj;
 	}
 	
 	@Override
 	public Iterator<CandyObject> iterator() {
-		return new CandyObjectIterator(vm, obj);
+		return new CandyObjectIterator(env, obj);
 	}
 
 	@Override

@@ -4,12 +4,12 @@ import com.nano.candy.interpreter.i2.builtin.CandyClass;
 import com.nano.candy.interpreter.i2.builtin.CandyObject;
 import com.nano.candy.interpreter.i2.builtin.type.ModuleObj;
 import com.nano.candy.interpreter.i2.builtin.type.error.AttributeError;
+import com.nano.candy.interpreter.i2.cni.CNIEnv;
 import com.nano.candy.interpreter.i2.cni.NativeClass;
 import com.nano.candy.interpreter.i2.cni.NativeClassRegister;
 import com.nano.candy.interpreter.i2.cni.NativeMethod;
-import com.nano.candy.interpreter.i2.rtda.FileEnvironment;
-import com.nano.candy.interpreter.i2.rtda.Variable;
-import com.nano.candy.interpreter.i2.vm.VM;
+import com.nano.candy.interpreter.i2.runtime.FileEnvironment;
+import com.nano.candy.interpreter.i2.runtime.Variable;
 import java.util.HashMap;
 
 @NativeClass(name = "Module")
@@ -27,12 +27,12 @@ public class ModuleObj extends CandyObject {
 	}
 	
 	@Override
-	public CandyObject getAttr(VM vm, String attr) {
+	public CandyObject getAttr(CNIEnv env, String attr) {
 		Variable variable = attrs.get(attr);
 		if (variable != null) {
 			return variable.getValue();
 		}
-		CandyObject val = super.getAttr(vm, attr);
+		CandyObject val = super.getAttr(env, attr);
 		if (val != null) {
 			return val;
 		}
@@ -43,7 +43,7 @@ public class ModuleObj extends CandyObject {
 	}
 
 	@Override
-	public CandyObject setAttr(VM vm, String attr, CandyObject ref) {
+	public CandyObject setAttr(CNIEnv env, String attr, CandyObject ref) {
 		Variable variable = attrs.get(attr);
 		if (variable != null) {
 			variable.setValue(ref);
@@ -70,7 +70,7 @@ public class ModuleObj extends CandyObject {
 	}
 
 	@Override
-	public CandyObject iterator(VM vm) {
+	public CandyObject iterator(CNIEnv env) {
 		return new IteratorObj.VarableIterator(attrs.values().iterator());
 	}
 	
@@ -79,13 +79,13 @@ public class ModuleObj extends CandyObject {
 	}
 	
 	@NativeMethod(name = "name")
-	public CandyObject getName(VM vm, CandyObject[] args) {
+	public CandyObject getName(CNIEnv env, CandyObject[] args) {
 		return StringObj.valueOf(name);
 	}
 	
 	@NativeMethod(name = "addToCurEnv")
-	public CandyObject addToCurEnv(VM vm, CandyObject[] args) {
-		addToEnv(vm.getCurrentFileEnv());
+	public CandyObject addToCurEnv(CNIEnv env, CandyObject[] args) {
+		addToEnv(env.getEvaluatorEnv().getCurrentFileEnv());
 		return null;
 	}
 }

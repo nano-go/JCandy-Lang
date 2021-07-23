@@ -2,10 +2,10 @@ package com.nano.candy.interpreter.i2.builtin.type;
 import com.nano.candy.interpreter.i2.builtin.CandyClass;
 import com.nano.candy.interpreter.i2.builtin.CandyObject;
 import com.nano.candy.interpreter.i2.builtin.type.NumberObj;
+import com.nano.candy.interpreter.i2.cni.CNIEnv;
 import com.nano.candy.interpreter.i2.cni.NativeClass;
 import com.nano.candy.interpreter.i2.cni.NativeClassRegister;
 import com.nano.candy.interpreter.i2.cni.NativeMethod;
-import com.nano.candy.interpreter.i2.vm.VM;
 
 @NativeClass(name = "Number")
 public abstract class NumberObj extends CandyObject {
@@ -33,7 +33,7 @@ public abstract class NumberObj extends CandyObject {
 	protected abstract boolean isDouble();
 	
 	@Override
-	public CandyObject add(VM vm, CandyObject operand) {
+	public CandyObject add(CNIEnv env, CandyObject operand) {
 		if (isNumber(operand)) {
 			NumberObj n = (NumberObj) operand;
 			if (isDouble() || n.isDouble()) {
@@ -41,11 +41,11 @@ public abstract class NumberObj extends CandyObject {
 			}
 			return IntegerObj.valueOf(intValue() + n.intValue());
 		}
-		return super.add(vm, operand);
+		return super.add(env, operand);
 	}
 
 	@Override
-	public CandyObject sub(VM vm, CandyObject operand) {
+	public CandyObject sub(CNIEnv env, CandyObject operand) {
 		if (isNumber(operand)) {
 			NumberObj n = (NumberObj) operand;
 			if (isDouble() || n.isDouble()) {
@@ -53,11 +53,11 @@ public abstract class NumberObj extends CandyObject {
 			}
 			return IntegerObj.valueOf(intValue() - n.intValue());
 		}
-		return super.sub(vm, operand);
+		return super.sub(env, operand);
 	}
 
 	@Override
-	public CandyObject mul(VM vm, CandyObject operand) {
+	public CandyObject mul(CNIEnv env, CandyObject operand) {
 		if (isNumber(operand)) {
 			NumberObj n = (NumberObj) operand;
 			if (isDouble() || n.isDouble()) {
@@ -65,11 +65,11 @@ public abstract class NumberObj extends CandyObject {
 			}
 			return IntegerObj.valueOf(intValue() * n.intValue());
 		}
-		return super.mul(vm, operand);
+		return super.mul(env, operand);
 	}
 
 	@Override
-	public CandyObject div(VM vm, CandyObject operand) {
+	public CandyObject div(CNIEnv env, CandyObject operand) {
 		if (isNumber(operand)) {
 			NumberObj n = (NumberObj) operand;
 			if (isDouble() || n.isDouble()) {
@@ -77,11 +77,11 @@ public abstract class NumberObj extends CandyObject {
 			}
 			return IntegerObj.valueOf(intValue() / n.intValue());
 		}
-		return super.div(vm, operand);
+		return super.div(env, operand);
 	}
 	
 	@Override
-	public CandyObject mod(VM vm, CandyObject operand) {
+	public CandyObject mod(CNIEnv env, CandyObject operand) {
 		if (isNumber(operand)) {
 			NumberObj n = (NumberObj) operand;
 			if (isDouble() || n.isDouble()) {
@@ -89,51 +89,51 @@ public abstract class NumberObj extends CandyObject {
 			}
 			return IntegerObj.valueOf(intValue() % n.intValue());
 		}
-		return super.mod(vm, operand);
+		return super.mod(env, operand);
 	}
 
 	@Override
-	public BoolObj gt(VM vm, CandyObject operand) {
+	public BoolObj gt(CNIEnv env, CandyObject operand) {
 		if (isNumber(operand)) {
 			return BoolObj.valueOf(doubleValue() > ((NumberObj)operand).doubleValue());
 		}
-		return super.gt(vm, operand);
+		return super.gt(env, operand);
 	}
 	
 	@Override
-	public BoolObj gteq(VM vm, CandyObject operand) {
+	public BoolObj gteq(CNIEnv env, CandyObject operand) {
 		if (isNumber(operand)) {
 			return BoolObj.valueOf(doubleValue() >= ((NumberObj)operand).doubleValue());
 		}
-		return super.gteq(vm, operand);
+		return super.gteq(env, operand);
 	}
 
 	@Override
-	public BoolObj lt(VM vm, CandyObject operand) {
+	public BoolObj lt(CNIEnv env, CandyObject operand) {
 		if (isNumber(operand)) {
 			return BoolObj.valueOf(doubleValue() < ((NumberObj)operand).doubleValue());
 		}
-		return super.lt(vm, operand);
+		return super.lt(env, operand);
 	}
 
 	@Override
-	public BoolObj lteq(VM vm, CandyObject operand) {
+	public BoolObj lteq(CNIEnv env, CandyObject operand) {
 		if (isNumber(operand)) {
 			return BoolObj.valueOf(doubleValue() <= ((NumberObj)operand).doubleValue());
 		}
-		return super.lteq(vm, operand);
+		return super.lteq(env, operand);
 	}
 
 	@Override
-	public BoolObj equals(VM vm, CandyObject operand) {
+	public BoolObj equals(CNIEnv env, CandyObject operand) {
 		if (isNumber(operand)) {
 			return BoolObj.valueOf(doubleValue() == ((NumberObj)operand).doubleValue());
 		}
-		return super.equals(vm, operand);
+		return super.equals(env, operand);
 	}
 	
 	@NativeMethod(name = "intVal")
-	public CandyObject intValue(VM vm, CandyObject[] args) {
+	public CandyObject intValue(CNIEnv env, CandyObject[] args) {
 		if (getCandyClass() == IntegerObj.INTEGER_CLASS) {
 			return this;
 		}
@@ -141,7 +141,7 @@ public abstract class NumberObj extends CandyObject {
 	}
 	
 	@NativeMethod(name = "doubleVal")
-	public CandyObject doubleValue(VM vm, CandyObject[] args) {
+	public CandyObject doubleValue(CNIEnv env, CandyObject[] args) {
 		if (getCandyClass() == DoubleObj.DOUBLE_CLASS) {
 			return this;
 		}

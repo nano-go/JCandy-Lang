@@ -4,7 +4,8 @@ import com.nano.candy.interpreter.i2.builtin.type.ArrayObj;
 import com.nano.candy.interpreter.i2.builtin.type.CallableObj;
 import com.nano.candy.interpreter.i2.builtin.type.NullPointer;
 import com.nano.candy.interpreter.i2.builtin.type.error.TypeError;
-import com.nano.candy.interpreter.i2.vm.VM;
+import com.nano.candy.interpreter.i2.cni.CNIEnv;
+import com.nano.candy.interpreter.i2.runtime.OperandStack;
 import com.nano.candy.std.Names;
 import java.util.LinkedList;
 
@@ -35,7 +36,8 @@ public class ElementsUnpacker {
 	 *
 	 * @return the target elements or null if fail to unpack.
 	 */
-	public static CandyObject[] unpackFromStack(VM vm, int n,
+	public static CandyObject[] unpackFromStack(CNIEnv env, OperandStack opStack,
+	                                            int n,
 	                                            int starIndex,
 												int targetLen,
 												int unpackFlags) 
@@ -44,11 +46,11 @@ public class ElementsUnpacker {
 			return null;
 		}
 		if (unpackFlags == CallableObj.EMPTY_UNPACK_FLAGS) {
-			return fetchFromStack(vm, n, starIndex, targetLen);
+			return fetchFromStack(opStack, n, starIndex, targetLen);
 		}
 		
 		LinkedList<CandyObject> buffer = new LinkedList<>();
-		unpackToBuffer(vm, n, unpackFlags, buffer);
+		unpackToBuffer(env, opStack, n, unpackFlags, buffer);
 		if (buffer.size() < targetLen-1) {
 			return null;
 		}
@@ -70,14 +72,14 @@ public class ElementsUnpacker {
 		return i < targetLen ? null : elements;
 	}
 
-	private static CandyObject[] fetchFromStack(VM vm, int n, 
+	private static CandyObject[] fetchFromStack(OperandStack opStack, int n, 
 	                                            int starIndex,
 	                                            int targetLen) {
 		CandyObject[] elements = new CandyObject[targetLen];
 		if (starIndex < 0) { 
 			// targetLen == n
 			for (int i = 0; i < n; i ++) {
-				elements[i] = vm.pop();
+				elements[i] = opStack.pop();
 			}
 			return elements;
 		}
@@ -85,7 +87,7 @@ public class ElementsUnpacker {
 		int nextTargetElements = targetLen - starIndex - 1;
 		int i;
 		for (i = 0; i < starIndex; i ++, n --) {
-			elements[i] = vm.pop();
+			elements[i] = opStack.pop();
 		}
 		// StarIndex Assign
 		if (nextTargetElements >= n) {
@@ -93,14 +95,14 @@ public class ElementsUnpacker {
 		} else {
 			ArrayObj arr = new ArrayObj(8);
 			while (nextTargetElements < n) {
-				arr.append(vm.pop());
+				arr.append(opStack.pop());
 				n --;
 			}
 			elements[i] = arr;
 		}
 		i ++;
 		for (; i < targetLen; i ++, n --) {
-			elements[i] = vm.pop();
+			elements[i] = opStack.pop();
 		}
 		return elements;
 	}
@@ -108,13 +110,14 @@ public class ElementsUnpacker {
 	/**
 	 * Fetchs/Unpacks n elements from the stack into the buffer.
 	 */
-	public static void unpackToBuffer(VM vm, int n, int unpackingBits,
+	public static void unpackToBuffer(CNIEnv env, OperandStack opStack, 
+	                                  int n, int unpackingBits,
 	                                  LinkedList<CandyObject> buffer) {
 		for (int i = 0; i < n; i ++) {
 			if (((unpackingBits >> i) & 1) == 1) {
-				unpackElement(vm, vm.pop(), buffer);
+				unpackElement(env, opStack.pop(), buffer);
 			} else {
-				buffer.offer(vm.pop());
+				buffer.offer(opStack.pop());
 			}
 		}
 	}
@@ -126,23 +129,23 @@ public class ElementsUnpacker {
 	 * If the element is {@link NullPointer.nil()}, the {@code null} will
 	 * not be unpacked, but it will be offered to the buffer.
 	 */
-	public static void unpackElement(VM vm, CandyObject element, 
+	public static void unpackElement(CNIEnv env, CandyObject element, 
 	                                 LinkedList<CandyObject> buffer) {
 		if (element == NullPointer.nil()) {
 			buffer.offer(element);
 			return;
 		}
-		CandyObject obj = element.callIterator(vm);
+		CandyObject obj = element.callIterator(env);
 		CandyObject hasNext =
-			obj.callGetAttr(vm, Names.METHOD_ITERATOR_HAS_NEXT);
+			obj.callGetAttr(env, Names.METHOD_ITERATOR_HAS_NEXT);
 		CandyObject next =
-			obj.callGetAttr(vm, Names.METHOD_ITERATOR_NEXT);
+			obj.callGetAttr(env, Names.METHOD_ITERATOR_NEXT);
 		TypeError.checkIsCallable(hasNext);
 		TypeError.checkIsCallable(next);
 		int size = 0;
-		while (((CallableObj) hasNext).callExeUser(vm)
-		       .boolValue(vm).value()) {
-			CandyObject e = ((CallableObj) next).callExeUser(vm);
+		while (((CallableObj) hasNext).callExeUser(env)
+		       .boolValue(env).value()) {
+			CandyObject e = ((CallableObj) next).callExeUser(env);
 			buffer.offer(e);
 			size ++;
 		}

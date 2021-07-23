@@ -1,7 +1,7 @@
 package com.nano.candy.interpreter.i2.tool.dis;
 
 import com.nano.candy.interpreter.i2.code.OpCodes;
-import com.nano.candy.interpreter.i2.rtda.chunk.Chunk;
+import com.nano.candy.interpreter.i2.runtime.chunk.Chunk;
 
 public class DisassSimpleInstruction implements DisassInstruction {
 	

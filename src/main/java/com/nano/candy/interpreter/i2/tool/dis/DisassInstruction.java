@@ -1,6 +1,6 @@
 package com.nano.candy.interpreter.i2.tool.dis;
 
-import com.nano.candy.interpreter.i2.rtda.chunk.Chunk;
+import com.nano.candy.interpreter.i2.runtime.chunk.Chunk;
 
 public interface DisassInstruction {
 	public Chunk getChunk();

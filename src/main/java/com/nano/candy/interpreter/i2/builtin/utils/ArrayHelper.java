@@ -6,31 +6,31 @@ import com.nano.candy.interpreter.i2.builtin.type.BoolObj;
 import com.nano.candy.interpreter.i2.builtin.type.DoubleObj;
 import com.nano.candy.interpreter.i2.builtin.type.IntegerObj;
 import com.nano.candy.interpreter.i2.builtin.type.StringObj;
-import com.nano.candy.interpreter.i2.vm.VM;
+import com.nano.candy.interpreter.i2.cni.CNIEnv;
 
 public class ArrayHelper {
 	
-	public static int hashCode(VM vm, CandyObject[] arr, int from, int to) {
+	public static int hashCode(CNIEnv env, CandyObject[] arr, int from, int to) {
 		int hash = 0;
 		for (int i = from; i < to; i ++) {
 			hash = hash * 31 + 
-				(int) arr[i].callHashCode(vm).intValue();
+				(int) arr[i].callHashCode(env).intValue();
 		}
 		return hash;
 	}
 	
-	public static String toString(VM vm, CandyObject[] arr, String sperator) {
-		return toString(vm, arr, 0, arr.length, sperator);
+	public static String toString(CNIEnv env, CandyObject[] arr, String sperator) {
+		return toString(env, arr, 0, arr.length, sperator);
 	}
 	
-	public static String toString(VM vm, CandyObject[] arr, int from, int to,
+	public static String toString(CNIEnv env, CandyObject[] arr, int from, int to,
 	                              String separator) {
 		StringBuilder str = new StringBuilder();
 		int i = from;
 		int iMax = to-1;
 		if (i <= iMax) {
 			for (;;) {
-				str.append(arr[i].callStr(vm).value());
+				str.append(arr[i].callStr(env).value());
 				if (i >= iMax) {
 					break;
 				}

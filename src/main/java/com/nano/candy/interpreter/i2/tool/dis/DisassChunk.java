@@ -1,9 +1,9 @@
 package com.nano.candy.interpreter.i2.tool.dis;
 
-import com.nano.candy.interpreter.i2.rtda.chunk.Chunk;
-import com.nano.candy.interpreter.i2.rtda.chunk.ConstantPool;
-import com.nano.candy.interpreter.i2.rtda.chunk.attrs.CodeAttribute;
-import com.nano.candy.interpreter.i2.rtda.chunk.attrs.LineNumberTable;
+import com.nano.candy.interpreter.i2.runtime.chunk.Chunk;
+import com.nano.candy.interpreter.i2.runtime.chunk.ConstantPool;
+import com.nano.candy.interpreter.i2.runtime.chunk.attrs.CodeAttribute;
+import com.nano.candy.interpreter.i2.runtime.chunk.attrs.LineNumberTable;
 
 public class DisassChunk {
 	private Chunk chunk;

@@ -2,7 +2,6 @@ package com.nano.candy.interpreter.i2.cni;
 
 import com.esotericsoftware.reflectasm.MethodAccess;
 import com.nano.candy.interpreter.i2.builtin.CandyObject;
-import com.nano.candy.interpreter.i2.vm.VM;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.List;
@@ -29,7 +28,7 @@ public class NativeMethodRegister {
 		return new CNativeMethod(
 			nativeMethod.name(), fullName, nativeMethod.argc(),
 			nativeMethod.varArgsIndex(), method, 
-			method.getIndex(name, VM.class, CandyObject[].class)
+			method.getIndex(name, CNIEnv.class, CandyObject[].class)
 		);
 	}
 	

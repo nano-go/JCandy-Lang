@@ -6,10 +6,10 @@ import com.nano.candy.interpreter.i2.builtin.type.MapObj;
 import com.nano.candy.interpreter.i2.builtin.type.error.ArgumentError;
 import com.nano.candy.interpreter.i2.builtin.type.error.TypeError;
 import com.nano.candy.interpreter.i2.builtin.utils.ObjectHelper;
+import com.nano.candy.interpreter.i2.cni.CNIEnv;
 import com.nano.candy.interpreter.i2.cni.NativeClass;
 import com.nano.candy.interpreter.i2.cni.NativeClassRegister;
 import com.nano.candy.interpreter.i2.cni.NativeMethod;
-import com.nano.candy.interpreter.i2.vm.VM;
 import com.nano.candy.std.Names;
 
 @NativeClass(name = "Map", isInheritable=true)
@@ -48,10 +48,10 @@ public final class MapObj extends CandyObject {
 			return hash;
 		}
 		
-		protected Entry findByKey(VM vm, CandyObject key, int hash) {
+		protected Entry findByKey(CNIEnv env, CandyObject key, int hash) {
 			Entry entry = this;
 			do {
-				if (entry.equals(vm, key, hash)) {
+				if (entry.equals(env, key, hash)) {
 					return entry;
 				}
 				entry = entry.next;
@@ -59,14 +59,14 @@ public final class MapObj extends CandyObject {
 			return null;
 		}
 		
-		protected boolean equals(VM vm, CandyObject key, int hash) {
+		protected boolean equals(CNIEnv env, CandyObject key, int hash) {
 			return this.hash == hash &&
-				this.key.callEquals(vm, key).value();
+				this.key.callEquals(env, key).value();
 		}
 	}
 	
-	private static int hash(VM vm, CandyObject obj) {
-		int hash = (int) obj.callHashCode(vm).value;
+	private static int hash(CNIEnv env, CandyObject obj) {
+		int hash = (int) obj.callHashCode(env).value;
 		return (hash >> 16) ^ hash;
 	}
 	
@@ -136,16 +136,16 @@ public final class MapObj extends CandyObject {
 		}
 	}
 	
-	public CandyObject put(VM vm, CandyObject key, CandyObject value) {
+	public CandyObject put(CNIEnv env, CandyObject key, CandyObject value) {
 		if (value == null) {
 			value = NullPointer.nil();
 		}
 		ensureTableSize();
-		int hash = hash(vm, key);
+		int hash = hash(env, key);
 		int index = hash & (this.table.length-1);
 		Entry entry;
 		if (table[index] != null && 
-			(entry = table[index].findByKey(vm, key, hash)) != null) {
+			(entry = table[index].findByKey(env, key, hash)) != null) {
 			CandyObject previousValue = entry.value;
 			entry.value = value;
 			return previousValue;
@@ -157,16 +157,16 @@ public final class MapObj extends CandyObject {
 		return null;
 	}
 	
-	public CandyObject putIfAbsent(VM vm, CandyObject key, CandyObject value) {
+	public CandyObject putIfAbsent(CNIEnv env, CandyObject key, CandyObject value) {
 		if (value == null) {
 			value = NullPointer.nil();
 		}
 		ensureTableSize();
-		int hash = hash(vm, key);
+		int hash = hash(env, key);
 		int index = hash & (this.table.length-1);
 		Entry entry;
 		if (table[index] != null && 
-			(entry = table[index].findByKey(vm, key, hash)) != null) {
+			(entry = table[index].findByKey(env, key, hash)) != null) {
 			return entry.value;
 		}
 		Entry newEntry = new Entry(key, value, hash);
@@ -176,43 +176,43 @@ public final class MapObj extends CandyObject {
 		return null;
 	}
 	
-	public CandyObject putAll(VM vm, MapObj map) {
+	public CandyObject putAll(CNIEnv env, MapObj map) {
 		EntryIterator i = new EntryIterator(map.table);
-		while (i.hasNext(vm)) {
-			put(vm, i.currentEntry.key, i.currentEntry.value);
-			i.next(vm);
+		while (i.hasNext(env)) {
+			put(env, i.currentEntry.key, i.currentEntry.value);
+			i.next(env);
 		}
 		return this;
 	}
 	
-	public CandyObject get(VM vm, CandyObject key) {
-		return getOrDefault(vm, key, null);
+	public CandyObject get(CNIEnv env, CandyObject key) {
+		return getOrDefault(env, key, null);
 	}
 	
-	public CandyObject getOrDefault(VM vm, CandyObject key, CandyObject def) {
+	public CandyObject getOrDefault(CNIEnv env, CandyObject key, CandyObject def) {
 		if (table == null) return null;
 		Entry entry;
-		int hash = hash(vm, key);
+		int hash = hash(env, key);
 		int index = hash & (this.table.length-1);
 		if (table[index] != null && 
-			(entry = table[index].findByKey(vm, key, hash)) != null) {
+			(entry = table[index].findByKey(env, key, hash)) != null) {
 			return entry.value;
 		}
 		return def;
 	}
 	
-	public boolean contains(VM vm, CandyObject key) {
-		return get(vm, key) != null;
+	public boolean contains(CNIEnv env, CandyObject key) {
+		return get(env, key) != null;
 	}
 	
-	public CandyObject remove(VM vm, CandyObject key) {
+	public CandyObject remove(CNIEnv env, CandyObject key) {
 		if (table == null) return null;
-		int hash = hash(vm, key);
+		int hash = hash(env, key);
 		int index = hash & (this.table.length-1);
 		Entry previous = null;
 		Entry entry = table[index];
 		while (entry != null) {
-			if (entry.equals(vm, key, hash)) {
+			if (entry.equals(env, key, hash)) {
 				if (previous == null) {
 					table[index] = null;
 				} else {
@@ -236,87 +236,87 @@ public final class MapObj extends CandyObject {
 	}
 	
 	@NativeMethod(name = Names.METHOD_INITALIZER, argc = 1)
-	public CandyObject init(VM vm, CandyObject[] args) {
+	public CandyObject init(CNIEnv env, CandyObject[] args) {
 		setInitCapacity(ObjectHelper.asInteger(args[0]));
 		return this;
 	}
 	
 	@NativeMethod(name = "get", argc = 1)
-	public CandyObject get(VM vm, CandyObject[] args) {
-		return get(vm, args[0]);
+	public CandyObject get(CNIEnv env, CandyObject[] args) {
+		return get(env, args[0]);
 	}
 	
 	@NativeMethod(name = "getOrDefault", argc = 2)
-	public CandyObject getOrDefault(VM vm, CandyObject[] args) {
-		return getOrDefault(vm, args[0], args[1]);
+	public CandyObject getOrDefault(CNIEnv env, CandyObject[] args) {
+		return getOrDefault(env, args[0], args[1]);
 	}
 
 	@Override
-	public CandyObject getItem(VM vm, CandyObject key) {
-		return get(vm, key);
+	public CandyObject getItem(CNIEnv env, CandyObject key) {
+		return get(env, key);
 	}
 	
 	@NativeMethod(name = "put", argc = 2)
-	public CandyObject put(VM vm, CandyObject[] args) {
-		return put(vm, args[0], args[1]);
+	public CandyObject put(CNIEnv env, CandyObject[] args) {
+		return put(env, args[0], args[1]);
 	}
 	
 	@NativeMethod(name = "putIfAbsent", argc = 2)
-	public CandyObject putIfAbsent(VM vm, CandyObject[] args) {
-		return putIfAbsent(vm, args[0], args[1]);
+	public CandyObject putIfAbsent(CNIEnv env, CandyObject[] args) {
+		return putIfAbsent(env, args[0], args[1]);
 	}
 	
 	@NativeMethod(name = "putAll", argc = 1) 
-	public CandyObject putAll(VM vm, CandyObject[] args) {
+	public CandyObject putAll(CNIEnv env, CandyObject[] args) {
 		TypeError.checkTypeMatched(MAP_CLASS, args[0]);
-		return putAll(vm, (MapObj) args[0]);
+		return putAll(env, (MapObj) args[0]);
 	}
 	
 	@Override
-	public CandyObject setItem(VM vm, CandyObject key, CandyObject value) {
-		put(vm, key, value);
+	public CandyObject setItem(CNIEnv env, CandyObject key, CandyObject value) {
+		put(env, key, value);
 		return value;
 	}
 	
 	@NativeMethod(name = "remove", argc = 1)
-	public CandyObject remove(VM vm, CandyObject[] args) {
-		return remove(vm, args[0]);
+	public CandyObject remove(CNIEnv env, CandyObject[] args) {
+		return remove(env, args[0]);
 	}
 	
 	@NativeMethod(name = "contains", argc = 1)
-	public CandyObject contains(VM vm, CandyObject[] args) {
-		return BoolObj.valueOf(contains(vm, args[0]));
+	public CandyObject contains(CNIEnv env, CandyObject[] args) {
+		return BoolObj.valueOf(contains(env, args[0]));
 	}
 	
 	@NativeMethod(name = "length", argc = 0)
-	public CandyObject size(VM vm, CandyObject[] args) {
+	public CandyObject size(CNIEnv env, CandyObject[] args) {
 		return IntegerObj.valueOf(size);
 	}
 	
 	@NativeMethod(name = "isEmpty", argc = 0)
-	public CandyObject isEmpty(VM vm, CandyObject[] args) {
+	public CandyObject isEmpty(CNIEnv env, CandyObject[] args) {
 		return BoolObj.valueOf(size == 0);
 	}
 	
 	@NativeMethod(name = "clear", argc = 0)
-	public CandyObject clear(VM vm, CandyObject[] args) {
+	public CandyObject clear(CNIEnv env, CandyObject[] args) {
 		clear();
 		return null;
 	}
 
 	@Override
-	public StringObj str(VM vm) {
+	public StringObj str(CNIEnv env) {
 		EntryIterator i = new EntryIterator(this.table);
-		if (!i.hasNext(vm)) {
+		if (!i.hasNext(env)) {
 			return StringObj.valueOf("{}");
 		}
 		StringBuilder builder = new StringBuilder("{");
 		while (true) {
-			String key = i.currentEntry.key.callStr(vm).value();
-			String value = i.currentEntry.value.callStr(vm).value();
+			String key = i.currentEntry.key.callStr(env).value();
+			String value = i.currentEntry.value.callStr(env).value();
 			builder.append(key).append(": ").append(value);
 			i.moveToNext();
-			if (!i.hasNext(vm)) {
+			if (!i.hasNext(env)) {
 				return StringObj.valueOf(builder.append("}").toString());
 			}
 			builder.append(", ");
@@ -324,7 +324,7 @@ public final class MapObj extends CandyObject {
 	}
 
 	@Override
-	public BoolObj equals(VM vm, CandyObject operand) {
+	public BoolObj equals(CNIEnv env, CandyObject operand) {
 		if (this == operand) {
 			return BoolObj.TRUE;
 		}
@@ -334,10 +334,10 @@ public final class MapObj extends CandyObject {
 				return BoolObj.FALSE;
 			}
 			EntryIterator i = new EntryIterator(this.table);
-			while (i.hasNext(vm)) {
-				CandyObject value = map.get(vm, i.currentEntry.key);
+			while (i.hasNext(env)) {
+				CandyObject value = map.get(env, i.currentEntry.key);
 				if (value == null ||
-					 !value.callEquals(vm, i.currentEntry.value).value()) {
+					 !value.callEquals(env, i.currentEntry.value).value()) {
 					return BoolObj.FALSE;
 				}
 				i.moveToNext();
@@ -347,7 +347,7 @@ public final class MapObj extends CandyObject {
 	}
 
 	@Override
-	public CandyObject iterator(VM vm) {
+	public CandyObject iterator(CNIEnv env) {
 		return new EntryIterator(this.table);
 	}
 	
@@ -380,12 +380,12 @@ public final class MapObj extends CandyObject {
 		}
 		
 		@Override
-		public boolean hasNext(VM vm) {
+		public boolean hasNext(CNIEnv env) {
 			return currentEntry != null;
 		}
 
 		@Override
-		public CandyObject next(VM vm) {
+		public CandyObject next(CNIEnv env) {
 			TupleObj tupleObj = new TupleObj(new CandyObject[]{
 				currentEntry.key, currentEntry.value
 			});
