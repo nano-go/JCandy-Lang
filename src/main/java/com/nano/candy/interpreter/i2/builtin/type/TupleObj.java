@@ -36,6 +36,21 @@ public final class TupleObj extends CandyObject {
 		this.elements = Objects.requireNonNull(elements);
 		this.hash = null;
 	}
+	
+	public int length() {
+		return elements.length;
+	}
+	
+	public CandyObject get(int index) {
+		return elements[index];
+	}
+	
+	public TupleObj add(CandyObject tuple) {
+		TypeError.checkTypeMatched(TUPLE_CLASS, tuple);
+		return new TupleObj(ArrayUtils.mergeArray(
+			this.elements, ((TupleObj) tuple).elements
+		));
+	}
 
 	@Override
 	public CandyObject iterator(VM vm) {
@@ -49,10 +64,7 @@ public final class TupleObj extends CandyObject {
 	
 	@Override
 	public CandyObject add(VM vm, CandyObject operand) {
-		TypeError.checkTypeMatched(TUPLE_CLASS, operand);
-		return new TupleObj(ArrayUtils.mergeArray(
-			this.elements, ((TupleObj) operand).elements
-		));
+		return add(operand);
 	}
 
 	@Override
