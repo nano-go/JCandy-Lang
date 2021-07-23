@@ -106,7 +106,7 @@ public final class TupleObj extends CandyObject {
 		} else if (args[0] instanceof ArrayObj) {
 			ArrayObj arr = (ArrayObj) args[0];
 			this.elements = Arrays.copyOfRange(
-				arr.getBuiltinArray(), 0, arr.size()
+				arr.getBuiltinArray(), 0, arr.length()
 			);
 		} else {
 			this.elements = ObjectHelper.iterableObjToArray(vm, args[0]);
@@ -114,7 +114,7 @@ public final class TupleObj extends CandyObject {
 		return this;
 	}
 	
-	@NativeMethod(name = "len")
+	@NativeMethod(name = "length")
 	public CandyObject len(VM vm, CandyObject[] args) {
 		return IntegerObj.valueOf(elements.length);
 	}

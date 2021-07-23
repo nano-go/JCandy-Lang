@@ -16,14 +16,14 @@ class InterpolatedStringTest : unit.TestCase {
 		this.assertEquals("10", "${10}")
 
 		var arr = [1, 2, 3]
-		this.assertEquals("The arr length is 3.", "The arr length is ${arr.size()}.")
+		this.assertEquals("The arr length is 3.", "The arr length is ${arr.length()}.")
 		this.assertEquals("[4, 5, 6]", "${[4, 5, 6]}")
 		this.assertEquals("[4, 5, abcd]", "${[4, 5, \"abcd\"]}")
 	}	
 
 	fun nested_test() {
 		var arr = [1, 2, 3]
-		this.assertEquals("a3[1, 2, 3]", "a${\"${getAttr(arr, \"size\")()}\" + arr}")
+		this.assertEquals("a3[1, 2, 3]", "a${\"${getAttr(arr, \"length\")()}\" + arr}")
 		this.assertEquals("a", "${\"${\"${\"a\"}\"}\"}")
 		var a = 5
 		this.assertEquals("566", "${\"\" + a + \"${a + 1}\"}${a+1}")

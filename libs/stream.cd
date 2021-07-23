@@ -121,7 +121,7 @@ class StreamInterface {
 				sortedArr.append(value)
 			}
 			sortedArr.sort()
-			size = sortedArr.size()
+			size = sortedArr.length()
 			return size != 0 ? getElement(0, sortedArr) : emptyStream
 		}
 		return this

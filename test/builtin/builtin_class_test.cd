@@ -120,7 +120,7 @@ class BuiltinClassTest : unit.TestCase {
 		}
 
 		@assertTrue(MyTuple((5, 6, 7)).linearlySearch(7))
-		@assertEquals(3, MyTuple([5, 6, 7]).len())
+		@assertEquals(3, MyTuple([5, 6, 7]).length())
 		@assertEquals((5, 6, 7), MyTuple([5, 6, 7]))
 
 		// String
@@ -184,7 +184,7 @@ class BuiltinClassTest : unit.TestCase {
 				super.init(0, null)
 			}
 		}
-		@assertEquals(0, MyArray().size())
+		@assertEquals(0, MyArray().length())
 		var arr = MyArray()
 		arr.append(5)
 		arr.append(6)

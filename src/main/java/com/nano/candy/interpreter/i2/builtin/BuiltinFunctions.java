@@ -129,7 +129,7 @@ public class BuiltinFunctions {
 	public static CandyObject select(VM vm, CandyObject[] args) {
 		TypeError.checkTypeMatched(ArrayObj.ARRAY_CLASS, args[0]);
 		ArrayObj files = (ArrayObj) args[0];
-		final int size = files.size();
+		final int size = files.length();
 		final ModuleManager m = vm.getModuleManager();
 		for (int i = 0; i < size; i ++) {
 			ModuleObj moduleObj =

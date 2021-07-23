@@ -35,5 +35,5 @@ for (i in a2) a2 = false
 assert a1 && a2
 
 assert a1._class() == Range && a2._class() == Range
-assert a1.toArray().size() == 0
-assert a2.toArray().size() == 0
+assert a1.toArray().length() == 0
+assert a2.toArray().length() == 0

@@ -43,7 +43,7 @@ public final class ArrayObj extends CandyObject {
 	}
 	
 	private CandyObject[] elements;
-	private int size;
+	private int length;
 	
 	private boolean isInProcessOfStr;
 	
@@ -59,13 +59,13 @@ public final class ArrayObj extends CandyObject {
 	public ArrayObj(CandyObject[] elements) {
 		super(ARRAY_CLASS);
 		this.elements = elements;
-		this.size = elements.length;
+		this.length = elements.length;
 	}
 	
 	public ArrayObj(CandyObject[] elements, int size) {
 		super(ARRAY_CLASS);
 		this.elements = elements;
-		this.size = size;
+		this.length = size;
 		if (size > elements.length) {
 			new ArgumentError("Illegal size: %d", size)
 				.throwSelfNative();
@@ -106,31 +106,31 @@ public final class ArrayObj extends CandyObject {
 	
 	private int asIndex(CandyObject index) {
 		long validIndex = ObjectHelper.asInteger(index);
-		RangeError.checkIndex(validIndex, size);
+		RangeError.checkIndex(validIndex, length);
 		return (int) validIndex;
 	}
 	
 	private int asIndexForInsert(CandyObject index) {
 		long validIndex = ObjectHelper.asInteger(index);
-		RangeError.checkIndex(validIndex, size + 1);
+		RangeError.checkIndex(validIndex, length + 1);
 		return (int) validIndex;
 	}
 	
 	public void append(CandyObject obj) {
-		ensureCapacity(size + 1);
-		elements[size ++] = obj;
+		ensureCapacity(length + 1);
+		elements[length ++] = obj;
 	}
 	
 	public void addAll(CandyObject[] arr, int len) {
-		addAll(this.size, arr, len);
+		addAll(this.length, arr, len);
 	}
 	
 	public void addAll(int index, CandyObject[] arr, int len) {
-		ensureCapacity(this.size + len);
+		ensureCapacity(this.length + len);
 		System.arraycopy(
-			elements, index, elements, index + len, this.size-index);
+			elements, index, elements, index + len, this.length-index);
 		System.arraycopy(arr, 0, elements, index, len);
-		this.size += len;
+		this.length += len;
 	}
 	
 	public CandyObject[] getBuiltinArray() {
@@ -138,16 +138,16 @@ public final class ArrayObj extends CandyObject {
 	}
 	
 	public CandyObject get(int index) {
-		RangeError.checkIndex(index, size);
+		RangeError.checkIndex(index, length);
 		return elements[index];
 	}
 	
-	public int size() {
-		return size;
+	public int length() {
+		return length;
 	}
 	
 	private int indexOf(VM vm, CandyObject obj) {
-		for (int i = 0; i < size; i ++) {
+		for (int i = 0; i < length; i ++) {
 			if (elements[i].callEquals(vm, obj).value()) {
 				return i;
 			}
@@ -156,7 +156,7 @@ public final class ArrayObj extends CandyObject {
 	}
 	
 	private int lastIndexOf(VM vm, CandyObject obj) {
-		for (int i = size-1; i >= 0; i --) {
+		for (int i = length-1; i >= 0; i --) {
 			if (elements[i].callEquals(vm, obj).value()) {
 				return i;
 			}
@@ -165,14 +165,14 @@ public final class ArrayObj extends CandyObject {
 	}
 	
 	private void insert(int index, CandyObject e) {
-		if (index == size) {
+		if (index == length) {
 			append(e);
 			return;
 		}
-		ensureCapacity(size + 1);
-		System.arraycopy(elements, index, elements, index + 1, size-index);
+		ensureCapacity(length + 1);
+		System.arraycopy(elements, index, elements, index + 1, length-index);
 		elements[index] = e;
-		size ++;
+		length ++;
 	}
 	
 	private boolean delete(VM vm, CandyObject obj) {
@@ -186,11 +186,11 @@ public final class ArrayObj extends CandyObject {
 	
 	public CandyObject deleteAt(int index) {
 		CandyObject oldValue = elements[index];
-		size--;
-		if (index != size) {
-			System.arraycopy(elements, index+1, elements, index, size-index);
+		length--;
+		if (index != length) {
+			System.arraycopy(elements, index+1, elements, index, length-index);
 		}
-		elements[size] = null;
+		elements[length] = null;
 		return oldValue;
 	}
 	
@@ -202,16 +202,16 @@ public final class ArrayObj extends CandyObject {
 		if (to == from) {
 			return;
 		}
-		int n = size - to;
+		int n = length - to;
 		System.arraycopy(elements, to, elements, from, n);
-		for (int i = from + n; i < size; i ++) {
+		for (int i = from + n; i < length; i ++) {
 			elements[i] = null;
 		}
-		size -= to-from;
+		length -= to-from;
 	}
 	
 	public TupleObj toTuple() {
-		return new TupleObj(Arrays.copyOf(elements, size));
+		return new TupleObj(Arrays.copyOf(elements, length));
 	}
 	
 	@Override
@@ -235,13 +235,13 @@ public final class ArrayObj extends CandyObject {
 	
 	@Override
 	public CandyObject iterator(VM vm) {
-		return new IteratorObj.ArrIterator(elements, size);
+		return new IteratorObj.ArrIterator(elements, length);
 	}
 
 	@Override
 	public IntegerObj hashCode(VM vm) {
 		int hash = 0;
-		for (int i = 0; i < size; i ++) {
+		for (int i = 0; i < length; i ++) {
 			hash = hash * 31 + 
 				(int) elements[i].callHashCode(vm).intValue();
 		}
@@ -257,10 +257,10 @@ public final class ArrayObj extends CandyObject {
 			return super.equals(vm, operand);
 		}
 		ArrayObj arr = (ArrayObj) operand;
-		if (arr.size != size) {
+		if (arr.length != length) {
 			return BoolObj.FALSE;
 		}
-		final int SIZE = this.size;
+		final int SIZE = this.length;
 		for (int i = 0; i < SIZE; i ++) {	
 			BoolObj result = get(i).callEquals(vm, arr.get(i));
 			if (!result.value()) {
@@ -272,7 +272,7 @@ public final class ArrayObj extends CandyObject {
 
 	@Override
 	public StringObj str(VM vm) {
-		if (size == 0) {
+		if (length == 0) {
 			return StringObj.EMPTY_LIST;
 		}
 		if (isInProcessOfStr) {
@@ -280,7 +280,7 @@ public final class ArrayObj extends CandyObject {
 		}
 		isInProcessOfStr = true;
 		StringBuilder builder = new StringBuilder("[");
-		builder.append(ArrayHelper.toString(vm, elements, 0, size, ", "));
+		builder.append(ArrayHelper.toString(vm, elements, 0, length, ", "));
 		builder.append("]");
 		isInProcessOfStr = false;
 		return StringObj.valueOf(builder.toString());
@@ -319,7 +319,7 @@ public final class ArrayObj extends CandyObject {
 			return this;
 		}
 		ArrayObj arr = (ArrayObj) args[0];
-		addAll(arr.elements, arr.size);
+		addAll(arr.elements, arr.length);
 		return this;
 	}
 	
@@ -337,7 +337,7 @@ public final class ArrayObj extends CandyObject {
 			return this;
 		}
 		ArrayObj arr = (ArrayObj) args[1];
-		addAll(index, arr.elements, arr.size);
+		addAll(index, arr.elements, arr.length);
 		return this;
 	}
 	
@@ -395,7 +395,7 @@ public final class ArrayObj extends CandyObject {
 	
 	@NativeMethod(name = "copy")
 	public CandyObject copy(VM vm, CandyObject[] args) {
-		return new ArrayObj(Arrays.copyOf(elements, size));
+		return new ArrayObj(Arrays.copyOf(elements, length));
 	}
 	
 	@NativeMethod(name = "copyRange", argc = 2)
@@ -407,17 +407,17 @@ public final class ArrayObj extends CandyObject {
 	
 	@NativeMethod(name = "sort") 
 	public CandyObject sort(VM vm, CandyObject[] args) {
-		Arrays.sort(elements, 0, size, ObjectHelper.newComparator(vm));
+		Arrays.sort(elements, 0, length, ObjectHelper.newComparator(vm));
 		return this;
 	}
 	
 	@NativeMethod(name = "reverse")
 	public CandyObject reverse(VM vm, CandyObject[] args) {
-		int half = size/2;
+		int half = length/2;
 		for (int i = 0; i < half; i ++) {
 			CandyObject tmp = elements[i];
-			elements[i] = elements[size-1-i];
-			elements[size-1-i] = tmp;
+			elements[i] = elements[length-1-i];
+			elements[length-1-i] = tmp;
 		}
 		return this;
 	}
@@ -428,7 +428,7 @@ public final class ArrayObj extends CandyObject {
 		if (rad == null) {
 			rad = new Random();
 		}
-		for (int i = size-1; i > 1; i --) {
+		for (int i = length-1; i > 1; i --) {
 			int j = rad.nextInt(i+1);
 			CandyObject tmp = elements[i];
 			elements[i] = elements[j];
@@ -440,7 +440,7 @@ public final class ArrayObj extends CandyObject {
 	@NativeMethod(name = "map", argc=1)
 	public CandyObject map(VM vm, CandyObject[] args) {
 		CallableObj mapper = TypeError.requiresCallable(args[0]);
-		final int SIZE = size;
+		final int SIZE = length;
 		for (int i = 0; i < SIZE; i ++) {
 			elements[i] = 
 				mapper.callExeUser(vm, IntegerObj.valueOf(i), elements[i]);
@@ -451,7 +451,7 @@ public final class ArrayObj extends CandyObject {
 	@NativeMethod(name = "foreach", argc = 1)
 	public CandyObject foreach(VM vm, CandyObject[] args) {
 		CallableObj walker = TypeError.requiresCallable(args[0]);
-		final int SIZE = size;
+		final int SIZE = length;
 		for (int i = 0; i < SIZE; i ++) {
 			walker.callExeUser(vm, IntegerObj.valueOf(i), elements[i]);
 		}
@@ -463,22 +463,22 @@ public final class ArrayObj extends CandyObject {
 		return toTuple();
 	}
 	
-	@NativeMethod(name = "size")
+	@NativeMethod(name = "length")
 	public CandyObject size(VM vm, CandyObject[] args) {
-		return IntegerObj.valueOf(size);
+		return IntegerObj.valueOf(length);
 	}
 	
 	@NativeMethod(name = "clear")
 	public CandyObject clear(VM vm, CandyObject[] args) {
-		for (int i = 0; i < size; i ++) {
+		for (int i = 0; i < length; i ++) {
 			elements[i] = null;
 		}
-		size = 0;
+		length = 0;
 		return this;
 	}
 	
 	@NativeMethod(name = "isEmpty")
 	public CandyObject isEmpty(VM vm, CandyObject[] args) {
-		return BoolObj.valueOf(size == 0);
+		return BoolObj.valueOf(length == 0);
 	}
 }

@@ -22,7 +22,7 @@ class HashMap {
 	 * Computes the index in this table range by the key._hashCode().
 	 */
 	_hash(key) {
-		return key._hashCode() % this.table.size()
+		return key._hashCode() % this.table.length()
 	}
 	
 	/**
@@ -30,7 +30,7 @@ class HashMap {
 	 */
 	_resize() {
 		var oldTable = this.table
-		var newSize = oldTable.size() * 2
+		var newSize = oldTable.length() * 2
 		// cache 'put' to local slot.
 		var putMethod = this.put
 		this.table = Array(newSize, null)

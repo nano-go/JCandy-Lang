@@ -218,7 +218,7 @@ public class StringObj extends CandyObject {
 		CandyObject obj = args[0];
 		TypeError.checkTypeMatched(ArrayObj.ARRAY_CLASS, obj);
 		ArrayObj array = (ArrayObj) obj;
-		final int size = array.size();
+		final int size = array.length();
 		if (size == 0) {
 			return EMPTY_STR;
 		}
@@ -249,6 +249,15 @@ public class StringObj extends CandyObject {
 		return IntegerObj.valueOf(
 			value.indexOf(ObjectHelper.asString(args[0]))
 		);
+	}
+	
+	@NativeMethod(name = "toCharInt", argc=0)
+	public CandyObject toCodePoint(VM vm, CandyObject[] args){
+		if (value.length() != 1) {
+			new TypeError("The object is not a single char: <%s>", value)
+				.throwSelfNative();
+		}
+		return IntegerObj.valueOf(value.charAt(0));
 	}
 	
 	@NativeMethod(name = "toUpperCase") 

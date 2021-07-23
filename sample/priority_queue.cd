@@ -15,7 +15,7 @@ class PriorityQueue {
 	
 	_sink(i) {
 		var heap = this.heap
-		var size = heap.size()
+		var size = heap.length()
 		while (true) {
 			var child = i*2 + 1
 			if (child >= size) break
@@ -31,14 +31,14 @@ class PriorityQueue {
 	
 	offer(element) {
 		var heap = this.heap
-		var size = this.heap.size()
+		var size = this.heap.length()
 		heap.append(element)
 		this._swim(size)
 	}
 	
 	poll() {
 		var heap = this.heap
-		var size = this.heap.size()
+		var size = this.heap.length()
 		var last = heap.deleteAt(size-1)
 		if (size == 1) {
 			return last

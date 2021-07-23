@@ -10,7 +10,7 @@ fun expectedError(name, arity, argc, fn) {
 }
 
 fun expected(vaargs, *expected) {
-	for (i in range(0, expected.size())) {
+	for (i in range(0, expected.length())) {
 		assert vaargs[i] == expected[i] :
 		        "Expected " + expected[i] + ", but was " + vaargs[i]
 	}

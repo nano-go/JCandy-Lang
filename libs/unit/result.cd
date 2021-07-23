@@ -75,7 +75,7 @@ class Group {
 	}
 
 	fun subtaskCount() {
-		return this.subtasks.size()
+		return this.subtasks.length()
 	}
 
 	fun isGroup() {
@@ -127,7 +127,7 @@ class Result {
 	}
 
 	fun getSuccessCount() {
-		return this.successResults.size()
+		return this.successResults.length()
 	}
 
 	fun getFailureResults() {
@@ -135,7 +135,7 @@ class Result {
 	}
 
 	fun getFailureCount() {
-		return this.failureResults.size()
+		return this.failureResults.length()
 	}
 
 	fun getErrorResults() {
@@ -143,7 +143,7 @@ class Result {
 	}
 
 	fun getErrorCount() {
-		return this.errorResults.size()
+		return this.errorResults.length()
 	}
 
 	fun getSkippedResults() {
@@ -151,7 +151,7 @@ class Result {
 	}
 
 	fun getSkippedCount() {
-		return this.skippedResults.size()
+		return this.skippedResults.length()
 	}
 
 	fun pushGroup(name) {
@@ -159,13 +159,13 @@ class Result {
 	}
 
 	fun popGroup() {
-		var group = this.pushedGroup.deleteAt(this.pushedGroup.size()-1)
+		var group = this.pushedGroup.deleteAt(this.pushedGroup.length()-1)
 		this._addTaskResult(group)
 	}
 
 	fun _addTaskResult(task) {
-		if (this.pushedGroup.size() != 0) {
-			this.pushedGroup.get(this.pushedGroup.size()-1).append(task)
+		if (this.pushedGroup.length() != 0) {
+			this.pushedGroup.get(this.pushedGroup.length()-1).append(task)
 		} else {
 			this.taskResults.append(task)
 		}

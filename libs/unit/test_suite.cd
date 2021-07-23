@@ -16,7 +16,7 @@ class TestSuite {
 	}
 
 	fun getTestCount() {
-		return this.subtests.size()
+		return this.subtests.length()
 	}
 
 	fun getSubtests() {

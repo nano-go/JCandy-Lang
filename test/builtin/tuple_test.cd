@@ -1,6 +1,6 @@
 var t = (5, 5 + 10, lambda e -> e, [ 5, 15 ], (6, 8))
 
-assert t.len() == 5
+assert t.length() == 5
 assert t[0] == 5
 assert t[1] == 15
 assert t[2].isCallable()
@@ -15,7 +15,7 @@ assert str(t) == "(5, 9)"
 var t = ()
 var t1 = Tuple([])
 assert t == t1
-assert t.len() == 0
+assert t.length() == 0
 
 var t = (1, 2, 3)
 var t1 = Tuple([1, 2, 3])

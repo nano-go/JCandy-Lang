@@ -1,5 +1,5 @@
 fun bubbleSort(arr) {
-	var size = arr.size()
+	var size = arr.length()
 	var swap = arr.swap
 	for (i in range(0, size-1)) {
 		for (j in range(0, size-1-i)) {
@@ -11,7 +11,7 @@ fun bubbleSort(arr) {
 }
 
 fun selectionSort(arr) {
-	var size = arr.size()
+	var size = arr.length()
 	for (i in range(0, size-1)) {
 		var min = i
 		for (j in range(i, size)) {
@@ -24,7 +24,7 @@ fun selectionSort(arr) {
 }
 
 fun pubInsertionSort(arr) {
-	insertionSort(arr, 0, arr.size()-1)
+	insertionSort(arr, 0, arr.length()-1)
 }
 
 fun insertionSort(arr, left, right) {
@@ -74,7 +74,7 @@ fun mergeSort(arr) {
 			l += 1
 		}
 	}
-	merge(arr, 0, arr.size()-1)
+	merge(arr, 0, arr.length()-1)
 }
 
 fun quickSort(arr) {
@@ -109,7 +109,7 @@ fun quickSort(arr) {
 		qs(arr, mid + 1, right)
 	}
 	
-	qs(arr, 0, arr.size() - 1)
+	qs(arr, 0, arr.length() - 1)
 }
 
 fun sorts_test() {
@@ -129,7 +129,7 @@ fun sorts_test() {
 		sort(cpy)
 		assert cpy == ans : 
 			"Expected: " + ans + "\nAcutal: " + cpy
-		println(sort.name() + ": " +
+		println(sort.name + ": " +
 			(clock() - s) + " ms")
 	}
 }

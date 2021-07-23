@@ -288,7 +288,7 @@ public final class MapObj extends CandyObject {
 		return BoolObj.valueOf(contains(vm, args[0]));
 	}
 	
-	@NativeMethod(name = "size", argc = 0)
+	@NativeMethod(name = "length", argc = 0)
 	public CandyObject size(VM vm, CandyObject[] args) {
 		return IntegerObj.valueOf(size);
 	}
