@@ -49,11 +49,13 @@ public class GlobalEnvironment {
 	}
 	
 	public CandyObject getVariableValue(String name) {
-		return currentFileEnv.getVariableValue(name);
+		Variable v = getVariable(name);
+		return v != null ? v.getValue() : null;
 	}
 	
 	public Variable getVariable(String name) {
-		return currentFileEnv.getVariable(name);
+		Variable v = currentFileEnv.getVariable(name);
+		return v != null ? v : BuiltinVariables.getVariable(name);
 	}
 	
 	public void setVariable(String name, CandyObject value) {

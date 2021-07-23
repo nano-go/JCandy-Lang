@@ -18,7 +18,7 @@ public class FileEnvironment {
 
 	protected FileEnvironment(CompiledFileInfo compiledFileInfo) {
 		this.compiledFileInfo = compiledFileInfo;
-		this.vars = new HashMap<>(BuiltinVariables.getVariables());
+		this.vars = new HashMap<>();
 	}
 	
 	public CompiledFileInfo getCompiledFileInfo() {
