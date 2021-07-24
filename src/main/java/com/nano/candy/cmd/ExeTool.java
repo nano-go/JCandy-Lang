@@ -62,8 +62,8 @@ public class ExeTool implements CandyTool {
 	}
 	
 	public static int run(Interpreter interpreter, 
-	                          File sourceFile, 
-	                          boolean exitIfError) throws IOException {
+	                      File sourceFile, 
+	                      boolean exitIfError) throws IOException {
 		return run(interpreter,
 			sourceFile.getPath(), 
 			FileUtils.readText(sourceFile), 
@@ -76,9 +76,9 @@ public class ExeTool implements CandyTool {
 	 * if fail to compile.
 	 */
 	public static int run(Interpreter interpreter, 
-	                          String fileName, 
-	                          String content, 
-	                          boolean exitIfError) throws IOException
+	                      String fileName, 
+	                      String content, 
+	                      boolean exitIfError) throws IOException
 	{
 		Program program = ParserFactory.newParser(fileName, content).parse();
 		if (!logger.printAllMessage(exitIfError)) {
