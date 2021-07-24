@@ -267,6 +267,10 @@ public class ScannerTestCase {
 			"{ null\n: }", 
 			LBRACE, NULL, SEMILN, COLON, RBRACE
 		),
+		newTKCase(
+			"| a |",
+			BIT_OR, id("a"), BIT_OR
+		),
 		newTKCase("a.b", id("a"), DOT, id("b"), SEMIEOF),
 		newTKCase("[a, b, c, d]", 
 			LBRACKET, id("a"), COMMA, id("b"), COMMA, 

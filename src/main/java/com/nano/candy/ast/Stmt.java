@@ -2,6 +2,7 @@ package com.nano.candy.ast;
 
 import com.nano.candy.ast.dumper.FieldName;
 import com.nano.candy.utils.Position;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
@@ -252,6 +253,11 @@ public abstract class Stmt extends ASTreeNode {
 	}
 	
 	public static class Parameters {
+		
+		public static Parameters empty() {
+			return new Parameters(new ArrayList<String>(), -1);
+		}
+		
 		public final List<String> params;
 		
 		/**

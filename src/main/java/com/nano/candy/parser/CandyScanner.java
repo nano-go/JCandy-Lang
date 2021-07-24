@@ -134,8 +134,8 @@ class CandyScanner implements Scanner {
 				case '|' :
 					ch = reader.peek();
 					if (ch != '|') {
-						reader.error(startPos, "Unknown character: '%c'", ch);
-						continue scanAgain;
+						kind = TokenKind.BIT_OR;
+						break;
 					}
 					reader.consume();
 					literal = "||";

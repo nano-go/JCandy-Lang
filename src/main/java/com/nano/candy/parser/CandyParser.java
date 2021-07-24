@@ -437,6 +437,8 @@ class CandyParser implements Parser {
 			case TRUE:       case FALSE: 
 			case THIS:       case SUPER:
 			case LBRACKET:   case AT_IDENTIFIER:
+			case BIT_OR:     case LOGICAL_OR:
+			case ARROW:      case LAMBDA:
 				return true;
 		}
 		return TokenKind.isUnaryOperator(tk);
@@ -804,7 +806,7 @@ class CandyParser implements Parser {
 	private Stmt.Return parseReturn() {
 		Token location = match(RETURN);
 		Expr expr = null;
-		if (peekKind() != SEMI) {
+		if (peekKind() != SEMI && isFirstSetOfExpr(peekKind())) {
 			expr = parseExpr();
 		}
 		if (this.curFunctionType == FunctionType.NONE) {
@@ -854,23 +856,36 @@ class CandyParser implements Parser {
 	}
 
 	/**
-	 * Params = ( ( "(" Parameters ")" ) | Parameters ) [ <SEMI> ]
-	 *
-	 * Parameters = [ ( [ "*" ] <IDENTIFIER> )  [ "," Parameters ] ]
+	 * Params = ( ( "(" ParameterList ")" ) | ParameterList ) [ <SEMI> ]
 	 */
 	private Stmt.Parameters parseParams(boolean optionalParentheses) {
-		ArrayList<String> params = new ArrayList<>(6);
 		boolean leftParenMatched = matchIf(LPAREN, !optionalParentheses);
 		if (leftParenMatched && matchIf(RPAREN)) {
 			ignorableLinebreak();
-			return new Stmt.Parameters(params, -1);
+			return Stmt.Parameters.empty();
+		}
+		Stmt.Parameters params = parseParameterList();
+		if (!optionalParentheses || leftParenMatched) {
+			matchIf(RPAREN, "Expected parameter declaration.");
+		}
+		ignorableLinebreak();
+		return params;
+	}
+	
+	/**
+	 * ParameterList = [ ( [ "*" ] <IDENTIFIER> )  [ "," ParameterList ] ]
+	 */
+	private Stmt.Parameters parseParameterList() {
+		if (peekKind() != STAR && peekKind() != IDENTIFIER) {
+			return Stmt.Parameters.empty();
 		}
 		int vaArgIndex = -1;
+		ArrayList<String> params = new ArrayList<>(6);
 		do {
 			if (matchIf(STAR)) {
 				if (vaArgIndex != -1) {
 					reportError(previous, "A function only have a parameter to" 
-						  + " aceept variable arguments.");
+						+ " aceept variable arguments.");
 				}
 				vaArgIndex = params.size();
 				matchIf(IDENTIFIER, true);
@@ -879,11 +894,7 @@ class CandyParser implements Parser {
 			}
 			Token nameTok = previous();
 			params.add(nameTok.getLiteral());
-		} while (matchIf(COMMA));	
-		if (!optionalParentheses || leftParenMatched) {
-			matchIf(RPAREN, "Expected parameter declaration.");
-		}
-		ignorableLinebreak();
+		} while (matchIf(COMMA));
 		return new Stmt.Parameters(params, vaArgIndex);
 	}
 	
@@ -1074,6 +1085,8 @@ class CandyParser implements Parser {
 	 *            | "this"
 	 *            | ( "super" "." <IDENTIFIER> )
 	 *            | InterpolatedString
+	 *            | LambdaExpr
+	 *            | LambdaExpr2
 	 *            )
 	 *            ExprSuffix
 	 */
@@ -1181,6 +1194,10 @@ class CandyParser implements Parser {
 				expr = parseLambdaExpr();
 				break;
 				
+			case BIT_OR: case ARROW: case LOGICAL_OR:
+				expr = parseLambdaExpr2();
+				break;
+				
 			default: 
 				reportError(suitableErrorPosition(), "Expected a expression terminal.");
 				panic();
@@ -1200,7 +1217,7 @@ class CandyParser implements Parser {
 	 *
 	 *     "".join(["a", b+c, "d", e])
 	 *
-	 * Empty strings will be ignored.
+	 * The empty string in this list will be ignored.
 	 */
 	private Expr parseInterpolatedString() {
 		ArrayList<Expr> arr = new ArrayList<>();
@@ -1317,9 +1334,10 @@ class CandyParser implements Parser {
 	}
 
 	/**
-	 * ExprSuffix = ( Agruments | GetAttr | GetItem )*
+	 * ExprSuffix = ( Agruments | GetAttr | GetItem )* | [ LambdaExprSuffix ]
 	 * GetAttr = [ SEMI ] "." <IDENTIFIER>
 	 * GetItem = "[" Expr "]"
+	 * LambdaExprSuffix = LambdaBody
 	 */
 	@SuppressWarnings("fallthrough")
 	private Expr parseExprSuffix(Expr expr) {
@@ -1354,9 +1372,57 @@ class CandyParser implements Parser {
 					Token attr = match(IDENTIFIER, "Expected attribute name.");
 					expr = locate(tok, new Expr.GetAttr(expr, attr.getLiteral()));
 					continue;
+				case ARROW:
+					Stmt.Parameters paramters = convertToParameters(expr);
+					return parseLambdaBody(expr.pos, paramters);
 			}
 			return expr;
 		}
+	}
+
+	/** 
+	 * Convert the given expression to the paramter list.
+	 *
+	 * If the expression is VarRef, the paramter is the name of it.
+	 * If the expression is Tuple, each of the elements in the tuple will be
+	 * converted into the paramter name.
+	 *
+	 * You can write Lambda Expression in the following way:
+	 * 
+	 *     (a, b) -> a + b
+	 *     a -> println(a)
+	 *     ...
+	 *
+	 * But the the star paramter such as '*name' is not supported.
+	 *
+	 * You can use 
+	 *    "|*a, b| -> {...}" 
+	 *
+	 * or 
+	 *    "lambda *a, b -> {...}" 
+	 *
+	 * to carry the star paramter(see LambdaExpr2).
+	 */
+	private Stmt.Parameters convertToParameters(Expr expr) {
+		ArrayList<String> list = new ArrayList<>(4);
+		if (expr instanceof Expr.Tuple) {
+			Expr.Tuple tuple = (Expr.Tuple) expr;
+			for (Expr e : tuple.elements) {
+				list.add(varRefToName(e));
+			}
+		} else {
+			list.add(varRefToName(expr));
+		}
+		return new Stmt.Parameters(list, -1);
+	}
+	
+	private String varRefToName(Expr expr) {
+		if (expr instanceof Expr.VarRef) {
+			return ((Expr.VarRef) expr).name;
+		}
+		reportError(expr, "Expected the name[s] expression.");
+		panic();
+		return null;
 	}
 
 	/**
@@ -1386,26 +1452,61 @@ class CandyParser implements Parser {
 	}
 	
 	/**
-	 * LambdaExpr = "lambda" Params "->" Body
+	 * LambdaExpr = "lambda" Params LambdaBody
 	 */
 	private Expr.Lambda parseLambdaExpr() {
+		Token location = match(LAMBDA);
+		Stmt.Parameters params = parseParams(true);
+		return parseLambdaBody(location.getPos(), params);
+	}
+	
+	/**
+	 * LambdaExpr2 = [ ( "|" ParameterList "|" ) | "||" ] LambdaBody
+	 *
+	 * "||" is an empty paramter list here but the scanner will compile it
+	 * into the LOGICAL_OR
+	 */
+	private Expr.Lambda parseLambdaExpr2() {
+		Token first = peek();
+		Stmt.Parameters params;
+		if (peekKind() == ARROW) {
+			params = Stmt.Parameters.empty();
+		} else if (matchIf(LOGICAL_OR)) {
+			// if don't check the literal,  "or -> {}" is correct.
+			if (!"||".equals(first.getLiteral())) {
+				reportError(
+					first, 
+					"Expected \"||\" instead of \"%s\" to represent the empty parameter list.",
+					first.getLiteral()
+				);
+			}
+			params = Stmt.Parameters.empty();
+		} else {
+			match(BIT_OR);
+			params = parseParameterList();
+			matchIf(BIT_OR, true);
+		} 
+		return parseLambdaBody(first.getPos(), params);
+	}
+	
+	/**
+	 * LambdaBody = "->" Body
+	 */
+	private Expr.Lambda parseLambdaBody(Position location, Stmt.Parameters params) {
+		match(ARROW);
 		FunctionType originalFuncType = this.curFunctionType;
 		this.curFunctionType = FunctionType.LAMBDA;	
-		try {
-			Token location = match(LAMBDA);
-			Stmt.Parameters params = parseParams(true);
-			match(ARROW);
-			
+		try {		
 			boolean originalSingleLineLambda = inSingleLineLambda;
 			inSingleLineLambda = peekKind() != TokenKind.LBRACE;
 			Stmt.Block body = toFuncBlock(
-				parseBody(location.getPos(), "Invalid lambda expression.")
+				parseBody(location, "Invalid lambda expression.")
 			);	
 			inSingleLineLambda = originalSingleLineLambda;
-			
+
 			Expr.Lambda lambda = new Expr.Lambda(params, body);
-			lambda.pos = location.getPos();
-			lambda.funcDef.pos = location.getPos();
+			lambda.pos = location;
+			lambda.funcDef.pos = location;
 			checkFunc(lambda.funcDef);
 			return lambda;
 		} finally {

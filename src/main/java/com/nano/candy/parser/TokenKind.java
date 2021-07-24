@@ -23,6 +23,7 @@ public enum TokenKind {
 	COMMA(","),
 	DOT("."),
 	ARROW("->"),
+	BIT_OR("|"), // is not binary operator yet.
 	SEMI(";"),
 	
 	NOT("!"),
