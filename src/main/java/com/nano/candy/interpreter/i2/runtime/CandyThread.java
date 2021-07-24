@@ -5,13 +5,15 @@ import com.nano.candy.sys.CandySystem;
 
 public class CandyThread {
 	
+	private static int threadCounter = 0;
+	private static Object threadCounterLock = new Object();
+	
 	public static void waitOtherThreadsEnd() {
-		while (Thread.activeCount() != 1) {
-			try {
-				Thread.sleep(20);
-			} catch (InterruptedException e) {
-				e.printStackTrace();
+		while (true) {
+			synchronized(threadCounterLock) {
+				if (threadCounter == 0) break;
 			}
+			Thread.yield();
 		}
 	}
 	
@@ -19,15 +21,22 @@ public class CandyThread {
 	                                                CallableObj target) {
 		InnerThread t = new InnerThread();
 		CandyThread candyThread = new CandyThread(t);
-		t.setTarget(() -> {
+		t.setTarget(() -> {		
 			EvaluatorEnv newEnv = new EvaluatorEnv(candyThread, env.getOptions());
 			try {
 				newEnv.getEvaluator().eval(target, 0);
 			} catch (VMExitException e) {
 				// Means an error occurred.
 				// We catch the exception to avoid printing unnecessary prompts.
+			} finally {
+				synchronized(threadCounterLock) {
+					threadCounter --;
+				}
 			}
 		});
+		synchronized(threadCounterLock) {
+			threadCounter ++;
+		}
 		t.start();
 		return candyThread;
 	}
@@ -58,11 +67,11 @@ public class CandyThread {
 	 */
 	protected StackFrame stack;
 	
-	public CandyThread() {
+	protected CandyThread() {
 		this(Thread.currentThread());
 	}
 	
-	public CandyThread(Thread javaThread) {
+	protected CandyThread(Thread javaThread) {
 		this.javaThread = javaThread;
 		this.javaThread.setName("CandyThread - " + javaThread.getId());
 		this.stack = new StackFrame(CandySystem.DEFAULT_MAX_STACK);
