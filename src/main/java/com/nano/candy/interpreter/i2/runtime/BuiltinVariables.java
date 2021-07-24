@@ -32,7 +32,11 @@ import java.util.HashMap;
 
 public class BuiltinVariables {
 
-	private static final HashMap<String, Variable> BUILTIN_VARS = new HashMap<>();
+	/**
+	 * Read-only built-in variables.
+	 */
+	private static final HashMap<String, Variable> BUILTIN_VARS = 
+		new HashMap<>();
 
 	static {
 		init();
@@ -83,10 +87,6 @@ public class BuiltinVariables {
 	private static void defineClass(CandyClass clazz) {
 		BUILTIN_VARS.put(clazz.getName(),
 			Variable.getVariable(clazz.getName(), clazz));
-	}
-	
-	protected static HashMap<String, Variable> getVariables() {
-		return BUILTIN_VARS;
 	}
 	
 	public static Variable getVariable(String name) {

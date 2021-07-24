@@ -14,7 +14,7 @@ import com.nano.candy.interpreter.i2.cni.CNIEnv;
 import com.nano.candy.interpreter.i2.cni.NativeContext;
 import com.nano.candy.interpreter.i2.cni.NativeFunc;
 import com.nano.candy.interpreter.i2.cni.NativeLibraryLoader;
-import com.nano.candy.interpreter.i2.runtime.VMExitException;
+import com.nano.candy.interpreter.i2.runtime.CandyThread;
 import com.nano.candy.interpreter.i2.runtime.module.ModuleManager;
 import com.nano.candy.std.Names;
 import com.nano.candy.sys.CandySystem;
@@ -202,6 +202,20 @@ public class BuiltinFunctions {
 	
 	@NativeFunc(name = "exit", arity=1)
 	public static CandyObject exit(CNIEnv env, CandyObject[] args) {
-		throw new VMExitException((int)ObjectHelper.asInteger(args[0]));
+		System.exit((int)ObjectHelper.asInteger(args[0]));
+		return null;
+	}
+	
+	@NativeFunc(name = "start", arity=1)
+	public static CandyObject start(CNIEnv env, CandyObject[] args) {
+		CallableObj target = TypeError.requiresCallable(args[0]);
+		CandyThread.startToRunCallableObj(env.getEvaluatorEnv(), target);
+		return null;
+	}
+	
+	@NativeFunc(name = "waitOtherThreadsEnd", arity=0)
+	public static CandyObject waitOtherThreadsEnd(CNIEnv env, CandyObject[] args) {
+		CandyThread.waitOtherThreadsEnd();
+		return null;
 	}
 }

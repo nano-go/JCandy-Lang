@@ -1,0 +1,42 @@
+import "unit" as unit
+
+class ThreadTest : unit.TestCase {
+
+	fun import_test() {
+		start(lambda -> {
+			import "stream" as stream_1
+		})
+		start(lambda -> {
+			import "stream" as stream_2
+		})
+		waitOtherThreadsEnd()
+		@assertTrue(stream_1 == stream_2)
+	}
+
+	fun closure_test() {
+		var index = 0
+		start(lambda -> index += 1)
+		waitOtherThreadsEnd()
+		@assertEquals(1, index) 
+	}
+
+	fun error_test() {
+		fun raiseAnError() {
+			raise Error("I'm an error.")
+		}
+		fun callRaiseAnError() {
+			raiseAnError()
+		}
+		fun catchError() {
+			try {
+				callRaiseAnError()
+			} intercept Error as e {
+				var stackTrace = e.getStackTraceElements()
+				@assertEquals(3, stackTrace.length())
+				@assertEquals("raiseAnError", stackTrace[0].getFrameName())
+				@assertEquals("callRaiseAnError", stackTrace[1].getFrameName())
+			}
+		}
+		start(catchError)
+	}
+}

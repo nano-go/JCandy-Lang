@@ -11,6 +11,7 @@ import com.nano.candy.interpreter.i2.cni.NativeMethod;
 import com.nano.candy.interpreter.i2.runtime.FileEnvironment;
 import com.nano.candy.interpreter.i2.runtime.Variable;
 import java.util.HashMap;
+import java.util.Map;
 
 @NativeClass(name = "Module")
 public class ModuleObj extends CandyObject {
@@ -19,8 +20,8 @@ public class ModuleObj extends CandyObject {
 		NativeClassRegister.generateNativeClass(ModuleObj.class);
 	
 	private String name;
-	private HashMap<String, Variable> attrs;
-	public ModuleObj(String name, HashMap<String, Variable> attrs) {
+	private Map<String, Variable> attrs;
+	public ModuleObj(String name, Map<String, Variable> attrs) {
 		super(MOUDLE_CLASS);
 		this.name = name;
 		this.attrs = attrs;

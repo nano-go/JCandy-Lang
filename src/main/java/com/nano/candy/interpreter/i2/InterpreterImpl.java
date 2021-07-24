@@ -3,14 +3,15 @@ package com.nano.candy.interpreter.i2;
 import com.nano.candy.ast.ASTreeNode;
 import com.nano.candy.interpreter.Interpreter;
 import com.nano.candy.interpreter.InterpreterOptions;
+import com.nano.candy.interpreter.i2.runtime.CandyThread;
 import com.nano.candy.interpreter.i2.runtime.CarrierErrorException;
 import com.nano.candy.interpreter.i2.runtime.EvaluatorEnv;
+import com.nano.candy.interpreter.i2.runtime.VMExitException;
 import com.nano.candy.interpreter.i2.runtime.chunk.Chunk;
 import com.nano.candy.interpreter.i2.tool.Compiler;
 
 public class InterpreterImpl implements Interpreter {
 
-	// private static final VM vm = new VM();
 	private InterpreterOptions options;
 	private Chunk loadedChunk;
 	
@@ -20,9 +21,7 @@ public class InterpreterImpl implements Interpreter {
 	}
 	
 	@Override
-	public void initOrReset() {
-		// vm.reset(options);	
-	}
+	public void initOrReset() {}
 
 	@Override
 	public void load(String text) {
@@ -49,8 +48,17 @@ public class InterpreterImpl implements Interpreter {
 	@Override
 	public int run() {
 		EvaluatorEnv env = new EvaluatorEnv(options);
-		env.getEvaluator().eval(loadedChunk);
-		return 0;
+		int code = 0;
+		try {
+			env.getEvaluator().eval(loadedChunk);
+		} catch (VMExitException e) {
+			code = e.code;
+		} finally {
+			// The current process may exit when this method
+			// ends but there may be other threads running.
+			CandyThread.waitOtherThreadsEnd();
+		}
+		return code;
 	}
 
 }

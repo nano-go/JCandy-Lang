@@ -55,10 +55,10 @@ public abstract class ModuleLoader {
 		return moduleObj;
 	}
 	
-	protected void verifyModule(CNIEnv env, Module module) 
-		throws ModuleLoadingException {
+	private void verifyModule(CNIEnv env, Module module) throws ModuleLoadingException {
 		for (int i = 0; i < module.getFileCount(); i ++) {
-			if (module.getSourceFile(i).isRunning()) {
+			SourceFileInfo info = module.getSourceFile(i);
+			if (info.isRunning()) {
 				throw new ModuleLoadingException
 					("cyclic import, in " + 
 					 env.getEvaluatorEnv().getCurRunningFile().getSimpleName() +

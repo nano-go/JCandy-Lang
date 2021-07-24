@@ -6,7 +6,8 @@ import com.nano.candy.interpreter.i2.builtin.type.CallableObj;
 import com.nano.candy.interpreter.i2.builtin.type.ModuleObj;
 import com.nano.candy.interpreter.i2.runtime.CompiledFileInfo;
 import java.util.Collection;
-import java.util.HashMap;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * An environment stores all variables in a Candy source file.
@@ -14,11 +15,11 @@ import java.util.HashMap;
 public class FileEnvironment {
 
 	private CompiledFileInfo compiledFileInfo;
-	private HashMap<String, Variable> vars;
+	private Map<String, Variable> vars;
 
 	protected FileEnvironment(CompiledFileInfo compiledFileInfo) {
 		this.compiledFileInfo = compiledFileInfo;
-		this.vars = new HashMap<>();
+		this.vars = new ConcurrentHashMap<>();
 	}
 	
 	public CompiledFileInfo getCompiledFileInfo() {

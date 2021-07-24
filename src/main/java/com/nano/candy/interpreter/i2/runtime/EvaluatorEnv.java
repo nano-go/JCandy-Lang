@@ -9,31 +9,32 @@ import java.io.File;
 public class EvaluatorEnv {
 	protected CNIEnv cniEnv;
 	protected GlobalEnvironment globalEnv;
-	protected StackFrame stack;
+	protected CandyThread thread;
 	protected Evaluator evaluator;
 	private InterpreterOptions options;
 	
 	public EvaluatorEnv(InterpreterOptions options) {
+		this(new CandyThread(), options);
+	}
+	
+	protected EvaluatorEnv(CandyThread thread, InterpreterOptions options) {
+		this.thread = thread;
+		this.options = options;
 		this.globalEnv = new GlobalEnvironment();
-		this.stack = new StackFrame(CandySystem.DEFAULT_MAX_STACK);
 		this.evaluator = new CandyV1Evaluator(this);
 		this.cniEnv = new CNIEnv(this, evaluator);
-		this.options = options;
 	}
 	
 	public Evaluator getEvaluator() {
 		return evaluator;
 	}
+	
+	public CandyThread getCurrentThread() {
+		return thread;
+	}
 
 	public Frame[] getStack() {
-		/*if (evaluator instanceof CandyV1Evaluator) {
-			((CandyV1Evaluator) evaluator).syncPcToTopFrame();
-		}*/
-		Frame[] frames = new Frame[stack.sp()];
-		for (int i = 0; i < frames.length; i ++) {
-			frames[i] = stack.getAt(stack.sp()-i-1);
-		}
-		return frames;
+		return thread.getStack();
 	}
 	
 	public InterpreterOptions getOptions() {

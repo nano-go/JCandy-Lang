@@ -51,42 +51,51 @@ public class CandyV1Evaluator implements Evaluator {
 
 	private EvaluatorEnv env;
 	
+	/**
+	 * A function returns a value by the operand stack, but when a function
+	 * is a top frame and the function has been executed, the operand stack
+	 * is null.
+	 *
+	 * So we need a variable to store the return value of this function if 
+	 * the return value is required.
+	 */
+	private CandyObject retValue;
+	
 	protected CandyV1Evaluator(EvaluatorEnv env) {
 		this.env = env;
-		this.stack = env.stack;
+		this.stack = env.thread.stack;
 	}
 	
 	private void pushFrame(Frame frame) {
 		stack.pushFrame(frame);
 		syncFrameData();
 	}
-
-	private void popFrame() {
-		fastPopFrame();
-		if (stack.isEmpty()) {
-			resetFrameData();
+	
+	private final void popFrameWithRet() {
+		Frame old = popFrame();
+		if (frame != null) {
+			// push return value to operand stack.
+			push(old.opStack.pop());
 		} else {
-			syncFrameData();
+			this.retValue = old.opStack.pop();
 		}
 	}
 
-	private void popFrameWithRet() {
-		Frame old = fastPopFrame();
-		syncFrameData();
-		// push return value to operand stack.
-		push(old.opStack.pop());
-	}
-
-	private final Frame fastPopFrame() {
+	private final Frame popFrame() {
 		Frame old = stack.popFrame();
 		if (old.isSourceFileFrame()) {
 			SourceFileInfo.unmarkRunning(old.chunk.getSourceFileName());
 		}
+		syncFrameData();
 		return old;
 	}
 
 	private void syncFrameData() {
 		this.frame = stack.peek();
+		if (frame == null) {
+			resetFrameData();
+			return;
+		}
 		this.cp = frame.chunk.getConstantPool();
 		this.slots = frame.slots;
 		this.code = frame.chunk.getByteCode();
@@ -165,6 +174,12 @@ public class CandyV1Evaluator implements Evaluator {
 			return true;
 		}	
 		if (printError) {
+			if (env.getCurrentThread().getId() != 1) {
+				System.err.printf(
+					"An error ocurrs in the thread '%s'.\n",
+					env.getCurrentThread().getName()
+				);
+			}
 			System.err.print(err.sprintStackTrace(24));
 		}
 		resetFrameData();
@@ -348,7 +363,7 @@ public class CandyV1Evaluator implements Evaluator {
 		if (!fn.isBuiltin()) {
 			evalCurrentFrame(true);
 		}
-		return pop();
+		return frame != null ? pop() : retValue;
 	}
 	
 	@Override
@@ -398,7 +413,7 @@ public class CandyV1Evaluator implements Evaluator {
 		env.globalEnv.setCurrentFileEnv(file);
 		SourceFileInfo srcFileInfo = env.getCurSourceFileInfo();
 		if (srcFileInfo != null) {
-			srcFileInfo.markRunning();
+			srcFileInfo.markRunning(env.thread);
 		}
 		eval(Frame.fetchFrame(
 			file.getChunk(), env.globalEnv.getCurrentFileEnv()
@@ -433,8 +448,9 @@ public class CandyV1Evaluator implements Evaluator {
 				throw e;
 			} catch (Throwable e) {
 				if (!tryToHandleError(ErrorObj.asErrorObj(e), true)) {
-					// unable to catch the thrown error and 
-					// throws the exception to exit the VM.
+					// unable to catch the thrown error and throws 
+					// the exception to tell the interpreter to end the 
+					// current thread.
 					throw new VMExitException(70);
 				}
 				if (stack.sp() < deepth) {

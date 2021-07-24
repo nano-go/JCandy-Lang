@@ -1,6 +1,7 @@
 package com.nano.candy.interpreter.i2.runtime.module;
 
 import com.nano.candy.interpreter.i2.builtin.type.error.IOError;
+import com.nano.candy.interpreter.i2.runtime.CandyThread;
 import com.nano.candy.interpreter.i2.runtime.CarrierErrorException;
 import java.io.File;
 import java.io.IOException;
@@ -10,9 +11,9 @@ public class SourceFileInfo {
 	
 	private static final HashMap<String, SourceFileInfo> sourceFiles = new HashMap<>();
 	
-	public static boolean markRunning(String fileName) {
+	public static boolean markRunning(String fileName, CandyThread thread) {
 		try {
-			get(new File(fileName)).markRunning();
+			get(new File(fileName)).markRunning(thread);
 			return true;
 		} catch (CarrierErrorException e) {
 			return false;
@@ -36,8 +37,10 @@ public class SourceFileInfo {
 	public static SourceFileInfo get(File file) {
 		IOError.checkCandySourceFile(file);
 		try {
-			String canonicalPath = file.getCanonicalPath();
-			return getOnlyFile(canonicalPath);
+			synchronized(SourceFileInfo.class) {
+				String canonicalPath = file.getCanonicalPath();
+				return getOnlyFile(canonicalPath);
+			}
 		} catch (IOException e) {
 			new IOError(file).throwSelfNative();
 			return null;
@@ -56,6 +59,7 @@ public class SourceFileInfo {
 	private String name;
 	private boolean isRunning;
 	private File file;
+	private CandyThread thread;
 	
 	private SourceFileInfo(String canonicalPath) {
 		this.file = new File(canonicalPath);
@@ -63,12 +67,18 @@ public class SourceFileInfo {
 		this.isRunning = false;
 	}
 	
-	public void markRunning() {
+	public synchronized void markRunning(CandyThread thread) {
 		this.isRunning = true;
+		this.thread = thread;
 	}
 	
-	public void unmarkRunning() {
+	public synchronized void unmarkRunning() {
 		this.isRunning = false;
+		this.thread = null;
+	}
+	
+	public CandyThread getThread() {
+		return this.thread;
 	}
 	
 	public boolean isRunning() {
