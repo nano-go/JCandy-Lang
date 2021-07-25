@@ -125,11 +125,11 @@ public abstract class IteratorObj extends CandyObject {
 		return super.getAttr(env, attr);
 	}
 	
-	public final CandyObject hasNext(CNIEnv env, int argc) {
+	public final CandyObject hasNext(CNIEnv env, CandyObject[] args) {
 		return BoolObj.valueOf(hasNext(env));
 	}
 	
-	public final CandyObject next(CNIEnv env, int argc) {
+	public final CandyObject next(CNIEnv env, CandyObject[] args) {
 		return next(env);
 	}
 	

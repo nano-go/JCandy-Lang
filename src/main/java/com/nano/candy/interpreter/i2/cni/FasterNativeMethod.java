@@ -1,6 +1,7 @@
 package com.nano.candy.interpreter.i2.cni;
 
 import com.nano.candy.interpreter.i2.builtin.CandyObject;
+import com.nano.candy.interpreter.i2.builtin.type.ArrayObj;
 import com.nano.candy.interpreter.i2.builtin.type.CallableObj;
 import com.nano.candy.interpreter.i2.builtin.type.NullPointer;
 import com.nano.candy.interpreter.i2.builtin.utils.ObjectHelper;
@@ -14,7 +15,7 @@ public class FasterNativeMethod extends CallableObj {
 
 	@FunctionalInterface
 	public static interface Callback {
-		public CandyObject onCall(CNIEnv env, int argc);
+		public CandyObject onCall(CNIEnv env, CandyObject[] args);
 	}
 	
 	private Callback callback;
@@ -35,7 +36,17 @@ public class FasterNativeMethod extends CallableObj {
 
 	@Override
 	public void onCall(CNIEnv env, OperandStack opStack, StackFrame stack, int argc, int unpackFlags) {
-		CandyObject retVal = callback.onCall(env, argc);
+		CandyObject retVal;
+		if (argc == 0) {
+			retVal = callback.onCall(env, ArrayObj.EMPTY_ARRAY);
+		} else {
+			CandyObject[] args = new CandyObject[argc];
+			args = new CandyObject[argc];
+			for (int i = 0; i < argc; i ++) {
+				args[i] = opStack.pop();
+			}
+			retVal = callback.onCall(env, args);
+		}
 		if (retVal == null) {
 			retVal = NullPointer.nil();
 		}
