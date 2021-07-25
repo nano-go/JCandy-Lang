@@ -1128,6 +1128,9 @@ class CandyParser implements Parser {
 					locate(location, new Expr.This()), 
 					location.getLiteral()
 				));
+				if (!inClass) {
+					reportError(expr, "The '@%s' outside class.", location.getLiteral());
+				}
 				break;
 				
 			case INTEGER:
