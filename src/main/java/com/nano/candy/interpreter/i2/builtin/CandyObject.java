@@ -85,7 +85,7 @@ public class CandyObject {
 	}
 	
 	public final boolean isCandyClass() {
-		return getCandyClass() == this;
+		return this instanceof CandyClass;
 	}
 	
 	public final void freeze() {
@@ -107,6 +107,11 @@ public class CandyObject {
 		return false;
 	}
 	
+	public boolean isInstanceOf(CandyObject obj) {
+		CandyClass klass = TypeError.requiresClass(obj);
+		return getCandyClass().isSubClassOf(klass);
+	}
+	
 	public void setMetaData(String name, CandyObject value) {
 		if (metaData.isEmpty()) {
 			metaData = new HashMap<>();
@@ -120,6 +125,11 @@ public class CandyObject {
 	
 	public CandyObject removeMetaData(String name) {
 		return metaData.remove(name);
+	}
+	
+	@NativeMethod(name = "isClass")
+	public CandyObject isClass(CNIEnv env, CandyObject[] args) {
+		return BoolObj.valueOf(isCandyClass());
 	}
 	
 	@NativeMethod(name = "isCallable")

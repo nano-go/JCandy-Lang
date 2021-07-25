@@ -1,0 +1,28 @@
+import "unit" as unit
+
+class ErrorHandlerTest : unit.TestCase {
+	fun raiseNonError_test() {
+		@expectedErrorRaised(TypeError, -> raise Error)
+		@expectedErrorRaised(TypeError, -> raise TypeError)
+		@expectedErrorRaised(TypeError, -> raise AttributeError)
+		@expectedErrorRaised(TypeError, -> raise TypeError)
+		@expectedErrorRaised(TypeError, -> raise NameError)
+		@expectedErrorRaised(TypeError, -> raise range(0, 10))
+	}
+
+	fun interceptNonError_test() {
+		fun interceptNonError(interceptedErrType) {
+			try {
+				raise Error("raised")
+			} intercept interceptedErrType as e {
+				@assertFail()
+			}
+			@assertFail()
+		}
+
+		@expectedErrorRaised(TypeError, -> interceptNonError(Error("foo")))
+		@expectedErrorRaised(TypeError, -> interceptNonError(TypeError("foo")))
+		@expectedErrorRaised(TypeError, -> interceptNonError(ArgumentError("foo")))
+		@expectedErrorRaised(TypeError, -> interceptNonError(Range))
+	}
+}

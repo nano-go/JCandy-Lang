@@ -3,6 +3,7 @@ package com.nano.candy.interpreter.i2.builtin.type;
 import com.nano.candy.interpreter.i2.builtin.CandyClass;
 import com.nano.candy.interpreter.i2.builtin.CandyObject;
 import com.nano.candy.interpreter.i2.builtin.type.NullPointer;
+import com.nano.candy.interpreter.i2.builtin.type.error.AttributeError;
 import com.nano.candy.interpreter.i2.builtin.utils.ObjectHelper;
 import com.nano.candy.interpreter.i2.cni.CNIEnv;
 import com.nano.candy.interpreter.i2.cni.NativeClass;
@@ -82,9 +83,7 @@ public abstract class CallableObj extends CandyObject {
 	 * Full name of a method. For example: LinkedList#append.
 	 */
 	protected final String fullName;
-	
 	protected final String declaredName;
-	
 	protected final ParametersInfo parameter;
 	
 	public CallableObj(String name, ParametersInfo parameter) {
@@ -96,7 +95,6 @@ public abstract class CallableObj extends CandyObject {
 		this.declaredName = declredName;
 		this.fullName = fullName;
 		this.parameter = parameter;
-		freeze();
 	}
 
 	@Override
@@ -159,6 +157,27 @@ public abstract class CallableObj extends CandyObject {
 				return IntegerObj.valueOf(varArgsIndex());
 		}
 		return super.getAttr(env, name);
+	}
+
+	@Override
+	public CandyObject setAttr(CNIEnv env, String name, CandyObject value) {
+		if (isBuiltinAttribute(name)) {
+			new AttributeError("The built-in attribute '%s' is read-only.", name)
+				.throwSelfNative();
+		}
+		setMetaData(name, value);
+		return value;
+	}
+	
+	protected boolean isBuiltinAttribute(String name) {
+		switch (name) {
+			case "name":
+			case "fullName":
+			case "arity":
+			case "vararg":
+				return true;	
+		}
+		return false;
 	}
 	
 	@Override

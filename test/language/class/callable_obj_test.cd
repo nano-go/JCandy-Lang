@@ -34,8 +34,5 @@ class CallableObjTest : unit.TestCase {
 	fun callable_class_test() {
 		this.assertEquals("Callable", bar1._class().className)
 		this.assertEquals("Callable", Foo().bar1._class().className)
-		this.expectedErrorRaised(AttributeError, lambda -> bar1.a = 0)
-		this.expectedErrorRaised(AttributeError, lambda -> bar2.a = 0)
-		this.expectedErrorRaised(AttributeError, lambda -> Foo().bar1.a = 0)
 	}
 }

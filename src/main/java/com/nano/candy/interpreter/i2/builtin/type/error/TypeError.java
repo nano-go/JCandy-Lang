@@ -12,15 +12,24 @@ import com.nano.candy.interpreter.i2.cni.NativeClassRegister;
 public class TypeError extends ErrorObj {
 	public static final CandyClass TYPE_ERROR_CLASS = 
 		NativeClassRegister.generateNativeClass(TypeError.class, ERROR_CLASS);
-	
+
 	public static CallableObj requiresCallable(CandyObject callable) {
 		checkIsCallable(callable);
 		return (CallableObj) callable;
 	}
+	
+	public static CandyClass requiresClass(CandyObject obj) {
+		if (obj instanceof CandyClass) {
+			return (CandyClass) obj;
+		}
+		new TypeError("The '%s' object is not a Class.", 
+			obj.toString()).throwSelfNative();
+		return null;
+	}
 		
 	public static void checkIsCallable(CandyObject callable) {
 		if (!callable.isCallable()) {
-			new TypeError("The '%s' obj is not callable.", 
+			new TypeError("The '%s' object is not callable.", 
 				callable.getCandyClassName()
 			).throwSelfNative();
 		}
@@ -35,7 +44,16 @@ public class TypeError extends ErrorObj {
 	}
 
 	public static void checkTypeMatched(CandyClass expected, CandyObject instance) {
-		if (instance.isCandyClass() || !expected.isSuperClassOf(instance.getCandyClass())) {
+		if (!expected.isSuperClassOf(instance.getCandyClass())) {
+			new TypeError(
+				"The '%s' can't apply to '%s' obj.",
+				instance.getCandyClassName(), expected.getName()
+			).throwSelfNative();	
+		}
+	}
+	
+	public static void checkIsInstanceOf(CandyClass expected, CandyObject instance) {
+		if (!instance.isInstanceOf(expected)) {
 			new TypeError(
 				"The '%s' can't apply to '%s' obj.",
 				instance.getCandyClassName(), expected.getName()

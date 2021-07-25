@@ -3,7 +3,7 @@ fun test(clazz) {
 		clazz()
 	} intercept NativeError as e {
 		assert e.getMessage() == 
-			"The built-in class can't be instantiated: " + clazz.className
+			"The built-in class can't be instantiated: " + clazz.className : e.getMessage()
 	} else {
 		assert false
 	}

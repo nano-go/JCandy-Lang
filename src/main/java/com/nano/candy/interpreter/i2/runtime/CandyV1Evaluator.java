@@ -322,16 +322,33 @@ public class CandyV1Evaluator implements Evaluator {
 		CandyObject error = peek(count);
 		boolean matched = count == 0;
 		for (int i = 0; i < count; i ++) {
-			CandyObject obj = pop();
+			CandyClass interceptedErrorType = checkIsErrorClass(pop());
 			if (!matched && error.getCandyClass()
-				.isSubClassOf(obj.getCandyClass())) {
+				.isSubClassOf(interceptedErrorType)) {
 				matched = true;
 			}
 		}
 		if (!matched) {
 			frame.pc += offset-3;
 		}
-	}	
+	}
+	
+	public static CandyClass checkIsErrorClass(CandyObject obj) {
+		String name;
+		if (obj instanceof CandyClass) {
+			CandyClass errClass = (CandyClass)obj;
+			if (errClass.isSubClassOf(ErrorObj.ERROR_CLASS)){
+				return errClass;
+			}
+			name = errClass.getName();
+		} else { 
+			name = "instance of the " + obj.getCandyClassName();
+		}
+		new TypeError("The '%s' is not an error class. The 'intercept' statmenet" +
+			" only accept classes that inherit from Error.", name)
+			.throwSelfNative();
+		return null;
+	}
 
 	private CandyObject getGlobalVariable(String name, boolean throwsErrorIfNotFound) {
 		CandyObject obj = env.globalEnv.getVariableValue(name);
@@ -580,7 +597,7 @@ public class CandyV1Evaluator implements Evaluator {
 					CandyObject val2 = pop();
 					CandyObject val1 = pop();
 					push(BoolObj.valueOf(
-						val1.getCandyClass().isSubClassOf(val2.getCandyClass())
+						val1.isInstanceOf(val2)
 					));
 					break;
 				}	

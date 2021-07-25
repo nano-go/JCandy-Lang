@@ -230,11 +230,13 @@ class TestCase {
 		msg = msg.isEmpty() ? "" : msg[0]
 		if (errType == null) {
 			errType = Error
-		} else if (!(errType is Error)) {
-			raise Assertion("The '" + errType._class().className +
+		} else if (!errType.isClass()) {
+			raise AssertionError("The ${errType} is not a class.")
+		} else if (!errType.isSubclassOf(Error)) {
+			raise AssertionError("The '" + errType.className +
 			 "' is not an 'Error' type.")
 		}
-		var name = errType._class().className
+		var name = errType.className
 		try {
 			fn()
 		} intercept errType {

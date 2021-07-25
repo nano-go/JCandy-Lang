@@ -125,6 +125,59 @@ class ClassTest : unit.TestCase {
 		this.expectedErrorRaised(AttributeError, Bar().callSuperMethodError)
 	}
 
+	fun classAttrs_test() {
+		var Callable = @classAttrs_test._class()
+
+		// Methods
+	 	@assertEquals("Object", Object.className)
+	 	@assertEquals(Object, Range.superClass)
+	 	@assertTrue(Range.isSuperclassOf(Range))
+	 	@assertTrue(Object.isSuperclassOf(Range))
+	 	@assertTrue(Range.isSubclassOf(Object))
+	 	@assertTrue(Range.instance(range(0, 150)))
+	 	@assertTrue(Range.methods().length() > 10)
+		@assertTrue(Range.methods().contains("rand"))
+		@assertTrue(Range.methods().contains("toArray"))
+		@assertTrue(Array.methods().contains("insert"))
+		@assertTrue(Array.methods().contains("_iterator"))
+		@assertTrue(Array.methods().contains("_str"))
+
+		// Callable
+		@assertEquals(Callable, Object._class())
+		@assertEquals(Callable, Callable._class())
+		@assertEquals("Callable", Callable.className)
+		@assertEquals("Callable", Callable.name)
+		@assertEquals("Callable", Callable.fullName)
+		@assertEquals(0, Callable.arity)
+		@assertTrue(Callable.isSuperclassOf(Callable))
+		@assertTrue(Callable.isSubclassOf(Object))
+		@assertFalse(Callable.isSubclassOf(Range))
+
+		// Illegal Argument
+		@expectedErrorRaised(TypeError, -> Object.isSuperclassOf(range(0, 15)))
+		@expectedErrorRaised(TypeError, -> Object.isSubclassOf(range(0, 15)))
+
+		// Read-only Attributes
+		@expectedErrorRaised(AttributeError, -> Object.name = "a")
+		@expectedErrorRaised(AttributeError, -> Object.fullName = "a")
+		@expectedErrorRaised(AttributeError, -> Object.arity = 0)
+		@expectedErrorRaised(AttributeError, -> Object.vararg = 0)
+		@expectedErrorRaised(AttributeError, -> Object.className = "a")
+		@expectedErrorRaised(AttributeError, -> Object.superClass = "a")
+		@expectedErrorRaised(AttributeError, -> Object.isSubclassOf = "")
+		@expectedErrorRaised(AttributeError, -> Object.isSuperclassOf = "")
+		@expectedErrorRaised(AttributeError, -> Object.methods = "")
+		@expectedErrorRaised(AttributeError, -> Object.instance = "")
+
+		// Change a Class
+		Object.equals = (a, b) -> {
+			return a == b
+		}
+		@assertTrue(Object.equals(5, 5))
+		Array.i = 15
+		@assertEquals(15, []._class().i)
+	}
+
 	fun callClassInJava_test() {
 		class Foo {
 			fun init(e, i) {

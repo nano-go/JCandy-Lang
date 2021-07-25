@@ -8,10 +8,12 @@ import (
 fun importTestClasses(modules) {
 	fun getTestClasses(module) {
 		return stream.Stream(module)
-			.map(lambda e -> e[1])
-			.filter(lambda e -> e is tc.TestCase or e is ts.TestSuite)
-			.filter(lambda e -> e._class() != tc.TestCase and e._class() != ts.TestSuite)
-			.map(lambda e -> e._class() == e ? e() : e)
+			.map(e -> e[1])
+			.filter(e -> e.isClass())
+			.filter(e -> 
+				e.isSubclassOf(tc.TestCase) or e.isSubclassOf(ts.TestSuite))
+			.filter(e -> e != tc.TestCase and e != ts.TestSuite)
+			.map(e -> e())
 			.toArray()
 	}
 	
