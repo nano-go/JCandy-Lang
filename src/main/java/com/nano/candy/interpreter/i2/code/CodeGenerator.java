@@ -395,11 +395,12 @@ public class CodeGenerator implements AstVisitor<Void, Void> {
 		} else {
 			// OP_CLASS will push a class created by the class-info
 			// to stack top.
-			// Operand stack does not change if this class has no 'super class'.
 			builder.state().push(1);
 		}
 		
-		declrVariable(node.name);
+		if (!node.isStaticClass) {
+			declrVariable(node.name);
+		}
 		enterScope();
 		
 		classInfo.fromPC = builder.curCp();	
@@ -412,7 +413,14 @@ public class CodeGenerator implements AstVisitor<Void, Void> {
 		}
 		
 		closeScope(true);
-		defineVariable(node.name, -1);
+		if (!node.isStaticClass) {
+			defineVariable(node.name, -1);
+		} else {
+			loadVariable("this", -1);
+			builder.emitop(OP_SET_ATTR);
+			builder.emitStringConstant(node.name);
+		}	
+		emitStaticBlock(node);
 		return null;
 	}
 
@@ -422,12 +430,30 @@ public class CodeGenerator implements AstVisitor<Void, Void> {
 	 * Byte code layout (push a class to stack top):
 	 *     1. OP_CLASS
 	 *     2. Class Constant (constant index)
-	 *     3. Super Class Slot (unsigned byte)
+	 *     3. Super Class Slot (unsigned byte) 
 	 */
 	private void emitClass(ClassInfo classInfo, int line) {
 		builder.emitop(OP_CLASS, line);
 		builder.emitConstant(classInfo);
 		builder.emit1((byte) declrVariable("super"));
+	}
+	
+	private void emitStaticBlock(Stmt.ClassDef node) {
+		if (!node.staticBlock.isPresent()) {
+			return;
+		}
+		enterScope();
+		if (!node.isStaticClass) {
+			loadVariable(node.name, -1);
+		} else {
+			loadVariable("this", -1);
+			builder.emitop(OP_GET_ATTR, -1);
+			builder.emitStringConstant(node.name);
+		} 
+		int thisSlot = declrVariable("this");		
+		defineVariable("this", thisSlot);
+		walkBlock(node.staticBlock.get());
+		closeScope(true);
 	}
 
 	private Optional<MethodInfo> initalizer(Stmt.ClassDef node, ClassInfo classDefinedIn) {
@@ -453,9 +479,23 @@ public class CodeGenerator implements AstVisitor<Void, Void> {
 	@Override
 	public Void visit(Stmt.FuncDef node) {
 		String nodeName = node.name.get();
-		declrVariable(nodeName);
-		loadFunction(nodeName, node);
-		defineVariable(nodeName, -1);
+		if (node.isStaticFunc) {
+			// Static Function is:
+			//     static { // in class
+			//         fun @foo() {...}
+			//     }
+			// 
+			// will be compiled into the 
+			//     this.nodeName = functionValue
+			loadFunction(nodeName, node);
+			loadVariable("this", -1);
+			builder.emitop(OP_SET_ATTR);
+			builder.emitStringConstant(nodeName);
+		} else {
+			declrVariable(nodeName);
+			loadFunction(nodeName, node);
+			defineVariable(nodeName, -1);
+		}
 		return null;
 	}
 
@@ -739,8 +779,14 @@ public class CodeGenerator implements AstVisitor<Void, Void> {
 		} else {
 			builder.emitop(OP_NULL, line(node));
 		}
-		declrVariable(node.name);
-		defineVariable(node.name, -1);
+		if (!node.isStatic) {
+			declrVariable(node.name);
+			defineVariable(node.name, -1);
+		} else {
+			loadVariable("this", -1);
+			builder.emitop(OP_SET_ATTR);
+			builder.emitStringConstant(node.name);
+		}
 		return null;
 	}
 

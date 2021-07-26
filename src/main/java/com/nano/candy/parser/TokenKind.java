@@ -58,6 +58,7 @@ public enum TokenKind {
 	FUN("fun"),
 	LAMBDA("lambda"),
 	CLASS("class"),
+	STATIC("static"),
 	IMPORT("import"),
 	FINALLY("finally"),
 	AS("as"),

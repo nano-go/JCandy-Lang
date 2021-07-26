@@ -13,7 +13,7 @@ class CandyScanner implements Scanner {
 	private Token tok;
 	
 	/**
-	 * Matched tokens that stores parsed tokens in interpolated string literals.
+	 * Stores the parsed tokens in the interpolation.
 	 */
 	private Queue<Token> macthedToken = new LinkedList<>();
 	
@@ -461,9 +461,9 @@ class CandyScanner implements Scanner {
 
 	/**
 	 * If we find an interpolated string, we treat the saved string as a 
-	 * INTERPOLATION and the interpolated string between '${' and '}'
-	 * will be treat as a serial of the normal token and put them into the 
-	 * matchedToken list.
+	 * INTERPOLATION and the interpolation between '${' and '}' will be 
+	 * treat as a serial of the normal token and put them into the 
+	 * 'matchedToken' list.
 	 *
 	 * This string:
 	 *
@@ -477,11 +477,11 @@ class CandyScanner implements Scanner {
 	 *     (IDENTIFIER,    "b")
 	 *     (STRING,        "")
 	 *
-	 * The last string token tells the parser to end the interpolated
+	 * The last empty string token tells Parser to end the interpolated
 	 * string parsing.
 	 *
-	 * If you want to use string literals in the interpolated string, 
-	 * you would use '\' to escape '"'.
+	 * If you want to use string literals in the interpolation, you would use
+	 * '\' to escape '"'.
 	 */
 	private void readInterpolatedString() {
 		macthedToken.offer(
@@ -498,7 +498,7 @@ class CandyScanner implements Scanner {
 				case '}':
 					if (previousNumToks == macthedToken.size()) {
 						reader.error("Empty interpolation string.");
-						// Insert an empty string to prevent errors in the parser.
+						// Insert an empty string to prevent errors in Parser.
 						macthedToken.offer(
 							new Token(reader.pos(), "", TokenKind.STRING));
 					}

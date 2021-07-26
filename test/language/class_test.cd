@@ -125,6 +125,64 @@ class ClassTest : unit.TestCase {
 		this.expectedErrorRaised(AttributeError, Bar().callSuperMethodError)
 	}
 
+	fun static_test() {
+		class Foo {
+			static var a = 15
+			static {
+				var foo = 0
+				@foo = foo
+				fun @getFoo() {
+					return @foo
+				}
+				class @Bar {
+					fun getHello() {
+						return "Hello"
+					}
+				}
+				@a = 20
+				if (@a == 20) {
+					fun @getFoo2() { return "Foo2"; }
+				}
+				else {
+					fun @getFoo2() { raise Error("Unsupported"); }
+				}
+			}
+			static var b = @a
+		}
+		@assertEquals("Foo2", Foo.getFoo2())
+		@assertEquals(20, Foo.a)
+		@assertEquals(20, Foo.b)
+		@assertEquals(0, Foo.foo)
+		@assertEquals(0, Foo.getFoo())
+		@assertEquals("Hello", Foo.Bar().getHello())
+	}
+
+	fun nestedStatic_test() {
+		class Foo {
+			static var a = "Foo.a"
+			static var b = "Foo.b"
+			static class Bar {
+				static var a = "Bar.a"
+				static var b = "Bar.b"
+				static {
+					var a = 15
+				}
+				static class _CONSTANTS {
+					static var BAR_A = Foo.Bar.a
+					static var BAR_B = Foo.Bar.b
+					static var FOO_A = Foo.a
+					static var FOO_B = Foo.b
+					static var A_IN_STATIC = a
+				}
+			}
+		}
+		@assertEquals("Foo.a", Foo.Bar._CONSTANTS.FOO_A)
+		@assertEquals("Foo.b", Foo.Bar._CONSTANTS.FOO_B)
+		@assertEquals("Bar.a", Foo.Bar._CONSTANTS.BAR_A)
+		@assertEquals("Bar.b", Foo.Bar._CONSTANTS.BAR_B)
+		@assertEquals(15, Foo.Bar._CONSTANTS.A_IN_STATIC)
+	}
+
 	fun classAttrs_test() {
 		var Callable = @classAttrs_test._class()
 

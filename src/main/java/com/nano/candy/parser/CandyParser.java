@@ -40,7 +40,7 @@ class CandyParser implements Parser {
 	}
 
 	private static void reportError(Position pos, String message, Object... args) {
-		logger.error(pos, String.format(message, args));
+		logger.error(pos, message, args);
 	}
 	
 	private static void reportError(ASTreeNode node, String msg, Object... args) {
@@ -51,6 +51,10 @@ class CandyParser implements Parser {
 		logger.warn(node.pos, msg, args);
 	}
 	
+	private static void reportWarn(Token tok, String message, Object... args) {
+		logger.warn(tok.getPos(), message, args);
+	}
+	
 	private enum FunctionType {
 		NONE,
 		FUNCTION,
@@ -59,12 +63,15 @@ class CandyParser implements Parser {
 		INIT
 	}
 	
-	
 	protected Scanner scanner;
 	private Token[] lookahead;
-	private int lp;
 	private Token previous;
 	private Token peek;
+	
+	/**
+	 * lookahead pointer.
+	 */
+	private int lp;
 	
 	/**
 	 * If parser is parsing a single-line lambda expression(only have a 
@@ -73,14 +80,16 @@ class CandyParser implements Parser {
 	private boolean inSingleLineLambda;
 	
 	/**
-	 * True when parse loop statements such as FOR, WHILE.
+	 * If true, it means that the parser has entered a loop statement 
+	 * such as 'while', 'for'.
+	 *
+	 * But if the parser has entered a new function or class, this value
+	 * will be reset to false.
 	 */
 	private boolean inLoop;
-
-	/**
-	 * True when parse class statements.
-	 */
+	
 	private boolean inClass;
+	private boolean inStaticBlock;
 	
 	private FunctionType curFunctionType = FunctionType.NONE;
 
@@ -191,9 +200,14 @@ class CandyParser implements Parser {
 			return;
 		}
 		
-		// e.g: var a = lambda -> { return value } // missing ';'
-		// Scanner can't insert a SEMI token to the end of this expression
-		// if the previous kind is '}'.
+		// In some cases, we do not need to match the ';' in the end 
+		// of a statement.
+		// For Example: 
+		//     var add = lambda a, b -> { return a + b; }
+		//
+		// Scanner do not insert a ';' to the end of this statement, but
+		// the 'Assign' production needs a SEMI at the end, so in this case,
+		// we hope to ignore the ';'.
 		matchIf(SEMI, previous().getKind() != RBRACE);
 	}
 	
@@ -201,10 +215,10 @@ class CandyParser implements Parser {
 	 * Linux style (break before braces) or Chained method invocations...
 	 *
 	 * Scanner will insert a SEMI in some cases, e.g:
-	 * 1. func a(a, b)\n /the insertion of a SEMI/ {}
-	 * 2. if (expr)\n /the insertion of a SEMI/ {}
-	 * 3. stream(arr)\n /insertion/ .foreach(...)\n /insertion/ .count()
-	 * 4. [\n expr1,\n expr2,\n expr3\n /insertion/ ]
+	 * 1. func a(a, b)\n /SEMI/ {}
+	 * 2. if (expr)\n /SEMI/ {}
+	 * 3. stream(arr)\n /SEMI/ .foreach(...)\n /SEMI/ .count()
+	 * 4. [\n expr1,\n expr2,\n expr3\n /SEMI/ ]
 	 * ...
 	 */
 	private void ignorableLinebreak() {
@@ -212,7 +226,8 @@ class CandyParser implements Parser {
 	}
 	
 	/**
-	 * In some cases, the syntax error may be located on the next token line;
+	 * In some cases, the syntax error may be located on the line of
+	 * the next token.
 	 */
 	private Position suitableErrorPosition() {
 		Position currentPosition = peek().getPos();
@@ -238,10 +253,10 @@ class CandyParser implements Parser {
 	 * class if this class defines a initalizer.
 	 *
 	 * If user do not invoke the initalizer of the super class(first statement),
-	 * it will be inserted.
+	 * the 'super.init()' will be inserted.
 	 */
 	private void insertSuperInitCall(Position pos, List<Stmt> stmts) {
-		if (stmts.isEmpty() || !isSuperCallInit(stmts.get(0))) {
+		if (stmts.isEmpty() || !isSuperInitCall(stmts.get(0))) {
 			stmts.add(0, newSuperInitCall(pos));
 		}
 	}
@@ -249,12 +264,12 @@ class CandyParser implements Parser {
 	private Stmt newSuperInitCall(Position pos) {
 		Expr.Super superExpr = locate(pos, new Expr.Super(INITIALIZER_NAME));
 		Expr.CallFunc callSuperExpr = new Expr.CallFunc
-		(superExpr, Collections.<Expr.Argument>emptyList());
+			(superExpr, Collections.<Expr.Argument>emptyList());
 		callSuperExpr.pos = pos;
 		return locate(pos, new Stmt.ExprS(callSuperExpr));
 	}
 
-	private boolean isSuperCallInit(Stmt stmt) {
+	private boolean isSuperInitCall(Stmt stmt) {
 		if (stmt instanceof Stmt.ExprS) {
 			Expr expr = ((Stmt.ExprS) stmt).expr;
 			if (!(expr instanceof Expr.CallFunc)) {
@@ -269,7 +284,7 @@ class CandyParser implements Parser {
 		}
 		if (stmt instanceof Stmt.StmtList) {
 			Stmt.StmtList stmts = (Stmt.StmtList)stmt;
-			return !stmts.isEmpty() && isSuperCallInit(stmts.getFirstStmt());
+			return !stmts.isEmpty() && isSuperInitCall(stmts.getFirstStmt());
 		}
 		return false;
 	}
@@ -304,7 +319,7 @@ class CandyParser implements Parser {
 	}
 	
 	/**
-	 * Every functions must have a return statement at the end.
+	 * Every function must have a return-statement at the end.
 	 */
 	private void insertReturnStmt(Stmt.FuncDef node) {
 		if (!isReturnStmt(node.body.getLastStmt())) {
@@ -332,15 +347,16 @@ class CandyParser implements Parser {
 	}
 	
 	private void unexpected(Token tok) {
-		reportError(tok, "Unexpected %s", tokStr(tok.getKind()));
+		reportError(tok, "Unexpected '%s'.", tokStr(tok.getKind()));
 	}
 	
-	private void synchronizeInMethodContext() {
+	private void synchronizeInClassBodyContext() {
 		loop: while (true) {
 			switch (peekKind()) {
 				case RBRACE:
 				case FUN:
 				case IDENTIFIER:
+				case STATIC:
 				case EOF:
 					break loop;
 			}
@@ -370,6 +386,10 @@ class CandyParser implements Parser {
 				case SEMI:
 					consume();
 					break loop;
+				default:
+					if (isFirstSetOfExpr(peekKind())) {
+						break loop;
+					}
 			}
 			consume();
 		}
@@ -379,7 +399,8 @@ class CandyParser implements Parser {
 	 * Ensures that the kind of the current token is the specified token kind.
 	 * If it's not, Parser will report an error and change lt.
 	 *
-	 * @param expectedKind the token kind must be in the FIRST-SET of statements.
+	 * @param expectedKind the token kind must be in the FIRST-SET of some 
+	 *                     production.
 	 */
 	private void ensureExpectedKind(TokenKind expectedKind) {
 		if (peekKind() == expectedKind) {
@@ -407,7 +428,7 @@ class CandyParser implements Parser {
 
 	/**
 	 * Changes the last statement in the specified block into the 
-	 * {@code Return-Stmt} if it's returnable.
+	 * {@code Stmt#Return} if it's returnable.
 	 */
 	private Stmt.Block toFuncBlock(Stmt.Block block) {
 		if (block.stmts.isEmpty()) {
@@ -425,10 +446,6 @@ class CandyParser implements Parser {
 		return block;
 	}
 	
-	/**
-	 * Lambda or Map is an expression but it can't be treated as
-	 * a statement(ExprStmt).
-	 */
 	private boolean isFirstSetOfExpr(TokenKind tk) {
 		switch (tk) {
 			case IDENTIFIER: case NULL: 
@@ -439,6 +456,7 @@ class CandyParser implements Parser {
 			case LBRACKET:   case AT_IDENTIFIER:
 			case BIT_OR:     case LOGICAL_OR:
 			case ARROW:      case LAMBDA:
+			case LBRACE:
 				return true;
 		}
 		return TokenKind.isUnaryOperator(tk);
@@ -530,11 +548,11 @@ class CandyParser implements Parser {
 				case RAISE:
 					return parseRaiseStmt();
 				case VAR:
-					return parseVarDef();
+					return parseVarDef(false);
 				case FUN:
 					return parseFunDef();
 				case CLASS:
-					return parseClassDef();
+					return parseClassDef(false);
 				case IMPORT:
 					return parseImports();
 				case LBRACE:
@@ -571,68 +589,163 @@ class CandyParser implements Parser {
 		block.stmts.add(body);
 		return locate(body.pos, block);
 	}
+	
+	/**
+	 * Name = (AT_IDENTIFIER | IDENTIFIER)
+	 */
+	private boolean parseName() {
+		if (matchIf(AT_IDENTIFIER)) {
+			if (!inStaticBlock) {
+				reportError(previous, "The @name outside static block.");
+			}
+			return true;
+		} else {
+			match(IDENTIFIER, "Expected a name.").getLiteral();	
+			return false;
+		}
+	}
 
 	/**
-	 * ClassDef = "class" <IDENTIFIER> SuperClass "{" Methods "}"
+	 * ClassDef = "class" Name SuperClass ClassBody
 	 */
-	private Stmt parseClassDef() {
-		boolean origin = inClass;
-		inClass = true;
+	private Stmt parseClassDef(boolean isStatic) {
+		boolean originInClass = this.inClass;
+		boolean originInStaticBlock = this.inStaticBlock;
+		boolean originInLoop = this.inLoop;
+		FunctionType originFuncType = this.curFunctionType;
+		this.inClass = true;
+		this.inLoop = false;
+		this.curFunctionType = FunctionType.NONE;
 		try {
 			Token location = match(CLASS);
-			Token name = match(IDENTIFIER, "Expected class name.");
+			String name = peek().getLiteral();
+			boolean isStaticName = parseName();
+			// parseName() requires the previous value of the 'inStaticBlock'
+			// so we reset this value after parseName().
+			this.inStaticBlock = false;
+			// isStatic means 'static class'
+			if (isStaticName && isStatic) {
+				reportWarn(previous(), 
+					"The unnecessary '@%s' after static class.",
+					name
+				);
+			}
 			Expr superClass = parseSuperClass();
 			ignorableLinebreak();
-			matchIf(LBRACE, true);
 			Stmt.ClassDef classDef = new Stmt.ClassDef(
-				name.getLiteral(), superClass, new ArrayList<Stmt.FuncDef>()
+				isStaticName || isStatic, name, superClass, 
+				new ArrayList<Stmt.FuncDef>()
 			);
-			parseMethods(classDef);
-			Token endPos = peek();
-			if (matchIf(RBRACE, true)) {
-				classDef.endPos = Optional.of(endPos.getPos());
-			}
+			parseClassBody(classDef);		
 			return checkClass(locate(location, classDef));
 		} finally {
-			this.inClass = origin;
+			this.inClass = originInClass;
+			this.inStaticBlock = originInStaticBlock;
+			this.inLoop = originInLoop;
+			this.curFunctionType = originFuncType;
 		}
 	}
 	
 	/**
-	 * Methods = method*
+	 * ClassBody = "{" Method* [ StaticBlock ] Method* "}"
 	 */
-	private void parseMethods(Stmt.ClassDef classDef) {
+	@SuppressWarnings("fallthrough")
+	private void parseClassBody(Stmt.ClassDef classDef) {
+		matchIf(LBRACE, true);
 		loop: while (true) {
 			switch (peekKind()) {
-				case RBRACE: case EOF:
+				case RBRACE: 
+					Token endPos = peek();
+					consume();
+					classDef.endPos = Optional.of(endPos.getPos());
 					return;
-				case FUN: case IDENTIFIER: 
+				case EOF:
+					reportError(peek(), "Missing '}'.");
+					return;
+				
+				case FUN: 
+				case IDENTIFIER: {
+					Stmt.FuncDef method = parseMethod(false);
+					if (!INITIALIZER_NAME.equals(method.name.get())) {
+						classDef.methods.add(method);
+						continue loop;
+					}
+					if (!classDef.initializer.isPresent()) {
+						classDef.initializer = Optional.of(method);
+						continue loop;
+					}
+					reportError(method.pos, "Duplicate initializer in the '%s' class.",
+						classDef.name
+					);
 					break;
+				}
+				
+				case STATIC: {
+					parseStaticStatement(classDef);
+					break;
+				}
+				
 				default:
 					unexpected(peek());
-					synchronizeInMethodContext();
+					synchronizeInClassBodyContext();
 					continue loop;
+			}		
+		}
+	}
+	
+	/**
+	 * StaticBlock = "static" ( Block | VarDef | ClassDef | Metnod )
+	 */
+	private void parseStaticStatement(Stmt.ClassDef classDef) {
+		match(STATIC);
+		boolean originalInStaticBlock = this.inStaticBlock;
+		this.inStaticBlock = true;
+		try {
+			switch (peekKind()) {
+				case LBRACE: {
+					if (!classDef.staticBlock.isPresent()) {
+						classDef.staticBlock = Optional.of(parseBlock());
+					} else {
+						classDef.staticBlock.get()
+							.stmts.addAll(parseBlock().stmts);
+					}
+					break;
+				}
+				case FUN: {
+					classDef.createNewStaticBlockIfNotPresent();
+					classDef.staticBlock.get().stmts.add(parseMethod(true));
+					break;
+				}
+				case VAR: {
+					classDef.createNewStaticBlockIfNotPresent();
+					classDef.staticBlock.get().stmts.add(parseVarDef(true));
+					break;
+				}
+				case CLASS: {
+					classDef.createNewStaticBlockIfNotPresent();
+					classDef.staticBlock.get().stmts.add(parseClassDef(true));
+					break;
+				}
+				
+				default: {
+					unexpected(peek());
+					synchronizeInClassBodyContext();
+					break;
+				}
 			}
-			Stmt.FuncDef method = parseMethod();
-			if (!INITIALIZER_NAME.equals(method.name.get())) {
-				classDef.methods.add(method);
-				continue;
-			}
-			if (!classDef.initializer.isPresent()) {
-				classDef.initializer = Optional.of(method);
-				continue;
-			}
-			reportError(method.pos, "Duplicate initializer in the '%s' class.",
-				  classDef.name
-			);
+		} finally {
+			this.inStaticBlock = originalInStaticBlock;
 		}
 	}
 
 	/**
-	 * Method = <IDENTIFIER> Params Block
+	 * Method = [ "fun" ] <IDENTIFIER> Params Block
 	 */
-	private Stmt.FuncDef parseMethod() {
+	private Stmt.FuncDef parseMethod(boolean isStatic) {
 		FunctionType originalFuncType = curFunctionType;
+		// Here do not need to reset 'inLoop' and 'curFunctionType'
+		// because this method is in a class and the class statement
+		// will reset them.
 		try {
 			matchIf(FUN);
 			Token name = peek();
@@ -643,7 +756,8 @@ class CandyParser implements Parser {
 			ensureExpectedKind(TokenKind.LBRACE);
 			Stmt.Block body = parseBlock();
 			return checkFunc(
-				locate(name, new Stmt.FuncDef(name.getLiteral(), params, body))
+				locate(name, 
+					new Stmt.FuncDef(isStatic, name.getLiteral(), params, body))
 			);
 		} finally {
 			this.curFunctionType = originalFuncType;
@@ -710,12 +824,12 @@ class CandyParser implements Parser {
 			elseBody = parseBody(suitableErrorPosition(), "Invalid if-else statement.");
 		}
 		
-		return constantFolde_IF(
+		return constantFold_IF(
 			locate(location, new Stmt.If(expr, thenBody, elseBody))
 		);
 	}
 
-	private Stmt constantFolde_IF(Stmt.If node) {
+	private Stmt constantFold_IF(Stmt.If node) {
 		Stmt thenBody = node.thenBody;
 		Stmt elseBody = node.elseBody.orElse(EMPTY_STMT);	
 		if (node.elseBody.isPresent()) {
@@ -822,7 +936,7 @@ class CandyParser implements Parser {
 	/**
 	 * VarDef = "var" <IDENTIFIER> [ "=" Expr ] <SEMI>
 	 */
-	private Stmt.VarDef parseVarDef() {
+	private Stmt.VarDef parseVarDef(boolean isStatic) {
 		Token position = match(VAR);
 		Token identifier = match(IDENTIFIER, "Expected variable name.");
 		Expr initializer = null;
@@ -831,27 +945,31 @@ class CandyParser implements Parser {
 		}
 		matchSEMI();
 		return locate(position, 
-			new Stmt.VarDef(identifier.getLiteral(), initializer)
+			new Stmt.VarDef(isStatic, identifier.getLiteral(), initializer)
 		);
 	}
 
 	/**
-	 * FunDef = "fun" <IDENTIFIER> Params Block
+	 * FunDef = "fun" Name Params Block
 	 */
 	private Stmt.FuncDef parseFunDef() {
 		FunctionType originalFuncType = curFunctionType;
+		boolean originalInLoop = inLoop;
 		this.curFunctionType = FunctionType.FUNCTION;
+		this.inLoop = false;
 		try {
 			Token location = match(FUN);
-			String name = match(IDENTIFIER, "Expected function name.").getLiteral();	
+			String name = peek().getLiteral();
+			boolean isStaticFunc = parseName();
 			Stmt.Parameters params = parseParams(false);
 			Stmt.Block body = toFuncBlock(parseBlock());
 			Stmt.FuncDef funcDef = locate(
-				location, new Stmt.FuncDef(name, params, body)
+				location, new Stmt.FuncDef(isStaticFunc, name, params, body)
 			);
 			return checkFunc(funcDef);
 		} finally {
 			this.curFunctionType = originalFuncType;
+			this.inLoop = originalInLoop;
 		}
 	}
 
@@ -902,13 +1020,12 @@ class CandyParser implements Parser {
 	 * RaiseStmt = "raise" Expr
 	 */
 	private Stmt.Raise parseRaiseStmt() {
-		Token location = match(RAISE);
-		return locate(location, new Stmt.Raise(parseExpr()));
+		return locate(match(RAISE), new Stmt.Raise(parseExpr()));
 	}
 
 	/**
 	 * TryInterceptStmt = "try" Block [ InterceptionStmts ] 
-	 *                    [ ElseStmt ] [ FinallyStmt ]
+	 *                    [ ElseStmt ]
 	 */
 	private Stmt.TryIntercept parseTryInterceptStmt() {
 		Token location = match(TRY);
@@ -939,7 +1056,7 @@ class CandyParser implements Parser {
 
 	/**
 	 * InterceptionStmt = "intercept" [ Expr ( "," Expr )* ]
-	 *                    [ "as" <IDENTIFIER> ] Block
+	 *                    [ "as" <IDENTIFIER> ] [ <SEMI> ] Block
 	 */
 	private Stmt.Interception parseInterceptionStmt() {
 		Token location = previous();
@@ -1021,7 +1138,7 @@ class CandyParser implements Parser {
 	}
 	
 	/**
-	 * Ternary = BinaryExpr [ "?" Expr ":" Expr ]
+	 * TernaryExpr = BinaryExpr [ "?" Expr ":" Expr ]
 	 */
 	private Expr parseTernaryOperator() {
 		Expr condition = parseBinaryExpr(0);
@@ -1184,7 +1301,7 @@ class CandyParser implements Parser {
 				expr = locate(
 					location, new Expr.Super(name.getLiteral())
 				);
-				if (!inClass) {
+				if (!inClass || inStaticBlock) {
 					reportError(expr, "The 'super' outside class.");
 				}
 				break;
@@ -1242,7 +1359,7 @@ class CandyParser implements Parser {
 				}
 				break;
 			}	
-			reportError(tok, "Syntax error in the interpolated string.");
+			reportError(tok, "Syntax error in the interpolation.");
 			break;
 		}
 		return joinExprArr(first, arr);
@@ -1365,11 +1482,11 @@ class CandyParser implements Parser {
 					if (peek(1).getKind() != DOT) {
 						break;
 					}
-					// consume '\n'
+					// consume SEMI(may be '\n' or '\;')
 					consume();
 					// reset position marker.
 					tok = peek();
-					// continue to parse down dot.
+					// continue to parse the following dot.
 				case DOT:
 					consume();
 					Token attr = match(IDENTIFIER, "Expected attribute name.");
@@ -1384,11 +1501,11 @@ class CandyParser implements Parser {
 	}
 
 	/** 
-	 * Convert the given expression to the paramter list.
+	 * Convert the given expression to the parameter list.
 	 *
 	 * If the expression is VarRef, the paramter is the name of it.
 	 * If the expression is Tuple, each of the elements in the tuple will be
-	 * converted into the paramter name.
+	 * converted into the parameter name.
 	 *
 	 * You can write Lambda Expression in the following way:
 	 * 
@@ -1404,7 +1521,8 @@ class CandyParser implements Parser {
 	 * or 
 	 *    "lambda *a, b -> {...}" 
 	 *
-	 * to carry the star paramter(see LambdaExpr2).
+	 * to create a lambda expression with the star paramter(see 
+	 * LambdaExpr and LambdaExpr2).
 	 */
 	private Stmt.Parameters convertToParameters(Expr expr) {
 		ArrayList<String> list = new ArrayList<>(4);
@@ -1429,15 +1547,12 @@ class CandyParser implements Parser {
 	}
 
 	/**
-	 * Agruments = "(" [ [ "*" ] Expr ( "," [ "*" ] Expr )* ] 
-	 *             [ <SEMI> ] ")"
+	 * Arguments = "(" [ Argument ( "," Argument )* ] [ <SEMI> ] ")"
+	 * Argument  = [ "*" ] Expr
 	 */
 	private List<Expr.Argument> parseArguments(Position pos) {
 		consume();
 		List<Expr.Argument> args = new ArrayList<>();
-		if (matchIf(RPAREN)) {
-			return args;
-		}
 		do {
 			if (peekKind() == RPAREN) {
 				break;
@@ -1475,7 +1590,7 @@ class CandyParser implements Parser {
 		if (peekKind() == ARROW) {
 			params = Stmt.Parameters.empty();
 		} else if (matchIf(LOGICAL_OR)) {
-			// if don't check the literal,  "or -> {}" is correct.
+			// if don't check the literal,  "or -> {}" will be correct.
 			if (!"||".equals(first.getLiteral())) {
 				reportError(
 					first, 
@@ -1498,7 +1613,9 @@ class CandyParser implements Parser {
 	private Expr.Lambda parseLambdaBody(Position location, Stmt.Parameters params) {
 		match(ARROW);
 		FunctionType originalFuncType = this.curFunctionType;
+		boolean originalInLoop = this.inLoop;
 		this.curFunctionType = FunctionType.LAMBDA;	
+		this.inLoop = false;
 		try {		
 			boolean originalSingleLineLambda = inSingleLineLambda;
 			inSingleLineLambda = peekKind() != TokenKind.LBRACE;
@@ -1514,6 +1631,7 @@ class CandyParser implements Parser {
 			return lambda;
 		} finally {
 			this.curFunctionType = originalFuncType;
+			this.inLoop = originalInLoop;
 		}
 	}
 

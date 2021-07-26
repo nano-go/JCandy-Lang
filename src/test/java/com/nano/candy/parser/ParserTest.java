@@ -71,6 +71,7 @@ public class ParserTest {
 		"test(a, || -> return)",
 		"test(a, | | -> return)",
 		"test(a, -> return)",
+		"test(a, -> return {})",
 		"test(a, |a, *b| -> return a + b)",
 		"test(a, |b, c| -> return c)",
 		"var lambdaExpr = lambda a, b -> a * b",
@@ -104,6 +105,25 @@ public class ParserTest {
 			"@if = a\n" +
 			"@value = value\n" +
 		"}}",
+		
+		"class A {\n" +
+		"    static {" +
+		"	     if (a) foo()\n" +
+		"	     @a = 5\n" +
+		"	     this.b = 5\n" +
+		"        fun @foo() {@bar = 15;}" + 
+		"    }" +
+		"}",
+		
+		"class A {\n" + 
+		"    static var a = 5\n" +
+		"    static var b = @a\n" + 
+		"    static fun test() { " +
+		"        println(@a)\n" +
+		"    }\n" +
+		"    static class B {}\n" +
+		"}",
+		
 		"class A {fun a(value) {\n" + 
 			"return @a\n" +
 		"}}",

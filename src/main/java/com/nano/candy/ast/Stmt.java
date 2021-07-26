@@ -238,10 +238,20 @@ public abstract class Stmt extends ASTreeNode {
 		public Optional<String> name;
 		public Parameters parameters;
 		public Stmt.Block body;
+		public boolean isStaticFunc;
 		
 		public FuncDef(String name, Parameters parameters, 
 					   Stmt.Block body) {
 			this.name = Optional.ofNullable(name) ;
+			this.parameters = parameters;
+			this.body = body;
+		}
+		
+		public FuncDef(boolean isStaticFunc, 
+		               String name, Parameters parameters, 
+					   Stmt.Block body) {
+			this.isStaticFunc = isStaticFunc;
+			this.name = Optional.ofNullable(name);
 			this.parameters = parameters;
 			this.body = body;
 		}
@@ -279,12 +289,14 @@ public abstract class Stmt extends ASTreeNode {
 	public static class VarDef extends Stmt {
 		public String name;
 		public Optional<Expr> init;
+		public boolean isStatic;
 		
 		public VarDef(String name) {
-			this(name, null);
+			this(false, name, null);
 		}
 
-		public VarDef(String name, Expr init) {
+		public VarDef(boolean isStatic, String name, Expr init) {
+			this.isStatic = isStatic;
 			this.name = name;
 			this.init = Optional.ofNullable(init);
 		}
@@ -301,17 +313,34 @@ public abstract class Stmt extends ASTreeNode {
 		public String name;
 		public Optional<Expr> superClass;
 		public Optional<Stmt.FuncDef> initializer;
+		public Optional<Block> staticBlock;
 		public List<Stmt.FuncDef> methods;
+		public boolean isStaticClass;
 		
 		public Optional<Position> endPos;
 
-		public ClassDef(String name, Expr superClass, 
+		public ClassDef(boolean isStaticClass, 
+		                String name, Expr superClass, 
 		                List<Stmt.FuncDef> methods) {
+			this(isStaticClass, name, superClass, methods, null);
+		}
+		
+		public ClassDef(boolean isStaticClass, 
+		                String name, Expr superClass, 
+		                List<Stmt.FuncDef> methods, Block staticBlock) {
+			this.isStaticClass = isStaticClass;
 			this.name = name;
 			this.methods = methods;
 			this.superClass = Optional.ofNullable(superClass);
+			this.staticBlock = Optional.ofNullable(staticBlock);
 			this.initializer = Optional.empty();
 			this.endPos = Optional.ofNullable(null);
+		}
+		
+		public void createNewStaticBlockIfNotPresent() {
+			if (!this.staticBlock.isPresent()) {
+				this.staticBlock = Optional.of(new Stmt.Block());
+			}
 		}
 
 		public int constructorParamNumber() {
@@ -342,7 +371,7 @@ public abstract class Stmt extends ASTreeNode {
 		public Optional<Position> endPos;
 		
 		public Block() {
-			this(new LinkedList<Stmt>());
+			this(new ArrayList<Stmt>());
 		}
 
 		public Block(List<Stmt> stmts) {
