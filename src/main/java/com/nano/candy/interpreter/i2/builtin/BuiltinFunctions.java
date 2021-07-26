@@ -7,6 +7,7 @@ import com.nano.candy.interpreter.i2.builtin.type.ModuleObj;
 import com.nano.candy.interpreter.i2.builtin.type.Range;
 import com.nano.candy.interpreter.i2.builtin.type.StringObj;
 import com.nano.candy.interpreter.i2.builtin.type.error.IOError;
+import com.nano.candy.interpreter.i2.builtin.type.error.InterruptedError;
 import com.nano.candy.interpreter.i2.builtin.type.error.NativeError;
 import com.nano.candy.interpreter.i2.builtin.type.error.TypeError;
 import com.nano.candy.interpreter.i2.builtin.utils.ObjectHelper;
@@ -14,7 +15,6 @@ import com.nano.candy.interpreter.i2.cni.CNIEnv;
 import com.nano.candy.interpreter.i2.cni.NativeContext;
 import com.nano.candy.interpreter.i2.cni.NativeFunc;
 import com.nano.candy.interpreter.i2.cni.NativeLibraryLoader;
-import com.nano.candy.interpreter.i2.runtime.CandyThread;
 import com.nano.candy.interpreter.i2.runtime.module.ModuleManager;
 import com.nano.candy.std.Names;
 import com.nano.candy.sys.CandySystem;
@@ -61,7 +61,7 @@ public class BuiltinFunctions {
 		try {
 			Thread.sleep(ObjectHelper.asInteger(args[0]));
 		} catch (InterruptedException e) {
-			new NativeError(e).throwSelfNative();
+			new InterruptedError(e).throwSelfNative();
 		}
 		return null;
 	}
@@ -114,6 +114,16 @@ public class BuiltinFunctions {
 	@NativeFunc(name = "str", arity = 1)
 	public static CandyObject str(CNIEnv env, CandyObject[] args) {
 		return args[0].callStr(env);
+	}
+	
+	@NativeFunc(name = "repeat", arity = 2)
+	public static CandyObject repear(CNIEnv env, CandyObject[] args) {
+		final long COUNT = ObjectHelper.asInteger(args[0]);
+		CallableObj fn = TypeError.requiresCallable(args[1]);
+		for (int i = 0; i < COUNT; i ++) {
+			ObjectHelper.callFunction(env, fn);
+		}
+		return null;
 	}
 
 	@NativeFunc(name = "importModule", arity = 1)
@@ -203,19 +213,6 @@ public class BuiltinFunctions {
 	@NativeFunc(name = "exit", arity=1)
 	public static CandyObject exit(CNIEnv env, CandyObject[] args) {
 		System.exit((int)ObjectHelper.asInteger(args[0]));
-		return null;
-	}
-	
-	@NativeFunc(name = "start", arity=1)
-	public static CandyObject start(CNIEnv env, CandyObject[] args) {
-		CallableObj target = TypeError.requiresCallable(args[0]);
-		CandyThread.startToRunCallableObj(env.getEvaluatorEnv(), target);
-		return null;
-	}
-	
-	@NativeFunc(name = "waitOtherThreadsEnd", arity=0)
-	public static CandyObject waitOtherThreadsEnd(CNIEnv env, CandyObject[] args) {
-		CandyThread.waitOtherThreadsEnd();
 		return null;
 	}
 }

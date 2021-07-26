@@ -18,6 +18,11 @@ public class AttributeError extends ErrorObj {
 			).throwSelfNative();
 		}
 	}
+	
+	public static void throwReadOnlyError(String name) {
+		new AttributeError("The attribute '%s' is read-only.", name)
+			.throwSelfNative();
+	}
 		
 	public AttributeError() {
 		super(ATTR_ERROR_CLASS);

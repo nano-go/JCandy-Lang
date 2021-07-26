@@ -53,10 +53,6 @@ public class InterpreterImpl implements Interpreter {
 			env.getEvaluator().eval(loadedChunk);
 		} catch (VMExitException e) {
 			code = e.code;
-		} finally {
-			// The current process may exit when this method
-			// ends but there may be other threads running.
-			CandyThread.waitOtherThreadsEnd();
 		}
 		return code;
 	}

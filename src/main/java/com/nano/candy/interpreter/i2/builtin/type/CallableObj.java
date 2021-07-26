@@ -162,8 +162,7 @@ public abstract class CallableObj extends CandyObject {
 	@Override
 	public CandyObject setAttr(CNIEnv env, String name, CandyObject value) {
 		if (isBuiltinAttribute(name)) {
-			new AttributeError("The built-in attribute '%s' is read-only.", name)
-				.throwSelfNative();
+			AttributeError.throwReadOnlyError(name);
 		}
 		setMetaData(name, value);
 		return value;

@@ -19,12 +19,14 @@ import com.nano.candy.interpreter.i2.builtin.type.error.AttributeError;
 import com.nano.candy.interpreter.i2.builtin.type.error.CompilerError;
 import com.nano.candy.interpreter.i2.builtin.type.error.ErrorObj;
 import com.nano.candy.interpreter.i2.builtin.type.error.IOError;
+import com.nano.candy.interpreter.i2.builtin.type.error.InterruptedError;
 import com.nano.candy.interpreter.i2.builtin.type.error.ModuleError;
 import com.nano.candy.interpreter.i2.builtin.type.error.NameError;
 import com.nano.candy.interpreter.i2.builtin.type.error.NativeError;
 import com.nano.candy.interpreter.i2.builtin.type.error.RangeError;
 import com.nano.candy.interpreter.i2.builtin.type.error.StackOverflowError;
 import com.nano.candy.interpreter.i2.builtin.type.error.StackTraceElementObj;
+import com.nano.candy.interpreter.i2.builtin.type.error.StateError;
 import com.nano.candy.interpreter.i2.builtin.type.error.TypeError;
 import com.nano.candy.interpreter.i2.cni.CNativeFunction;
 import com.nano.candy.interpreter.i2.cni.NativeFuncRegister;
@@ -45,6 +47,7 @@ public class BuiltinVariables {
 	private static void init() {
 		defineBuiltinFunctions();
 		defineBuiltinErrorClasses();
+		defineClass(CandyThread.THREAD_CLASS);
 		defineClass(Range.RANGE_CLASS);
 		defineClass(ArrayObj.ARRAY_CLASS);
 		defineClass(IntegerObj.INTEGER_CLASS);
@@ -71,6 +74,8 @@ public class BuiltinVariables {
 		defineClass(RangeError.RANGE_ERROR_CLASS);
 		defineClass(StackOverflowError.SOF_ERROR_CLASS);
 		defineClass(TypeError.TYPE_ERROR_CLASS);
+		defineClass(StateError.STATE_ERROR_CLASS);
+		defineClass(InterruptedError.INRERRUPTED_ERROR_CLASS);
 
 		defineClass(StackTraceElementObj.STACK_TRACE_ELEMENT_CLASS);
 	}

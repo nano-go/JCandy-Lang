@@ -14,7 +14,7 @@ public class EvaluatorEnv {
 	private InterpreterOptions options;
 	
 	public EvaluatorEnv(InterpreterOptions options) {
-		this(new CandyThread(), options);
+		this(new CandyThread(Thread.currentThread()), options);
 	}
 	
 	protected EvaluatorEnv(CandyThread thread, InterpreterOptions options) {

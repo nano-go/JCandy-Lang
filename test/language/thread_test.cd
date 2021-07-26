@@ -3,20 +3,22 @@ import "unit" as unit
 class ThreadTest : unit.TestCase {
 
 	fun import_test() {
-		start(lambda -> {
+		var t1 = Thread.start(lambda -> {
 			import "stream" as stream_1
 		})
-		start(lambda -> {
+		var t2 = Thread.start(lambda -> {
 			import "stream" as stream_2
 		})
-		waitOtherThreadsEnd()
+		t1.join()
+		t2.join()
 		@assertTrue(stream_1 == stream_2)
 	}
 
 	fun closure_test() {
 		var index = 0
-		start(lambda -> index += 1)
-		waitOtherThreadsEnd()
+		Thread.start(-> {
+			index += 1
+		}).join()
 		@assertEquals(1, index) 
 	}
 
@@ -37,6 +39,20 @@ class ThreadTest : unit.TestCase {
 				@assertEquals("callRaiseAnError", stackTrace[1].getFrameName())
 			}
 		}
-		start(catchError)
+		Thread.start(catchError).join()
+	}
+
+	fun threadAttr_test() {
+		var i = 0
+		var t = Thread(-> i += 1)
+		@assertNotNull(t.name)
+		@assertTrue(t.id > 0)
+		@assertFalse(t.isDaemon)
+		@assertFalse(t.isAlive)
+		@assertFalse(t.isInterrupted)
+
+		@expectedErrorRaised(AttributeError, -> t.id = 0)
+		@expectedErrorRaised(AttributeError, -> t.isAlive = 0)
+		@expectedErrorRaised(AttributeError, -> t.isInterrupted = 0)
 	}
 }
