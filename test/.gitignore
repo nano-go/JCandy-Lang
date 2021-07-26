@@ -1,2 +1,17 @@
-tmp*
-candy_old.jar
+/tmp*
+
+# vim syntax
+syntax.cd
+
+# ast dumper tmp file
+/syntax_tree.cd
+/syntax.json
+
+# error syntax file
+/error_syntax.cd
+
+# jvm log file
+/log.txt
+
+# ruby script
+/*.rb
