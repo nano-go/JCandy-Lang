@@ -30,20 +30,6 @@ public abstract class CallableObj extends CandyObject {
 		return CALLABLE_CLASS;
 	}
 	
-	/**
-	 * Push arguments into the operand stack in the right-to-left order.
-	 */
-	public final static void pushArguments(OperandStack opStack,
-	                                       CandyObject... args) {
-		for (int i = args.length-1; i >= 0; i --) {
-			if (args[i] == null) {
-				opStack.push(NullPointer.nil());
-			} else {
-				opStack.push(args[i]);
-			}
-		}
-	}
-	
 	public static class ParametersInfo {
 		
 		/**
