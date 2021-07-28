@@ -6,8 +6,8 @@ public class OperandStack {
 	private CandyObject[] opStack;
 	private int sp;
 
-	public OperandStack(int slots) {
-		opStack = new CandyObject[slots];
+	public OperandStack(int stackMaxSize) {
+		opStack = new CandyObject[stackMaxSize];
 	}
 	
 	public final void rotThree() {
