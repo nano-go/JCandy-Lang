@@ -81,8 +81,14 @@ public abstract class Logger {
 				.append("\n    in source: ")
 				.append(pos.getFileName());
 			if (pos.getLineFromSource().isPresent()) {
-				builder.append("\n    ").append(pos.getLine())
-					.append(" | ").append(pos.getLineFromSource().get().trim());
+				String linePrefix = String.format("    %d | ", pos.getLine());
+				String line = pos.getLineFromSource().get();
+				String lineTrimmedLeft = line.replaceAll("^\\s+", "");
+				builder.append("\n").append(linePrefix).append(lineTrimmedLeft);
+				builder.append("\n")	
+					.append(" ".repeat(linePrefix.length() + (pos.getCol() - 1) - 
+						(line.length() - lineTrimmedLeft.length())))
+					.append("^");
 			}
 			return builder.toString();
 		}

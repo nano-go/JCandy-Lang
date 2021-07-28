@@ -3,8 +3,9 @@ import com.nano.candy.parser.Token;
 import com.nano.candy.parser.TokenKind;
 import com.nano.candy.std.StringFunctions;
 import com.nano.candy.utils.Position;
-import java.util.List;
+import java.util.ArrayList;
 import java.util.Collections;
+import java.util.List;
 
 public abstract class Expr extends ASTreeNode {
 	
@@ -309,6 +310,10 @@ public abstract class Expr extends ASTreeNode {
 		
 		public List<Expr> elements;
 
+		public Array() {
+			this(new ArrayList<Expr>());
+		}
+		
 		public Array(List<Expr> elements) {
 			this.elements = elements;
 		}
