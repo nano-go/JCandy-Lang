@@ -26,4 +26,17 @@ class StringTest : unit.TestCase {
 		this.assertEquals("5", ",".join([5]))
 		this.assertEquals("5, 6", ", ".join([5, 6]))
 	}
+
+	fun operator_test() {
+		@assertEquals("a", "abcd"[0])
+		@assertEquals("b", "abcd"[1])
+		@assertEquals("d", "abcd"[-1])
+
+		@expectedErrorRaised(RangeError, -> ""[0])
+		@expectedErrorRaised(RangeError, -> ""[-1])
+		@expectedErrorRaised(RangeError, -> "a"[-2])
+		@expectedErrorRaised(TypeError, -> "a"[-2] = "a")
+		@expectedErrorRaised(TypeError, -> "a"[1] = "a")
+		@expectedErrorRaised(TypeError, -> "a"[-1] = 0)
+	}
 }

@@ -6,6 +6,7 @@ import com.nano.candy.interpreter.i2.builtin.type.ArrayObj;
 import com.nano.candy.interpreter.i2.builtin.type.StringObj;
 import com.nano.candy.interpreter.i2.builtin.type.error.RangeError;
 import com.nano.candy.interpreter.i2.builtin.type.error.TypeError;
+import com.nano.candy.interpreter.i2.builtin.utils.IndexHelper;
 import com.nano.candy.interpreter.i2.builtin.utils.ObjectHelper;
 import com.nano.candy.interpreter.i2.cni.CNIEnv;
 import com.nano.candy.interpreter.i2.cni.NativeClass;
@@ -66,6 +67,51 @@ public class StringObj extends CandyObject {
 	public String value() {
 		return value;
 	}
+
+	@Override
+	public CandyObject iterator(CNIEnv env) {
+		return new IteratorObj.StringIterator(this.value);
+	}
+
+	@Override
+	protected BoolObj lt(CNIEnv env, CandyObject operand) {
+		if (operand instanceof StringObj) {
+			return BoolObj.valueOf(
+				value.compareTo(((StringObj)operand).value) < 0
+			);
+		}
+		return super.lt(env, operand);
+	}
+
+	@Override
+	protected BoolObj lteq(CNIEnv env, CandyObject operand) {
+		if (operand instanceof StringObj) {
+			return BoolObj.valueOf(
+				value.compareTo(((StringObj)operand).value) <= 0
+			);
+		}
+		return super.lteq(env, operand);
+	}
+
+	@Override
+	protected BoolObj gt(CNIEnv env, CandyObject operand) {
+		if (operand instanceof StringObj) {
+			return BoolObj.valueOf(
+				value.compareTo(((StringObj)operand).value) > 0
+			);
+		}
+		return super.gt(env, operand);
+	}
+
+	@Override
+	protected BoolObj gteq(CNIEnv env, CandyObject operand) {
+		if (operand instanceof StringObj) {
+			return BoolObj.valueOf(
+				value.compareTo(((StringObj)operand).value) >= 0
+			);
+		}
+		return super.gteq(env, operand);
+	}
 	
 	@Override
 	public CandyObject add(CNIEnv env, CandyObject operand) {
@@ -83,15 +129,19 @@ public class StringObj extends CandyObject {
 	}
 
 	@Override
+	protected CandyObject getItem(CNIEnv env, CandyObject key) {
+		int index = IndexHelper.asIndex(key, value.length());
+		return valueOf(value.charAt(index));
+	}
+
+	@Override
 	public BoolObj equals(CNIEnv env, CandyObject operand) {
 		if (operand == this) {
 			return BoolObj.TRUE;
 		}
 		if (operand instanceof StringObj) {
 			String str = ((StringObj)operand).value();
-			return BoolObj.valueOf(
-				StringFunctions.equals(value, str)
-			);
+			return BoolObj.valueOf(StringFunctions.equals(value, str));
 		}
 		return BoolObj.FALSE;
 	}
@@ -124,21 +174,13 @@ public class StringObj extends CandyObject {
 		long beginIndex = ObjectHelper.asInteger(args[0]);
 		long endIndex = ObjectHelper.asInteger(args[1]);
 		final int size = value.length();
-		RangeError.checkIndex(beginIndex, size);
-		RangeError.checkIndexForAdd(endIndex, size);
+		beginIndex = RangeError.checkIndex(beginIndex, size);
+		endIndex = RangeError.checkIndexForAdd(endIndex, size);
 		if (beginIndex > endIndex) {
 			return EMPTY_STR;
 		}
 		return valueOf(value.substring(
 			(int) beginIndex, (int) endIndex));
-	}
-	
-	@NativeMethod(name = "charAt", argc = 1)
-	public CandyObject charAt(CNIEnv env, CandyObject[] args) {
-		long index = ObjectHelper.asInteger(args[0]);
-		final int size = value.length();
-		RangeError.checkIndex(index, size);
-		return valueOf(value.charAt((int)index));
 	}
 	
 	@NativeMethod(name = "length")
@@ -251,7 +293,7 @@ public class StringObj extends CandyObject {
 		);
 	}
 	
-	@NativeMethod(name = "toCharInt", argc=0)
+	@NativeMethod(name = "codePoint", argc=0)
 	public CandyObject toCodePoint(CNIEnv env, CandyObject[] args){
 		if (value.length() != 1) {
 			new TypeError("The object is not a single char: <%s>", value)
@@ -270,9 +312,22 @@ public class StringObj extends CandyObject {
 		return valueOf(value.toLowerCase());
 	}
 	
-	@NativeMethod(name = "toInt")
+	@NativeMethod(name = "capitalize")
+	public CandyObject capitalize(CNIEnv env, CandyObject[] args){
+		return valueOf(
+			value.substring(0, 1).toUpperCase().concat(
+				value.substring(1)
+			)
+		);
+	}
+	
+	@NativeMethod(name = "toInt", argc = 1, varArgsIndex = 0)
 	public CandyObject toInt(CNIEnv env, CandyObject[] args){
-		return IntegerObj.valueOf(Integer.valueOf(value));
+		CandyObject radix = 
+			ObjectHelper.getOptionalArgument(args[0], IntegerObj.valueOf(10));
+		return IntegerObj.valueOf(
+			Integer.valueOf(value, (int) ObjectHelper.asInteger(radix))
+		);
 	}
 	
 	@NativeMethod(name = "toDouble")

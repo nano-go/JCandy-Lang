@@ -50,6 +50,11 @@ public class IntegerObj extends NumberObj {
 		this.value = ObjectHelper.asInteger(args[0]);
 		return this;
 	}
+	
+	@NativeMethod(name = "toChar")
+	public CandyObject toChar(CNIEnv env, CandyObject[] args) {
+		return StringObj.valueOf((char) value);
+	}
 
 	@Override
 	public CandyObject negative(CNIEnv env) {

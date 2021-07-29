@@ -98,6 +98,25 @@ public abstract class IteratorObj extends CandyObject {
 		}
 	}
 	
+	public static class StringIterator extends IteratorObj {
+		private int i;
+		private String str;
+
+		public StringIterator(String str) {
+			this.str = str;
+		}
+
+		@Override
+		public final boolean hasNext(CNIEnv env) {
+			return i < str.length();
+		}
+
+		@Override
+		public final CandyObject next(CNIEnv env) {
+			return StringObj.valueOf(str.charAt(i ++));
+		}
+	}
+	
 	private FasterNativeMethod next;
 	private FasterNativeMethod hasNext;
 	

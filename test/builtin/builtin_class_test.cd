@@ -129,10 +129,6 @@ class BuiltinClassTest : unit.TestCase {
 				super.init(str)
 			}
 			
-			fun _getItem(index) {
-				return this.charAt(index)
-			}
-
 			fun _iterator() {
 				var iterator = Object()
 				var i = 0
