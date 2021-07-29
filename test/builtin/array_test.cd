@@ -122,10 +122,6 @@ fun insertion_deletion_0_test() {
 	arr = []
 	expectedError(re, lambda -> arr.insert(1, 2))
 	expectedError(re, lambda -> arr.deleteAt(1))
-	
-	arr = [1]
-	expectedError(re, lambda -> arr.insert(-1, 2))
-	expectedError(re, lambda -> arr.deleteAt(-1))
 }
 
 fun insertion_deletion_1_test() {
@@ -187,7 +183,6 @@ fun insertion_deletion_1_test() {
 	expectedError(re, lambda -> [1, 2, 3].deleteRange(3, 3))
 	
 	expectedError(re, lambda -> [].insertAll(1, 0, 1))
-	expectedError(re, lambda -> [].insertAll(-1, 1))
 	expectedError(re, lambda -> [1].insertAll(2, 2))
 	expectedError(re, lambda -> [1, 2, 3].insertAll(4, 3))
 	
@@ -208,7 +203,6 @@ fun set_get_foreach_test() {
 	fun assertGet(arr, *expectedElements) {
 		for (i in range(0, expectedElements.length())) {
 			assert arr[i] == expectedElements[i]
-			assert arr.get(i) == expectedElements.get(i)
 			assert arr._getItem(i) == expectedElements._getItem(i)
 		}
 	}
@@ -220,8 +214,8 @@ fun set_get_foreach_test() {
 		}
 		
 		for (i in range(0, elements.length())) {
-			arr.set(i, 0)
-			assert arr.get(i) == 0
+			arr[i] = 0 
+			assert arr[i] == 0
 		}
 		
 		for (i in range(0, elements.length())) {
@@ -267,10 +261,8 @@ fun set_get_foreach_test() {
 	arr = []
 	fun errors(index) {
 		expectedError(re, lambda -> arr[index])
-		expectedError(re, lambda -> arr.get(index))
 		expectedError(re, lambda -> arr._getItem(index))
 		expectedError(re, lambda -> arr[index] = 0)
-		expectedError(re, lambda -> arr.set(index, 0))
 		expectedError(re, lambda -> arr._setItem(index, 0))
 	}
 	for (i in range(-1, 3)) errors(i)
@@ -352,7 +344,6 @@ fun misc_0_test() {
 	arr.swap(0, 1)
 	assert arr == [2, 1]
 	
-	expectedError(RangeError, lambda -> arr.swap(-1, 0))
 	expectedError(RangeError, lambda -> arr.swap(0, 2))
 	
 	assert [].reverse() == []

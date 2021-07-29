@@ -1,0 +1,50 @@
+import "unit" as unit
+import "../custom" as custom
+
+custom.importAll()
+
+class ArrayTest : unit.TestCase {
+	fun indexAccess_test() {
+		var arr = [0, 1, 2, 3]
+		for (i in range(0, 4)) {
+			@assertEquals(i, arr[i])
+		}
+		for (i in range(-4, 0)) {
+			@assertEquals(i+4, arr[i])
+		}
+		arr.insert(-1, 4)
+		@assertEquals([0, 1, 2, 3, 4], arr)
+		arr.insert(-6, -1)
+		@assertEquals([-1, 0, 1, 2, 3, 4], arr)
+
+		@expectedErrorRaised(RangeError, -> arr.insert(-8, 0))
+		@expectedErrorRaised(RangeError, -> arr.insert(7, 0))
+
+		@assertEquals(-1, [-1][-1])
+		@expectedErrorRaised(RangeError, -> [][-1])
+	}
+
+	fun insertion_test() {
+		var arr = []
+		arr.insertAll(0, *(0, 1, 2, 3))
+		@assertEquals([0, 1, 2, 3], arr)
+		arr.insertAll(-2, *LinkedList("1", "2"))
+		@assertEquals([0, 1, 2, "1", "2", 3], arr)
+		arr.insertAll(0, *[])
+		@assertEquals([0, 1, 2, "1", "2", 3], arr)
+		arr.insertAll(0, *())
+		@assertEquals([0, 1, 2, "1", "2", 3], arr)
+
+		arr = []
+		arr.insertAll(-1, *(1, 2))
+		@assertEquals([1, 2], arr)
+	}
+
+	fun operator_test() {
+		@assertEquals([1, 2, 1, 2], [1, 2]* 2)
+		@assertEquals([1, 1, 1], [1] * 3)
+		@assertEquals([], [] * 2)
+		@assertEquals([], [1, 2, 3] * 0)
+		@assertEquals([], [1, 2, 3] * -1)
+	}
+}

@@ -3,6 +3,8 @@ package com.nano.candy.interpreter.i2.builtin.type;
 import com.nano.candy.interpreter.i2.builtin.CandyClass;
 import com.nano.candy.interpreter.i2.builtin.CandyObject;
 import com.nano.candy.interpreter.i2.builtin.type.TupleObj;
+import com.nano.candy.interpreter.i2.builtin.type.error.ArgumentError;
+import com.nano.candy.interpreter.i2.builtin.type.error.RangeError;
 import com.nano.candy.interpreter.i2.builtin.type.error.TypeError;
 import com.nano.candy.interpreter.i2.builtin.utils.ArrayHelper;
 import com.nano.candy.interpreter.i2.builtin.utils.ObjectHelper;
@@ -37,12 +39,19 @@ public final class TupleObj extends CandyObject {
 		this.hash = null;
 	}
 	
+	public TupleObj(CandyObject[] elements, int len) {
+		super(TUPLE_CLASS);
+		this.elements = Arrays.copyOf(elements, len);
+		this.hash = null;
+	}
+	
 	public int length() {
 		return elements.length;
 	}
 	
-	public CandyObject get(int index) {
-		return elements[index];
+	public CandyObject get(long index) {
+		index = RangeError.checkIndex(index, elements.length);
+		return elements[(int) index];
 	}
 	
 	public TupleObj add(CandyObject tuple) {
@@ -59,12 +68,20 @@ public final class TupleObj extends CandyObject {
 
 	@Override
 	public CandyObject getItem(CNIEnv env, CandyObject key) {
-		return elements[(int) ObjectHelper.asInteger(key)];
+		long index = ObjectHelper.asInteger(key);
+		return ObjectHelper.preventNull(get(index));
 	}
 	
 	@Override
 	public CandyObject add(CNIEnv env, CandyObject operand) {
 		return add(operand);
+	}
+
+	@Override
+	protected CandyObject mul(CNIEnv env, CandyObject operand) {
+		long repeat = ObjectHelper.asInteger(operand);
+		ArgumentError.checkValueTooLarge(repeat, "repeat");
+		return new TupleObj(ArrayUtils.repeat(elements, (int) repeat));
 	}
 
 	@Override

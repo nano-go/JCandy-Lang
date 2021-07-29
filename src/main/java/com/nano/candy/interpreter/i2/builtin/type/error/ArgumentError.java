@@ -37,7 +37,13 @@ public class ArgumentError extends ErrorObj {
 		} else {
 			new ArgumentError(callable, actual).throwSelfNative();
 		}
-		
+	}
+	
+	public static void checkValueTooLarge(long value, String argName) {
+		if (value > Integer.MAX_VALUE) {
+			new ArgumentError("The %s too large.", argName)
+				.throwSelfNative();
+		}
 	}
 
 	private static String name(CandyObject obj) {

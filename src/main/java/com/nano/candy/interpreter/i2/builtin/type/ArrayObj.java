@@ -8,6 +8,7 @@ import com.nano.candy.interpreter.i2.builtin.type.error.NativeError;
 import com.nano.candy.interpreter.i2.builtin.type.error.RangeError;
 import com.nano.candy.interpreter.i2.builtin.type.error.TypeError;
 import com.nano.candy.interpreter.i2.builtin.utils.ArrayHelper;
+import com.nano.candy.interpreter.i2.builtin.utils.IndexHelper;
 import com.nano.candy.interpreter.i2.builtin.utils.ObjectHelper;
 import com.nano.candy.interpreter.i2.cni.CNIEnv;
 import com.nano.candy.interpreter.i2.cni.NativeClass;
@@ -30,9 +31,6 @@ public final class ArrayObj extends CandyObject {
 		return new ArrayObj(EMPTY_ARRAY); 
 	}
 	
-	/**
-	 * Requested maximum array size.
-	 */
 	private static final int MAX_ARRAY_SIZE = Integer.MAX_VALUE - 8;
 	
 	protected static void checkCapacity(long capacity) {
@@ -104,18 +102,6 @@ public final class ArrayObj extends CandyObject {
 		}
 	}
 	
-	private int asIndex(CandyObject index) {
-		long validIndex = ObjectHelper.asInteger(index);
-		RangeError.checkIndex(validIndex, length);
-		return (int) validIndex;
-	}
-	
-	private int asIndexForInsert(CandyObject index) {
-		long validIndex = ObjectHelper.asInteger(index);
-		RangeError.checkIndex(validIndex, length + 1);
-		return (int) validIndex;
-	}
-	
 	public void append(CandyObject obj) {
 		ensureCapacity(length + 1);
 		elements[length ++] = obj;
@@ -138,7 +124,7 @@ public final class ArrayObj extends CandyObject {
 	}
 	
 	public CandyObject get(int index) {
-		RangeError.checkIndex(index, length);
+		index = RangeError.checkIndex(index, length);
 		return elements[index];
 	}
 	
@@ -216,12 +202,14 @@ public final class ArrayObj extends CandyObject {
 	
 	@Override
 	public CandyObject getItem(CNIEnv env, CandyObject key) {
-		return elements[asIndex(key)];
+		return ObjectHelper.preventNull(
+			elements[IndexHelper.asIndex(key, length)]
+		);
 	}
 
 	@Override
 	public CandyObject setItem(CNIEnv env, CandyObject key, CandyObject value) {
-		elements[asIndex(key)] = value;
+		elements[IndexHelper.asIndex(key, length)] = value;
 		return value;
 	}
 
@@ -231,6 +219,13 @@ public final class ArrayObj extends CandyObject {
 		return new ArrayObj(
 			ArrayUtils.mergeArray(elements, ((ArrayObj) operand).elements)
 		);
+	}
+
+	@Override
+	protected CandyObject mul(CNIEnv env, CandyObject operand) {
+		long repat = ObjectHelper.asInteger(operand);
+		ArgumentError.checkValueTooLarge(repat, "repeat");
+		return new ArrayObj(ArrayUtils.repeat(elements, length, (int) repat));
 	}
 	
 	@Override
@@ -325,14 +320,14 @@ public final class ArrayObj extends CandyObject {
 	
 	@NativeMethod(name = "insert", argc = 2)
 	public CandyObject insert(CNIEnv env, CandyObject[] args) {
-		int index = asIndexForInsert(args[0]);
+		int index = IndexHelper.asIndexForAdd(args[0], length);
 		insert(index, args[1]);
 		return args[1];
 	}
 	
 	@NativeMethod(name = "insertAll", argc = 2, varArgsIndex = 1)
 	public CandyObject insertAllAt(CNIEnv env, CandyObject[] args) {
-		int index = asIndexForInsert(args[0]);
+		int index = IndexHelper.asIndexForAdd(args[0], length);
 		if (args[1] == NullPointer.nil()) {
 			return this;
 		}
@@ -343,7 +338,7 @@ public final class ArrayObj extends CandyObject {
 	
 	@NativeMethod(name = "deleteAt", argc = 1)
 	public CandyObject deleteAt(CNIEnv env, CandyObject[] args) {
-		return deleteAt(asIndex(args[0]));
+		return deleteAt(IndexHelper.asIndex(args[0], length));
 	}
 	
 	@NativeMethod(name = "delete", argc = 1)
@@ -353,18 +348,11 @@ public final class ArrayObj extends CandyObject {
 	
 	@NativeMethod(name = "deleteRange", argc = 2)
 	public CandyObject deleteRange(CNIEnv env, CandyObject[] args) {
-		deleteRange(asIndex(args[0]), asIndexForInsert(args[1]));
+		deleteRange(
+			IndexHelper.asIndex(args[0], length),
+			IndexHelper.asIndexForAdd(args[1], length)
+		);
 		return this;
-	}
-	
-	@NativeMethod(name = "set", argc = 2)
-	public CandyObject set(CNIEnv env, CandyObject[] args) {
-		return elements[asIndex(args[0])] = args[1];
-	}
-	
-	@NativeMethod(name = "get", argc = 1)
-	public CandyObject get(CNIEnv env, CandyObject[] args) {
-		return elements[asIndex(args[0])];
 	}
 	
 	@NativeMethod(name = "contains", argc = 1)
@@ -384,8 +372,8 @@ public final class ArrayObj extends CandyObject {
 	
 	@NativeMethod(name = "swap", argc = 2)
 	public CandyObject swap(CNIEnv env, CandyObject[] args) {
-		int i = asIndex(args[0]);
-		int j = asIndex(args[1]);
+		int i = IndexHelper.asIndex(args[0], length);
+		int j = IndexHelper.asIndex(args[1], length);
 		
 		CandyObject tmp = elements[i];
 		elements[i] = elements[j];
@@ -400,8 +388,8 @@ public final class ArrayObj extends CandyObject {
 	
 	@NativeMethod(name = "copyRange", argc = 2)
 	public CandyObject copyRange(CNIEnv env, CandyObject[] args) {
-		int from = asIndex(args[0]);
-		int to = asIndexForInsert(args[1]);
+		int from = IndexHelper.asIndex(args[0], length);
+		int to = IndexHelper.asIndexForAdd(args[1], length);
 		return new ArrayObj(Arrays.copyOfRange(elements, from, to));
 	}
 	

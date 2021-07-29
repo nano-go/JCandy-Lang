@@ -41,6 +41,13 @@ public class ArrayHelper {
 		return str.toString();
 	}
 	
+	public static ArrayObj toArray(CNIEnv env, CandyObject obj) {
+		if (obj instanceof ArrayObj) {
+			return (ArrayObj) obj;
+		}
+		return new ArrayObj(ObjectHelper.iterableObjToArray(env, obj));
+	}
+	
 	public static ArrayObj toCandyStringArr(String[] arr) {
 		ArrayObj candyArr = new ArrayObj(arr.length);
 		for (String e : arr) {

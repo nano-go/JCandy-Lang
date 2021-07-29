@@ -165,7 +165,7 @@ class Result {
 
 	fun _addTaskResult(task) {
 		if (this.pushedGroup.length() != 0) {
-			this.pushedGroup.get(this.pushedGroup.length()-1).append(task)
+			this.pushedGroup[this.pushedGroup.length()-1].append(task)
 		} else {
 			this.taskResults.append(task)
 		}
