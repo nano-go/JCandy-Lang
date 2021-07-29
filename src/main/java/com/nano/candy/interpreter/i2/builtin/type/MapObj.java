@@ -253,7 +253,7 @@ public final class MapObj extends CandyObject {
 
 	@Override
 	public CandyObject getItem(CNIEnv env, CandyObject key) {
-		return get(env, key);
+		return ObjectHelper.preventNull(get(env, key));
 	}
 	
 	@NativeMethod(name = "put", argc = 2)
