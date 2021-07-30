@@ -54,6 +54,7 @@ public class InterpreterImpl implements Interpreter {
 		} catch (VMExitException e) {
 			code = e.code;
 		}
+		CandyThread.waitOtherThreadsEnd();
 		return code;
 	}
 

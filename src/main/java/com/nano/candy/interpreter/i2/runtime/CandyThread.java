@@ -48,7 +48,7 @@ public class CandyThread extends CandyObject {
 	public static CandyObject startThread(CNIEnv env, CandyObject[] args) {
 		CallableObj runner = TypeError.requiresCallable(args[0]);
 		CandyThread t = new CandyThread(env, runner);
-		t.getJavaThread().start();
+		t.start();
 		return t;
 	}
 	
@@ -73,9 +73,11 @@ public class CandyThread extends CandyObject {
 	}
 	
 	public static void waitOtherThreadsEnd() {
-		while (true) {
+		while (true) {		
 			if (runningThreadCounter == 0) break;
-			Thread.yield();
+			try {
+				Thread.sleep(20);
+			} catch (InterruptedException e) {}
 		}
 	}
 
@@ -91,10 +93,7 @@ public class CandyThread extends CandyObject {
 		}
 
 		@Override
-		public void run() {
-			synchronized (threadCounterLock) {
-				runningThreadCounter ++;
-			}
+		public void run() {		
 			EvaluatorEnv newEnv = new EvaluatorEnv(candyThread, env.getOptions());
 			try {
 				newEnv.getEvaluator().eval(target, 0);
@@ -165,7 +164,14 @@ public class CandyThread extends CandyObject {
 		}
 		return frames;
 	}
-
+	
+	public void start() {
+		synchronized (threadCounterLock) {
+			runningThreadCounter ++;
+		}
+		this.javaThread.start();
+	}
+	
 	protected final void pushFrame(Frame frame) {
 		stack.pushFrame(frame);
 	}
@@ -211,7 +217,7 @@ public class CandyThread extends CandyObject {
 	@NativeMethod(name = "start")
 	public CandyObject start(CNIEnv env, CandyObject[] args) {
 		try {
-			this.javaThread.start();
+			start();
 		} catch (IllegalThreadStateException e) {
 			new StateError("This thread '" + getName() + "' has already started.");
 		}
