@@ -39,6 +39,12 @@ fun iteratorTest() {
 		assert cmpI == i
 		cmpI -= 1
 	}
+	
+	cmpI = 0
+	for (i in 0..10) {
+		assert cmpI == i
+		cmpI += 1
+	}
 }
 
 fun emptySetTest() {

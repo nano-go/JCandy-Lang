@@ -30,6 +30,8 @@ public class OperatorInstructionMap {
 		map(TokenKind.LTEQ, OpCodes.OP_LTEQ);
 		map(TokenKind.EQUAL, OpCodes.OP_EQ);
 		map(TokenKind.NOT_EQUAL, OpCodes.OP_NOTEQ);
+		
+		map(TokenKind.DOT_DOT, OpCodes.OP_RANGE);
 	}
 		
 	private static void map(TokenKind binaryOp, byte instruction) {

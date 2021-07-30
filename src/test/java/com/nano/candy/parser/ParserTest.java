@@ -15,6 +15,9 @@ public class ParserTest {
 
 	public static final String[] UNEXPECTED_ERROR_CASES = {
 		"var a = 5; a += 15; a -= 15; a *= 15; a /= 15; a %= 15",
+		"var a = 1..2",
+		"var a = 1*2..2*5",
+		"var a = 1*2..2>5",
 		"var arr = [1, 5 + 6, lambda a,b -> 9, c] + 123 * 5",
 		"var arr = [1, 5 + 6, a = 15, false]",
 		"var arr = [1, 5 + 6, a = lambda a -> b]",

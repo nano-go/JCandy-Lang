@@ -12,10 +12,8 @@ class CandyScanner implements Scanner {
 	private Position startPos;
 	private Token tok;
 	
-	/**
-	 * Stores the parsed tokens in the interpolation.
-	 */
-	private Queue<Token> macthedToken = new LinkedList<>();
+	
+	private Queue<Token> parsedToken = new LinkedList<>();
 	
 	private Position basePos;
 	
@@ -47,8 +45,8 @@ class CandyScanner implements Scanner {
 
 	@Override
 	public Token nextToken() {
-		if (!macthedToken.isEmpty()) {
-			this.tok = macthedToken.poll();
+		if (!parsedToken.isEmpty()) {
+			this.tok = parsedToken.poll();
 		} else {
 			this.tok = privateNextToken();
 		}
@@ -101,11 +99,11 @@ class CandyScanner implements Scanner {
 					
 				case '"':
 					readStringLiteral(false);
-					if (macthedToken.isEmpty()) {
+					if (parsedToken.isEmpty()) {
 						continue scanAgain;
 					} else {
 						this.insertSemi = true;
-						return macthedToken.poll();
+						return parsedToken.poll();
 					}
 					
 				case '/' :
@@ -201,6 +199,10 @@ class CandyScanner implements Scanner {
 					break;					
 				case '.' :
 					kind = TokenKind.DOT;
+					if (reader.peek() == '.') {
+						reader.consume();
+						kind = TokenKind.DOT_DOT;
+					}
 					break;
 				default :
 					reader.error(startPos, "Unknown character: '%c'", ch);
@@ -363,18 +365,32 @@ class CandyScanner implements Scanner {
 		}
 		
 		boolean hasError = digits(base);
-		boolean hasRadixPoint = false;	
-		hasRadixPoint = reader.peek() == '.';
-		if (hasRadixPoint) {
-			if (base != 10) {
-				reader.error(
-					"Invalid radix point in %s literal.", 
-					baseName(base)
-				);
-				hasError = true;
+		boolean hasRadixPoint = false;
+		if (reader.peek() == '.') {
+			Position pos = reader.pos();
+			reader.consume();
+			if (Characters.isDigit(reader.peek()) || reader.peek() == '_') {
+				hasRadixPoint = true;
+				reader.putChar('.');
+				if (base != 10) {
+					reader.error(pos,
+						"Invalid radix point in %s literal.", 
+						baseName(base)
+					);
+					hasError = true;
+				}
+				hasError = digits(base) || hasError;
+			} else { 
+				// 123. will be recognized as a number and a dot.
+				TokenKind kind = TokenKind.DOT;
+				if (reader.peek() == '.') {
+					kind = TokenKind.DOT_DOT;
+					reader.consume();
+				}
+				this.insertSemi = false;
+				parsedToken.add(
+					new Token(pos, kind.getLiteral(), kind));
 			}
-			reader.putChar(true);
-			hasError = digits(base) || hasError;
 		}
 		
 		if (hasError) {
@@ -390,9 +406,9 @@ class CandyScanner implements Scanner {
 	private Token toNumberToken(String lit, boolean hasPrefix, boolean hasRadixPoint, int base) {
 		String numberLit = lit;
 		if (hasPrefix) {
-			// remove the prefix of a number like 0x...
+			// remove the prefix of the literal such as 0x...
 			numberLit = lit.substring(2);
-			// format "" will be error. replace it with "0"
+			// valueOf("") will be error. replace it with "0"
 			if (numberLit.length() == 0) {
 				numberLit = "0";
 			}
@@ -421,7 +437,7 @@ class CandyScanner implements Scanner {
 			switch (ch) {
 				case '\n': case Characters.EOF:
 					reader.error("Unterminated string literal.");
-					macthedToken.clear();
+					parsedToken.clear();
 					return;
 				
 				case '"':
@@ -455,7 +471,7 @@ class CandyScanner implements Scanner {
 			}
 		}
 		reader.consume();
-		macthedToken.offer(
+		parsedToken.offer(
 			new Token(startPos, reader.savedString(), TokenKind.STRING));
 	}
 
@@ -463,7 +479,7 @@ class CandyScanner implements Scanner {
 	 * If we find an interpolated string, we treat the saved string as a 
 	 * INTERPOLATION and the interpolation between '${' and '}' will be 
 	 * treat as a serial of the normal token and put them into the 
-	 * 'matchedToken' list.
+	 * 'parsedTokens' list.
 	 *
 	 * This string:
 	 *
@@ -484,9 +500,9 @@ class CandyScanner implements Scanner {
 	 * '\' to escape '"'.
 	 */
 	private void readInterpolatedString() {
-		macthedToken.offer(
+		parsedToken.offer(
 			new Token(startPos, reader.savedString(), TokenKind.INTERPOLATION));
-		int previousNumToks = macthedToken.size();
+		int previousNumToks = parsedToken.size();
 		outloop: while (true) {
 			skipWhitespace(true);
 			switch (reader.peek()) {
@@ -496,10 +512,10 @@ class CandyScanner implements Scanner {
 					break outloop;
 					
 				case '}':
-					if (previousNumToks == macthedToken.size()) {
+					if (previousNumToks == parsedToken.size()) {
 						reader.error("Empty interpolation string.");
 						// Insert an empty string to prevent errors in Parser.
-						macthedToken.offer(
+						parsedToken.offer(
 							new Token(reader.pos(), "", TokenKind.STRING));
 					}
 					reader.consume();
@@ -511,7 +527,7 @@ class CandyScanner implements Scanner {
 					break;
 					
 				default: 
-					macthedToken.offer(privateNextToken());
+					parsedToken.offer(privateNextToken());
 					break;
 			}
 		}
@@ -525,7 +541,7 @@ class CandyScanner implements Scanner {
 				break;
 				
 			case '{': case '}':
-				macthedToken.offer(privateNextToken());
+				parsedToken.offer(privateNextToken());
 				break;
 				
 			default:

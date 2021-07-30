@@ -209,6 +209,7 @@ public class ScannerTestCase {
 			"\n12.34\n",
 			doubl("12.34"), SEMILN
 		),
+		newTKCase("123..", integer("123"), DOT_DOT),
 		
 		/*===== Operator Test Case =====*/
 		
@@ -216,12 +217,13 @@ public class ScannerTestCase {
 			id("a"), QUESITION, id("b"), COLON, id("c"), SEMIEOF),
 		
 		newTKCase(
-			"+ - * / % is == != > >= < <= and or && ||", 
+			"+ - * / % is == != > >= < <= and or && || ..", 
 			PLUS, MINUS, STAR, DIV, MOD, 
 			IS, EQUAL, NOT_EQUAL,
 			GT, GTEQ, LT, LTEQ,
 			tk(LOGICAL_AND, "and"), tk(LOGICAL_OR, "or"),
-			tk(LOGICAL_AND, "&&"), tk(LOGICAL_OR, "||")
+			tk(LOGICAL_AND, "&&"), tk(LOGICAL_OR, "||"),
+			DOT_DOT
 		),
 		newTKCase(
 			"= += -= *= /= %=",
@@ -242,6 +244,11 @@ public class ScannerTestCase {
 			integer("50"), MOD, 
 			integer("45"),SEMIEOF
 		),
+		
+		newTKCase("123.abc", integer("123"), DOT, id("abc"), SEMIEOF),
+		newTKCase("123.", integer("123"), DOT),
+		newTKCase("123..", integer("123"), DOT_DOT),
+		
 		
 		/*===== KeyWord Test Case ===== */
 		newTKCase(
@@ -345,6 +352,7 @@ public class ScannerTestCase {
 		newNLCase("3_._14159_265358_9793", DOUBLE, 3.141592653589793D),
 		newNLCase("0._35", DOUBLE, 0.35),
 		newNLCase("0.35", DOUBLE, 0.35),
+		newNLCase("0._123", DOUBLE, 0.123),
 	
 		newNLCase("0", INTEGER, 0),
 		newNLCase("0b", INTEGER, 0),
@@ -400,7 +408,6 @@ public class ScannerTestCase {
 		/* Number Literal */	
 		newPECase("0bFFFF", true, pos(1, 3), pos(1, 4), pos(1, 5), pos(1, 6)),
 		newPECase("0b002", true, pos(1, 5)),
-		newPECase("0xFFFF.FFF", true, pos(1, 7)),
 		newPECase("089", true, pos(1, 2), pos(1, 3)),
 		newPECase("0o89", true, pos(1, 3), pos(1, 4)),
 		newPECase("01.6", true, pos(1, 3)),

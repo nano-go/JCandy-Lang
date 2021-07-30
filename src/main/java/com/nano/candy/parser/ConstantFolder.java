@@ -107,6 +107,11 @@ public class ConstantFolder {
 		if (!left.isConstant()) {
 			return binaryExpr;
 		}
+		
+		// can't fold the range a..b
+		if (operator == TokenKind.DOT_DOT) {
+			return binaryExpr;
+		}
 
 		Expr ret = foldBinaryExpr(left, operator, right);
 		if (ret == null) { 

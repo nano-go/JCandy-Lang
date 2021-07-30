@@ -32,6 +32,7 @@ public enum TokenKind {
 	STAR("*"),
 	DIV("/"),
 	MOD("%"),
+	DOT_DOT(".."),
 	LOGICAL_AND("and"),
 	LOGICAL_OR("or"),
 	IS("is"),
@@ -144,21 +145,23 @@ public enum TokenKind {
 	
 	public static int precedence(TokenKind kind) {
 		switch (kind) {
-			case LOGICAL_OR: 
+			case DOT_DOT:
 				return 1;
-			case LOGICAL_AND: 
+			case LOGICAL_OR: 
 				return 2;
+			case LOGICAL_AND: 
+				return 3;
 			case EQUAL: 
 			case NOT_EQUAL: 
-				return 3;
+				return 4;
 			case GT: case GTEQ: 
 			case LT: case LTEQ: 
 			case IS:
-				return 4;
-			case PLUS: case MINUS: 
 				return 5;
-			case STAR: case DIV: case MOD: 
+			case PLUS: case MINUS: 
 				return 6;
+			case STAR: case DIV: case MOD: 
+				return 7;	
 		}
 		return 0;
 	}

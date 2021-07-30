@@ -12,6 +12,7 @@ import com.nano.candy.interpreter.i2.builtin.type.MapObj;
 import com.nano.candy.interpreter.i2.builtin.type.ModuleObj;
 import com.nano.candy.interpreter.i2.builtin.type.NullPointer;
 import com.nano.candy.interpreter.i2.builtin.type.PrototypeFunction;
+import com.nano.candy.interpreter.i2.builtin.type.Range;
 import com.nano.candy.interpreter.i2.builtin.type.StringObj;
 import com.nano.candy.interpreter.i2.builtin.type.TupleObj;
 import com.nano.candy.interpreter.i2.builtin.type.error.ArgumentError;
@@ -635,6 +636,19 @@ public class CandyV1Evaluator implements Evaluator {
 					CandyObject val2 = pop();
 					CandyObject val1 = pop();
 					push(val1.callEquals(env.cniEnv, val2).not(env.cniEnv));
+					break;
+				}
+				
+				/**
+				 * Other Operator
+				 */
+				case OP_RANGE: {
+					CandyObject val2 = pop();
+					CandyObject val1 = pop();
+					push(new Range(
+						ObjectHelper.asInteger(val1), 
+						ObjectHelper.asInteger(val2)
+					));
 					break;
 				}
 
