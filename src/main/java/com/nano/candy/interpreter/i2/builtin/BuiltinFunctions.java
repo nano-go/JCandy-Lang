@@ -6,6 +6,7 @@ import com.nano.candy.interpreter.i2.builtin.type.MethodObj;
 import com.nano.candy.interpreter.i2.builtin.type.ModuleObj;
 import com.nano.candy.interpreter.i2.builtin.type.Range;
 import com.nano.candy.interpreter.i2.builtin.type.StringObj;
+import com.nano.candy.interpreter.i2.builtin.type.TupleObj;
 import com.nano.candy.interpreter.i2.builtin.type.error.IOError;
 import com.nano.candy.interpreter.i2.builtin.type.error.InterruptedError;
 import com.nano.candy.interpreter.i2.builtin.type.error.NativeError;
@@ -79,11 +80,6 @@ public class BuiltinFunctions {
 		}
 		return arr;
 	}
-	
-	@NativeFunc(name = "bool", arity = 1) 
-	public static CandyObject bool(CNIEnv env, CandyObject[] args) {
-		return args[0].boolValue(env);
-	}
 
 	@NativeFunc(name = "getAttr", arity = 2)
 	public static CandyObject getAttr(CNIEnv env, CandyObject[] args) {
@@ -111,9 +107,36 @@ public class BuiltinFunctions {
 			? args[0] : args[1];
 	}
 	
+	@NativeFunc(name = "bool", arity = 1) 
+	public static CandyObject bool(CNIEnv env, CandyObject[] args) {
+		return args[0].boolValue(env);
+	}
+	
 	@NativeFunc(name = "str", arity = 1)
 	public static CandyObject str(CNIEnv env, CandyObject[] args) {
 		return args[0].callStr(env);
+	}
+	
+	@NativeFunc(name = "array", arity = 1)
+	public static CandyObject array(CNIEnv env, CandyObject[] args) {
+		if (args[0] instanceof ArrayObj) {
+			return (ArrayObj) args[0];
+		}
+		if (args[0] instanceof TupleObj) {
+			return ((TupleObj) args[0]).toArrayObj();
+		}
+		return new ArrayObj(ObjectHelper.iterableObjToArray(env, args[0]));
+	}
+	
+	@NativeFunc(name = "tuple", arity = 1)
+	public static CandyObject tuple(CNIEnv env, CandyObject[] args) {
+		if (args[0] instanceof TupleObj) {
+			return (TupleObj) args[0];
+		}
+		if (args[0] instanceof ArrayObj) {
+			return ((ArrayObj) args[0]).toTuple();
+		}
+		return new TupleObj(ObjectHelper.iterableObjToArray(env, args[0]));
 	}
 	
 	@NativeFunc(name = "repeat", arity = 2)

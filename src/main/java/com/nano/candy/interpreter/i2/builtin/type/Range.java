@@ -89,20 +89,4 @@ public class Range extends CandyObject {
 		long rand = left + (long) (Math.random() * (right - left)) ;
 		return IntegerObj.valueOf(rand);
 	}
-
-	@NativeMethod(name = "toArray")
-	public CandyObject toArray(CNIEnv env, CandyObject[] args) {
-		long left = getLeft();
-		long right = getRight();
-		long length = length();
-		ArrayObj.checkCapacity(length);
-		int size = (int) length;
-		CandyObject[] elements = new CandyObject[size];
-		int v = left > right ? -1 : 1;
-		long e = left;
-		for (int i = 0; i < size; i ++, e += v) {
-			elements[i] = IntegerObj.valueOf(e);
-		}
-		return new ArrayObj(elements);
-	}
 }

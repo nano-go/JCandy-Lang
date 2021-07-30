@@ -277,7 +277,7 @@ class StreamTest : unit.TestCase {
 
 	fun toTuple_test() {
 		var arr = Array(50, lambda e -> e)
-		this.assertEquals(arr.toTuple(), stream.Stream(arr).toTuple())
+		this.assertEquals(tuple(arr), stream.Stream(arr).toTuple())
 		this.assertEquals((), stream.Stream([]).toTuple())
 	}
 

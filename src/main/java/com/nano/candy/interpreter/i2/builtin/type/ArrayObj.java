@@ -446,11 +446,6 @@ public final class ArrayObj extends CandyObject {
 		return this;
 	}
 	
-	@NativeMethod(name = "toTuple")
-	public CandyObject toTuple(CNIEnv env, CandyObject[] args) {
-		return toTuple();
-	}
-	
 	@NativeMethod(name = "length")
 	public CandyObject size(CNIEnv env, CandyObject[] args) {
 		return IntegerObj.valueOf(length);

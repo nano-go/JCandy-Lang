@@ -7,22 +7,9 @@ for (i in a) {
 	cmpI += 1
 }
 
-var cmpI = 0
-for (i in a.toArray()) {
-	assert cmpI == i
-	cmpI += 1
-}
-
-
 var a = range(10, 0)
 var cmpI = 10
 for (i in a) {
-	assert cmpI == i
-	cmpI -= 1
-}
-
-var cmpI = 10
-for (i in a.toArray()) {
 	assert cmpI == i
 	cmpI -= 1
 }
@@ -35,5 +22,3 @@ for (i in a2) a2 = false
 assert a1 && a2
 
 assert a1._class() == Range && a2._class() == Range
-assert a1.toArray().length() == 0
-assert a2.toArray().length() == 0
