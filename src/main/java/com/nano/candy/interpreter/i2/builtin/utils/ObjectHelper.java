@@ -8,6 +8,7 @@ import com.nano.candy.interpreter.i2.builtin.type.IntegerObj;
 import com.nano.candy.interpreter.i2.builtin.type.NullPointer;
 import com.nano.candy.interpreter.i2.builtin.type.NumberObj;
 import com.nano.candy.interpreter.i2.builtin.type.StringObj;
+import com.nano.candy.interpreter.i2.builtin.type.error.ArgumentError;
 import com.nano.candy.interpreter.i2.builtin.type.error.AttributeError;
 import com.nano.candy.interpreter.i2.builtin.type.error.TypeError;
 import com.nano.candy.interpreter.i2.cni.CNIEnv;
@@ -26,6 +27,24 @@ public class ObjectHelper {
 					return 0;
 				}
 				if (obj1.callGt(env, obj2).value()) {
+					return 1;
+				}
+				return -1;
+			}
+		};
+	}
+	
+	public static Comparator<CandyObject> newComparator(final CNIEnv env, CandyObject cmp) {
+		final CallableObj cmpFn = TypeError.requiresCallable(cmp);
+		return new Comparator<CandyObject>() {
+			@Override
+			public int compare(CandyObject obj1, CandyObject obj2) {
+				CandyObject obj1Attr = callFunction(env, cmpFn, obj1);
+				CandyObject obj2Attr = callFunction(env, cmpFn, obj2);
+				if (obj1Attr.callEquals(env, obj2Attr).value()) {
+					return 0;
+				}
+				if (obj1Attr.callGt(env, obj2Attr).value()) {
 					return 1;
 				}
 				return -1;

@@ -25,13 +25,12 @@ public final class ArrayObj extends CandyObject {
 	public static final CandyClass ARRAY_CLASS = 
 		NativeClassRegister.generateNativeClass(ArrayObj.class);
 	
+	private static final int MAX_ARRAY_SIZE = Integer.MAX_VALUE - 8;	
 	public static final CandyObject[] EMPTY_ARRAY = new CandyObject[0];
 	
 	public static final ArrayObj emptyArray() {
 		return new ArrayObj(EMPTY_ARRAY); 
 	}
-	
-	private static final int MAX_ARRAY_SIZE = Integer.MAX_VALUE - 8;
 	
 	protected static void checkCapacity(long capacity) {
 		if (capacity > Integer.MAX_VALUE || capacity < 0) {
@@ -40,7 +39,7 @@ public final class ArrayObj extends CandyObject {
 		}
 	}
 	
-	private CandyObject[] elements;
+	protected CandyObject[] elements;
 	private int length;
 	
 	private boolean isInProcessOfStr;
@@ -88,18 +87,22 @@ public final class ArrayObj extends CandyObject {
 			return;
 		}
 		if (minCapacity - elements.length > 0) {
-			if (minCapacity < 0) {
-				new NativeError("Out of memory.").throwSelfNative();
-			}
-			int oldCapacity = elements.length;
-			int newCapacity = oldCapacity + (oldCapacity >> 1);
-			if (newCapacity < minCapacity)
-				newCapacity = minCapacity;
-			if (newCapacity > MAX_ARRAY_SIZE) {
-				new NativeError("Out of memory.").throwSelfNative();
-			}
-			elements = Arrays.copyOf(elements, newCapacity);
+			elements = Arrays.copyOf(elements, newArrayCapacity(minCapacity));
 		}
+	}
+	
+	private int newArrayCapacity(int minCapacity) {
+		if (minCapacity < 0) {
+			new NativeError("Out of memory.").throwSelfNative();
+		}
+		int oldCapacity = elements.length;
+		int newCapacity = oldCapacity + (oldCapacity >> 1);
+		if (newCapacity < minCapacity)
+			newCapacity = minCapacity;
+		if (newCapacity > MAX_ARRAY_SIZE) {
+			new NativeError("Out of memory.").throwSelfNative();
+		}
+		return newCapacity;
 	}
 	
 	public void append(CandyObject obj) {
@@ -107,11 +110,11 @@ public final class ArrayObj extends CandyObject {
 		elements[length ++] = obj;
 	}
 	
-	public void addAll(CandyObject[] arr, int len) {
-		addAll(this.length, arr, len);
+	public void insertAll(CandyObject[] arr, int len) {
+		insertAll(this.length, arr, len);
 	}
 	
-	public void addAll(int index, CandyObject[] arr, int len) {
+	public void insertAll(int index, CandyObject[] arr, int len) {
 		ensureCapacity(this.length + len);
 		System.arraycopy(
 			elements, index, elements, index + len, this.length-index);
@@ -119,20 +122,85 @@ public final class ArrayObj extends CandyObject {
 		this.length += len;
 	}
 	
-	public CandyObject[] getBuiltinArray() {
-		return elements;
-	}
-	
 	public CandyObject get(int index) {
 		index = RangeError.checkIndex(index, length);
 		return elements[index];
+	}
+	
+	public void replaceRange(Range range, CandyObject[] newArray) {
+		replaceRange(range, newArray, newArray.length);
+	}
+	
+	public void replaceRange(Range range, CandyObject[] newArray, int newArrayLen) {
+		int begin = IndexHelper.asIndex(range.getLeftObj(), length);
+		int end = IndexHelper.asIndexForAdd(range.getRightObj(), length);
+		privateReplaceRange(begin, end, newArray, newArrayLen);
+	}
+	
+	public void replaceRange(int begin, int end, CandyObject[] newArray) {
+		replaceRange(begin, end, newArray);					 
+	}
+	
+	public void replaceRange(int begin, int end, CandyObject[] newArray, 
+	                         int newArrayLen) {
+		begin = RangeError.checkIndex(begin, length);
+		end = RangeError.checkIndexForAdd(end, length);
+		privateReplaceRange(begin, end, newArray, newArrayLen);
+	}
+	
+	/**
+	 * We assume that the begin index and the end index are invalid.
+	 */
+	private void privateReplaceRange(int begin, int end, 
+	                                 CandyObject[] newArray, 
+	                                 int newArrayLen) {
+		if (begin >= end) {
+			insertAll(begin, newArray, newArrayLen);
+			return;
+		}
+		int len = this.length-(end-begin)+newArrayLen;
+		if (len > elements.length) {
+			CandyObject[] narr = new CandyObject[newArrayCapacity(len)];
+			System.arraycopy(elements, 0, narr, 0, begin);
+			System.arraycopy(newArray, 0, narr, begin, newArrayLen);
+			System.arraycopy(elements, end, narr, begin + newArrayLen, this.length - end);
+			this.elements = narr;
+		} else {
+			System.arraycopy(
+				elements, end, 
+				elements, begin + newArrayLen, this.length-end);
+			System.arraycopy(newArray, 0, elements, begin, newArrayLen);
+		}
+		this.length = len;
+	}
+	
+	public CandyObject[] subarray(Range range) {
+		int begin = IndexHelper.asIndex(range.getLeftObj(), length);
+		int end = IndexHelper.asIndexForAdd(range.getRightObj(), length);
+		return privateSubarray(begin, end);
+	}
+	
+	public CandyObject[] subarray(int begin, int end) {
+		begin = RangeError.checkIndex(begin, length);
+		end = RangeError.checkIndexForAdd(begin, length);
+		return privateSubarray(begin, end);
+	}
+	
+	/**
+	 * We assume that the begin index and the end index are invalid.
+	 */
+	private CandyObject[] privateSubarray(int begin, int end) {
+		if (end - begin <= 0) {
+			return EMPTY_ARRAY;
+		}
+		return Arrays.copyOfRange(elements, begin, end);
 	}
 	
 	public int length() {
 		return length;
 	}
 	
-	private int indexOf(CNIEnv env, CandyObject obj) {
+	public int indexOf(CNIEnv env, CandyObject obj) {
 		for (int i = 0; i < length; i ++) {
 			if (elements[i].callEquals(env, obj).value()) {
 				return i;
@@ -141,7 +209,7 @@ public final class ArrayObj extends CandyObject {
 		return -1;
 	}
 	
-	private int lastIndexOf(CNIEnv env, CandyObject obj) {
+	public int lastIndexOf(CNIEnv env, CandyObject obj) {
 		for (int i = length-1; i >= 0; i --) {
 			if (elements[i].callEquals(env, obj).value()) {
 				return i;
@@ -150,7 +218,7 @@ public final class ArrayObj extends CandyObject {
 		return -1;
 	}
 	
-	private void insert(int index, CandyObject e) {
+	public void insert(int index, CandyObject e) {
 		if (index == length) {
 			append(e);
 			return;
@@ -161,7 +229,7 @@ public final class ArrayObj extends CandyObject {
 		length ++;
 	}
 	
-	private boolean delete(CNIEnv env, CandyObject obj) {
+	public boolean delete(CNIEnv env, CandyObject obj) {
 		int i = indexOf(env, obj);
 		if (i == -1) {
 			return false;
@@ -202,6 +270,9 @@ public final class ArrayObj extends CandyObject {
 	
 	@Override
 	public CandyObject getItem(CNIEnv env, CandyObject key) {
+		if (key instanceof Range) {
+			return new ArrayObj(subarray((Range) key));
+		}
 		return ObjectHelper.preventNull(
 			elements[IndexHelper.asIndex(key, length)]
 		);
@@ -209,6 +280,15 @@ public final class ArrayObj extends CandyObject {
 
 	@Override
 	public CandyObject setItem(CNIEnv env, CandyObject key, CandyObject value) {
+		if (key instanceof Range) {
+			if (value instanceof ArrayObj) {
+				ArrayObj arr = (ArrayObj) value;
+				replaceRange((Range) key, arr.elements, arr.length);
+			} else {
+				replaceRange((Range) key, new CandyObject[]{value});
+			}
+			return value;
+		}
 		elements[IndexHelper.asIndex(key, length)] = value;
 		return value;
 	}
@@ -314,7 +394,7 @@ public final class ArrayObj extends CandyObject {
 			return this;
 		}
 		ArrayObj arr = (ArrayObj) args[0];
-		addAll(arr.elements, arr.length);
+		insertAll(arr.elements, arr.length);
 		return this;
 	}
 	
@@ -332,7 +412,7 @@ public final class ArrayObj extends CandyObject {
 			return this;
 		}
 		ArrayObj arr = (ArrayObj) args[1];
-		addAll(index, arr.elements, arr.length);
+		insertAll(index, arr.elements, arr.length);
 		return this;
 	}
 	
@@ -386,16 +466,15 @@ public final class ArrayObj extends CandyObject {
 		return new ArrayObj(Arrays.copyOf(elements, length));
 	}
 	
-	@NativeMethod(name = "copyRange", argc = 2)
-	public CandyObject copyRange(CNIEnv env, CandyObject[] args) {
-		int from = IndexHelper.asIndex(args[0], length);
-		int to = IndexHelper.asIndexForAdd(args[1], length);
-		return new ArrayObj(Arrays.copyOfRange(elements, from, to));
-	}
-	
 	@NativeMethod(name = "sort") 
 	public CandyObject sort(CNIEnv env, CandyObject[] args) {
 		Arrays.sort(elements, 0, length, ObjectHelper.newComparator(env));
+		return this;
+	}
+	
+	@NativeMethod(name = "sortBy", argc = 1) 
+	public CandyObject sortBy(CNIEnv env, CandyObject[] args) {
+		Arrays.sort(elements, 0, length, ObjectHelper.newComparator(env, args[0]));
 		return this;
 	}
 	

@@ -31,9 +31,17 @@ public class Range extends CandyObject {
 	public long getLeft() {
 		return ObjectHelper.asInteger(getMetaData("left"));
 	}
+	
+	public CandyObject getLeftObj() {
+		return getMetaData("left");
+	}
 
 	public long getRight() {
 		return ObjectHelper.asInteger(getMetaData("right"));
+	}
+	
+	public CandyObject getRightObj() {
+		return getMetaData("right");
 	}
 	
 	public long length() {

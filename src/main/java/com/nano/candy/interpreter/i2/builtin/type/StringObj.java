@@ -130,6 +130,13 @@ public class StringObj extends CandyObject {
 
 	@Override
 	protected CandyObject getItem(CNIEnv env, CandyObject key) {
+		if (key instanceof Range) {
+			Range range = (Range) key;
+			int begin = IndexHelper.asIndex(range.getLeftObj(), value.length());
+			int end = IndexHelper.asIndexForAdd(range.getRightObj(), value.length());
+			return end <= begin ? EMPTY_STR : 
+				new StringObj(value.substring(begin, end));
+		}
 		int index = IndexHelper.asIndex(key, value.length());
 		return valueOf(value.charAt(index));
 	}

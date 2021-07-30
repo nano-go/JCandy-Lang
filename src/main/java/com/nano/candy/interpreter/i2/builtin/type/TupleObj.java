@@ -7,6 +7,7 @@ import com.nano.candy.interpreter.i2.builtin.type.error.ArgumentError;
 import com.nano.candy.interpreter.i2.builtin.type.error.RangeError;
 import com.nano.candy.interpreter.i2.builtin.type.error.TypeError;
 import com.nano.candy.interpreter.i2.builtin.utils.ArrayHelper;
+import com.nano.candy.interpreter.i2.builtin.utils.IndexHelper;
 import com.nano.candy.interpreter.i2.builtin.utils.ObjectHelper;
 import com.nano.candy.interpreter.i2.cni.CNIEnv;
 import com.nano.candy.interpreter.i2.cni.NativeClass;
@@ -45,6 +46,10 @@ public final class TupleObj extends CandyObject {
 		this.hash = null;
 	}
 	
+	public ArrayObj toArrayObj() {
+		return new ArrayObj(this.elements);
+	}
+	
 	public int length() {
 		return elements.length;
 	}
@@ -60,6 +65,26 @@ public final class TupleObj extends CandyObject {
 			this.elements, ((TupleObj) tuple).elements
 		));
 	}
+	
+	public CandyObject[] subarray(Range range) {
+		return subarray(range.getLeftObj(), range.getRightObj());
+	}
+
+	public CandyObject[] subarray(CandyObject begin, CandyObject end) {
+		int beginIndex = IndexHelper.asIndex(begin, elements.length);
+		int endIndex = IndexHelper.asIndexForAdd(end, elements.length);
+		return privateSubarray(beginIndex, endIndex);
+	}
+		
+	/**
+	 * We assume that the begin index and the end index are invalid.
+	 */
+	private CandyObject[] privateSubarray(int begin, int end) {
+		if (end - begin <= 0) {
+			return ArrayObj.EMPTY_ARRAY;
+		}
+		return Arrays.copyOfRange(elements, begin, end);
+	}
 
 	@Override
 	public CandyObject iterator(CNIEnv env) {
@@ -68,6 +93,9 @@ public final class TupleObj extends CandyObject {
 
 	@Override
 	public CandyObject getItem(CNIEnv env, CandyObject key) {
+		if (key instanceof Range) {
+			return new TupleObj(subarray((Range) key));
+		}
 		long index = ObjectHelper.asInteger(key);
 		return ObjectHelper.preventNull(get(index));
 	}
@@ -135,7 +163,7 @@ public final class TupleObj extends CandyObject {
 		} else if (args[0] instanceof ArrayObj) {
 			ArrayObj arr = (ArrayObj) args[0];
 			this.elements = Arrays.copyOfRange(
-				arr.getBuiltinArray(), 0, arr.length()
+				arr.elements, 0, arr.length()
 			);
 		} else {
 			this.elements = ObjectHelper.iterableObjToArray(env, args[0]);
