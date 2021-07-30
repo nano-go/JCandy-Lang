@@ -7,6 +7,7 @@ import com.nano.candy.interpreter.i2.builtin.type.ArrayObj;
 import com.nano.candy.interpreter.i2.builtin.type.BoolObj;
 import com.nano.candy.interpreter.i2.builtin.type.DoubleObj;
 import com.nano.candy.interpreter.i2.builtin.type.IntegerObj;
+import com.nano.candy.interpreter.i2.builtin.type.LockObj;
 import com.nano.candy.interpreter.i2.builtin.type.MapObj;
 import com.nano.candy.interpreter.i2.builtin.type.ModuleObj;
 import com.nano.candy.interpreter.i2.builtin.type.NumberObj;
@@ -48,6 +49,7 @@ public class BuiltinVariables {
 		defineBuiltinFunctions();
 		defineBuiltinErrorClasses();
 		defineClass(CandyThread.THREAD_CLASS);
+		defineClass(LockObj.LOCK_CLASS);
 		defineClass(Range.RANGE_CLASS);
 		defineClass(ArrayObj.ARRAY_CLASS);
 		defineClass(IntegerObj.INTEGER_CLASS);
