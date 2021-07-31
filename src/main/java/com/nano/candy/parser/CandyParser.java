@@ -43,7 +43,7 @@ class CandyParser implements Parser {
 		final TokenKind[] FIRST_TOKENS_OF_EXPR = {
 			IDENTIFIER, NULL, DOUBLE, INTEGER, STRING, LPAREN, TRUE, FALSE, 
 			THIS, SUPER, LBRACKET, AT_IDENTIFIER, BIT_OR, LOGICAL_OR, ARROW, LAMBDA,
-			LBRACE
+			LBRACE, INTERPOLATION
 		};
 		for (TokenKind tok : FIRST_TOKENS_OF_EXPR) {
 			FIRST_SET_OF_EXPR.set(tok.ordinal());
@@ -777,6 +777,9 @@ class CandyParser implements Parser {
 			Stmt.Parameters params = parseParams(false);
 			ensureExpectedKind(TokenKind.LBRACE);
 			Stmt.Block body = parseBlock();
+			if (curFunctionType != FunctionType.INIT) {
+				body = toFuncBlock(body);
+			}
 			return checkFunc(
 				locate(name, 
 					new Stmt.FuncDef(isStatic, name.getLiteral(), params, body))
