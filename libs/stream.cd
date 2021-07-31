@@ -240,7 +240,7 @@ class StreamInterface {
 	fun toTuple() {
 		return this._collect([], 
 			lambda arr, e -> arr.append(e), 
-			lambda arr -> arr.toTuple())
+			lambda arr -> tuple(arr))
 	}
 
 	fun toMap(accumulator) {
