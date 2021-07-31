@@ -1,0 +1,141 @@
+/**
+ * File:        json_dumper.cd
+ * Description: This is used to convert an object in Candy into the JSON
+ *              text.
+ *
+ * Usage Example:
+ *   
+ *     1. Imports the json module.
+ *     import "json" as json
+ *
+ *     2. Converts an object to the JSON text
+ *     println(json.JsonDumper.dump(jsonObj))
+ *
+ *     3. You can specify the format-enable and the indent.
+ *     println(json.JsonDumper.dump(jsonObj, format({
+ *         "format": false,
+ *         "indent": "\t",
+ *     })))
+ *
+ *     4. How to convert a custom object to JSON?
+ *        You can write a method 'toElement' to your class.
+ *     class Song {
+ *         ...
+ *         fun toElement() { 
+ *             return {
+ *                 "id": @id, 
+ *                 "title": @title,
+ *             } 
+ *         }
+ *         ...
+ *     }
+ *     and converts it
+ *     println(json.JsonDumper.dump(Song()))
+ * 
+ */
+
+
+class JsonDumper {
+
+	static fun dump(element, *options) {
+		this(*options).dump(element)
+	}
+
+	fun init(*options) {
+		@options = {
+			"indent": "   ",
+			"format": true,
+			"method": "toElement",
+		}.putAll(!options.isEmpty() ? options[0] : {})
+
+		@indent = @options["indent"]
+		@format = @options["format"]
+		@method = @options["method"]
+
+		@curIndent = ""
+		@indentCount = 0
+	}
+
+	fun indentInc() {
+		@indentCount += 1
+		@curIndent = @indent * @indentCount
+	}
+
+	fun indentDec() {
+		@indentCount -= 1
+		@curIndent = @indent * @indentCount
+	}
+
+	fun dump(element) {
+		@curIndent = ""
+		@indentCount = 0
+		return @dumpElement(element)
+	}
+
+	fun dumpElement(element) {
+		if (null == element or
+	      true == element or
+			  false == element or
+			  element is Number) {
+			return str(element)
+		}
+		if (element is String) {
+			return "\"${element}\""
+		}
+		if (element is Map) {
+			return @dumpMap(element)
+		}
+		if (element is Array) {
+			return @dumpArray(element)
+		}
+		return @dumpObject(element)
+	}
+
+	fun dumpObject(obj) {
+		var met = getAttr(obj, @method)
+		if (met == null or !met.isCallable()) {
+			raise ArgumentError("The object ${obj} has no '${@method}' method" +
+				" or the method is not a callable object.")
+		}
+		return @dumpElement(met())
+	}
+
+	fun dumpMap(map) {
+		var kvSeperator = @format ? ": " : ":"
+		var dumpElement = @dumpElement
+		return @dumpList(map, "{", "}", @format ? ", " : ",", (append, kv) -> {
+			append("\"${kv[0]}\"")
+			append(kvSeperator)
+			append(dumpElement(kv[1]))
+		})
+	}
+
+	fun dumpArray(arr) {
+		var dumpElement = @dumpElement
+		return @dumpList(arr, "[", "]", @format ? ", " : ",", (append, e) -> {
+			append(dumpElement(e))
+		})
+	}
+
+	fun dumpList(list, open, close, seperator, fn) {
+		var json = []
+		var format = @format
+		var append = json.append
+		append(open)
+		if (list.length() == 0) {
+			append(close)
+		} else {
+			format and @indentInc()
+			var indent = @curIndent
+			for (e in list) {
+				format and append("\n${indent}")	
+				fn(append, e)
+				append(seperator)
+			}
+			json.deleteAt(-1) // remove trailing seperator.
+			format and @indentDec()
+			append(format ? "\n${@curIndent}${close}" : close)
+		}
+		return "".join(json)
+	}
+}

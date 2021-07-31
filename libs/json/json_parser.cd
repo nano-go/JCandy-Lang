@@ -1,0 +1,304 @@
+/**
+ * File:        json_parser.cd
+ * Description: This is used to parse a JSON text into an object in Candy.
+ * 
+ * Usage Example:
+ *
+ *    1. Imports the json module.
+ *    import "json" as json
+ *
+ *    2. Parses the specified JSON text as an object in Candy.
+ *    var videos = json.JsonParser.parse(jsonText)
+ *
+ *    3. You can use the 'has_xxx' to get whether the json object contains
+ *       the specified element 'xxx'.
+ *    if (videos.has_code && videos.code == 0) {
+ *        for (video in videos.list) {
+ *            println(video.id)
+ *            println(video.title)
+ *            println(video.author)
+ *        }
+ *    }
+ *
+ */
+import "json_objs" as objs
+
+var EOF = (-1).toChar()
+
+class StringReader {
+	fun init(str) {
+		@str = str + EOF
+		@p = 0
+		@ch = null
+
+		// alias
+		@consume = @read
+		@read()
+	}
+	
+	fun read() {
+		if (@ch == EOF) {
+			raise Error("")
+			return @ch	
+		}
+		@ch = @str[@p] 
+		@p += 1
+		return @ch
+	}
+
+	fun isAtEnd() {
+		return @ch == EOF
+	}
+}
+
+class ParseError : Error {
+	fun init(msg) {
+		super.init(msg)
+	}
+}
+
+class JsonParser : StringReader {
+
+	static fun parse(json) {
+		return this(json).parse()
+	}
+
+	fun init(json) {
+		super.init(json)
+	}
+
+	fun unexpected(ch) {
+		var s = ch == EOF ? "EOF" : ch
+		raise ParseError("Unexpected the char '${s}'.")
+	}
+
+	fun skipWhitespaces() {
+		var ch
+		var consume = @consume
+		while ((ch = @ch) and 
+		       ch == " "  or 
+		       ch == "\n" or 
+		       ch == "\t" or 
+		       ch == "\f" or 
+		       ch == "\r") consume()
+	}
+
+	fun match(expectedCh) {
+		@skipWhitespaces()
+		if (@ch == expectedCh) {
+			@consume()
+			return
+		}
+		var s = ch == EOF ? "EOF" : ch
+		raise ParseError("Expecting '${expectedCh}', but was '${s}'")
+	}
+
+	fun matchWord(word) {
+		var consume = @consume
+		for (ch in word) {
+			if (ch != @ch) {
+				@unexpected(@ch)
+			}	
+			consume()
+		}
+	}
+
+	fun got(ch) {
+		@skipWhitespaces()
+		if (@ch == ch) {
+			@consume()
+			return true
+		}
+		return false
+	}
+
+	fun parse() {
+		var element = @parseElement()
+		@skipWhitespaces()
+		if (!@isAtEnd()) {
+			raise ParseError("Expecting 'EOF'.")	
+		}
+		return element
+	}
+
+	fun parseElement() {
+		@skipWhitespaces()
+		var ch = @ch
+		if (ch == "\"") {
+			return @parseString()
+		}
+		if (ch == "{") {
+			return @parseObject()
+		}
+		if (ch == "[") { 
+			return @parseArray()
+		}	
+		if (ch == "n") {
+			@matchWord("null")
+			return null
+		}
+		if (ch == "t") { 
+			@matchWord("true")
+			return true
+		}
+		if (ch == "f") {
+			@matchWord("false")
+			return false
+		}
+		if (ch >= "0" and ch <= "9" or ch == "-") {
+			return @parseNumber()
+		}	
+		@unexpected(ch)
+	}
+
+	fun parseObject() {
+		@consume() // consume '{'
+		@skipWhitespaces()
+		if (@ch == "}") {
+			@consume() 
+			return objs.JsonObject()
+		}
+		var obj = objs.JsonObject()
+		while (true) {
+			if (@isAtEnd()) {
+				raise ParseError("Missing '}'.")
+			}
+			var key = @parseString()
+			@match(":")
+			obj[key] = @parseElement()
+			if (!@got(",")) {
+				break
+			}
+			@skipWhitespaces()
+			continue
+		}
+		@match("}")
+		return obj
+	}
+
+	fun parseArray() {
+		@consume() // consume '['
+		@skipWhitespaces()
+		if (@ch == "]") {
+			@consume() 
+			return []
+		}
+		var elements = []
+		while (true) {
+			elements.append(@parseElement())
+			if (!@got(",")) {
+				break
+			}
+		}
+		@match("]")
+		return elements
+	}
+
+	fun parseString() {
+
+		fun parseHex() {
+			var code = 0
+			var hexNum = []
+			for (i in 0..4) {
+				hexNum.append(@ch)
+				@consume()
+			}
+			try {
+				return "".join(hexNum).toInt(16).toChar()
+			} intercept {
+				raise ParseError("Invalid hex number.")
+			}
+		}
+		
+		fun parseEscape() {
+			var ch = @ch
+			@consume()
+			if (ch == "\"" or ch == "\\" or ch == "/") return ch
+			if (ch == "n") return "\n"
+			if (ch == "t") return "\t"
+			if (ch == "r") return "\r"
+			if (ch == "f") return "\f"
+			if (ch == "b") return "\b"
+			if (ch == "u") return parseHex()
+			
+			raise ParseError("Unexpected the escape char '${ch == EOF ? \"EOF\" : ch}'.")
+		}
+
+		fun parseChar() {
+			if (@ch == "\\") {
+				@consume()
+				return parseEscape()
+			}
+			var ch = @ch
+			@consume()
+			return ch
+		}
+
+		@match("\"")
+		var str = []
+		while (@ch != "\"") {
+			if (@isAtEnd()) {
+				raise ParseError("Missing '\"'.")
+			}
+			str.append(parseChar())
+		}
+		@consume()
+		return "".join(str)
+	}
+
+	fun parseNumber() {
+
+		fun isDigit(ch) {
+			return ch >= "0" and ch <= "9"
+		}
+
+		fun append(num) {
+			num.append(@ch)
+			@consume()
+		}
+
+		fun parseDigits(num, checkFirstDigit) {
+			if (!isDigit(@ch)) {
+				raise ParseError("Invalid digit '${@ch}'.")
+			}
+			var first = @ch
+			append(num)
+			if (isDigit(@ch)) {
+				if (checkFirstDigit and first == "0") {
+					raise ParseError("Invalid number.")
+				}
+				append(num)
+			}
+			while (isDigit(@ch)) {
+				append(num)
+			}
+		}
+
+		var num = []
+		if (@ch == "-") {
+			append(num)
+		}
+		parseDigits(num, true)
+		var fraction = false
+		if (@ch == ".") {
+			fraction = true
+			append(num)
+			parseDigits(num, false)
+		}
+
+		if (@ch == "e" or @ch == "E") {
+			append(num)
+			if (@ch == "+" or @ch == "-") {
+				append(num)
+			}
+			parseDigits(num, false)
+		}
+
+		var numStr = "".join(num)
+		try {
+			return fraction ? numStr.toDouble() : numStr.toInt() 
+		} intercept {	
+			raise ParseError("Invalid number ${numStr}.")
+		}
+	}
+}

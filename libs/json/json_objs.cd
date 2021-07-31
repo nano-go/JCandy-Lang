@@ -1,0 +1,17 @@
+class JsonObject : Map {
+	fun init() {
+		super.init(16)
+	}
+
+	fun _getAttr(name) {
+		if (super.contains(name)) return this[name]
+		return super._getAttr(name)
+	}
+
+	fun _getUnknownAttr(name) {
+		if (name.startWith("has_")) {
+			return this.contains(name[4..-1])
+		}
+		return super._getUnknownAttr(name)
+	}
+}
