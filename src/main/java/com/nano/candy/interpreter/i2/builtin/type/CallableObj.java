@@ -2,7 +2,6 @@ package com.nano.candy.interpreter.i2.builtin.type;
 
 import com.nano.candy.interpreter.i2.builtin.CandyClass;
 import com.nano.candy.interpreter.i2.builtin.CandyObject;
-import com.nano.candy.interpreter.i2.builtin.type.NullPointer;
 import com.nano.candy.interpreter.i2.builtin.type.error.AttributeError;
 import com.nano.candy.interpreter.i2.builtin.utils.ObjectHelper;
 import com.nano.candy.interpreter.i2.cni.CNIEnv;
@@ -13,8 +12,7 @@ import com.nano.candy.interpreter.i2.runtime.StackFrame;
 import com.nano.candy.interpreter.i2.runtime.chunk.ConstantValue;
 
 /**
- * A CallablObj represents a candy callable object (a function, a method
- * or a class).
+ * Superclass of all functions.
  */
 @NativeClass(name = "Callable")
 public abstract class CallableObj extends CandyObject {
@@ -30,8 +28,7 @@ public abstract class CallableObj extends CandyObject {
 		return CALLABLE_CLASS;
 	}
 	
-	public static class ParametersInfo {
-		
+	public static class ParametersInfo {	
 		/**
 		 * The number of arguments.
 		 */
@@ -59,7 +56,7 @@ public abstract class CallableObj extends CandyObject {
 			return arity;
 		}
 
-		public int getVarArgsIndex() {
+		public int getVaargIndex() {
 			return varArgsIndex;
 		}
 	}
@@ -69,16 +66,21 @@ public abstract class CallableObj extends CandyObject {
 	 * Full name of a method. For example: LinkedList#append.
 	 */
 	protected final String fullName;
-	protected final String declaredName;
+	
+	/**
+	 * The name of this callable. For example: append.
+	 */
+	protected final String funcName;
+	
 	protected final ParametersInfo parameter;
 	
 	public CallableObj(String name, ParametersInfo parameter) {
 		this(name, name, parameter);
 	}
 	
-	public CallableObj(String declredName,
+	public CallableObj(String funcName,
 	                   String fullName, ParametersInfo parameter) {
-		this.declaredName = declredName;
+		this.funcName = funcName;
 		this.fullName = fullName;
 		this.parameter = parameter;
 	}
@@ -88,8 +90,8 @@ public abstract class CallableObj extends CandyObject {
 		return getCallableClass();
 	}
 	
-	public String declaredName() {
-		return declaredName;
+	public String funcName() {
+		return funcName;
 	}
 	
 	public String fullName() {
@@ -100,47 +102,44 @@ public abstract class CallableObj extends CandyObject {
 		return parameter;
 	}
 	
-	public int varArgsIndex() {
-		return getParameter().getVarArgsIndex();
+	public int vaargIndex() {
+		return getParameter().getVaargIndex();
 	}
 	
 	public int arity() {
 		return getParameter().getArity();
 	}
 	
-	public final CandyObject callExeUser(CNIEnv env, CandyObject... args) {
-		return callExeUser(env, EMPTY_UNPACK_FLAGS, args);
+	/**
+	 * Equals call(env, EMPTY_UNPACK_FLAGS, args);
+	 */
+	public final CandyObject call(CNIEnv env, CandyObject... args) {
+		return call(env, EMPTY_UNPACK_FLAGS, args);
 	}
 	
 	/**
-	 * Execute this callable object.
+	 * Call this function and returns the result.
+	 * This is an auxiliary method which help you to call this
+	 * function.
 	 *
-	 * @param unpackFlags See {@link ElementsUnpacker#unpackFromStack}
+	 * Actually this method will call Evaluator#eval method.
 	 */
-	public CandyObject callExeUser(CNIEnv env, int unpackFlags, 
-	                               CandyObject... args) {
+	public final CandyObject call(CNIEnv env, int unpackFlags, 
+	                              CandyObject... args) {
 		return env.getEvaluator().eval(this, unpackFlags, args);
-	}
-	
-	public final void call(CNIEnv env, int argc) {
-		call(env, argc, EMPTY_UNPACK_FLAGS);
-	}
-	
-	public void call(CNIEnv env, int argc, int unpackFlags) {
-		env.getEvaluator().call(this, argc, unpackFlags);
 	}
 
 	@Override
 	public CandyObject getAttr(CNIEnv env, String name) {
 		switch (name) {
 			case "name":
-				return StringObj.valueOf(declaredName);
+				return StringObj.valueOf(funcName);
 			case "fullName":
 				return StringObj.valueOf(fullName);
 			case "arity":
 				return IntegerObj.valueOf(arity());
 			case "vararg":
-				return IntegerObj.valueOf(varArgsIndex());
+				return IntegerObj.valueOf(vaargIndex());
 		}
 		return super.getAttr(env, name);
 	}

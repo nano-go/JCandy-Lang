@@ -35,11 +35,11 @@ public class CandyObjectIterator implements Iterator<CandyObject> {
 	
 	@Override
 	public boolean hasNext() {
-		return hasNext.callExeUser(env).boolValue(env).value();
+		return hasNext.call(env).boolValue(env).value();
 	}
 
 	@Override
 	public CandyObject next() {
-		return next.callExeUser(env);
+		return next.call(env);
 	}
 }

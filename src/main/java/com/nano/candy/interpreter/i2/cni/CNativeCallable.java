@@ -35,7 +35,7 @@ public abstract class CNativeCallable extends CallableObj {
 		CandyObject[] args = EMPTY_ARGUMENTS;
 		if (argc != 0) {
 			args = new CandyObject[argc];
-			for (int i = 0; i < argc; i ++) {
+			for (int i = argc - 1 ; i >= 0; i --) {
 				args[i] = opStack.pop();
 			}
 		}

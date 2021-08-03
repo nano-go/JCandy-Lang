@@ -61,7 +61,7 @@ public final class StackFrame {
 	
 	public void clearFrame() {
 		for (int i = 1; i < sp; i ++) {
-			stack[i].recycleSelf();
+			stack[i].closeAllUpvalues();
 			stack[i] = null;
 		}
 		this.sp = 1;

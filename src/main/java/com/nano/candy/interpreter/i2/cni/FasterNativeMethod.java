@@ -65,7 +65,7 @@ public class FasterNativeMethod extends CallableObj {
 		} else {
 			CandyObject[] args = new CandyObject[argc];
 			args = new CandyObject[argc];
-			for (int i = 0; i < argc; i ++) {
+			for (int i = argc - 1 ; i >= 0; i --) {
 				args[i] = opStack.pop();
 			}
 			retVal = callback.onCall(env, args);

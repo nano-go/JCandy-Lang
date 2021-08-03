@@ -24,14 +24,14 @@ import java.util.HashMap;
  * function that can return an instance of this class.
  */
 public class CandyClass extends CallableObj {
-
-	/**
-	 * See Constructor.
-	 */
+	
 	private static ParametersInfo genParamtersInfo(CallableObj initalizer) {
 		return new ParametersInfo(
+			// The initalizer takes an extra argument.
+			// We will call the initalizer when this call is called and
+			// pass a new instance to the initalizer.
 			initalizer == null ? 0 : initalizer.arity()-1,
-			initalizer == null ? -1 : initalizer.varArgsIndex()-1
+			initalizer == null ? -1 : initalizer.vaargIndex()
 		);
 	}
 	
@@ -239,16 +239,6 @@ public class CandyClass extends CallableObj {
 	}
 	
 	@Override
-	public int arity() {
-		return initializer == null ? 0 : initializer.arity()-1;
-	}
-
-	@Override
-	public int varArgsIndex() {
-		return initializer == null ? -1 : initializer.varArgsIndex()-1;
-	}
-
-	@Override
 	public boolean isBuiltin() {
 		return initializer == null ? true : initializer.isBuiltin();
 	}
@@ -259,18 +249,6 @@ public class CandyClass extends CallableObj {
 		new MethodObj(instance, initializer).onCall(
 			env, opStack, stack, argc, unpackFlags
 		);
-	}
-	
-	@Override
-	public void call(CNIEnv env, int argc, int unpackFlags) {
-		CandyObject instance = createInstance(env);
-		new MethodObj(instance, initializer).call(env, argc, unpackFlags);
-	}
-
-	@Override
-	public CandyObject callExeUser(CNIEnv env, int unpackFlags, CandyObject[] args) {
-		CandyObject instance = createInstance(env);
-		return new MethodObj(instance, initializer).callExeUser(env, unpackFlags, args);
 	}
 
 	protected CandyObject createInstance(CNIEnv env) {		

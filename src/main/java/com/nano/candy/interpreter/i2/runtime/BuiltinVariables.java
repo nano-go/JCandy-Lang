@@ -86,8 +86,8 @@ public class BuiltinVariables {
 		CNativeFunction[] builtinFunctions =
 			NativeFuncRegister.getNativeFunctions(BuiltinFunctions.class);
 		for (CNativeFunction f : builtinFunctions) {
-			BUILTIN_VARS.put(f.declaredName(), 
-				Variable.getVariable(f.declaredName(), f));
+			BUILTIN_VARS.put(f.funcName(), 
+				Variable.getVariable(f.funcName(), f));
 		}
 	}
 

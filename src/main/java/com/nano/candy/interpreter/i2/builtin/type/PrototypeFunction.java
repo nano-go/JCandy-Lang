@@ -13,12 +13,26 @@ import com.nano.candy.interpreter.i2.runtime.chunk.attrs.CodeAttribute;
 
 public final class PrototypeFunction extends CallableObj {
 
-	public Chunk chunk;
-	public ConstantValue.MethodInfo metInfo;
-	public int pc;
+	public final Chunk chunk;
+	public final ConstantValue.MethodInfo metInfo;
+	public final int pc;
 	
-	public FileEnvironment fileEnv;
-	public Upvalue[] upvalues;
+	public final FileEnvironment fileEnv;
+	public final Upvalue[] upvalues;
+	
+	/**
+	 * See Frame.java
+	 *
+	 * Cached: frameSize = maxLocal() + maxStack() - arity;
+	 */
+	public final int frameSize;
+	
+	/**
+	 * See Frame.java
+	 *
+	 * Cached: localSizeWithoutArgs = maxLocal() - arity;
+	 */
+	public final int localSizeWithoutArgs;
 	
 	public PrototypeFunction(Chunk chunk, int pc, 
 	                         Upvalue[] upvalues, 
@@ -35,6 +49,9 @@ public final class PrototypeFunction extends CallableObj {
 		this.upvalues = upvalues;
 		this.metInfo = methodInfo;
 		this.fileEnv = fileEnv;
+		
+		this.frameSize = getMaxLocal() + getMaxStack() - arity();
+		this.localSizeWithoutArgs = getMaxLocal() - arity();
 	}
 
 	public Chunk getChunk() {
@@ -72,8 +89,7 @@ public final class PrototypeFunction extends CallableObj {
 
 	@Override
 	public void onCall(CNIEnv env, OperandStack opStack, StackFrame stack, int argc, int unpackFlags) {
-		Frame newFrame = Frame.fetchFrame(this, argc, opStack);	
-		stack.pushFrame(newFrame);
+		env.getEvaluator().push(Frame.fetchFrame(this, opStack));
 	}
 	
 	@Override

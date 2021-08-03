@@ -124,7 +124,7 @@ public class OpCodes {
 		INSTRUCTION_NAMES[OP_DIV]               = "div";
 		INSTRUCTION_NAMES[OP_MOD]               = "mod";
 		INSTRUCTION_NAMES[OP_INSTANCE_OF]       = "instanceof";
-		INSTRUCTION_NAMES[OP_RANGE]             = "=";
+		INSTRUCTION_NAMES[OP_RANGE]             = "range";
 		INSTRUCTION_NAMES[OP_EQ]                = "cmpeq";
 		INSTRUCTION_NAMES[OP_NOTEQ]             = "cmpneq";
 		INSTRUCTION_NAMES[OP_GT]                = "cmpgt";

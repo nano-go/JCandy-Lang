@@ -143,9 +143,9 @@ public class ElementsUnpacker {
 		TypeError.checkIsCallable(hasNext);
 		TypeError.checkIsCallable(next);
 		int size = 0;
-		while (((CallableObj) hasNext).callExeUser(env)
+		while (((CallableObj) hasNext).call(env)
 		       .boolValue(env).value()) {
-			CandyObject e = ((CallableObj) next).callExeUser(env);
+			CandyObject e = ((CallableObj) next).call(env);
 			buffer.offer(e);
 			size ++;
 		}

@@ -168,7 +168,7 @@ public class CandyObject {
 			return value;
 		}
 		return getBoundMethod(Names.METHOD_SET_ATTR, SET_ATTR_MASK)
-			.callExeUser(env, StringObj.valueOf(name), value);
+			.call(env, StringObj.valueOf(name), value);
 	}
 	public CandyObject setAttr(CNIEnv env, String name, CandyObject value) {
 		setMetaData(name, value);
@@ -186,7 +186,7 @@ public class CandyObject {
 			return getAttrMet(env, new CandyObject[]{StringObj.valueOf(name)});
 		}
 		return getBoundMethod(Names.METHOD_GET_ATTR, GET_ATTR_MASK)
-			.callExeUser(env, StringObj.valueOf(name));
+			.call(env, StringObj.valueOf(name));
 	}
 	public CandyObject getAttr(CNIEnv env, String name) {
 		CandyObject val = getMetaData(name);
@@ -211,7 +211,7 @@ public class CandyObject {
 			return getUnknownAttr(env, name);
 		}
 		return getBoundMethod(Names.METHOD_GET_UNKNOWN_ATTR, GET_UNKNOWN_ATTR_MASK)
-			.callExeUser(env, StringObj.valueOf(name));
+			.call(env, StringObj.valueOf(name));
 	}
 	protected CandyObject getUnknownAttr(CNIEnv env, String name) {
 		AttributeError.checkAttributeNull(this, name, null);
@@ -229,7 +229,7 @@ public class CandyObject {
 			return setItem(env, key, value);
 		}
 		return getBoundMethod(Names.METHOD_SET_ITEM, SET_ITEM_MASK)
-			.callExeUser(env, key, value);
+			.call(env, key, value);
 	}
 	protected CandyObject setItem(CNIEnv env, CandyObject key, CandyObject value) {
 		new TypeError(
@@ -253,7 +253,7 @@ public class CandyObject {
 			return getItem(env, key);
 		}
 		return getBoundMethod(Names.METHOD_GET_ITEM, GET_ITEM_MASK)
-			.callExeUser(env, key);
+			.call(env, key);
 	}
 	protected CandyObject getItem(CNIEnv env, CandyObject key) {
 		new TypeError(
@@ -272,7 +272,7 @@ public class CandyObject {
 			return positive(env);
 		}
 		return getBoundMethod(Names.METHOD_OP_POSITIVE, POSTIVE_MASK)
-			.callExeUser(env);
+			.call(env);
 	}
 	protected CandyObject positive(CNIEnv env) {
 		new TypeError("+").throwSelfNative();
@@ -289,7 +289,7 @@ public class CandyObject {
 			return negative(env);
 		}
 		return getBoundMethod(Names.METHOD_OP_NEGATIVE, NEGATIVE_MASK)
-			.callExeUser(env);
+			.call(env);
 	}
 	protected CandyObject negative(CNIEnv env) {
 		new TypeError("-").throwSelfNative();
@@ -310,12 +310,12 @@ public class CandyObject {
 	
 	private CandyObject callBinaryOp(CNIEnv env, CandyObject operand,
 	                                 String name, int mask) {
-		return getBoundMethod(name, mask).callExeUser(env, operand);
+		return getBoundMethod(name, mask).call(env, operand);
 	}
 	
 	private BoolObj callRelativeBinaryOp(CNIEnv env, CandyObject operand,
 	                                     String name, int mask) {
-		CandyObject obj = getBoundMethod(name, mask).callExeUser(env, operand);
+		CandyObject obj = getBoundMethod(name, mask).call(env, operand);
 		return obj.boolValue(env);
 	}
 	
@@ -482,7 +482,7 @@ public class CandyObject {
 			return equals(env, operand);
 		}
 		return getBoundMethod(Names.METHOD_EQUALS, EQ_MASK)
-			.callExeUser(env, operand).boolValue(env);
+			.call(env, operand).boolValue(env);
 	}
 	public BoolObj equals(CNIEnv env, CandyObject operand) {
 		return BoolObj.valueOf(this == operand);
@@ -498,7 +498,7 @@ public class CandyObject {
 			return hashCode(env);
 		}
 		CandyObject obj = getBoundMethod(Names.METHOD_HASH_CODE, HASH_MASK)
-			.callExeUser(env);
+			.call(env);
 		checkReturnedType(Names.METHOD_HASH_CODE, obj, IntegerObj.INTEGER_CLASS);
 		return (IntegerObj) obj;
 	}
@@ -516,7 +516,7 @@ public class CandyObject {
 			return str(env);
 		}
 		CandyObject obj = getBoundMethod(Names.METHOD_STR_VALUE, STR_MASK)
-			.callExeUser(env);
+			.call(env);
 		checkReturnedType(Names.METHOD_STR_VALUE, obj, StringObj.STRING_CLASS);
 		return obj.str(env);
 	}
@@ -540,7 +540,7 @@ public class CandyObject {
 			return iterator(env);
 		}
 		return getBoundMethod(Names.METHOD_ITERATOR, ITERATOR_MASK)
-			.callExeUser(env);
+			.call(env);
 	}
 	public CandyObject iterator(CNIEnv env) {
 		new TypeError("the object is not iterable.")

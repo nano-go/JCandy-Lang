@@ -40,7 +40,7 @@ public class FileEnvironment {
 	}
 	
 	public void defineCallable(CallableObj callableObj) {
-		setVariable(callableObj.declaredName(), callableObj);
+		setVariable(callableObj.funcName(), callableObj);
 	}
 	
 	public void defineClass(CandyClass clazz) {

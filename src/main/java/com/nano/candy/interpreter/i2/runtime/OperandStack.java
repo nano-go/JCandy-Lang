@@ -1,49 +1,109 @@
 package com.nano.candy.interpreter.i2.runtime;
 import com.nano.candy.interpreter.i2.builtin.CandyObject;
+import com.nano.candy.interpreter.i2.builtin.type.NullPointer;
+import java.util.Arrays;
 
 public class OperandStack {
 	
-	private CandyObject[] opStack;
-	private int sp;
-
-	public OperandStack(int stackMaxSize) {
-		opStack = new CandyObject[stackMaxSize];
+	protected CandyObject[] operands;
+	protected int sp;
+	
+	public OperandStack(int initialCapacity) {
+		this.operands = new CandyObject[initialCapacity];
+		this.sp = 1;
+	}
+	
+	public final void reverse(int n) {
+		final int hn = n >> 1;
+		for(int i = 0; i < hn; i ++) {
+			CandyObject tmp = operands[sp-n+i];
+			operands[sp-n+i] = operands[sp-i-1];
+			operands[sp-i-1] = tmp;
+		}
 	}
 	
 	public final void rotThree() {
 		int sp = this.sp-1;
-		CandyObject top = opStack[sp];
-		opStack[sp] = opStack[sp-1];
-		opStack[sp-1] = opStack[sp-2];
-		opStack[sp-2] = top;
+		CandyObject top = operands[sp];
+		operands[sp] = operands[sp-1];
+		operands[sp-1] = operands[sp-2];
+		operands[sp-2] = top;
 	}
 	
 	public final void swap() {
-		CandyObject tmp = opStack[sp-1];
-		opStack[sp-1] = opStack[sp-2];
-		opStack[sp-2] = tmp;
+		CandyObject tmp = operands[sp-1];
+		operands[sp-1] = operands[sp-2];
+		operands[sp-2] = tmp;
 	}
 	
 	public final CandyObject pop() {
-		return opStack[-- sp];
+		return operands[-- sp];
 	}
 	
 	public final CandyObject peek(int k) {
-		return opStack[sp - k - 1];
+		return operands[sp - k - 1];
+	}
+	
+	public final void pushArguments(CandyObject... args) {
+		for (CandyObject arg : args) {
+			if (arg == null) {
+				push(NullPointer.nil());
+			} else {
+				push(arg);
+			}
+		}
 	}
 	
 	public final void push(CandyObject operand) {
-		opStack[sp ++] = operand;
+		operands[sp ++] = operand;
 	}
 	
 	public final int size() {
 		return sp;
 	}
 	
-	public void clear() {
-		for (int i = 0; i < sp; i ++) {
-			opStack[i] = null;
+	public final void pop(int bp) {
+		for (int i = bp; i < this.sp; i ++) {
+			operands[i] = null;
+		} 
+		this.sp = bp;
+	}
+	
+	protected final void push(int frameSize) {
+		if (this.sp + frameSize >= operands.length) {
+			int minSize = this.sp + frameSize;
+			int len = operands.length;
+			do {
+				len *= 1.5;
+			} while (len <= minSize);
+			this.operands = Arrays.copyOf(this.operands, len);
 		}
-		sp = 0;
+	}
+	
+	protected final void clearOperands(int bp) {
+		for (;bp < sp; bp ++) {
+			operands[bp] = null;
+		}
+	}
+	
+	public String toString(int bp, int local) {
+		StringBuilder builder = new StringBuilder();
+		builder.append("[");
+		for (int i = 0; i < bp; i ++) {
+			builder.append(operands[i]);
+			builder.append(", ");
+		}
+		builder.append("] [");
+		for (int i = bp; i < bp + local; i ++) {
+			builder.append(operands[i]);
+			builder.append(", ");
+		}
+		builder.append("] [");
+		for (int i = bp + local; i < sp; i ++) {
+			builder.append(operands[i]);
+			builder.append(", ");
+		}
+		builder.append("]");
+		return builder.toString();
 	}
 }

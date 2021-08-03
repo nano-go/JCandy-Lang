@@ -104,6 +104,6 @@ public class ObjectHelper {
 	}
 	
 	public static CandyObject callFunction(CNIEnv env, CallableObj callable, CandyObject... args) {
-		return callable.callExeUser(env, args);
+		return callable.call(env, args);
 	}
 }

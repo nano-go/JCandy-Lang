@@ -70,7 +70,7 @@ public class ClassSignature {
 	}
 	
 	public ClassSignature defineMethod(CallableObj obj) {
-		return defineMethod(obj.declaredName(), obj);
+		return defineMethod(obj.funcName(), obj);
 	}
 
 	public ClassSignature defineMethod(String name, CallableObj obj) {

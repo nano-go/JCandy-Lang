@@ -371,7 +371,7 @@ public final class ArrayObj extends CandyObject {
 			CallableObj callable = (CallableObj) defaultElement;
 			for (int i = 0; i < initalCapacity; i ++) {
 				CandyObject element = 
-					callable.callExeUser(env, IntegerObj.valueOf(i));
+					callable.call(env, IntegerObj.valueOf(i));
 				append(element);
 			}
 		} else {
@@ -510,7 +510,7 @@ public final class ArrayObj extends CandyObject {
 		final int SIZE = length;
 		for (int i = 0; i < SIZE; i ++) {
 			elements[i] = 
-				mapper.callExeUser(env, IntegerObj.valueOf(i), elements[i]);
+				mapper.call(env, IntegerObj.valueOf(i), elements[i]);
 		}
 		return this;
 	}
@@ -520,7 +520,7 @@ public final class ArrayObj extends CandyObject {
 		CallableObj walker = TypeError.requiresCallable(args[0]);
 		final int SIZE = length;
 		for (int i = 0; i < SIZE; i ++) {
-			walker.callExeUser(env, IntegerObj.valueOf(i), elements[i]);
+			walker.call(env, IntegerObj.valueOf(i), elements[i]);
 		}
 		return this;
 	}

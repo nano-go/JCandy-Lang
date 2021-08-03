@@ -14,7 +14,7 @@ public class ArgumentError extends ErrorObj {
 		NativeClassRegister.generateNativeClass(ArgumentError.class, ERROR_CLASS);
 	
 	public static void checkArity(CallableObj callable, int expectedArity) {
-		if (callable.varArgsIndex() >= 0) {
+		if (callable.vaargIndex() >= 0) {
 			if (expectedArity < callable.arity()-1) {
 				new ArgumentError
 					(callable, expectedArity).throwSelfNative();
@@ -29,7 +29,7 @@ public class ArgumentError extends ErrorObj {
 	
 	public static void throwsArgumentError(CallableObj callable, 
 	                                       int actual) {
-		if (callable.varArgsIndex() != -1) {
+		if (callable.vaargIndex() != -1) {
 			new ArgumentError(
 				"The %s takes %d+ arguments, but %d were given.",
 				name(callable), callable.arity()-1, actual

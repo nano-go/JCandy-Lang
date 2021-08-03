@@ -44,42 +44,39 @@ public class CandyV1Evaluator implements Evaluator {
 	private static final byte EMPTY_UNPACK_FLAGS = 0;
 	
 	private StackFrame stack;
+	
 	private Frame frame;
 	private ConstantPool cp;
 	private byte[] code;
-	private CandyObject[] slots;
+	
 	private OperandStack opStack;
+	private int bp;
 
 	private EvaluatorEnv env;
-	
-	/**
-	 * A function returns a value by the operand stack, but when a function
-	 * is a top frame and the function has been executed, the operand stack
-	 * is null.
-	 *
-	 * So we need a variable to store the return value of this function if 
-	 * the return value is required.
-	 */
-	private CandyObject retValue;
 	
 	protected CandyV1Evaluator(EvaluatorEnv env) {
 		this.env = env;
 		this.stack = env.thread.stack;
+		this.opStack = new OperandStack(32);
 	}
 	
 	private void pushFrame(Frame frame) {
-		stack.pushFrame(frame);
+		stack.pushFrame(frame);	
+		opStack.push(frame.frameSize());
 		syncFrameData();
+		this.opStack.sp += frame.localSizeWithoutArgs;
 	}
 	
-	private final void popFrameWithRet() {
-		Frame old = popFrame();
-		if (frame != null) {
-			// push return value to operand stack.
-			push(old.opStack.pop());
-		} else {
-			this.retValue = old.opStack.pop();
+	private final void returnFrame() {
+		Frame old = stack.popFrame();
+		if (old.isSourceFileFrame()) {
+			SourceFileInfo.unmarkRunning(old.chunk.getSourceFileName());
 		}
+		old.closeAllUpvalues();
+		CandyObject retValue = opStack.peek(0);
+		opStack.pop(bp + 1);
+		store(0, retValue);
+		syncFrameData();
 	}
 
 	private final Frame popFrame() {
@@ -87,6 +84,8 @@ public class CandyV1Evaluator implements Evaluator {
 		if (old.isSourceFileFrame()) {
 			SourceFileInfo.unmarkRunning(old.chunk.getSourceFileName());
 		}
+		opStack.pop(bp);
+		old.closeAllUpvalues();
 		syncFrameData();
 		return old;
 	}
@@ -98,18 +97,17 @@ public class CandyV1Evaluator implements Evaluator {
 			return;
 		}
 		this.cp = frame.chunk.getConstantPool();
-		this.slots = frame.slots;
 		this.code = frame.chunk.getByteCode();
-		this.opStack = frame.opStack;
+		this.bp = frame.bp;
 		env.globalEnv.setCurrentFileEnv(frame.fileEnv);
 	}
 
 	private void resetFrameData() {
 		this.cp = null;
-		this.slots = null;
 		this.code = null;
 		this.opStack = null;
 		this.frame = null;
+		this.bp = 0;
 		env.globalEnv.setCurrentFileEnv((FileEnvironment) null);
 	}
 	
@@ -144,25 +142,12 @@ public class CandyV1Evaluator implements Evaluator {
 		opStack.push(obj);
 	}
 	
-	/**
-	 * Push arguments into the operand stack in the right-to-left order.
-	 */
-	private final void pushArguments(CandyObject... args) {
-		for (int i = args.length-1; i >= 0; i --) {
-			if (args[i] == null) {
-				opStack.push(NullPointer.nil());
-			} else {
-				opStack.push(args[i]);
-			}
-		}
-	}
-
 	private final CandyObject load(int slot) {
-		return slots[slot];
+		return opStack.operands[bp + slot];
 	}
 
 	private final void store(int slot, CandyObject value) {
-		slots[slot] = value;
+		opStack.operands[bp + slot] = value;
 	}
 
 	private boolean tryToHandleError(ErrorObj err, boolean printError) {
@@ -203,7 +188,7 @@ public class CandyV1Evaluator implements Evaluator {
 	}
 
 	private void handleError(ErrorObj err, ErrorHandlerTable.ErrorHandler handler) {	
-		opStack.clear();
+		opStack.clearOperands(bp + frame.getMaxLocal());
 		frame.pc = handler.handlerPc;
 		push(err);
 	}
@@ -371,47 +356,51 @@ public class CandyV1Evaluator implements Evaluator {
 		env.globalEnv.setVariable(name, val);
 		return true;
 	}
+
+	@Override
+	public void push(Frame frame) {
+		pushFrame(frame);
+	}
 	
 	@Override
-	public CandyObject eval(CallableObj fn, int unpackFlags, CandyObject[] args) {
+	public CandyObject eval(CallableObj fn, int unpackFlags, CandyObject... args) {
 		if (args != null) {
-			pushArguments(args);
+			opStack.pushArguments(args);
 		}
 		call(fn, args == null ? 0 : args.length, unpackFlags);
 		if (!fn.isBuiltin()) {
 			evalCurrentFrame(true);
 		}
-		return frame != null ? pop() : retValue;
+		return pop();
 	}
 	
 	@Override
 	public void call(CallableObj fn, int argc, int unpackFlags) {
-		if (unpackFlags == EMPTY_UNPACK_FLAGS && fn.varArgsIndex() < 0) {
+		argc = checkArgument(fn, argc, unpackFlags);
+		fn.onCall(env.cniEnv, opStack, stack, argc, unpackFlags);
+	}
+	
+	private final int checkArgument(CallableObj fn, int argc, int unpackFlags) {
+		if (unpackFlags == EMPTY_UNPACK_FLAGS && fn.vaargIndex() < 0) {
 			if (fn.arity() != argc) {
 				ArgumentError.throwsArgumentError(fn, argc);
 			}
-			callFn(fn, argc, unpackFlags);
 		} else {
 			CandyObject[] args = unpack(fn, argc, unpackFlags);
-			pushArguments(args);
-			callFn(fn, args.length, unpackFlags);
+			opStack.pushArguments(args);
+			argc = args.length;
 		}
-		if (!fn.isBuiltin()) {
-			syncFrameData();
-		}
+		return argc;
 	}
 
 	private final CandyObject[] unpack(CallableObj fn, int argc, int unpackFlags) {
+		opStack.reverse(argc);
 		CandyObject[] args = ElementsUnpacker.unpackFromStack
-			(env.cniEnv, opStack, argc, fn.varArgsIndex(), fn.arity(), unpackFlags);
+			(env.cniEnv, opStack, argc, fn.vaargIndex(), fn.arity(), unpackFlags);
 		if (args == null) {
 			ArgumentError.throwsArgumentError(fn, argc);
 		}
 		return args;
-	}
-
-	private final void callFn(CallableObj fn, int argc, int unpackFlags) {
-		fn.onCall(env.cniEnv, opStack, stack, argc, unpackFlags);
 	}
 	
 	@Override
@@ -434,7 +423,7 @@ public class CandyV1Evaluator implements Evaluator {
 			srcFileInfo.markRunning(env.thread);
 		}
 		eval(Frame.fetchFrame(
-			file.getChunk(), env.globalEnv.getCurrentFileEnv()
+			opStack, file.getChunk(), env.globalEnv.getCurrentFileEnv()
 		), false);
 		ModuleObj moudleObj = 
 			env.globalEnv.getCurrentFileEnv().generateModuleObject();
@@ -450,7 +439,7 @@ public class CandyV1Evaluator implements Evaluator {
 
 	private void evalCurrentFrame(boolean exitJavaMethodAtReturn) {
 		if (exitJavaMethodAtReturn) {
-			stack.peek().exitJavaMethodAtReturn = true;
+			stack.peek().exitRunAtReturn = true;
 		}
 		int deepth = stack.sp();
 		while (true) {
@@ -481,8 +470,6 @@ public class CandyV1Evaluator implements Evaluator {
 	
 	private void evalCore() {
 		loop: for (;;) {
-			/*if (tracerManager != null)
-				tracerManager.notifyInsStarted(this, pc);*/
 			switch (code[frame.pc ++]) {
 				case OP_NOP: break;
 				case OP_POP: {
@@ -864,40 +851,42 @@ public class CandyV1Evaluator implements Evaluator {
 							name, superClass.getName()
 						).throwSelfNative();
 					}
-					method.call(env.cniEnv, argc);
+					call(method, argc, EMPTY_UNPACK_FLAGS);
 					break;
 				}
 				case OP_INVOKE: {
 					int arity = readUint8();
 					String attr = cp.getString(readIndex());
 					CandyObject method = pop().callGetAttr(env.cniEnv, attr);
-					TypeError.requiresCallable(method).call(env.cniEnv, arity);
+					call(TypeError.requiresCallable(method),
+						arity, EMPTY_UNPACK_FLAGS);
 					break;
 				}
 				case OP_CALL_SLOT: {
-					int arity = readUint8();	
-					TypeError.requiresCallable(load(readUint8()))
-						.call(env.cniEnv, arity);
+					int arity = readUint8();
+					call(TypeError.requiresCallable(load(readUint8())),
+						arity, EMPTY_UNPACK_FLAGS);
 					break;
 				}
 				case OP_CALL_GLOBAL: {
 					int arity = readUint8();
 					String name = cp.getString(readIndex());
-					TypeError.requiresCallable(
+					call(TypeError.requiresCallable(
 						getGlobalVariable(name, true)
-					).call(env.cniEnv, arity);
+					), arity, EMPTY_UNPACK_FLAGS);
 					break;
 				}
 				case OP_CALL: {
 					int arity = readUint8();
-					TypeError.requiresCallable(pop()).call(env.cniEnv, arity);
+					call(TypeError.requiresCallable(pop()), 
+						arity, EMPTY_UNPACK_FLAGS);
 					break;
 				}
 				case OP_CALL_EX: {
 					int arity = readUint8();
 					int unpackFlags = cp.getUnpackFlags(readIndex());
-					TypeError.requiresCallable(pop())
-						.call(env.cniEnv, arity, unpackFlags);
+					call(TypeError.requiresCallable(pop()), 
+						arity, unpackFlags);
 					break;
 				}
 
@@ -939,28 +928,26 @@ public class CandyV1Evaluator implements Evaluator {
 					break;
 				}
 				case OP_RETURN: {
-					if (stack.peek().exitJavaMethodAtReturn) {
-						popFrameWithRet();
+					if (stack.peek().exitRunAtReturn) {
+						returnFrame();
 						break loop;
 					}
-					popFrameWithRet(); 
+					returnFrame(); 
 					break;
 				}
 				case OP_RETURN_NIL: {
 					push(NullPointer.nil());
-					if (stack.peek().exitJavaMethodAtReturn) {
-						popFrameWithRet();
+					if (stack.peek().exitRunAtReturn) {
+						returnFrame();
 						break loop;
 					}
-					popFrameWithRet(); 
+					returnFrame(); 
 					break;
 				}
 				case OP_EXIT: {
 					break loop;
 				}
 			}
-			/*if (tracerManager != null)
-				tracerManager.notifyInsEnd(this);*/
 		}
 	}
 }

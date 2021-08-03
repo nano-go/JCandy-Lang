@@ -6,67 +6,82 @@ import com.nano.candy.interpreter.i2.runtime.chunk.ConstantPool;
 import com.nano.candy.interpreter.i2.runtime.chunk.ConstantValue;
 import com.nano.candy.interpreter.i2.runtime.chunk.attrs.CodeAttribute;
 import com.nano.candy.interpreter.i2.runtime.chunk.attrs.ErrorHandlerTable;
-import com.nano.candy.utils.objpool.Recyclable;
 
-public final class Frame implements Recyclable {
+public final class Frame {
 	
-	public static Frame fetchFrame(Chunk chunk, FileEnvironment env)  {
-		return new Frame().init(chunk, env);
+	public static Frame fetchFrame(OperandStack opStack, 
+	                               Chunk chunk, 
+								   FileEnvironment env)  {
+		return new Frame().init(opStack, chunk, env);
 	}
 	
 	public static Frame fetchFrame(PrototypeFunction prototypeFunc, 
-	                               int argc, 
-								   OperandStack opStack) {
-		Frame f = new Frame().init(prototypeFunc);
-		for (int i = 0; i < argc; i ++) {
-			f.slots[i] = opStack.pop();
-		}
-		return f;
+								   OperandStack opStack) {	
+		return new Frame().init(opStack, prototypeFunc);
 	}
 	
+	/**
+	 * The name of this frame, usually a function name.
+	 * If this frame is the top frame of a source file, the name is
+	 * a source file name.
+	 */
 	private String name;
-	private CodeAttribute codeAttr;
 	
 	/**
-	 * True if this fream is the top fream of a Candy source file.
+	 * True if this frame is the top fream of a source file.
 	 */
 	private boolean isSourceFileFrame;
 	
 	/**
-	 * True if you want to end the VM.runFrame Java method at the end of
-	 * this fream execution.
-	 *
-	 * The field can be used to call Candy methods in the Java language level.
+	 * Used to call Candy function from Java.
 	 */
-	protected boolean exitJavaMethodAtReturn;
+	protected boolean exitRunAtReturn;
 	
-	/**
-	 * The PC points to the current instruction of this frame.
-	 */
 	protected int pc;
 	protected byte[] code;
-	protected ConstantPool cp;
+	protected CodeAttribute codeAttr;
 	protected Chunk chunk;
+	protected ConstantPool cp;
 	
 	/**
-	 * The operand stack holds the operand used by operators to
-	 * perform operation.
-	 *
-	 * The operand stack is a fixed size that Candy compiler can compute
-	 * the max depth of the operand stack.
+	 * +------------------------+
+	 * |                        |
+	 * |        Operands        |   <- push pop...
+	 * |                        |
+	 * +------------------------+   <- new frame start sp
+	 * |                        |
+	 * |     Local Variables    |   <- load store...
+	 * |                        |
+	 * +------------------------+   <- old frame sp
+	 * |                        |
+	 * |        Arguments       |   <- old frame will push n args to operand stack.
+	 * |                        |
+	 * +------------------------+   <- new frame bp, bp+n is nth local variable.
+	 * |   Old Frame Operands   |
+	 * |         ....           |
+	 * +------------------------+
 	 */
+	protected int bp;
+	
+	/**
+	 * Local Variables Size.
+	 */
+	protected int localSizeWithoutArgs;
+	
+	/**
+	 * Local Variables(Without Arguments) + Operands(Max Deepth).
+	 *
+	 * Whenever a frame is pushed, the space of the 'frameSize' will be
+	 * pushed into the operand stack.
+	 */
+	protected int frameSize;
 	protected OperandStack opStack;
 	
 	/**
-	 * This slots used to hold the all local variables in this frame.
-	 */
-	protected CandyObject[] slots;
-	
-	/**
-	 * The file environment when the frame was created.
+	 * This file environment is recorded when a frame is created.
 	 *
-	 * The file environment is required for reference to the variables
-	 * correctly when you call a method in other modules, 
+	 * The file environment is required that reference to the variables
+	 * correctly when you call the frame in other modules, 
 	 */
 	protected FileEnvironment fileEnv;
 	
@@ -76,16 +91,14 @@ public final class Frame implements Recyclable {
 	protected Upvalue[] capturedUpvalues;
 	
 	/**
-	 * The open upvalues are captured by other frame in the current
+	 * The open upvalues are captured by other frames in the current
 	 * frame.
 	 */
 	private Upvalue[] openUpvalues;
 	
 	private Frame() {}
 	
-	private Frame init(Chunk chunk, FileEnvironment env) {
-		adaptForSlots(chunk.getMaxLocal());
-		this.opStack = new OperandStack(chunk.getMaxStack());
+	private Frame init(OperandStack opStack, Chunk chunk, FileEnvironment env) {
 		this.name = chunk.getSimpleName();
 		this.chunk = chunk;
 		this.code = chunk.getByteCode();
@@ -93,14 +106,16 @@ public final class Frame implements Recyclable {
 		this.codeAttr = chunk.getCodeAttr();
 		this.pc = 0;
 		this.fileEnv = env;
-		this.isSourceFileFrame = true;
+		
+		this.bp = opStack.sp;
+		this.localSizeWithoutArgs = getMaxLocal();
+		this.frameSize = getMaxStack() + getMaxLocal();
+		this.opStack = opStack;
 		return this;
 	}
 	
-	private Frame init(PrototypeFunction prototypeFunc) {
-		adaptForSlots(prototypeFunc.getMaxLocal());
-		this.opStack = new OperandStack(prototypeFunc.getMaxStack());
-		this.name = prototypeFunc.declaredName();
+	private Frame init(OperandStack opStack, PrototypeFunction prototypeFunc) {
+		this.name = prototypeFunc.funcName();
 		this.chunk = prototypeFunc.chunk;
 		this.code = chunk.getByteCode();
 		this.cp = chunk.getConstantPool();
@@ -108,14 +123,12 @@ public final class Frame implements Recyclable {
 		this.pc = prototypeFunc.pc;
 		this.fileEnv = prototypeFunc.fileEnv;
 		this.capturedUpvalues = prototypeFunc.upvalues;
-		this.isSourceFileFrame = false;
+		
+		this.bp = opStack.sp - prototypeFunc.arity();
+		this.localSizeWithoutArgs = prototypeFunc.localSizeWithoutArgs;
+		this.frameSize = prototypeFunc.frameSize;
+		this.opStack = opStack;
 		return this;
-	}
-	
-	private void adaptForSlots(int minCapacity) {
-		if (this.slots == null || this.slots.length < minCapacity) {
-			this.slots = new CandyObject[minCapacity];
-		}
 	}
 	
 	public Upvalue[] captureUpvalueObjs(ConstantValue.MethodInfo methodInfo) {
@@ -139,11 +152,11 @@ public final class Frame implements Recyclable {
 	 */
 	private Upvalue captureUpvalue(int index) {
 		if (openUpvalues == null) { /* lazy init */
-			openUpvalues = new Upvalue[slots.length];
+			openUpvalues = new Upvalue[getMaxLocal()];
 		} else if (openUpvalues[index] != null) { // Find the same upvalue.
 			return openUpvalues[index];
-		}	
-		Upvalue openUpvalue = new Upvalue(this.slots, index);
+		}
+		Upvalue openUpvalue = new Upvalue(this.opStack.operands, bp + index);
 		openUpvalues[index] = openUpvalue;
 		return openUpvalue;
 	}
@@ -183,16 +196,20 @@ public final class Frame implements Recyclable {
 		return codeAttr;
 	}
 	
-	public ErrorHandlerTable getErrorHandlerTable() {
-		return codeAttr.errorHandlerTable;
-	}
-	
 	public int getMaxLocal() {
 		return codeAttr.maxLocal;
 	}
 	
 	public int getMaxStack() {
 		return codeAttr.maxStack;
+	}
+	
+	public ErrorHandlerTable getErrorHandlerTable() {
+		return codeAttr.errorHandlerTable;
+	}
+	
+	public int getFrameSize() {
+		return frameSize;
 	}
 	
 	public boolean isSourceFileFrame() {
@@ -211,40 +228,23 @@ public final class Frame implements Recyclable {
 		return chunk.getLineNumber(pc-1);
 	}
 	
+	public int frameSize() {
+		return getMaxLocal() + getMaxStack();
+	}
+	
 	public OperandStack getOperandStack() {
 		return opStack;
 	}
 	
 	public int slotCount() {
-		return slots.length;
+		return getMaxLocal();
 	}
 	
 	public CandyObject getSlotAt(int index) {
-		return slots[index];
-	}
-	
-	public void recycleSelf() {
-		// FRAME_POOL.recycle(this);
-	}
-	
-	protected void clearSlots() {
-		for (int i = 0; i < slots.length; i ++) {
-			slots[i] = null;
+		if (index >= getMaxLocal()) {
+			throw new IndexOutOfBoundsException(
+				String.format("Index %d, Size: %d", index, slotCount()));
 		}
-	}
-
-	@Override
-	public void release() {
-		this.closeAllUpvalues();
-		this.clearSlots();
-		this.chunk = null;
-		this.name = null;
-		this.opStack = null;
-		this.capturedUpvalues = null;
-		this.fileEnv = null;
-		this.codeAttr = null;	
-		this.pc = 0;
-		this.isSourceFileFrame = false;
-		this.exitJavaMethodAtReturn = false;
+		return opStack.operands[bp + index];
 	}
 }

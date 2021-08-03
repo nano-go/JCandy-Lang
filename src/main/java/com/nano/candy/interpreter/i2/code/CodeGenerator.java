@@ -10,7 +10,6 @@ import com.nano.candy.interpreter.i2.runtime.chunk.ConstantValue;
 import com.nano.candy.parser.TokenKind;
 import com.nano.candy.std.Names;
 import com.nano.candy.utils.ArrayUtils;
-import java.util.Collections;
 import java.util.LinkedList;
 import java.util.Optional;
 
@@ -324,16 +323,14 @@ public class CodeGenerator implements AstVisitor<Void, Void> {
 	                                  Stmt.FuncDef node, ClassInfo classDefinedIn) {	
 		enterFunctionScope();
 		int arity = node.parameters.size();
-		int vaArgsIndex = node.parameters.vaArgsIndex;
+		int vaArgsIndex = node.parameters.vaArgsIndex;	
+		locals.addLocals(node.parameters.params);
 		if (classDefinedIn != null) {
+			// declare 'this' as the last argument.
 			methodInfo.classDefinedIn = classDefinedIn;
 			declrVariable("this");
 			arity ++;
-			if (vaArgsIndex != -1) {
-				vaArgsIndex ++;
-			}
 		}	
-		locals.addLocals(node.parameters.params);
 		// locate the beginning of the method for debugger.
 		if (isDebugMode && classDefinedIn != null) {
 			builder.emitop(OP_NOP, node.pos.getLine());
@@ -388,21 +385,25 @@ public class CodeGenerator implements AstVisitor<Void, Void> {
 		
 		if (node.superClass.isPresent()) {
 			Expr superClass = node.superClass.get();
-			// load super class object to operand stack top.
+			// push superclass object to the operand stack.
 			superClass.accept(this);
-			// If true, VM will fetch the super class from the operand stack top.
+			// If true, VM will fetch the superclass from 
+			// the operand stack.
 			classInfo.hasSuperClass = true;
 		} else {
-			// OP_CLASS will push a class created by the class-info
-			// to stack top.
-			builder.state().push(1);
+			// If the superclass is not present, the Object will be default
+			// superclass.
 		}
+		
+		// OP_CLASS will push a class created by the class-info
+		// to stack top.
+		builder.state().push(1);
 		
 		if (!node.isStaticClass) {
 			declrVariable(node.name);
 		}
-		enterScope();
 		
+		enterScope();
 		classInfo.fromPC = builder.curCp();	
 		emitClass(classInfo, line(node));	
 		classInfo.className = node.name;
@@ -411,11 +412,12 @@ public class CodeGenerator implements AstVisitor<Void, Void> {
 		if (isDebugMode && node.endPos.isPresent()) {
 			builder.emitop(OP_NOP, node.endPos.get().getLine());
 		}
-		
 		closeScope(true);
+		
 		if (!node.isStaticClass) {
 			defineVariable(node.name, -1);
 		} else {
+			// this.className = class
 			loadVariable("this", -1);
 			builder.emitop(OP_SET_ATTR);
 			builder.emitStringConstant(node.name);
@@ -438,22 +440,34 @@ public class CodeGenerator implements AstVisitor<Void, Void> {
 		builder.emit1((byte) declrVariable("super"));
 	}
 	
+	/**
+	 * Static Block:
+	 *     static {...}
+	 *
+	 * We will store this class as a local variable called 'this'.
+	 */
 	private void emitStaticBlock(Stmt.ClassDef node) {
 		if (!node.staticBlock.isPresent()) {
 			return;
 		}
 		enterScope();
-		if (!node.isStaticClass) {
-			loadVariable(node.name, -1);
-		} else {
-			loadVariable("this", -1);
-			builder.emitop(OP_GET_ATTR, -1);
-			builder.emitStringConstant(node.name);
-		} 
+		loadClass(node);
 		int thisSlot = declrVariable("this");		
 		defineVariable("this", thisSlot);
 		walkBlock(node.staticBlock.get());
 		closeScope(true);
+	}
+	
+	private void loadClass(Stmt.ClassDef node) {
+		if (!node.isStaticClass) {
+			loadVariable(node.name, -1);
+		} else {
+			// We are inside stack block.
+			// load 'this.className'
+			loadVariable("this", -1);
+			builder.emitop(OP_GET_ATTR, -1);
+			builder.emitStringConstant(node.name);
+		}
 	}
 
 	private Optional<MethodInfo> initalizer(Stmt.ClassDef node, ClassInfo classDefinedIn) {
@@ -759,9 +773,8 @@ public class CodeGenerator implements AstVisitor<Void, Void> {
 	@Override
 	public Void visit(Stmt.Return node) {
 		if (isInInitializer) {
-			// the 'this' pointer is at the slot 0.
 			// VM requires to return the 'this' pointer from a initializer.
-			builder.emitop(OP_LOAD0, line(node));
+			loadVariable("this", line(node));
 		} else if (node.expr.isPresent()) {
 			node.expr.get().accept(this);
 		} else {
@@ -894,9 +907,6 @@ public class CodeGenerator implements AstVisitor<Void, Void> {
 				flags |= bits;
 			}
 			bits <<= 1;
-		}
-		Collections.reverse(node.arguments);
-		for (Expr.Argument arg : node.arguments) {
 			arg.expr.accept(this);
 		}
 		
