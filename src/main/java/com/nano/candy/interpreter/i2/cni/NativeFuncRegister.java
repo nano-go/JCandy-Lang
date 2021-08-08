@@ -9,7 +9,7 @@ public class NativeFuncRegister {
 	
 	public static void register(FileEnvironment env, Class<?> nativeFunctionSet) {
 		for (CNativeFunction nativeFunc : getNativeFunctions(nativeFunctionSet)) {
-			env.defineCallable(nativeFunc);
+			env.getVariableTable().defineCallable(nativeFunc);
 		}
 	}
 	

@@ -10,8 +10,7 @@ import com.nano.candy.interpreter.i2.cni.NativeClassRegister;
 import com.nano.candy.interpreter.i2.cni.NativeMethod;
 import com.nano.candy.interpreter.i2.runtime.FileEnvironment;
 import com.nano.candy.interpreter.i2.runtime.Variable;
-import java.util.HashMap;
-import java.util.Map;
+import com.nano.candy.interpreter.i2.runtime.VariableTable;
 
 @NativeClass(name = "Module")
 public class ModuleObj extends CandyObject {
@@ -20,8 +19,8 @@ public class ModuleObj extends CandyObject {
 		NativeClassRegister.generateNativeClass(ModuleObj.class);
 	
 	private String name;
-	private Map<String, Variable> attrs;
-	public ModuleObj(String name, Map<String, Variable> attrs) {
+	private VariableTable attrs;
+	public ModuleObj(String name, VariableTable attrs) {
 		super(MOUDLE_CLASS);
 		this.name = name;
 		this.attrs = attrs;
@@ -29,7 +28,7 @@ public class ModuleObj extends CandyObject {
 	
 	@Override
 	public CandyObject getAttr(CNIEnv env, String attr) {
-		Variable variable = attrs.get(attr);
+		Variable variable = attrs.getVariable(attr);
 		if (variable != null) {
 			return variable.getValue();
 		}
@@ -45,7 +44,7 @@ public class ModuleObj extends CandyObject {
 
 	@Override
 	public CandyObject setAttr(CNIEnv env, String attr, CandyObject ref) {
-		Variable variable = attrs.get(attr);
+		Variable variable = attrs.getVariable(attr);
 		if (variable != null) {
 			variable.setValue(ref);
 			return ref;
@@ -56,23 +55,17 @@ public class ModuleObj extends CandyObject {
 		throw new Error();
 	}
 	
-	public void defineTo(HashMap<String, Variable> vars) {
-		vars.putAll(attrs);
-	}
-	
 	public void defineTo(ModuleObj moudleObj) {
-		moudleObj.attrs.putAll(this.attrs);
+		moudleObj.attrs.defineAll(this.attrs);
 	}
 	
 	public void addToEnv(FileEnvironment env) {
-		for (Variable v : attrs.values()) {
-			env.defineVeriable(v);
-		}
+		env.getVariableTable().defineAll(this.attrs);
 	}
 
 	@Override
 	public CandyObject iterator(CNIEnv env) {
-		return new IteratorObj.VarableIterator(attrs.values().iterator());
+		return new IteratorObj.VarableIterator(attrs.getVariables().iterator());
 	}
 	
 	public String getName() {

@@ -8,6 +8,7 @@ import com.nano.candy.interpreter.i2.runtime.chunk.attrs.LineNumberTable;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.LinkedList;
 
 import static com.nano.candy.interpreter.i2.code.OpCodes.*;
@@ -24,9 +25,9 @@ public class ChunkBuilder {
 		OP_STORE0, OP_STORE1, OP_STORE2, OP_STORE3, OP_STORE4 
 	};
 	
-	public static final ErrorHandlerTable.ErrorHandler[] EMPTY_ERROR_HANDLER_ARR =
+	public static final ErrorHandlerTable.ErrorHandler[] EMPTY_ERROR_HANDLER_ARR = 
 		new ErrorHandlerTable.ErrorHandler[0];
-	
+
 	private static class LineNumberInfo {
 		short startPc;
 		short lineNumber;
@@ -86,6 +87,7 @@ public class ChunkBuilder {
 	}
 
 	private ArrayList<LineNumberInfo> lineNumberTable;
+	
 	private String sourceFileName;
 	
 	protected ConstantPool constantPool;
@@ -96,6 +98,9 @@ public class ChunkBuilder {
 	 */
 	private int cp;
 	private State state;
+	
+	private ArrayList<String> globalVariableNames;
+	private HashMap<String, Integer> globalVariableTable;
 
 	public ChunkBuilder() {
 		this.lineNumberTable = new ArrayList<>();
@@ -105,6 +110,14 @@ public class ChunkBuilder {
 	
 	public void setSourceFileName(String fileName) {
 		this.sourceFileName = fileName;
+	}
+	
+	public void setGlobalVariableNames(ArrayList<String> names) {
+		this.globalVariableNames = names;
+	}
+	
+	public void setGlobalVariableTable(HashMap<String, Integer> globalVariableTable) {
+		this.globalVariableTable = globalVariableTable;
 	}
 	
 	protected void addLineNumber(int startPc, int lineNumber) {
@@ -335,8 +348,8 @@ public class ChunkBuilder {
 		emitStringConstant(attr);
 	}
 
-	
-	private void emitIndex(int index) {
+
+	public void emitIndex(int index) {
 		if (index < 255) {
 			emit1((byte) index);
 			return;
@@ -389,6 +402,8 @@ public class ChunkBuilder {
 			.setLineNumberTable(buildLineNumberTable())
 			.setConstantPool(constantPool.toConstants())
 			.setCodeAttr(buildCodeAttr(maxLocal))
+			.setGlobalVarNames(globalVariableNames)
+			.setGlobalVarTable(globalVariableTable)
 			.build();
 	}
 }

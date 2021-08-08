@@ -1,0 +1,21 @@
+import "common" as common
+
+var globalSum = 0
+
+fun test_accessGlobal() {
+	for (i in 0..35000) {
+		globalSum += i
+	}
+	globalSum = 0
+}
+
+fun test_accessLocal() {
+	var sum = 0
+	for (i in 0..35000) {
+		sum += i
+	}
+}
+
+common.testTimes(10, "global", test_accessGlobal)
+common.testTimes(10, "global", test_accessGlobal)
+common.testTimes(10, "local", test_accessLocal)

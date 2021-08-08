@@ -10,6 +10,8 @@ import com.nano.candy.interpreter.i2.runtime.chunk.ConstantValue;
 import com.nano.candy.parser.TokenKind;
 import com.nano.candy.std.Names;
 import com.nano.candy.utils.ArrayUtils;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.Optional;
 
@@ -68,6 +70,18 @@ public class CodeGenerator implements AstVisitor<Void, Void> {
 	private boolean isInInitializer;
 	private LinkedList<LoopMarker> loopMarkers;
 	
+	/**
+	 * We use indexes to access the global variable instead of names.
+	 *
+	 * This map stores the indexes of each global variable name.
+	 */
+	private HashMap<String, Integer> globalVariableTable;
+	
+	/**
+	 * The array stores the global variable name of the specified index.
+	 */
+	private ArrayList<String> globalVariableNames;
+	
 	public CodeGenerator(boolean isInteractionMode) {
 		this(isInteractionMode, false);
 	}
@@ -78,12 +92,16 @@ public class CodeGenerator implements AstVisitor<Void, Void> {
 		this.loopMarkers = new LinkedList<>();
 		this.isInteractionMode = isInteractionMode;
 		this.isDebugMode = debugMode;
+		this.globalVariableTable = new HashMap<>();
+		this.globalVariableNames = new ArrayList<>();
 	}
 	
 	public Chunk genCode(ASTreeNode node) {
 		ASTreeNode.accept(node, this);
 		builder.emitop(OP_EXIT);
 		builder.setSourceFileName(node.pos.getFileName());
+		builder.setGlobalVariableNames(globalVariableNames);
+		builder.setGlobalVariableTable(globalVariableTable);
 		return builder.build(locals.maxSlotCount());
 	}
 	
@@ -124,6 +142,19 @@ public class CodeGenerator implements AstVisitor<Void, Void> {
 	}
 	
 	/**
+	 * Returns the index of the specified global variable name.
+	 */
+	private int globalVarIndex(String name) {
+		Integer globalVarIndex = globalVariableTable.get(name);
+		if (globalVarIndex == null) {
+			globalVarIndex = globalVariableNames.size();
+			globalVariableNames.add(name);
+			globalVariableTable.put(name, globalVarIndex);
+		}
+		return globalVarIndex;
+	}
+	
+	/**
 	 * Declares a variable in the current scope.
 	 *
 	 * @return the slot of the given variable or -1 if the current scope 
@@ -147,7 +178,7 @@ public class CodeGenerator implements AstVisitor<Void, Void> {
 	private void defineVariable(String name, int line) {
 		if (locals.isInGlobal()) {
 			builder.emitop(OP_GLOBAL_DEFINE, line);
-			builder.emitStringConstant(name);
+			builder.emitIndex(globalVarIndex(name));
 			return;
 		}
 		int slot = locals.resolveLocalInCurrentDeepth(name);
@@ -168,7 +199,7 @@ public class CodeGenerator implements AstVisitor<Void, Void> {
 			builder.emitopWithArg(OP_LOAD_UPVALUE, slot, line);
 		} else {
 			builder.emitop(OP_GLOBAL_GET, line);
-			builder.emitStringConstant(name);
+			builder.emitIndex(globalVarIndex(name));
 		}
 	}
 	
@@ -184,7 +215,7 @@ public class CodeGenerator implements AstVisitor<Void, Void> {
 			builder.emitopWithArg(OP_STORE_UPVALUE, slot, line);
 		} else {
 			builder.emitop(OP_GLOBAL_SET, line);
-			builder.emitStringConstant(name);
+			builder.emitIndex(globalVarIndex(name));
 		}
 	}
 	
@@ -525,7 +556,7 @@ public class CodeGenerator implements AstVisitor<Void, Void> {
 	public Void visit(Stmt.Import node) {
 		node.fileExpr.accept(this);
 		builder.emitop(OP_IMPORT, line(node));
-		builder.emitStringConstant(node.asIdentifier);
+		builder.emitIndex(globalVarIndex(node.asIdentifier));
 		return null;
 	}
 
@@ -970,7 +1001,7 @@ public class CodeGenerator implements AstVisitor<Void, Void> {
 	
 	private void callGlobalVar(String name, int argc, int line) {
 		builder.emitopWithArg(OP_CALL_GLOBAL, argc, line);
-		builder.emitStringConstant(name);
+		builder.emitIndex(globalVarIndex(name));
 	}
 
 	@Override

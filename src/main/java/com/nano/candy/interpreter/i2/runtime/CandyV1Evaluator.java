@@ -336,24 +336,23 @@ public class CandyV1Evaluator implements Evaluator {
 		return null;
 	}
 
-	private CandyObject getGlobalVariable(String name, boolean throwsErrorIfNotFound) {
-		CandyObject obj = env.globalEnv.getVariableValue(name);
+	private CandyObject getGlobalVariable(int index, boolean throwsErrorIfNotFound) {
+		CandyObject obj = env.globalEnv.getVariableValue(index);
 		if (obj == null && throwsErrorIfNotFound) {
-			new NameError("the variable '%s' not found.", name)
+			new NameError("the variable '%s' not found.", env.globalEnv.getVariableName(index))
 				.throwSelfNative();
 		}
 		return obj;
 	}
 
-	private boolean setGlobalVariable(String name, CandyObject val, boolean throwsErrorIfNotFound) {
-		if (env.globalEnv.getVariableValue(name) == null) {
+	private boolean setGlobalVariable(int index, CandyObject val, boolean throwsErrorIfNotFound) {
+		if (!env.globalEnv.setVariableIfExists(index, val)) {
 			if (throwsErrorIfNotFound) {
-				new NameError("the variable '%s' not found.", name)
+				new NameError("the variable '%s' not found.", env.globalEnv.getVariableName(index))
 					.throwSelfNative();
 			}
 			return false;
 		}
-		env.globalEnv.setVariable(name, val);
 		return true;
 	}
 
@@ -704,22 +703,21 @@ public class CandyV1Evaluator implements Evaluator {
 				 */
 				case OP_GLOBAL_DEFINE: {
 					env.globalEnv.setVariable(
-						cp.getString(readIndex()), /* name */
+						readIndex(),               /* name index */
 						pop()                      /* value */
 					);
 					break;
 				}		
 				case OP_GLOBAL_SET: {
 					setGlobalVariable(
-						cp.getString(readIndex()), /* name */
+						readIndex(),               /* name index */
 						peek(0),                   /* value */
 						true
 					);					
 					break;
 				}		
 				case OP_GLOBAL_GET: {
-					push(getGlobalVariable(
-						cp.getString(readIndex()), true));
+					push(getGlobalVariable(readIndex(), true));
 					break;
 				}
 
@@ -870,9 +868,8 @@ public class CandyV1Evaluator implements Evaluator {
 				}
 				case OP_CALL_GLOBAL: {
 					int arity = readUint8();
-					String name = cp.getString(readIndex());
 					call(TypeError.requiresCallable(
-						getGlobalVariable(name, true)
+						getGlobalVariable(readIndex(), true)
 					), arity, EMPTY_UNPACK_FLAGS);
 					break;
 				}
@@ -911,7 +908,7 @@ public class CandyV1Evaluator implements Evaluator {
 					ModuleObj moudleObj = ModuleManager.getManager().importModule(
 						env.cniEnv, ObjectHelper.asString(pop())
 					);
-					env.globalEnv.setVariable(cp.getString(readIndex()), moudleObj);
+					env.globalEnv.setVariable(readIndex(), moudleObj);
 					break;
 				}
 				case OP_ASSERT: {

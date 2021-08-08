@@ -2,9 +2,8 @@ package com.nano.candy.interpreter.i2.runtime.module;
 import com.nano.candy.interpreter.i2.builtin.type.ModuleObj;
 import com.nano.candy.interpreter.i2.cni.CNIEnv;
 import com.nano.candy.interpreter.i2.runtime.CompiledFileInfo;
-import com.nano.candy.interpreter.i2.runtime.Variable;
+import com.nano.candy.interpreter.i2.runtime.VariableTable;
 import com.nano.candy.interpreter.i2.tool.Compiler;
-import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -94,8 +93,7 @@ public abstract class ModuleLoader {
 	private ModuleObj mergeModules(String moduleName, 
 	                               ModuleObj[] moduleObjects) 
 	{
-		ModuleObj moduleObj = new ModuleObj
-			(moduleName, new HashMap<String, Variable>());
+		ModuleObj moduleObj = new ModuleObj(moduleName, new VariableTable(32));
 		for (ModuleObj submoduleObj : moduleObjects) {
 			submoduleObj.defineTo(moduleObj);
 		}

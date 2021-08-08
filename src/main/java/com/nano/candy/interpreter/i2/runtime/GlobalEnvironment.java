@@ -11,8 +11,8 @@ public class GlobalEnvironment {
 	private FileEnvironment currentFileEnv;
 	
 	public GlobalEnvironment() {
-		fileEnvCache = new HashMap<>();
-		currentFileEnv = null;
+		this.fileEnvCache = new HashMap<>();
+		this.currentFileEnv = null;
 	}
 	
 	private FileEnvironment generateFileEnvrionment(CompiledFileInfo compiledFileInfo) {
@@ -48,17 +48,43 @@ public class GlobalEnvironment {
 		this.currentFileEnv = null;
 	}
 	
+	public String getVariableName(int index) {
+		return currentFileEnv
+			.getVariableTable().getVariableName(index);
+	}
+	
+	public CandyObject getVariableValue(int index) {
+		Variable v = getVariable(index);
+		return v != null ? v.getValue() : null;
+	}
+	
 	public CandyObject getVariableValue(String name) {
 		Variable v = getVariable(name);
 		return v != null ? v.getValue() : null;
 	}
 	
+	public Variable getVariable(int index) {
+		VariableTable vars = currentFileEnv.getVariableTable();
+		Variable v = vars.getVariable(index);
+		return v != null ? v : 
+			BuiltinVariables.getVariable(vars.getVariableName(index));
+	}
+	
 	public Variable getVariable(String name) {
-		Variable v = currentFileEnv.getVariable(name);
+		Variable v = currentFileEnv.getVariableTable().getVariable(name);
 		return v != null ? v : BuiltinVariables.getVariable(name);
 	}
 	
+	public void setVariable(int index, CandyObject value) {
+		currentFileEnv.getVariableTable().setVariable(index, value);
+	}
+	
 	public void setVariable(String name, CandyObject value) {
-		currentFileEnv.setVariable(name, value);
+		currentFileEnv.getVariableTable().defineVariable(name, value);
+	}
+	
+	public boolean setVariableIfExists(int index, CandyObject value) {
+		return currentFileEnv.getVariableTable()
+			.setVariableIfExists(index, value);
 	}
 }

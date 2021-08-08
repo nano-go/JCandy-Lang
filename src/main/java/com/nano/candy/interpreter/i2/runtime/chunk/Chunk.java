@@ -3,6 +3,8 @@ package com.nano.candy.interpreter.i2.runtime.chunk;
 import com.nano.candy.interpreter.i2.runtime.chunk.attrs.CodeAttribute;
 import com.nano.candy.interpreter.i2.runtime.chunk.attrs.LineNumberTable;
 import java.io.File;
+import java.util.ArrayList;
+import java.util.HashMap;
 
 public class Chunk {
 
@@ -12,6 +14,9 @@ public class Chunk {
 	protected ConstantPool constantPool;
 	protected LineNumberTable lineNumberTable;
 	protected CodeAttribute codeAttr;
+	
+	protected ArrayList<String> globalVarNames;
+	protected HashMap<String, Integer> globalVarTable;
 	
 	private Chunk() {}
 	
@@ -49,6 +54,14 @@ public class Chunk {
 		return lineNumberTable.findLineNumber(pc);
 	}
 	
+	public ArrayList<String> getGlobalVarNames() {
+		return globalVarNames;
+	}
+
+	public HashMap<String, Integer> getGlobalVarTable() {
+		return globalVarTable;
+	}
+	
 	public ConstantValue.MethodInfo findMethodInfoByPC(int pc) {
 		for (ConstantValue val : getConstants()){
 			if (!(val instanceof ConstantValue.MethodInfo)) {
@@ -84,10 +97,23 @@ public class Chunk {
 		protected LineNumberTable lineNumberTable;
 		protected CodeAttribute codeAttr;
 		
+		protected ArrayList<String> globalVarNames;
+		protected HashMap<String, Integer> globalVarTable;
+		
 		;public Builder(String sourceFileName, byte[] code) {
 			this.sourceFileName = sourceFileName;
 			this.code = code;
 			this.constantPool = new ConstantPool(new ConstantValue[0]);
+		}
+
+		public Builder setGlobalVarTable(HashMap<String, Integer> globalVarTable) {
+			this.globalVarTable = globalVarTable;
+			return this;
+		}
+		
+		public Builder setGlobalVarNames(ArrayList<String> globalVarNames) {
+			this.globalVarNames = globalVarNames;
+			return this;
 		}
 		
 		public Builder setLineNumberTable(LineNumberTable lineNumberTable) {
@@ -117,6 +143,8 @@ public class Chunk {
 			chunk.constantPool = constantPool;
 			chunk.lineNumberTable = lineNumberTable;
 			chunk.codeAttr = codeAttr;
+			chunk.globalVarNames = globalVarNames;
+			chunk.globalVarTable = globalVarTable;
 			return chunk;
 		}
 	}

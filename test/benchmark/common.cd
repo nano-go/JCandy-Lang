@@ -3,3 +3,9 @@ fun test(name, fn) {
 	fn()
 	println("${name}: ${clock()-s} ms.")
 }
+
+fun testTimes(times, name, fn) {
+	for (i in 0..times) {
+		test(name, fn)
+	}
+}

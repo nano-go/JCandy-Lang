@@ -57,22 +57,24 @@ public class Disassembler {
 			case OP_ICONST:
 			case OP_DCONST:	
 			case OP_SCONST:
-			case OP_GLOBAL_DEFINE:
-			case OP_GLOBAL_SET:
-			case OP_GLOBAL_GET:
 			case OP_SET_ATTR:
 			case OP_GET_ATTR:
 			case OP_SUPER_GET:
 			case OP_NEW_ARRAY:
 			case OP_NEW_MAP:
-			case OP_IMPORT:
 			case OP_CLOSE:
 				return disassSimpleInsWithConst(pc);
 				
+			case OP_GLOBAL_DEFINE:
+			case OP_GLOBAL_SET:
+			case OP_GLOBAL_GET:
+			case OP_IMPORT:
+				return disassGlobalVariableIns(pc);
+			
 			case OP_INVOKE:
 			case OP_SUPER_INVOKE:
 				return disassInvokeInstruction(pc);
-				
+			
 			case OP_CALL_SLOT:
 				return disassCallSlotIns(pc);
 			case OP_CALL_GLOBAL:
@@ -166,6 +168,16 @@ public class Disassembler {
 			chunk, insPc, ConstantPool.indexLength(index), argStr
 		);
 	}
+	
+	private DisassInstruction disassGlobalVariableIns(int pc) {
+		int insPc = pc ++;
+		int index = readCpIndex(pc);
+		String name = String.format("%d (%s)", index, 
+			chunk.getGlobalVarNames().get(index));
+		return new DisassSimpleInstruction(
+			chunk, insPc, ConstantPool.indexLength(index) + 1, name
+		);
+	}
 
 	private DisassInstruction disassInvokeInstruction(int pc) {
 		int insPc = pc ++;
@@ -193,9 +205,12 @@ public class Disassembler {
 	private DisassInstruction disassCallGlobalIns(int pc) {
 		int insPc = pc ++;
 		int arity = code[pc ++] & 0xFF; /* u1 */
-		int constIndex = readCpIndex(pc); /* u1 - u3 */
-		String global = getConstantValue(constIndex).toString();
-		String argStr = String.format("global %s(%d)", global, arity);
+		int nameIndex = readCpIndex(pc); /* u1 - u3 */
+		String argStr = String.format("global %d %s(%d)", 
+			nameIndex,
+			chunk.getGlobalVarNames().get(nameIndex), 
+			arity
+		);
 		return new DisassSimpleInstruction(
 			chunk, insPc, 2, argStr
 		);
