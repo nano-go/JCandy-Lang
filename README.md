@@ -25,4 +25,4 @@ Candy 的语法属于常见的语法类型， 可在 [Wiki](https://github.com/n
 因为是使用 Java 编写的虚拟机，所以性能可能不太乐观。相对于其他脚本语言，在没有 JIT 的优化下可能要慢几倍。
 
 # LICENSE
-APACHE LICENSE version 2.0. See [LICENSE](https:/github.com/nano-go/JCandy-Lang/LICENSE)
+APACHE LICENSE version 2.0. 
