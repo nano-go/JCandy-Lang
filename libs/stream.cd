@@ -101,7 +101,6 @@ class StreamInterface {
 		var sortedArr = null
 		var p = 1
 		var size = 0
-		var emptyStream = EMPTY_STREAM
 
 		fun getElement(p, sortedArr) {
 			var value = sortedArr[p]
@@ -111,37 +110,35 @@ class StreamInterface {
 
 		this.eval = lambda -> {
 			if (sortedArr) {
-				if (p >= size) return emptyStream
+				if (p >= size) return EMPTY_STREAM
 				p += 1
 				return getElement(p-1, sortedArr)
 			}
 			sortedArr = []
 			var value
-			while (emptyStream != (value = eval())) {
+			while (EMPTY_STREAM != (value = eval())) {
 				sortedArr.append(value)
 			}
 			sortedArr.sort()
 			size = sortedArr.length()
-			return size != 0 ? getElement(0, sortedArr) : emptyStream
+			return size != 0 ? getElement(0, sortedArr) : EMPTY_STREAM
 		}
 		return this
 	}
 
 	fun foreach(consumer) {
 		var eval = this.eval
-		var emptyStream = EMPTY_STREAM;
 		var value
-		while (emptyStream != (value = eval())) {
+		while (EMPTY_STREAM != (value = eval())) {
 			consumer(value)
 		}
 	}
 
 	fun reduce(initVal, operator) {
 		var eval = this.eval
-		var emptyStream = EMPTY_STREAM;
 		var value
 		var result = initVal
-		while (emptyStream != (value = eval())) {
+		while (EMPTY_STREAM != (value = eval())) {
 			result = operator(result, value)
 		}
 		return result
@@ -149,11 +146,10 @@ class StreamInterface {
 
 	fun fold(operator) {
 		var eval = this.eval
-		var emptyStream = EMPTY_STREAM;
 		var value = eval()
-		if (value == emptyStream) return null;
+		if (value == EMPTY_STREAM) return null;
 		var result = value
-		while (emptyStream != (value = eval())) {
+		while (EMPTY_STREAM != (value = eval())) {
 			result = operator(result, value)
 		}
 		return result
@@ -173,10 +169,9 @@ class StreamInterface {
 
 	fun count() {
 		var eval = this.eval
-		var emptyStream = EMPTY_STREAM;
 		var value
 		var count = 0
-		while (emptyStream != (value = eval())) {
+		while (EMPTY_STREAM != (value = eval())) {
 			count += 1
 		}
 		return count
@@ -184,9 +179,8 @@ class StreamInterface {
 
 	fun allMatch(matcher) {
 		var eval = this.eval
-		var emptyStream = EMPTY_STREAM;
 		var value
-		while (emptyStream != (value = eval())) {
+		while (EMPTY_STREAM != (value = eval())) {
 			if (!matcher(value)) return false
 		}
 		return true
@@ -194,9 +188,8 @@ class StreamInterface {
 
 	fun anyMatch(matcher) {
 		var eval = this.eval
-		var emptyStream = EMPTY_STREAM;
 		var value
-		while (emptyStream != (value = eval())) {
+		while (EMPTY_STREAM != (value = eval())) {
 			if (matcher(value)) return true
 		}
 		return false
@@ -204,9 +197,8 @@ class StreamInterface {
 
 	fun noneMatch(matcher) {
 		var eval = this.eval
-		var emptyStream = EMPTY_STREAM;
 		var value
-		while (emptyStream != (value = eval())) {
+		while (EMPTY_STREAM != (value = eval())) {
 			if (matcher(value)) return false
 		}
 		return true
@@ -219,9 +211,8 @@ class StreamInterface {
 
 	fun _collect(suppiler, accumulator, finisher) {
 		var eval = this.eval
-		var emptyStream = EMPTY_STREAM;
 		var value
-		while (emptyStream != (value = eval())) {
+		while (EMPTY_STREAM != (value = eval())) {
 			accumulator(suppiler, value)
 		}
 		return finisher(suppiler)
