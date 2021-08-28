@@ -67,7 +67,7 @@ public class BuiltinFunctions {
 		return null;
 	}
 	
-	@NativeFunc(name = "clock", arity = 0)
+	@NativeFunc(name = "curTime", arity = 0)
 	public static CandyObject clock(CNIEnv env, CandyObject[] args) {
 		return IntegerObj.valueOf(System.currentTimeMillis());
 	}

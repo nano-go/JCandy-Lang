@@ -1,7 +1,7 @@
 fun test(name, fn) {
-	var s = clock()
+	var s = curTime()
 	fn()
-	println("${name}: ${clock()-s} ms.")
+	println("${name}: ${curTime()-s} ms.")
 }
 
 fun testTimes(times, name, fn) {

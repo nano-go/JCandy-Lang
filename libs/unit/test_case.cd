@@ -54,14 +54,14 @@ class TestCase {
 		if (!this._exeSpecialMethod(this.setUp, result, name, 0)) {
 			return
 		}
-		var s = clock()
+		var s = curTime()
 		var e = null
 		try {
 			m()
 		} intercept as err {
 			e = err
 		}
-		var t = clock() - s
+		var t = curTime() - s
 		// execute tearDown. It represents error if returns false.
 		if (!this._exeSpecialMethod(this.tearDown, result, name, t)) {
 			return
@@ -70,11 +70,11 @@ class TestCase {
 	}
 	
 	fun _exeSpecialMethod(method, result, name, t) {
-		var s = clock()
+		var s = curTime()
 		try {
 			method()
 		} intercept as e {
-			this._addResultByError(result, name, clock()-s + t, e)
+			this._addResultByError(result, name, curTime()-s + t, e)
 			return false
 		}
 		return true

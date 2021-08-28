@@ -125,12 +125,12 @@ fun sorts_test() {
 	}
 	for (sort in sorts) {
 		var cpy = sample.copy()
-		var s = clock()
+		var s = curTime()
 		sort(cpy)
 		assert cpy == ans : 
 			"Expected: " + ans + "\nAcutal: " + cpy
 		println(sort.name + ": " +
-			(clock() - s) + " ms")
+			(curTime() - s) + " ms")
 	}
 }
 sorts_test()

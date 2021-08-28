@@ -22,7 +22,7 @@ hi def link cdConditional        Conditional
 hi def link cdRepeat             Repeat
 hi def link cdException          Exception
 
-syn keyword cdBuiltin            print println max min range clock importMudule setAttr getAttr str bool methods select selectByFilter cmdArgs loadLibrary readLine sleep
+syn keyword cdBuiltin            print println max min range curTime importMudule setAttr getAttr str bool methods select selectByFilter cmdArgs loadLibrary readLine sleep
 syn keyword cdConstants          true false null
 
 hi def link cdBuiltin            Identifier
@@ -45,7 +45,7 @@ syn region cdComment             start="/\*" end="\*/" contains=@cdCommentGroup,
 syn region cdComment             start=+//+ end=/$/ contains=@cdCommentGrouap,@Spell
 
 hi def link cdComment            Comment
-hi def link cdCommentTodo				 Todo
+hi def link cdCommentTodo        Todo
 
 " Identifier;
 syn match cdIdentifier           /[a-zA-Z_][a-zA-Z0-9_]*/ skipwhite skipnl contained
