@@ -1,0 +1,10 @@
+plugins {
+	id 'java-library'
+}	
+archivesBaseName = 'candy-code'
+jar.enabled = true
+
+dependencies {
+	implementation project(':candy-common')
+	implementation project(':candy-compiler')
+}

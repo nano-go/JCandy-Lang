@@ -1,0 +1,11 @@
+plugins {
+	id 'java-library'
+}
+archivesBaseName = 'candy-core'
+
+dependencies {
+	implementation fileTree(dir: '../java-libs/', include: ['reflectasm-1.11.9.jar'])
+	implementation project(':candy-compiler')
+	implementation project(':candy-common')
+	implementation project(':candy-code')
+}

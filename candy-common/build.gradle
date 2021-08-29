@@ -1,0 +1,7 @@
+archivesBaseName = 'candy-common'
+
+jar.enabled = true
+
+dependencies {
+	implementation fileTree(dir: '../java-libs/', include: ['nano-common-0.0.1.jar'])
+}

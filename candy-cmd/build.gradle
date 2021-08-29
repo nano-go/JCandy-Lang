@@ -1,0 +1,39 @@
+apply plugin: 'application'
+
+mainClassName = "com.nano.candy.Main"
+application {
+	mainClass = mainClassName
+}
+
+jar {
+	archiveFileName = 'candy.jar'
+	manifestContentCharset 'utf-8'
+	metadataCharset 'utf-8'
+	manifest {
+		attributes('Main-Class': mainClassName,
+		           'Implementation-Title': project.name,
+							 'Implementation-Version': version)
+	}
+	dependsOn configurations.runtimeClasspath
+	from { 
+		fileTree(dir: 'java-libs/', include: ['*.jar'])
+	}
+	from {
+		configurations.runtimeClasspath.collect { 
+			it.isDirectory() ? it : zipTree(it) 
+		}
+	}
+}
+
+task makeCmdToolJar(type: Copy, dependsOn: jar) {
+	from file("${buildDir}/libs/${jar.archiveName}")
+	into file("${parent.projectDir}/")
+}
+
+dependencies {
+	implementation project(':candy-debug')
+	implementation project(':candy-core')
+	implementation project(':candy-common')
+	implementation project(':candy-compiler')
+	implementation project(':candy-code')
+}

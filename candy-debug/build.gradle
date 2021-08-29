@@ -1,0 +1,6 @@
+archivesBaseName = 'candy-debug'
+
+dependencies {
+	implementation project(':candy-common')
+	implementation project(':candy-code')
+}

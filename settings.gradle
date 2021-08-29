@@ -7,4 +7,5 @@
  * in the user manual at https://docs.gradle.org/6.6.1/userguide/multi_project_builds.html
  */
 
+include 'candy-core', 'candy-compiler', 'candy-common', 'candy-code', 'candy-cmd', 'candy-debug', 'candy-library'
 rootProject.name = 'candy'
