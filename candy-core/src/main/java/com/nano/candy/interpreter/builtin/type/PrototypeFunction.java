@@ -23,13 +23,6 @@ public final class PrototypeFunction extends CallableObj {
 	/**
 	 * See Frame.java
 	 *
-	 * Cached: frameSize = maxLocal() + maxStack() - arity;
-	 */
-	public final int frameSize;
-	
-	/**
-	 * See Frame.java
-	 *
 	 * Cached: localSizeWithoutArgs = maxLocal() - arity;
 	 */
 	public final int localSizeWithoutArgs;
@@ -50,10 +43,9 @@ public final class PrototypeFunction extends CallableObj {
 		this.metInfo = methodInfo;
 		this.fileEnv = fileEnv;
 		
-		this.frameSize = getMaxLocal() + getMaxStack() - arity();
 		this.localSizeWithoutArgs = getMaxLocal() - arity();
 	}
-
+	
 	public Chunk getChunk() {
 		return chunk;
 	}

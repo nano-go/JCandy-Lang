@@ -2,7 +2,6 @@ package com.nano.candy.interpreter.runtime;
 
 import com.nano.candy.code.Chunk;
 import com.nano.candy.code.CodeAttribute;
-import com.nano.candy.code.ConstantPool;
 import com.nano.candy.code.ConstantValue;
 import com.nano.candy.code.ErrorHandlerTable;
 import com.nano.candy.interpreter.builtin.CandyObject;
@@ -42,10 +41,8 @@ public final class Frame {
 	protected boolean exitRunAtReturn;
 	
 	protected int pc;
-	protected byte[] code;
-	protected CodeAttribute codeAttr;
 	protected Chunk chunk;
-	protected ConstantPool cp;
+	protected CodeAttribute codeAttr;
 	
 	/**
 	 * +------------------------+
@@ -72,13 +69,6 @@ public final class Frame {
 	 */
 	protected int localSizeWithoutArgs;
 	
-	/**
-	 * Local Variables(Without Arguments) + Operands(Max Deepth).
-	 *
-	 * Whenever a frame is pushed, the space of the 'frameSize' will be
-	 * pushed into the operand stack.
-	 */
-	protected int frameSize;
 	protected OperandStack opStack;
 	
 	/**
@@ -105,15 +95,12 @@ public final class Frame {
 	private Frame init(OperandStack opStack, Chunk chunk, FileEnvironment env) {
 		this.name = chunk.getSimpleName();
 		this.chunk = chunk;
-		this.code = chunk.getByteCode();
-		this.cp = chunk.getConstantPool();
 		this.codeAttr = chunk.getCodeAttr();
 		this.pc = 0;
 		this.fileEnv = env;
 		
 		this.bp = opStack.sp;
 		this.localSizeWithoutArgs = getMaxLocal();
-		this.frameSize = getMaxStack() + getMaxLocal();
 		this.opStack = opStack;
 		return this;
 	}
@@ -121,8 +108,6 @@ public final class Frame {
 	private Frame init(OperandStack opStack, PrototypeFunction prototypeFunc) {
 		this.name = prototypeFunc.funcName();
 		this.chunk = prototypeFunc.chunk;
-		this.code = chunk.getByteCode();
-		this.cp = chunk.getConstantPool();
 		this.codeAttr = prototypeFunc.metInfo.attrs;
 		this.pc = prototypeFunc.pc;
 		this.fileEnv = prototypeFunc.fileEnv;
@@ -130,7 +115,6 @@ public final class Frame {
 		
 		this.bp = opStack.sp - prototypeFunc.arity();
 		this.localSizeWithoutArgs = prototypeFunc.localSizeWithoutArgs;
-		this.frameSize = prototypeFunc.frameSize;
 		this.opStack = opStack;
 		return this;
 	}
@@ -210,10 +194,6 @@ public final class Frame {
 	
 	public ErrorHandlerTable getErrorHandlerTable() {
 		return codeAttr.errorHandlerTable;
-	}
-	
-	public int getFrameSize() {
-		return frameSize;
 	}
 	
 	public boolean isSourceFileFrame() {
