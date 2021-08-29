@@ -14,7 +14,7 @@ import com.nano.candy.interpreter.runtime.Upvalue;
 public final class PrototypeFunction extends CallableObj {
 
 	public final Chunk chunk;
-	public final ConstantValue.MethodInfo metInfo;
+	public final CodeAttribute codeAttr;
 	public final int pc;
 	
 	public final FileEnvironment fileEnv;
@@ -40,10 +40,21 @@ public final class PrototypeFunction extends CallableObj {
 		this.chunk = chunk;
 		this.pc = pc;
 		this.upvalues = upvalues;
-		this.metInfo = methodInfo;
+		this.codeAttr = methodInfo.attrs;
 		this.fileEnv = fileEnv;
 		
 		this.localSizeWithoutArgs = getMaxLocal() - arity();
+	}
+	
+	public PrototypeFunction(Chunk chunk, FileEnvironment fileEnv) {
+		super(chunk.getSimpleName(), new ParametersInfo(0, -1));
+		this.chunk = chunk;
+		this.pc = 0;
+		this.upvalues = Upvalue.EMPTY_UPVALUES;
+		this.codeAttr = chunk.getCodeAttr();
+		this.fileEnv = fileEnv;
+		
+		this.localSizeWithoutArgs = getMaxLocal();
 	}
 	
 	public Chunk getChunk() {
@@ -59,19 +70,19 @@ public final class PrototypeFunction extends CallableObj {
 	}
 
 	public int getMaxLocal() {
-		return metInfo.attrs.maxLocal;
+		return codeAttr.maxLocal;
 	}
 	
 	public int getMaxStack() {
-		return metInfo.attrs.maxStack;
+		return codeAttr.maxStack;
 	}
 	
 	public int getCodeLength() {
-		return metInfo.attrs.length;
+		return codeAttr.length;
 	}
 	
 	public CodeAttribute getCodeAttr() {
-		return metInfo.attrs;
+		return codeAttr;
 	}
 
 	@Override

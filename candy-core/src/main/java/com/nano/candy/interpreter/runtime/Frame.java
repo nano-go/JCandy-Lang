@@ -9,28 +9,10 @@ import com.nano.candy.interpreter.builtin.type.PrototypeFunction;
 
 public final class Frame {
 	
-	public static Frame fetchFrame(OperandStack opStack, 
-	                               Chunk chunk, 
-								   FileEnvironment env)  {
-		return new Frame().init(opStack, chunk, env);
-	}
-	
 	public static Frame fetchFrame(PrototypeFunction prototypeFunc, 
 								   OperandStack opStack) {	
-		return new Frame().init(opStack, prototypeFunc);
+		return new Frame(opStack, prototypeFunc);
 	}
-	
-	/**
-	 * The name of this frame, usually a function name. 
-	 * If this frame is a top frame (non-function), the name is a 
-	 * source file name.
-	 */
-	private String name;
-	
-	/**
-	 * True if this frame is a top fream.
-	 */
-	private boolean isSourceFileFrame;
 	
 	/**
 	 * True when the virtual machine executes the RETURN opcode, 
@@ -41,8 +23,7 @@ public final class Frame {
 	protected boolean exitRunAtReturn;
 	
 	protected int pc;
-	protected Chunk chunk;
-	protected CodeAttribute codeAttr;
+	protected PrototypeFunction closure;
 	
 	/**
 	 * +------------------------+
@@ -63,11 +44,6 @@ public final class Frame {
 	 * +------------------------+
 	 */
 	protected int bp;
-	
-	/**
-	 * Local Variables Size.
-	 */
-	protected int localSizeWithoutArgs;
 	
 	protected OperandStack opStack;
 	
@@ -90,37 +66,21 @@ public final class Frame {
 	 */
 	private Upvalue[] openUpvalues;
 	
-	private Frame() {}
-	
-	private Frame init(OperandStack opStack, Chunk chunk, FileEnvironment env) {
-		this.name = chunk.getSimpleName();
-		this.chunk = chunk;
-		this.codeAttr = chunk.getCodeAttr();
-		this.pc = 0;
-		this.fileEnv = env;
-		
-		this.bp = opStack.sp;
-		this.localSizeWithoutArgs = getMaxLocal();
-		this.opStack = opStack;
-		return this;
-	}
-	
-	private Frame init(OperandStack opStack, PrototypeFunction prototypeFunc) {
-		this.name = prototypeFunc.funcName();
-		this.chunk = prototypeFunc.chunk;
-		this.codeAttr = prototypeFunc.metInfo.attrs;
+	private Frame(OperandStack opStack, PrototypeFunction prototypeFunc) {
+		this.closure = prototypeFunc;
 		this.pc = prototypeFunc.pc;
 		this.fileEnv = prototypeFunc.fileEnv;
 		this.capturedUpvalues = prototypeFunc.upvalues;
 		
 		this.bp = opStack.sp - prototypeFunc.arity();
-		this.localSizeWithoutArgs = prototypeFunc.localSizeWithoutArgs;
 		this.opStack = opStack;
-		return this;
 	}
 	
 	public Upvalue[] captureUpvalueObjs(ConstantValue.MethodInfo methodInfo) {
 		final int COUNT = methodInfo.upvalueCount();
+		if (COUNT == 0) {
+			return Upvalue.EMPTY_UPVALUES;
+		}
 		Upvalue[] upvalueObjs = new Upvalue[COUNT];
 		for (int i = 0; i < COUNT; i ++) {
 			int index = methodInfo.upvalueIndex(i);
@@ -172,36 +132,45 @@ public final class Frame {
 		openUpvalues = null;
 	}
 	
+	/**
+	 * Returns the name of this frame, usually a function name. 
+	 * If this frame is a top frame of a source file, the name is a 
+	 * source file name.
+	 */
 	public String getName() {
-		return name;
+		return closure.funcName();
 	}
 	
 	public String getSourceFileName() {
-		return chunk.getSourceFileName();
+		return closure.chunk.getSourceFileName();
+	}
+	
+	public Chunk getChunk() {
+		return closure.chunk;
 	}
 	
 	public CodeAttribute getCodeAttr() {
-		return codeAttr;
+		return closure.codeAttr;
 	}
 	
 	public int getMaxLocal() {
-		return codeAttr.maxLocal;
+		return closure.codeAttr.maxLocal;
 	}
 	
 	public int getMaxStack() {
-		return codeAttr.maxStack;
+		return closure.codeAttr.maxStack;
 	}
 	
 	public ErrorHandlerTable getErrorHandlerTable() {
-		return codeAttr.errorHandlerTable;
+		return closure.codeAttr.errorHandlerTable;
 	}
 	
 	public boolean isSourceFileFrame() {
-		return isSourceFileFrame;
+		return false;
 	}
 	
 	public int currentLine() {
-		return chunk.getLineNumber(pc);
+		return closure.chunk.getLineNumber(pc);
 	}
 	
 	/**
@@ -209,7 +178,7 @@ public final class Frame {
 	 * want to locate has executed.
 	 */
 	public int currentLineExecuted() {
-		return chunk.getLineNumber(pc-1);
+		return closure.chunk.getLineNumber(pc-1);
 	}
 	
 	public int frameSize() {

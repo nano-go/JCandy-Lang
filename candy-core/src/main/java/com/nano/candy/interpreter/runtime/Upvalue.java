@@ -4,6 +4,8 @@ import com.nano.candy.interpreter.builtin.CandyObject;
 
 public class Upvalue {
 	
+	public static final Upvalue[] EMPTY_UPVALUES = new Upvalue[0];
+	
 	private CandyObject[] slots;
 	private int index;
 	private CandyObject ref;

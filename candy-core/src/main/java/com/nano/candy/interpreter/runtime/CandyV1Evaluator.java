@@ -64,13 +64,13 @@ public class CandyV1Evaluator implements Evaluator {
 		stack.pushFrame(frame);	
 		opStack.push(frame.frameSize());
 		syncFrameData();
-		this.opStack.sp += frame.localSizeWithoutArgs;
+		this.opStack.sp += frame.closure.localSizeWithoutArgs;
 	}
 	
 	private final void returnFrame() {
 		Frame old = stack.popFrame();
 		if (old.isSourceFileFrame()) {
-			SourceFileInfo.unmarkRunning(old.chunk.getSourceFileName());
+			SourceFileInfo.unmarkRunning(old.getChunk().getSourceFileName());
 		}
 		old.closeAllUpvalues();
 		CandyObject retValue = opStack.peek(0);
@@ -82,7 +82,7 @@ public class CandyV1Evaluator implements Evaluator {
 	private final Frame popFrame() {
 		Frame old = stack.popFrame();
 		if (old.isSourceFileFrame()) {
-			SourceFileInfo.unmarkRunning(old.chunk.getSourceFileName());
+			SourceFileInfo.unmarkRunning(old.getChunk().getSourceFileName());
 		}
 		opStack.pop(bp);
 		old.closeAllUpvalues();
@@ -96,8 +96,8 @@ public class CandyV1Evaluator implements Evaluator {
 			resetFrameData();
 			return;
 		}
-		this.cp = frame.chunk.getConstantPool();
-		this.code = frame.chunk.getByteCode();
+		this.cp = frame.getChunk().getConstantPool();
+		this.code = frame.getChunk().getByteCode();
 		this.bp = frame.bp;
 		env.globalEnv.setCurrentFileEnv(frame.fileEnv);
 	}
@@ -246,7 +246,7 @@ public class CandyV1Evaluator implements Evaluator {
 			tagName = ObjectHelper.methodName(className, tagName);
 		}
 		return new PrototypeFunction(
-			stack.peek().chunk, frame.pc, // Start pc.
+			stack.peek().getChunk(), frame.pc, // Start pc.
 			upvalues, tagName, 
 			methodInfo, env.globalEnv.getCurrentFileEnv()
 		);
@@ -421,9 +421,11 @@ public class CandyV1Evaluator implements Evaluator {
 		if (srcFileInfo != null) {
 			srcFileInfo.markRunning(env.thread);
 		}
-		eval(Frame.fetchFrame(
-			opStack, file.getChunk(), env.globalEnv.getCurrentFileEnv()
-		), false);
+		PrototypeFunction topFunction = new PrototypeFunction(
+			file.getChunk(), env.globalEnv.getCurrentFileEnv()
+		);
+		// OP_EXIT will return the eval method.
+		eval(Frame.fetchFrame(topFunction, opStack), false);
 		ModuleObj moudleObj = 
 			env.globalEnv.getCurrentFileEnv().generateModuleObject();
 		popFrame();
