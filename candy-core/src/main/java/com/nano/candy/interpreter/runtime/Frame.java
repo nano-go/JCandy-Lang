@@ -4,7 +4,6 @@ import com.nano.candy.code.Chunk;
 import com.nano.candy.code.CodeAttribute;
 import com.nano.candy.code.ConstantValue;
 import com.nano.candy.code.ErrorHandlerTable;
-import com.nano.candy.interpreter.builtin.CandyObject;
 import com.nano.candy.interpreter.builtin.type.PrototypeFunction;
 
 public final class Frame {
@@ -45,21 +44,6 @@ public final class Frame {
 	 */
 	protected int bp;
 	
-	protected OperandStack opStack;
-	
-	/**
-	 * This file environment is recorded when a frame is created.
-	 *
-	 * The file environment is required that reference to the variables
-	 * correctly when you call the frame in other modules, 
-	 */
-	protected FileEnvironment fileEnv;
-	
-	/**
-	 * Captured upvalues from the upper frame.
-	 */
-	protected Upvalue[] capturedUpvalues;
-	
 	/**
 	 * The open upvalues are captured by other frames in the current
 	 * frame.
@@ -69,14 +53,10 @@ public final class Frame {
 	private Frame(OperandStack opStack, PrototypeFunction prototypeFunc) {
 		this.closure = prototypeFunc;
 		this.pc = prototypeFunc.pc;
-		this.fileEnv = prototypeFunc.fileEnv;
-		this.capturedUpvalues = prototypeFunc.upvalues;
-		
 		this.bp = opStack.sp - prototypeFunc.arity();
-		this.opStack = opStack;
 	}
 	
-	public Upvalue[] captureUpvalueObjs(ConstantValue.MethodInfo methodInfo) {
+	public Upvalue[] captureUpvalueObjs(OperandStack opStack, ConstantValue.MethodInfo methodInfo) {
 		final int COUNT = methodInfo.upvalueCount();
 		if (COUNT == 0) {
 			return Upvalue.EMPTY_UPVALUES;
@@ -84,27 +64,28 @@ public final class Frame {
 		Upvalue[] upvalueObjs = new Upvalue[COUNT];
 		for (int i = 0; i < COUNT; i ++) {
 			int index = methodInfo.upvalueIndex(i);
-			// checks the upvalue is in this frame.
-			if (methodInfo.isLocal(i)) {		
-				upvalueObjs[i] = captureUpvalue(index);
+			// checks the variable is in this frame.
+			if (methodInfo.isLocal(i)) {
+				upvalueObjs[i] = captureUpvalue(opStack, index);
 			} else {
-				// derive the upvalue from the upper frame.
-				upvalueObjs[i] = this.capturedUpvalues[index];
+				// derive directly the upvalue from this frame.
+				// the upvalue is captured by this frame in upper frames.
+				upvalueObjs[i] = this.closure.upvalues[index];
 			}
 		}
 		return upvalueObjs;
 	}
 	
 	/**
-	 * Derive the upvalue from this frame.
+	 * Captures a local variable in this frame.
 	 */
-	private Upvalue captureUpvalue(int index) {
+	private Upvalue captureUpvalue(OperandStack opStack, int index) {
 		if (openUpvalues == null) { /* lazy init */
 			openUpvalues = new Upvalue[getMaxLocal()];
 		} else if (openUpvalues[index] != null) { // Find the same upvalue.
 			return openUpvalues[index];
 		}
-		Upvalue openUpvalue = new Upvalue(this.opStack.operands, bp + index);
+		Upvalue openUpvalue = new Upvalue(opStack.operands, bp + index);
 		openUpvalues[index] = openUpvalue;
 		return openUpvalue;
 	}
@@ -145,6 +126,10 @@ public final class Frame {
 		return closure.chunk.getSourceFileName();
 	}
 	
+	public FileEnvironment getFileEnv() {
+		return closure.fileEnv;
+	}
+	
 	public Chunk getChunk() {
 		return closure.chunk;
 	}
@@ -181,19 +166,11 @@ public final class Frame {
 		return getMaxLocal() + getMaxStack();
 	}
 	
-	public OperandStack getOperandStack() {
-		return opStack;
-	}
-	
 	public int slotCount() {
 		return getMaxLocal();
 	}
 	
-	public CandyObject getSlotAt(int index) {
-		if (index >= getMaxLocal()) {
-			throw new IndexOutOfBoundsException(
-				String.format("Index %d, Size: %d", index, slotCount()));
-		}
-		return opStack.operands[bp + index];
+	public int getBp() {
+		return bp;
 	}
 }

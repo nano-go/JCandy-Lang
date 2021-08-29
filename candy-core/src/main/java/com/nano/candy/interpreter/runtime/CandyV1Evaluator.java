@@ -92,13 +92,12 @@ public class CandyV1Evaluator implements Evaluator {
 		this.cp = frame.getChunk().getConstantPool();
 		this.code = frame.getChunk().getByteCode();
 		this.bp = frame.bp;
-		env.globalEnv.setCurrentFileEnv(frame.fileEnv);
+		env.globalEnv.setCurrentFileEnv(frame.getFileEnv());
 	}
 
 	private void resetFrameData() {
 		this.cp = null;
 		this.code = null;
-		this.opStack = null;
 		this.frame = null;
 		this.bp = 0;
 		env.globalEnv.setCurrentFileEnv((FileEnvironment) null);
@@ -233,7 +232,7 @@ public class CandyV1Evaluator implements Evaluator {
 	 * @param methodInfo The information of the prototype function.
 	 */
 	private PrototypeFunction createFunctionObj(String className, ConstantValue.MethodInfo methodInfo) {
-		Upvalue[] upvalues = stack.peek().captureUpvalueObjs(methodInfo);
+		Upvalue[] upvalues = stack.peek().captureUpvalueObjs(opStack, methodInfo);
 		String tagName = methodInfo.name;
 		if (className != null) {
 			tagName = ObjectHelper.methodName(className, tagName);
@@ -756,11 +755,11 @@ public class CandyV1Evaluator implements Evaluator {
 				 * Upvalues.
 				 */
 				case OP_LOAD_UPVALUE: {
-					push(stack.peek().capturedUpvalues[readUint8()].load());
+					push(stack.peek().closure.upvalues[readUint8()].load());
 					break;
 				}				
 				case OP_STORE_UPVALUE: {
-					stack.peek().capturedUpvalues[readUint8()].store(peek(0));
+					stack.peek().closure.upvalues[readUint8()].store(peek(0));
 					break;
 				}
 
