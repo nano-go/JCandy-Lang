@@ -121,7 +121,7 @@ public class VariableTable {
 		for (int i = 0; i < table.varibleSize; i ++) {
 			Variable v = table.vars[i];
 			if (v != null) {
-				defineVariable(v.getName(), v.getValue());
+				defineVariable(v);
 			}
 		}
 	}
