@@ -44,8 +44,9 @@ class TestImport : unit.TestCase {
 		tmp.A = "Hello."
 
 		import "sub_module2" as sm2
+		this.assertEquals("foo", sm2.FOO)
 		sm2.FOO = "foo1"
-		import "sub_module2" as tmp
+		import "../module_test_1/sub_module2" as tmp
 		this.assertEquals(sm2, tmp)
 		this.assertEquals("foo1", tmp.FOO)
 

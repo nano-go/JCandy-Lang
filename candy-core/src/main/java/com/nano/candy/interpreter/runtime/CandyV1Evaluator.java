@@ -32,7 +32,6 @@ import com.nano.candy.interpreter.runtime.OperandStack;
 import com.nano.candy.interpreter.runtime.StackFrame;
 import com.nano.candy.interpreter.runtime.Upvalue;
 import com.nano.candy.interpreter.runtime.module.ModuleManager;
-import com.nano.candy.interpreter.runtime.module.SourceFileInfo;
 import com.nano.candy.sys.CandySystem;
 import java.io.File;
 
@@ -68,10 +67,7 @@ public class CandyV1Evaluator implements Evaluator {
 	}
 	
 	private final void returnFrame() {
-		Frame old = stack.popFrame();
-		if (old.isSourceFileFrame()) {
-			SourceFileInfo.unmarkRunning(old.getChunk().getSourceFileName());
-		}
+		Frame old = stack.popFrame();	
 		old.closeAllUpvalues();
 		CandyObject retValue = opStack.peek(0);
 		opStack.pop(bp + 1);
@@ -81,9 +77,6 @@ public class CandyV1Evaluator implements Evaluator {
 
 	private final Frame popFrame() {
 		Frame old = stack.popFrame();
-		if (old.isSourceFileFrame()) {
-			SourceFileInfo.unmarkRunning(old.getChunk().getSourceFileName());
-		}
 		opStack.pop(bp);
 		old.closeAllUpvalues();
 		syncFrameData();
@@ -417,10 +410,6 @@ public class CandyV1Evaluator implements Evaluator {
 	@Override
 	public ModuleObj eval(CompiledFileInfo file) {
 		env.globalEnv.setCurrentFileEnv(file);
-		SourceFileInfo srcFileInfo = env.getCurSourceFileInfo();
-		if (srcFileInfo != null) {
-			srcFileInfo.markRunning(env.thread);
-		}
 		PrototypeFunction topFunction = new PrototypeFunction(
 			file.getChunk(), env.globalEnv.getCurrentFileEnv()
 		);

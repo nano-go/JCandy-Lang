@@ -165,10 +165,6 @@ public final class Frame {
 		return closure.codeAttr.errorHandlerTable;
 	}
 	
-	public boolean isSourceFileFrame() {
-		return false;
-	}
-	
 	public int currentLine() {
 		return closure.chunk.getLineNumber(pc);
 	}

@@ -110,10 +110,8 @@ public class CandyPathModuleLoader extends ModuleLoader {
 	private Module generteFileModule(String name, File file) {
 		try {
 			return new Module(
-				name,
-				file.getAbsolutePath(),
-				false,
-				new String[] {file.getAbsolutePath()}
+				name, file.getAbsolutePath(),
+				false, new String[] {}
 			);
 		} catch (IOException e) {
 			return null;

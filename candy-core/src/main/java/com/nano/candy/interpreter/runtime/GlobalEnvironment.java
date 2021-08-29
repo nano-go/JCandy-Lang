@@ -1,8 +1,10 @@
 package com.nano.candy.interpreter.runtime;
 
 import com.nano.candy.interpreter.builtin.CandyObject;
+import com.nano.candy.interpreter.builtin.type.error.IOError;
 import com.nano.candy.interpreter.runtime.CompiledFileInfo;
-import com.nano.candy.interpreter.runtime.module.SourceFileInfo;
+import java.io.File;
+import java.io.IOException;
 import java.util.HashMap;
 
 public class GlobalEnvironment {
@@ -17,19 +19,27 @@ public class GlobalEnvironment {
 	
 	private FileEnvironment generateFileEnvrionment(CompiledFileInfo compiledFileInfo) {
 		FileEnvironment fenv;
-		String absPath;
-		if (compiledFileInfo.isRealFile()) {
-			absPath = SourceFileInfo.get(compiledFileInfo.getFile())
-				.getFile().getAbsolutePath();
-		} else {
-			absPath = compiledFileInfo.getAbsPath();
-		}
+		String absPath = getAbsPath(compiledFileInfo);
 		fenv = fileEnvCache.get(absPath);
 		if (fenv == null) {
 			fenv = new FileEnvironment(compiledFileInfo);
 			fileEnvCache.put(absPath, fenv);
 		}
 		return fenv;
+	}
+	
+	private String getAbsPath(CompiledFileInfo compiledFileInfo) {
+		if (compiledFileInfo.isRealFile()) {
+			try {
+				return new File(compiledFileInfo.getAbsPath())
+					.getCanonicalPath();
+			} catch (IOException e) {
+				new IOError(e).throwSelfNative();
+				return null;
+			}
+		} else {
+			return compiledFileInfo.getAbsPath();
+		}
 	}
 	
 	public FileEnvironment getCurrentFileEnv() {

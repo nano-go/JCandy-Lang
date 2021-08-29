@@ -2,7 +2,6 @@ package com.nano.candy.interpreter.runtime;
 
 import com.nano.candy.interpreter.InterpreterOptions;
 import com.nano.candy.interpreter.cni.CNIEnv;
-import com.nano.candy.interpreter.runtime.module.SourceFileInfo;
 import com.nano.candy.sys.CandySystem;
 import java.io.File;
 
@@ -43,14 +42,6 @@ public class EvaluatorEnv {
 
 	public CompiledFileInfo getCurRunningFile() {
 		return globalEnv.getCurrentFileEnv().getCompiledFileInfo();
-	}
-
-	public SourceFileInfo getCurSourceFileInfo() {
-		CompiledFileInfo compiledFileInfo = getCurRunningFile();
-		if (compiledFileInfo.isRealFile()) {
-			return SourceFileInfo.get(compiledFileInfo.getFile());
-		}
-		return null;
 	}
 	
 	/**
