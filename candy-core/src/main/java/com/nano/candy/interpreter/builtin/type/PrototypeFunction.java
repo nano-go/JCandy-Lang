@@ -8,7 +8,7 @@ import com.nano.candy.interpreter.cni.CNIEnv;
 import com.nano.candy.interpreter.runtime.FileEnvironment;
 import com.nano.candy.interpreter.runtime.Frame;
 import com.nano.candy.interpreter.runtime.OperandStack;
-import com.nano.candy.interpreter.runtime.StackFrame;
+import com.nano.candy.interpreter.runtime.FrameStack;
 import com.nano.candy.interpreter.runtime.Upvalue;
 
 public final class PrototypeFunction extends CallableObj {
@@ -91,8 +91,8 @@ public final class PrototypeFunction extends CallableObj {
 	}
 
 	@Override
-	public void onCall(CNIEnv env, OperandStack opStack, StackFrame stack, int argc, int unpackFlags) {
-		env.getEvaluator().push(Frame.fetchFrame(this, opStack));
+	public void onCall(CNIEnv env, OperandStack opStack, int argc, int unpackFlags) {
+		env.getEvaluator().pushFrame(Frame.fetchFrame(this, opStack));
 	}
 	
 	@Override

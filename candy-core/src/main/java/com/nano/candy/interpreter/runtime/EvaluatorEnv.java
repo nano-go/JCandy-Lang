@@ -6,15 +6,12 @@ import com.nano.candy.sys.CandySystem;
 import java.io.File;
 
 public class EvaluatorEnv {
+	
 	protected CNIEnv cniEnv;
 	protected GlobalEnvironment globalEnv;
 	protected CandyThread thread;
 	protected Evaluator evaluator;
 	private InterpreterOptions options;
-	
-	public EvaluatorEnv(InterpreterOptions options) {
-		this(new CandyThread(Thread.currentThread()), options);
-	}
 	
 	protected EvaluatorEnv(CandyThread thread, InterpreterOptions options) {
 		this.thread = thread;
@@ -33,7 +30,7 @@ public class EvaluatorEnv {
 	}
 
 	public Frame[] getStack() {
-		return thread.getStack();
+		return evaluator.getStack();
 	}
 	
 	public InterpreterOptions getOptions() {

@@ -7,7 +7,6 @@ import com.nano.candy.interpreter.builtin.type.CallableObj;
 import com.nano.candy.interpreter.builtin.type.NullPointer;
 import com.nano.candy.interpreter.builtin.utils.ObjectHelper;
 import com.nano.candy.interpreter.runtime.OperandStack;
-import com.nano.candy.interpreter.runtime.StackFrame;
 
 /**
  * Faster than the native method implemented by the reflection.
@@ -58,7 +57,7 @@ public class FasterNativeMethod extends CallableObj {
 	}
 
 	@Override
-	public void onCall(CNIEnv env, OperandStack opStack, StackFrame stack, int argc, int unpackFlags) {
+	public void onCall(CNIEnv env, OperandStack opStack, int argc, int unpackFlags) {
 		CandyObject retVal;
 		if (argc == 0) {
 			retVal = callback.onCall(env, ArrayObj.EMPTY_ARRAY);

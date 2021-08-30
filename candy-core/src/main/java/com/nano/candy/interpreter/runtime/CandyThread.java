@@ -1,10 +1,13 @@
 package com.nano.candy.interpreter.runtime;
 
+import com.nano.candy.code.Chunk;
+import com.nano.candy.interpreter.InterpreterOptions;
 import com.nano.candy.interpreter.builtin.CandyClass;
 import com.nano.candy.interpreter.builtin.CandyObject;
 import com.nano.candy.interpreter.builtin.type.BoolObj;
 import com.nano.candy.interpreter.builtin.type.CallableObj;
 import com.nano.candy.interpreter.builtin.type.IntegerObj;
+import com.nano.candy.interpreter.builtin.type.ModuleObj;
 import com.nano.candy.interpreter.builtin.type.StringObj;
 import com.nano.candy.interpreter.builtin.type.error.ArgumentError;
 import com.nano.candy.interpreter.builtin.type.error.AttributeError;
@@ -18,7 +21,6 @@ import com.nano.candy.interpreter.cni.NativeClassRegister;
 import com.nano.candy.interpreter.cni.NativeMethod;
 import com.nano.candy.interpreter.runtime.CandyThread;
 import com.nano.candy.std.Names;
-import com.nano.candy.sys.CandySystem;
 
 import static com.nano.candy.interpreter.cni.FasterNativeMethod.*;
 
@@ -93,9 +95,8 @@ public class CandyThread extends CandyObject {
 
 		@Override
 		public void run() {		
-			EvaluatorEnv newEnv = new EvaluatorEnv(candyThread, env.getOptions());
 			try {
-				newEnv.getEvaluator().eval(target, 0);
+				candyThread.mEnv.getEvaluator().eval(target, 0);
 			} catch (VMExitException e) {
 				// Means an error occurred.
 				// We catch the exception to avoid printing unnecessary prompts.
@@ -108,21 +109,16 @@ public class CandyThread extends CandyObject {
 	}
 
 	private Thread javaThread;
-
-	/**
-	 * Each of thread has a stack used to store the frames produced by
-	 * the method.
-	 */
-	protected StackFrame stack;
+	protected EvaluatorEnv mEnv;
 
 	protected CandyThread() {
 		super(THREAD_CLASS);
 	}
 
-	protected CandyThread(Thread javaThread) {
+	public CandyThread(Thread javaThread, InterpreterOptions options) {
 		super(THREAD_CLASS);
-		this.stack = new StackFrame(CandySystem.DEFAULT_MAX_STACK);
 		setThread(javaThread);
+		this.mEnv = new EvaluatorEnv(this, options);
 	}
 	
 	public CandyThread(CNIEnv env, CallableObj runner) {
@@ -131,9 +127,9 @@ public class CandyThread extends CandyObject {
 	}
 
 	private void init(CNIEnv env, CallableObj runner) {	
-		this.stack = new StackFrame(CandySystem.DEFAULT_MAX_STACK);
 		Thread javaThread = new InnerThread(this, env.getEvaluatorEnv(), runner);
 		setThread(javaThread);
+		this.mEnv = new EvaluatorEnv(this, env.getEvaluatorEnv().getOptions());
 	}
 
 	private void setThread(Thread javaThread) {
@@ -155,28 +151,20 @@ public class CandyThread extends CandyObject {
 	public long getId() {
 		return this.javaThread.getId();
 	}
-
-	public Frame[] getStack() {
-		Frame[] frames = new Frame[stack.sp()];
-		for (int i = 0; i < frames.length; i ++) {
-			frames[i] = stack.getAt(stack.sp()-i-1);
-		}
-		return frames;
-	}
 	
 	public void start() {
-		synchronized (threadCounterLock) {
-			runningThreadCounter ++;
+		if (javaThread instanceof InnerThread) {
+			synchronized (threadCounterLock) {
+				runningThreadCounter ++;
+			}
+			this.javaThread.start();
+		} else {
+			throw new Error("Can't run an unrecognized java thread.");
 		}
-		this.javaThread.start();
 	}
 	
-	protected final void pushFrame(Frame frame) {
-		stack.pushFrame(frame);
-	}
-
-	protected final Frame popFrame() {
-		return stack.popFrame();
+	public ModuleObj run(Chunk chunk) {
+		return mEnv.getEvaluator().eval(chunk);
 	}
 
 	@Override

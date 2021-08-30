@@ -9,7 +9,7 @@ import com.nano.candy.interpreter.cni.CNIEnv;
 import com.nano.candy.interpreter.cni.NativeClass;
 import com.nano.candy.interpreter.cni.NativeClassRegister;
 import com.nano.candy.interpreter.runtime.OperandStack;
-import com.nano.candy.interpreter.runtime.StackFrame;
+import com.nano.candy.interpreter.runtime.FrameStack;
 
 /**
  * Superclass of all functions.
@@ -181,8 +181,7 @@ public abstract class CallableObj extends CandyObject {
 	protected abstract String strTag();
 
 	public abstract void onCall(CNIEnv env,
-	                            OperandStack opStack, 
-	                            StackFrame stack, 
+	                            OperandStack opStack,
 								int argc, int unpackFlags);
 	
 	public abstract boolean isBuiltin();

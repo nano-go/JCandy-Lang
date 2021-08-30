@@ -28,8 +28,8 @@ import com.nano.candy.interpreter.builtin.utils.ElementsUnpacker;
 import com.nano.candy.interpreter.builtin.utils.ObjectHelper;
 import com.nano.candy.interpreter.runtime.FileEnvironment;
 import com.nano.candy.interpreter.runtime.Frame;
+import com.nano.candy.interpreter.runtime.FrameStack;
 import com.nano.candy.interpreter.runtime.OperandStack;
-import com.nano.candy.interpreter.runtime.StackFrame;
 import com.nano.candy.interpreter.runtime.Upvalue;
 import com.nano.candy.interpreter.runtime.module.ModuleManager;
 import com.nano.candy.sys.CandySystem;
@@ -42,9 +42,9 @@ public class CandyV1Evaluator implements Evaluator {
 	private static final byte WIDE_INDEX_MARK = (byte) 0xFF;
 	private static final byte EMPTY_UNPACK_FLAGS = 0;
 	
-	private StackFrame stack;
-	
+	private FrameStack stack;
 	private Frame frame;
+	
 	private ConstantPool cp;
 	private byte[] code;
 	
@@ -55,15 +55,34 @@ public class CandyV1Evaluator implements Evaluator {
 	
 	protected CandyV1Evaluator(EvaluatorEnv env) {
 		this.env = env;
-		this.stack = env.thread.stack;
+		this.stack = new FrameStack(CandySystem.DEFAULT_MAX_STACK);
 		this.opStack = new OperandStack(32);
 	}
 	
-	private void pushFrame(Frame frame) {
+	@Override
+	public void pushFrame(Frame frame) {
 		stack.pushFrame(frame);	
 		opStack.push(frame.frameSize());
 		syncFrameData();
 		this.opStack.sp += frame.closure.localSizeWithoutArgs;
+	}
+	
+	@Override
+	public Frame popFrame() {
+		Frame old = stack.popFrame();
+		opStack.pop(bp);
+		old.closeAllUpvalues();
+		syncFrameData();
+		return old;
+	}
+
+	@Override
+	public Frame[] getStack() {
+		Frame[] frames = new Frame[stack.sp()];
+		for (int i = 0; i < frames.length; i ++) {
+			frames[i] = stack.getAt(stack.sp()-i-1);
+		}
+		return frames;
 	}
 	
 	private final void returnFrame() {
@@ -73,14 +92,6 @@ public class CandyV1Evaluator implements Evaluator {
 		opStack.pop(bp + 1);
 		store(0, retValue);
 		syncFrameData();
-	}
-
-	private final Frame popFrame() {
-		Frame old = stack.popFrame();
-		opStack.pop(bp);
-		old.closeAllUpvalues();
-		syncFrameData();
-		return old;
 	}
 
 	private void syncFrameData() {
@@ -347,11 +358,6 @@ public class CandyV1Evaluator implements Evaluator {
 		}
 		return true;
 	}
-
-	@Override
-	public void push(Frame frame) {
-		pushFrame(frame);
-	}
 	
 	@Override
 	public CandyObject eval(CallableObj fn, int unpackFlags, CandyObject... args) {
@@ -368,7 +374,7 @@ public class CandyV1Evaluator implements Evaluator {
 	@Override
 	public void call(CallableObj fn, int argc, int unpackFlags) {
 		argc = checkArgument(fn, argc, unpackFlags);
-		fn.onCall(env.cniEnv, opStack, stack, argc, unpackFlags);
+		fn.onCall(env.cniEnv, opStack, argc, unpackFlags);
 	}
 	
 	private final int checkArgument(CallableObj fn, int argc, int unpackFlags) {

@@ -7,7 +7,7 @@ import com.nano.candy.interpreter.builtin.type.error.NativeError;
 import com.nano.candy.interpreter.runtime.CarrierErrorException;
 import com.nano.candy.interpreter.runtime.ContinueRunException;
 import com.nano.candy.interpreter.runtime.OperandStack;
-import com.nano.candy.interpreter.runtime.StackFrame;
+import com.nano.candy.interpreter.runtime.FrameStack;
 import com.nano.candy.interpreter.runtime.VMExitException;
 import java.lang.reflect.InvocationTargetException;
 
@@ -25,8 +25,7 @@ public abstract class CNativeCallable extends CallableObj {
 	}
 
 	@Override
-	public void onCall(CNIEnv env, 
-	                   OperandStack opStack, StackFrame stack,
+	public void onCall(CNIEnv env, OperandStack opStack,
 					   int argc, int unpackFlags) {
 		CandyObject instance = null;
 		if (isMethod()) {

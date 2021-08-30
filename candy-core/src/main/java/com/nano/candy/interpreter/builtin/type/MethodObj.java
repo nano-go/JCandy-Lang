@@ -4,7 +4,7 @@ import com.nano.candy.interpreter.builtin.CandyObject;
 import com.nano.candy.interpreter.builtin.type.CallableObj;
 import com.nano.candy.interpreter.cni.CNIEnv;
 import com.nano.candy.interpreter.runtime.OperandStack;
-import com.nano.candy.interpreter.runtime.StackFrame;
+import com.nano.candy.interpreter.runtime.FrameStack;
 import java.util.Objects;
 
 /**
@@ -30,9 +30,9 @@ public class MethodObj extends CallableObj {
 	}
 
 	@Override
-	public void onCall(CNIEnv env, OperandStack opStack, StackFrame stack, int argc, int unpackFlags) {
+	public void onCall(CNIEnv env, OperandStack opStack, int argc, int unpackFlags) {
 		opStack.push(receiver);
-		method.onCall(env, opStack, stack, argc + 1, unpackFlags);
+		method.onCall(env, opStack, argc + 1, unpackFlags);
 	}
 
 	@Override

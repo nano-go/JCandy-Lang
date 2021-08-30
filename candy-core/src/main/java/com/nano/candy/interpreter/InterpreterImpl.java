@@ -4,7 +4,6 @@ import com.nano.candy.code.Chunk;
 import com.nano.candy.interpreter.Interpreter;
 import com.nano.candy.interpreter.InterpreterOptions;
 import com.nano.candy.interpreter.runtime.CandyThread;
-import com.nano.candy.interpreter.runtime.EvaluatorEnv;
 import com.nano.candy.interpreter.runtime.VMExitException;
 
 public class InterpreterImpl implements Interpreter {
@@ -17,10 +16,11 @@ public class InterpreterImpl implements Interpreter {
 	
 	@Override
 	public int execute(Chunk chunk) {
-		EvaluatorEnv env = new EvaluatorEnv(options);
+		CandyThread mainThread = 
+			new CandyThread(Thread.currentThread(), options);
 		int code = 0;
 		try {
-			env.getEvaluator().eval(chunk);
+			mainThread.run(chunk);
 		} catch (VMExitException e) {
 			code = e.code;
 		}

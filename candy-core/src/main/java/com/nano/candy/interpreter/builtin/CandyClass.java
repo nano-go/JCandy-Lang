@@ -12,7 +12,6 @@ import com.nano.candy.interpreter.builtin.type.error.TypeError;
 import com.nano.candy.interpreter.cni.CNIEnv;
 import com.nano.candy.interpreter.cni.FasterNativeMethod;
 import com.nano.candy.interpreter.runtime.OperandStack;
-import com.nano.candy.interpreter.runtime.StackFrame;
 import com.nano.candy.std.Names;
 import java.util.Collection;
 import java.util.HashMap;
@@ -244,10 +243,10 @@ public class CandyClass extends CallableObj {
 	}
 
 	@Override
-	public void onCall(CNIEnv env, OperandStack opStack, StackFrame stack, int argc, int unpackFlags) {
+	public void onCall(CNIEnv env, OperandStack opStack, int argc, int unpackFlags) {
 		CandyObject instance = createInstance(env);
 		new MethodObj(instance, initializer).onCall(
-			env, opStack, stack, argc, unpackFlags
+			env, opStack, argc, unpackFlags
 		);
 	}
 

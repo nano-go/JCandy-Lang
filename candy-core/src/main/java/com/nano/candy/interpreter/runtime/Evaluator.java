@@ -18,7 +18,9 @@ public interface Evaluator {
 	public CandyObject eval(CallableObj fn, int unpackFlags, 
 	                        CandyObject... args);
 	
-	public void push(Frame frame);
+	public void pushFrame(Frame frame);
+	public Frame popFrame();
+	public Frame[] getStack();
 	
 	public ModuleObj eval(Chunk chunk);
 	public ModuleObj eval(CompiledFileInfo file);
