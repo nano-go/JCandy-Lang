@@ -228,7 +228,7 @@ public class CodeGenerator implements AstVisitor<Void, Void> {
 	 *
 	 * @return the slot of the given local variable.
 	 */
-	private int cacheAttrToLocal(String attrName, String localVarName, int objSlot) {
+	protected int cacheAttrToLocal(String attrName, String localVarName, int objSlot) {
 		builder.emitLoad(objSlot, -1);
 		return cacheAttrToLocal(attrName, localVarName);
 	}
@@ -604,10 +604,10 @@ public class CodeGenerator implements AstVisitor<Void, Void> {
 		node.iterable.accept(this);
 		
 		enterScope();
-		int iteratorSlot = invokeIterator(line(node));
+		invokeIterator(line(node));
 		int nextSlot = cacheAttrToLocal(Names.METHOD_ITERATOR_NEXT, "hidden$i_next");
 		int hasNextSlot = cacheAttrToLocal(Names.METHOD_ITERATOR_HAS_NEXT, 
-			"hidden$i_has_next", iteratorSlot);
+			"hidden$i_has_next");
 		int iteratingSlot = locals.addLocal(node.iteratingVar);
 		
 		int begainning = builder.curCp();
@@ -627,11 +627,9 @@ public class CodeGenerator implements AstVisitor<Void, Void> {
 		return null;
 	}
 	
-	private int invokeIterator(int lineNumber) {
-		int iteratorSlot = locals.addLocal("hidden$iterator");
+	private void invokeIterator(int lineNumber) {
 		builder.emitInvoke(Names.METHOD_ITERATOR, 0, lineNumber);
-		builder.emitopWithArg(OP_STORE, iteratorSlot, -1);
-		return iteratorSlot;
+		builder.emitop(OP_DUP);
 	}
 	
 	@Override
