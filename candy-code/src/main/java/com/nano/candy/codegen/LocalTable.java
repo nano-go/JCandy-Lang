@@ -198,6 +198,9 @@ public class LocalTable {
 			}
 			upvalueIndex --;
 		}
+		if (byteArr.length() == 0) {
+			return null;
+		}
 		return new ConstantValue.CloseIndexes(byteArr.getBytes());
 	}
 	
