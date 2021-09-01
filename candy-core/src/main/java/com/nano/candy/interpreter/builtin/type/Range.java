@@ -80,7 +80,7 @@ public class Range extends CandyObject {
 
 	/*===================== Native Methods ===================*/
 
-	@NativeMethod(name = Names.METHOD_INITALIZER, argc = 2)
+	@NativeMethod(name = Names.METHOD_INITALIZER, arity = 2)
 	public CandyObject initializer(CNIEnv env, CandyObject[] args) {
 		setMetaData("left", args[0]);
 		setMetaData("right", args[1]);

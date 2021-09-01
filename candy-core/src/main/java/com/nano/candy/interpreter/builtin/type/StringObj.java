@@ -170,13 +170,13 @@ public class StringObj extends CandyObject {
 		return hashCode;
 	}
 	
-	@NativeMethod(name = Names.METHOD_INITALIZER, argc = 1)
+	@NativeMethod(name = Names.METHOD_INITALIZER, arity = 1)
 	public CandyObject init(CNIEnv env, CandyObject[] args) {
 		this.value = ObjectHelper.asString(args[0]);
 		return this;
 	}
 	
-	@NativeMethod(name = "substr", argc = 2)
+	@NativeMethod(name = "substr", arity = 2)
 	public CandyObject substring(CNIEnv env, CandyObject[] args) {
 		long beginIndex = ObjectHelper.asInteger(args[0]);
 		long endIndex = ObjectHelper.asInteger(args[1]);
@@ -195,19 +195,19 @@ public class StringObj extends CandyObject {
 		return IntegerObj.valueOf(value.length());
 	}
 	
-	@NativeMethod(name = "startWith", argc = 1)
+	@NativeMethod(name = "startWith", arity = 1)
 	public CandyObject startWith(CNIEnv env, CandyObject[] args) {
 		String str = args[0].callStr(env).value;
 		return BoolObj.valueOf(value.startsWith(str));
 	}
 	
-	@NativeMethod(name = "endWith", argc = 1)
+	@NativeMethod(name = "endWith", arity = 1)
 	public CandyObject endWith(CNIEnv env, CandyObject[] args) {
 		String str = args[0].callStr(env).value;
 		return BoolObj.valueOf(value.endsWith(str));
 	}
 	
-	@NativeMethod(name = "split", argc = 1)
+	@NativeMethod(name = "split", arity = 1)
 	public CandyObject split(CNIEnv env, CandyObject[] args) {
 		String regex = ObjectHelper.asString(args[0]);
 		String[] res = value.split(regex);
@@ -247,7 +247,7 @@ public class StringObj extends CandyObject {
 		return valueOf(value.trim());
 	}
 	
-	@NativeMethod(name = "replaceFirst", argc = 2)
+	@NativeMethod(name = "replaceFirst", arity = 2)
 	public CandyObject replace(CNIEnv env, CandyObject[] args) {
 		String regex = ObjectHelper.asString(args[0]);
 		String replacement = args[1].callStr(env).value;
@@ -255,14 +255,14 @@ public class StringObj extends CandyObject {
 	}
 	
 
-	@NativeMethod(name = "replaceAll", argc = 2)
+	@NativeMethod(name = "replaceAll", arity = 2)
 	public CandyObject replaceAll(CNIEnv env, CandyObject[] args) {
 		String regex = ObjectHelper.asString(args[0]);
 		String replacement = args[1].callStr(env).value;
 		return valueOf(value.replaceAll(regex, replacement));
 	}
 	
-	@NativeMethod(name = "join", argc = 1)
+	@NativeMethod(name = "join", arity = 1)
 	public CandyObject join(CNIEnv env, CandyObject[] args) {
 		CandyObject obj = args[0];
 		TypeError.checkTypeMatched(ArrayObj.ARRAY_CLASS, obj);
@@ -286,21 +286,21 @@ public class StringObj extends CandyObject {
 		return valueOf(builder.toString());
 	}
 	
-	@NativeMethod(name = "lastIndexOf", argc=1) 
+	@NativeMethod(name = "lastIndexOf", arity=1) 
 	public CandyObject lastIndexOf(CNIEnv env, CandyObject[] args){
 		return IntegerObj.valueOf(
 			value.lastIndexOf(ObjectHelper.asString(args[0]))
 		);
 	}
 	
-	@NativeMethod(name = "indexOf", argc=1) 
+	@NativeMethod(name = "indexOf", arity=1) 
 	public CandyObject indexOf(CNIEnv env, CandyObject[] args){
 		return IntegerObj.valueOf(
 			value.indexOf(ObjectHelper.asString(args[0]))
 		);
 	}
 	
-	@NativeMethod(name = "codePoint", argc=0)
+	@NativeMethod(name = "codePoint", arity=0)
 	public CandyObject toCodePoint(CNIEnv env, CandyObject[] args){
 		if (value.length() != 1) {
 			new TypeError("The object is not a single char: <%s>", value)
@@ -328,7 +328,7 @@ public class StringObj extends CandyObject {
 		);
 	}
 	
-	@NativeMethod(name = "toInt", argc = 1, varArgsIndex = 0)
+	@NativeMethod(name = "toInt", arity = 1, varArgsIndex = 0)
 	public CandyObject toInt(CNIEnv env, CandyObject[] args){
 		CandyObject radix = 
 			ObjectHelper.getOptionalArgument(args[0], IntegerObj.valueOf(10));

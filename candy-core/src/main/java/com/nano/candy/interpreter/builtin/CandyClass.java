@@ -10,7 +10,7 @@ import com.nano.candy.interpreter.builtin.type.StringObj;
 import com.nano.candy.interpreter.builtin.type.error.NativeError;
 import com.nano.candy.interpreter.builtin.type.error.TypeError;
 import com.nano.candy.interpreter.cni.CNIEnv;
-import com.nano.candy.interpreter.cni.FasterNativeMethod;
+import com.nano.candy.interpreter.cni.JavaFunctionObj;
 import com.nano.candy.interpreter.runtime.OperandStack;
 import com.nano.candy.std.Names;
 import java.util.Collection;
@@ -61,10 +61,10 @@ public class CandyClass extends CallableObj {
 	protected final HashMap<String, CallableObj> methods;
 	protected final CallableObj initializer;
 	
-	private FasterNativeMethod isSubclassOf, 
-	                           isSuperclassOf,
-	                           instance,
-	                           methodsMethod;
+	private JavaFunctionObj isSubclassOf, 
+	                        isSuperclassOf,
+	                        instance,
+	                        methodsMethod;
 
 	protected CandyClass(ClassSignature signature) {
 		super(signature.className, genParamtersInfo(signature.initializer));
@@ -193,28 +193,28 @@ public class CandyClass extends CallableObj {
 				return superClass == null ? NullPointer.nil() : superClass;
 			case "isSubclassOf":
 				if (isSubclassOf == null) {
-					isSubclassOf = new FasterNativeMethod(
+					isSubclassOf = new JavaFunctionObj(
 						getName(), "isSubclassOf", 1, this::isSubclassOf
 					);
 				}
 				return isSubclassOf;
 			case "isSuperclassOf":
 				if (isSuperclassOf == null) {
-					isSuperclassOf = new FasterNativeMethod(
+					isSuperclassOf = new JavaFunctionObj(
 						getName(), "isSuperclassOf", 1, this::isSuperclassOf
 					);
 				}
 				return isSuperclassOf;
 			case "methods":
 				if (methodsMethod == null) {
-					methodsMethod = new FasterNativeMethod(
+					methodsMethod = new JavaFunctionObj(
 						getName(), "methods", 0, this::methods
 					);
 				}
 				return methodsMethod;
 			case "instance":
 				if (instance == null) {
-					instance = new FasterNativeMethod(
+					instance = new JavaFunctionObj(
 						getName(), "instance", 1, this::instance
 					);
 				}

@@ -8,4 +8,6 @@ dependencies {
 	implementation project(':candy-compiler')
 	implementation project(':candy-common')
 	implementation project(':candy-code')
+	implementation project(':candy-cni')
+	annotationProcessor project(':candy-cni-processor')
 }

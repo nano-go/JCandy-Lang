@@ -1,0 +1,5 @@
+
+/**
+ * This library just provides CNI annotations.
+ */
+archivesBaseName = "candy-cni"

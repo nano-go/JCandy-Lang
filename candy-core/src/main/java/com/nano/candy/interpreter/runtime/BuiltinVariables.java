@@ -29,7 +29,7 @@ import com.nano.candy.interpreter.builtin.type.error.StackOverflowError;
 import com.nano.candy.interpreter.builtin.type.error.StackTraceElementObj;
 import com.nano.candy.interpreter.builtin.type.error.StateError;
 import com.nano.candy.interpreter.builtin.type.error.TypeError;
-import com.nano.candy.interpreter.cni.CNativeFunction;
+import com.nano.candy.interpreter.cni.JavaFunctionObj;
 import com.nano.candy.interpreter.cni.NativeFuncRegister;
 import java.util.HashMap;
 
@@ -83,9 +83,9 @@ public class BuiltinVariables {
 	}
 
 	private static void defineBuiltinFunctions() {
-		CNativeFunction[] builtinFunctions =
+		JavaFunctionObj[] builtinFunctions =
 			NativeFuncRegister.getNativeFunctions(BuiltinFunctions.class);
-		for (CNativeFunction f : builtinFunctions) {
+		for (JavaFunctionObj f : builtinFunctions) {
 			BUILTIN_VARS.put(f.funcName(), 
 				Variable.getVariable(f.funcName(), f));
 		}

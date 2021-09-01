@@ -361,7 +361,7 @@ public final class ArrayObj extends CandyObject {
 		return StringObj.valueOf(builder.toString());
 	}
 	
-	@NativeMethod(name = Names.METHOD_INITALIZER, argc = 2)
+	@NativeMethod(name = Names.METHOD_INITALIZER, arity = 2)
 	public CandyObject initalizer(CNIEnv env, CandyObject[] args) {
 		long initalCapacity = ObjectHelper.asInteger(args[0]);
 		CandyObject defaultElement = args[1];
@@ -382,13 +382,13 @@ public final class ArrayObj extends CandyObject {
 		return this;
 	}
 	
-	@NativeMethod(name = "append", argc = 1)
+	@NativeMethod(name = "append", arity = 1)
 	public CandyObject append(CNIEnv env, CandyObject[] args) {
 		append(args[0]);
 		return this;
 	}
 	
-	@NativeMethod(name = "appendAll", argc = 1, varArgsIndex = 0)
+	@NativeMethod(name = "appendAll", arity = 1, varArgsIndex = 0)
 	public CandyObject appendAll(CNIEnv env, CandyObject[] args) {
 		if (args[0] == NullPointer.nil()) {
 			return this;
@@ -398,14 +398,14 @@ public final class ArrayObj extends CandyObject {
 		return this;
 	}
 	
-	@NativeMethod(name = "insert", argc = 2)
+	@NativeMethod(name = "insert", arity = 2)
 	public CandyObject insert(CNIEnv env, CandyObject[] args) {
 		int index = IndexHelper.asIndexForAdd(args[0], length);
 		insert(index, args[1]);
 		return args[1];
 	}
 	
-	@NativeMethod(name = "insertAll", argc = 2, varArgsIndex = 1)
+	@NativeMethod(name = "insertAll", arity = 2, varArgsIndex = 1)
 	public CandyObject insertAllAt(CNIEnv env, CandyObject[] args) {
 		int index = IndexHelper.asIndexForAdd(args[0], length);
 		if (args[1] == NullPointer.nil()) {
@@ -416,17 +416,17 @@ public final class ArrayObj extends CandyObject {
 		return this;
 	}
 	
-	@NativeMethod(name = "deleteAt", argc = 1)
+	@NativeMethod(name = "deleteAt", arity = 1)
 	public CandyObject deleteAt(CNIEnv env, CandyObject[] args) {
 		return deleteAt(IndexHelper.asIndex(args[0], length));
 	}
 	
-	@NativeMethod(name = "delete", argc = 1)
+	@NativeMethod(name = "delete", arity = 1)
 	public CandyObject delete(CNIEnv env, CandyObject[] args) {
 		return BoolObj.valueOf(delete(env, args[0]));
 	}
 	
-	@NativeMethod(name = "deleteRange", argc = 2)
+	@NativeMethod(name = "deleteRange", arity = 2)
 	public CandyObject deleteRange(CNIEnv env, CandyObject[] args) {
 		deleteRange(
 			IndexHelper.asIndex(args[0], length),
@@ -435,22 +435,22 @@ public final class ArrayObj extends CandyObject {
 		return this;
 	}
 	
-	@NativeMethod(name = "contains", argc = 1)
+	@NativeMethod(name = "contains", arity = 1)
 	public CandyObject contains(CNIEnv env, CandyObject[] args) {
 		return BoolObj.valueOf(indexOf(env, args[0]) != -1);
 	}
 	
-	@NativeMethod(name = "indexOf", argc = 1)
+	@NativeMethod(name = "indexOf", arity = 1)
 	public CandyObject indexOf(CNIEnv env, CandyObject[] args) {
 		return IntegerObj.valueOf(indexOf(env, args[0]));
 	}
 	
-	@NativeMethod(name = "lastIndexOf", argc = 1)
+	@NativeMethod(name = "lastIndexOf", arity = 1)
 	public CandyObject lastIndexOf(CNIEnv env, CandyObject[] args) {
 		return IntegerObj.valueOf(lastIndexOf(env, args[0]));
 	}
 	
-	@NativeMethod(name = "swap", argc = 2)
+	@NativeMethod(name = "swap", arity = 2)
 	public CandyObject swap(CNIEnv env, CandyObject[] args) {
 		int i = IndexHelper.asIndex(args[0], length);
 		int j = IndexHelper.asIndex(args[1], length);
@@ -472,7 +472,7 @@ public final class ArrayObj extends CandyObject {
 		return this;
 	}
 	
-	@NativeMethod(name = "sortBy", argc = 1) 
+	@NativeMethod(name = "sortBy", arity = 1) 
 	public CandyObject sortBy(CNIEnv env, CandyObject[] args) {
 		Arrays.sort(elements, 0, length, ObjectHelper.newComparator(env, args[0]));
 		return this;
@@ -504,7 +504,7 @@ public final class ArrayObj extends CandyObject {
 		return this;
 	}
 	
-	@NativeMethod(name = "map", argc=1)
+	@NativeMethod(name = "map", arity=1)
 	public CandyObject map(CNIEnv env, CandyObject[] args) {
 		CallableObj mapper = TypeError.requiresCallable(args[0]);
 		final int SIZE = length;
@@ -515,7 +515,7 @@ public final class ArrayObj extends CandyObject {
 		return this;
 	}
 	
-	@NativeMethod(name = "foreach", argc = 1)
+	@NativeMethod(name = "foreach", arity = 1)
 	public CandyObject foreach(CNIEnv env, CandyObject[] args) {
 		CallableObj walker = TypeError.requiresCallable(args[0]);
 		final int SIZE = length;

@@ -8,48 +8,34 @@ import com.nano.candy.interpreter.builtin.type.NullPointer;
 import com.nano.candy.interpreter.builtin.utils.ObjectHelper;
 import com.nano.candy.interpreter.runtime.OperandStack;
 
-/**
- * Faster than the native method implemented by the reflection.
- */
-public class FasterNativeMethod extends CallableObj {
+public class JavaFunctionObj extends CallableObj {
 	
 	@FunctionalInterface
 	public static interface Callback {
 		public CandyObject onCall(CNIEnv env, CandyObject[] args);
 	}
 	
-	public static void addStatic(CandyClass klass, String name, 
-								 int arity, Callback callback) {
-		klass.setMetaData(name, new FasterNativeMethod(name, arity, -1, callback));					 
-	}
-	
-	public static void addStatic(CandyClass klass, String name, 
-								 int arity, int varArgsIndex, 
-								 Callback callback) {
-		klass.setMetaData(name, new FasterNativeMethod(name, arity, varArgsIndex, callback));
-	}
-	
 	private Callback callback;
-	
-	public FasterNativeMethod(String name,
+	public JavaFunctionObj(String name,
 	                          int arity, Callback callback) {
-		this(name, name, arity, -1, callback);
+		this(name, arity, -1, callback);
 	}
 	
-	public FasterNativeMethod(String name,
-	                          int arity,
-							  int varArgsIndex, Callback callback) {
-		this(name, name, arity, varArgsIndex, callback);
+	public JavaFunctionObj(String name,
+	                       int arity,
+						   int varArgsIndex, Callback callback) {
+		super(name, name, new ParametersInfo(arity, varArgsIndex));
+		this.callback = callback;
 	}
 	
-	public FasterNativeMethod(String className, String name,
+	public JavaFunctionObj(String className, String name,
 	                          int arity, Callback callback) {
 		this(className, name, arity, -1, callback);
 	}
 	
-	public FasterNativeMethod(String className, String name,
-	                          int arity, int varArgsIndex,
-	                          Callback callback) {
+	public JavaFunctionObj(String className, String name,
+	                       int arity, int varArgsIndex,
+	                       Callback callback) {
 		super(name, ObjectHelper.methodName(className, name), 
 			new ParametersInfo(arity, varArgsIndex)
 		);
@@ -63,8 +49,7 @@ public class FasterNativeMethod extends CallableObj {
 			retVal = callback.onCall(env, ArrayObj.EMPTY_ARRAY);
 		} else {
 			CandyObject[] args = new CandyObject[argc];
-			args = new CandyObject[argc];
-			for (int i = argc - 1 ; i >= 0; i --) {
+			for (int i = argc - 1; i >= 0; i --) {
 				args[i] = opStack.pop();
 			}
 			retVal = callback.onCall(env, args);
@@ -82,6 +67,6 @@ public class FasterNativeMethod extends CallableObj {
 
 	@Override
 	protected String strTag() {
-		return "method";
+		return fullName.equals(funcName) ? "function" : "method";
 	}
 }

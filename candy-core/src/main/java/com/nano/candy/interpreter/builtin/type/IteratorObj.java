@@ -3,7 +3,7 @@ import com.nano.candy.interpreter.builtin.CandyObject;
 import com.nano.candy.interpreter.builtin.ObjectClass;
 import com.nano.candy.interpreter.builtin.type.IteratorObj;
 import com.nano.candy.interpreter.cni.CNIEnv;
-import com.nano.candy.interpreter.cni.FasterNativeMethod;
+import com.nano.candy.interpreter.cni.JavaFunctionObj;
 import com.nano.candy.interpreter.runtime.Variable;
 import com.nano.candy.std.Names;
 import java.util.Iterator;
@@ -117,17 +117,17 @@ public abstract class IteratorObj extends CandyObject {
 		}
 	}
 	
-	private FasterNativeMethod next;
-	private FasterNativeMethod hasNext;
+	private JavaFunctionObj next;
+	private JavaFunctionObj hasNext;
 	
 	public IteratorObj() {
 		super(ObjectClass.getObjClass());
-		next = new FasterNativeMethod(
+		next = new JavaFunctionObj(
 			"Iterator", Names.METHOD_ITERATOR_NEXT, 0, 
 			this::next
 		);
 		
-		hasNext = new FasterNativeMethod(
+		hasNext = new JavaFunctionObj(
 			"Iterator", Names.METHOD_ITERATOR_HAS_NEXT, 0, 
 			this::hasNext
 		);

@@ -30,7 +30,7 @@ public class LockObj extends CandyObject {
 		return StringObj.valueOf(lock.toString());
 	}
 	
-	@NativeMethod(name = "synchronize", argc = 1)
+	@NativeMethod(name = "synchronize", arity = 1)
 	public CandyObject synchronize(CNIEnv env, CandyObject[] args) {
 		CallableObj fn = TypeError.requiresCallable(args[0]);
 		lock.lock();
@@ -48,7 +48,7 @@ public class LockObj extends CandyObject {
 		return this;
 	}
 	
-	@NativeMethod(name = "tryLock", argc = 1, varArgsIndex = 0)
+	@NativeMethod(name = "tryLock", arity = 1, varArgsIndex = 0)
 	public CandyObject tryLock(CNIEnv env, CandyObject[] args) {
 		CandyObject second = ObjectHelper.getOptionalArgument(args[0], IntegerObj.valueOf(0));
 		long s = ObjectHelper.asInteger(second);

@@ -111,7 +111,7 @@ public class ErrorObj extends CandyObject {
 		return builder.toString();
 	}
 	
-	@NativeMethod(name = Names.METHOD_INITALIZER, argc = 1)
+	@NativeMethod(name = Names.METHOD_INITALIZER, arity = 1)
 	public CandyObject init(CNIEnv env, CandyObject[] args) {
 		if (this.stackTraceElements != null && 
 		     this.stackTraceElements.length != 0 ) {
@@ -139,13 +139,13 @@ public class ErrorObj extends CandyObject {
 		return StringObj.valueOf(message);
 	}
 	
-	@NativeMethod(name = "setMessage", argc = 1)
+	@NativeMethod(name = "setMessage", arity = 1)
 	public CandyObject setMessage(CNIEnv env, CandyObject[] args) {
 		setMessage(ObjectHelper.asString(args[0]));
 		return null;
 	}
 	
-	@NativeMethod(name = "sprintStackTrace", argc = 1)
+	@NativeMethod(name = "sprintStackTrace", arity = 1)
 	public CandyObject sprintStackTrace(CNIEnv env, CandyObject[] args) {
 		int maxFrames = (int) ObjectHelper.asInteger(args[0]);
 		return StringObj.valueOf(sprintStackTrace(maxFrames));

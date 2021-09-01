@@ -153,7 +153,7 @@ public final class TupleObj extends CandyObject {
 		return StringObj.valueOf(builder.toString());
 	}
 	
-	@NativeMethod(name = Names.METHOD_INITALIZER, argc = 1)
+	@NativeMethod(name = Names.METHOD_INITALIZER, arity = 1)
 	public CandyObject init(CNIEnv env, CandyObject[] args) {
 		if (args[0] instanceof  TupleObj) {
 			TupleObj tuple = (TupleObj) args[0];

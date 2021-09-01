@@ -235,18 +235,18 @@ public final class MapObj extends CandyObject {
 		}
 	}
 	
-	@NativeMethod(name = Names.METHOD_INITALIZER, argc = 1)
+	@NativeMethod(name = Names.METHOD_INITALIZER, arity = 1)
 	public CandyObject init(CNIEnv env, CandyObject[] args) {
 		setInitCapacity(ObjectHelper.asInteger(args[0]));
 		return this;
 	}
 	
-	@NativeMethod(name = "get", argc = 1)
+	@NativeMethod(name = "get", arity = 1)
 	public CandyObject get(CNIEnv env, CandyObject[] args) {
 		return get(env, args[0]);
 	}
 	
-	@NativeMethod(name = "getOrDefault", argc = 2)
+	@NativeMethod(name = "getOrDefault", arity = 2)
 	public CandyObject getOrDefault(CNIEnv env, CandyObject[] args) {
 		return getOrDefault(env, args[0], args[1]);
 	}
@@ -256,17 +256,17 @@ public final class MapObj extends CandyObject {
 		return ObjectHelper.preventNull(get(env, key));
 	}
 	
-	@NativeMethod(name = "put", argc = 2)
+	@NativeMethod(name = "put", arity = 2)
 	public CandyObject put(CNIEnv env, CandyObject[] args) {
 		return put(env, args[0], args[1]);
 	}
 	
-	@NativeMethod(name = "putIfAbsent", argc = 2)
+	@NativeMethod(name = "putIfAbsent", arity = 2)
 	public CandyObject putIfAbsent(CNIEnv env, CandyObject[] args) {
 		return putIfAbsent(env, args[0], args[1]);
 	}
 	
-	@NativeMethod(name = "putAll", argc = 1) 
+	@NativeMethod(name = "putAll", arity = 1) 
 	public CandyObject putAll(CNIEnv env, CandyObject[] args) {
 		TypeError.checkTypeMatched(MAP_CLASS, args[0]);
 		return putAll(env, (MapObj) args[0]);
@@ -278,27 +278,27 @@ public final class MapObj extends CandyObject {
 		return value;
 	}
 	
-	@NativeMethod(name = "remove", argc = 1)
+	@NativeMethod(name = "remove", arity = 1)
 	public CandyObject remove(CNIEnv env, CandyObject[] args) {
 		return remove(env, args[0]);
 	}
 	
-	@NativeMethod(name = "contains", argc = 1)
+	@NativeMethod(name = "contains", arity = 1)
 	public CandyObject contains(CNIEnv env, CandyObject[] args) {
 		return BoolObj.valueOf(contains(env, args[0]));
 	}
 	
-	@NativeMethod(name = "length", argc = 0)
+	@NativeMethod(name = "length", arity = 0)
 	public CandyObject size(CNIEnv env, CandyObject[] args) {
 		return IntegerObj.valueOf(size);
 	}
 	
-	@NativeMethod(name = "isEmpty", argc = 0)
+	@NativeMethod(name = "isEmpty", arity = 0)
 	public CandyObject isEmpty(CNIEnv env, CandyObject[] args) {
 		return BoolObj.valueOf(size == 0);
 	}
 	
-	@NativeMethod(name = "clear", argc = 0)
+	@NativeMethod(name = "clear", arity = 0)
 	public CandyObject clear(CNIEnv env, CandyObject[] args) {
 		clear();
 		return null;

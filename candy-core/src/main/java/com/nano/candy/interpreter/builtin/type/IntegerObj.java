@@ -45,7 +45,7 @@ public class IntegerObj extends NumberObj {
 		this.value = value;
 	}
 	
-	@NativeMethod(name = Names.METHOD_INITALIZER, argc = 1)
+	@NativeMethod(name = Names.METHOD_INITALIZER, arity = 1)
 	public CandyObject init(CNIEnv env, CandyObject[] args) {
 		this.value = ObjectHelper.asInteger(args[0]);
 		return this;

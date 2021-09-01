@@ -5,9 +5,9 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
-@Retention(RetentionPolicy.RUNTIME)
+@Retention(RetentionPolicy.SOURCE)
 @Target(ElementType.METHOD)
-public @interface NativeFunc {
+public @interface NativeMethod {
 	public String name();
 	public int arity() default 0;
 	public int varArgsIndex() default -1;

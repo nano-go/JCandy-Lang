@@ -1,6 +1,6 @@
 package com.nano.candy.interpreter.builtin;
 import com.nano.candy.interpreter.builtin.CandyObject;
-import com.nano.candy.interpreter.cni.CNativeMethod;
+import com.nano.candy.interpreter.cni.JavaMethodObj;
 import com.nano.candy.interpreter.cni.NativeMethodRegister;
 import com.nano.candy.std.Names;
 
@@ -15,10 +15,10 @@ public class ObjectClass {
 	}
 	
 	private static ClassSignature getObjectClassSignature() {
-		CNativeMethod[] methods = NativeMethodRegister.
+		JavaMethodObj[] methods = NativeMethodRegister.
 			generateNativeMethods("Object", CandyObject.class);
 		ClassSignature signature = new ClassSignature("Object", null);
-		for (CNativeMethod method : methods) {
+		for (JavaMethodObj method : methods) {
 			if (Names.METHOD_INITALIZER.equals(method.funcName())) {
 				signature.setInitializer(method);
 			} else {
