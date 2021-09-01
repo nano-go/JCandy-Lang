@@ -175,7 +175,7 @@ public class Disassembler {
 		String name = String.format("%d (%s)", index, 
 			chunk.getGlobalVarNames().get(index));
 		return new DisassSimpleInstruction(
-			chunk, insPc, ConstantPool.indexLength(index) + 1, name
+			chunk, insPc, ConstantPool.indexLength(index), name
 		);
 	}
 
