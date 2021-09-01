@@ -1,16 +1,16 @@
 package com.nano.candy.interpreter.builtin;
 
-import com.esotericsoftware.reflectasm.ConstructorAccess;
 import com.nano.candy.interpreter.builtin.CandyObject;
 import com.nano.candy.interpreter.builtin.type.CallableObj;
-import java.util.HashMap;
+import java.lang.reflect.Constructor;
 import java.lang.reflect.Modifier;
+import java.util.HashMap;
 
 /**
  * Builds a Candy class with this signature.
  */
 public class ClassSignature {
-	protected ConstructorAccess<? extends CandyObject> constructorAccess;
+	protected Constructor<? extends CandyObject> objectAllocator;
 	protected boolean canBeCreated;
 	protected CandyClass superClass;
 	protected String className;
@@ -32,7 +32,7 @@ public class ClassSignature {
 		} else {
 			this.methods = new HashMap<>(superClass.methods);
 			this.initializer = superClass.initializer;
-			this.constructorAccess = superClass.constructorAccess;
+			this.objectAllocator = superClass.objectAllocator;
 		}
 		this.canBeCreated = true;
 	}
@@ -51,16 +51,24 @@ public class ClassSignature {
 	
 	public ClassSignature setObjEntityClass(Class<? extends CandyObject> objEntityClass) {
 		try {
-			// Abstract class can't create instances!
+			// Abstract classes can't create instances!
 			if (Modifier.isAbstract(objEntityClass.getClass().getModifiers())) {
 				this.canBeCreated = false;
 				return this;
 			}
-			this.constructorAccess = ConstructorAccess.get(objEntityClass);			
-		} catch (RuntimeException e) {
-			this.constructorAccess = null;
-			this.canBeCreated = false;
+			this.objectAllocator = objEntityClass.getDeclaredConstructor();
+			if (Modifier.isPublic(objectAllocator.getModifiers())) {
+				return this;
+			}
+			if (Modifier.isProtected(objectAllocator.getModifiers())) {
+				objectAllocator.setAccessible(true);
+				return this;
+			}
+		} catch (Exception e) {
+			// It means that can't get the allocator.
 		}
+		this.objectAllocator = null;
+		this.canBeCreated = false;
 		return this;
 	}
 

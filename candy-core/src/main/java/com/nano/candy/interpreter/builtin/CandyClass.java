@@ -1,6 +1,5 @@
 package com.nano.candy.interpreter.builtin;
 
-import com.esotericsoftware.reflectasm.ConstructorAccess;
 import com.nano.candy.interpreter.builtin.type.ArrayObj;
 import com.nano.candy.interpreter.builtin.type.BoolObj;
 import com.nano.candy.interpreter.builtin.type.CallableObj;
@@ -13,6 +12,8 @@ import com.nano.candy.interpreter.cni.CNIEnv;
 import com.nano.candy.interpreter.cni.JavaFunctionObj;
 import com.nano.candy.interpreter.runtime.OperandStack;
 import com.nano.candy.std.Names;
+import java.lang.reflect.Constructor;
+import java.lang.reflect.InvocationTargetException;
 import java.util.Collection;
 import java.util.HashMap;
 
@@ -35,9 +36,21 @@ public class CandyClass extends CallableObj {
 	}
 	
 	/**
-	 * Use ReflectASM to call reflectly the no-args constructor of CandyObject
+	 * We use the non-args constructor to create various objects.
+	 *
+	 * <p>Every candy class corresponds with an original Java class, and we 
+	 * need the constructor of the Java class to create various Candy 
+	 * objects. If the Java class has no such constructors, it means the
+	 * corresponding Candy class can't create instances.
+	 *
+	 * <p>We create Candy objects by reflection.
+	 *
+	 * <pre>
+	 * Note that only public or protected non-args constructors can be 
+	 * considered as an object allocator.
+	 * </pre>
 	 */
-	protected final ConstructorAccess<? extends CandyObject> constructorAccess;
+	protected final Constructor<? extends CandyObject> objectAllocator;
 
 	/**
 	 * False if the object class (java class) has no a constructor 
@@ -73,7 +86,7 @@ public class CandyClass extends CallableObj {
 		this.isInheritable = signature.isInheritable;
 		this.methods = signature.methods;
 		this.initializer = signature.initializer;
-		this.constructorAccess = signature.constructorAccess;
+		this.objectAllocator = signature.objectAllocator;
 		this.canBeCreated = signature.canBeCreated;
 		
 		if (this.initializer != null) {
@@ -257,14 +270,24 @@ public class CandyClass extends CallableObj {
 				+ getName()
 			).throwSelfNative();
 		}
-		if (constructorAccess == null) {
+		if (objectAllocator == null) {
 			return new CandyObject(this);
 		}
-		// We can't reflectly call the constructor with a CandyClass
-		// due to the restriction of ReflectASM.
-		CandyObject obj = constructorAccess.newInstance();
-		obj.setCandyClass(this);
-		return obj;
+		try {
+			CandyObject obj = objectAllocator.newInstance();
+			obj.setCandyClass(this);
+			return obj;
+		} catch (InvocationTargetException e) {
+			if (e.getTargetException() instanceof RuntimeException) {
+				throw (RuntimeException) e.getTargetException();
+			}
+			new NativeError(e.getTargetException()).throwSelfNative();
+		} catch (IllegalAccessException e) {
+			throw new RuntimeException("The non-args constructor must be public.");
+		} catch (IllegalArgumentException | InstantiationException  e) {
+			// Unreachable.
+		}
+		throw new RuntimeException("Unreachable.");
 	}
 
 	@Override
