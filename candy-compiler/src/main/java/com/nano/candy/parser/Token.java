@@ -3,7 +3,14 @@ import com.nano.candy.utils.Position;
 import java.util.Objects;
 
 public class Token {
-
+	
+	public static final String LN_SEMI_LITERAL = "end of line";
+	
+	public static boolean isNewLineSEMI(Token tok) {
+		return tok.getKind() == TokenKind.SEMI && 
+			tok.getLiteral().equals(LN_SEMI_LITERAL);
+	}
+	
 	private final Position pos;
 	private final String literal;
 	private final TokenKind kind;

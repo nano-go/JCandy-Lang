@@ -12,7 +12,6 @@ class CandyScanner implements Scanner {
 	private Position startPos;
 	private Token tok;
 	
-	
 	private Queue<Token> parsedToken = new LinkedList<>();
 	
 	private Position basePos;
@@ -88,7 +87,7 @@ class CandyScanner implements Scanner {
 					
 				case '\n' :
 					kind = TokenKind.SEMI;
-					literal = CandySystem.END_OF_LINE;
+					literal = Token.LN_SEMI_LITERAL;
 					break;
 					
 				case '@':
