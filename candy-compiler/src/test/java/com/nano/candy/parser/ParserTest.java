@@ -97,6 +97,8 @@ public class ParserTest {
 		"stream()\n\t.filter(a).map(b).\nlimit(5)\n.skip(15)\n",
 		"_call(a, lambda a -> a)",
 		"_call(lambda a -> a)",
+		"fun foo(a, b)\n {\n\ta.s = b\n}",
+		"fun foo(a, b)\n\n\n\n {\n\ta.s = b\n}",
 		"class Point {\n x() { \n return x; } y() { \n return y; } }",
 		"class P {\n P() {this.x = x; this.y = y;} A() { super.test().b; } }",
 		"class A { fun test() {super.a(); super.b();}}",
@@ -105,6 +107,10 @@ public class ParserTest {
 		"class A : a[c] {}",
 		"class A \n { fun a(a, b) \n {} fun a() \n {} fun a(a, b) {} }",
 		"class A {fun init(value) {\n" + 
+			"@if = a\n" +
+			"@value = value\n" +
+		"}}",
+		"class A {fun init(value) \n{\n" + 
 			"@if = a\n" +
 			"@value = value\n" +
 		"}}",
@@ -167,11 +173,6 @@ public class ParserTest {
 		newPECase("or -> {}", loc(1, 1)),
 		newPECase("var ", loc(1, 5), loc(1, 5)),
 		newPECase("a. ", loc(1, 4)),
-		newPECase("fun ", loc(1, 5), loc(1, 5), loc(1, 5)),
-		newPECase("fun a(a, *) {}", loc(1, 11)),
-		newPECase("class ", loc(1, 7), loc(1, 7), loc(1, 7)),
-		newPECase("class a :", loc(1, 10), loc(1, 10), loc(1, 10)),
-		newPECase("class A { fun test() {super.a(); super.b();}\nfalse}\n", loc(1, 44)),
 		
 		newPECase(
 			"maxParams(a0,a1,a2,a3,a4,a5,a6,a7,a8,a9,a10,a11,a12,a13,a14,a15,a16,a17,a18,a19,a20,a21,a22,a23,a24,a25,a26,a27,a28,a29,a30,a31,a32,a33,a34,a35,a36,a37,a38,a39,a40,a41,a42,a43,a44,a45,a46,a47,a48,a49,a50,a51,a52,a53,a54,a55,a56,a57,a58,a59,a60,a61,a62,a63,a64,a65,a66,a67,a68,a69,a70,a71,a72,a73,a74,a75,a76,a77,a78,a79,a80,a81,a82,a83,a84,a85,a86,a87,a88,a89,a90,a91,a92,a93,a94,a95,a96,a97,a98,a99,a100,a101,a102,a103,a104,a105,a106,a107,a108,a109,a110,a111,a112,a113,a114,a115,a116,a117,a118,a119,a120,a121,a122,a123,a124,a125,a126,a127,a128,a129,a130,a131,a132,a133,a134,a135,a136,a137,a138,a139,a140,a141,a142,a143,a144,a145,a146,a147,a148,a149,a150,a151,a152,a153,a154,a155,a156,a157,a158,a159,a160,a161,a162,a163,a164,a165,a166,a167,a168,a169,a170,a171,a172,a173,a174,a175,a176,a177,a178,a179,a180,a181,a182,a183,a184,a185,a186,a187,a188,a189,a190,a191,a192,a193,a194,a195,a196,a197,a198,a199,a200,a201,a202,a203,a204,a205,a206,a207,a208,a209,a210,a211,a212,a213,a214,a215,a216,a217,a218,a219,a220,a221,a222,a223,a224,a225,a226,a227,a228,a229,a230,a231,a232,a233,a234,a235,a236,a237,a238,a239,a240,a241,a242,a243,a244,a245,a246,a247,a248,a249,a250,a251,a252,a253,a254,a255)", 
@@ -184,18 +185,30 @@ public class ParserTest {
 		newPECase("super.init();", loc(1, 1)),
 		newPECase("while (true) { break;\na -;\n}\nbreak;", loc(2, 4), loc(4, 1)),
 		newPECase("while (true) { continue;\na -;\n}\ncontinue;", loc(2, 4), loc(4, 1)),
+		newPECase("while (1); {}", loc(1, 10)),
 		newPECase("for (i in arr) { break;\na -;\n}\nbreak;", loc(2, 4), loc(4, 1)),
 		newPECase("for (i in arr) { continue;\na -;\n}\ncontinue;", loc(2, 4), loc(4, 1)),
-		newPECase("fun test(a, b, a) {}", loc(1, 1)),
+		newPECase("for (i in arr); {}", loc(1, 15)),
+		
 		newPECase(
 			"fun maxParams(p0,p1,p2,p3,p4,p5,p6,p7,p8,p9,p10,p11,p12,p13,p14,p15,p16,p17,p18,p19,p20,p21,p22,p23,p24,p25,p26,p27,p28,p29,p30,p31,p32,p33,p34,p35,p36,p37,p38,p39,p40,p41,p42,p43,p44,p45,p46,p47,p48,p49,p50,p51,p52,p53,p54,p55,p56,p57,p58,p59,p60,p61,p62,p63,p64,p65,p66,p67,p68,p69,p70,p71,p72,p73,p74,p75,p76,p77,p78,p79,p80,p81,p82,p83,p84,p85,p86,p87,p88,p89,p90,p91,p92,p93,p94,p95,p96,p97,p98,p99,p100,p101,p102,p103,p104,p105,p106,p107,p108,p109,p110,p111,p112,p113,p114,p115,p116,p117,p118,p119,p120,p121,p122,p123,p124,p125,p126,p127,p128,p129,p130,p131,p132,p133,p134,p135,p136,p137,p138,p139,p140,p141,p142,p143,p144,p145,p146,p147,p148,p149,p150,p151,p152,p153,p154,p155,p156,p157,p158,p159,p160,p161,p162,p163,p164,p165,p166,p167,p168,p169,p170,p171,p172,p173,p174,p175,p176,p177,p178,p179,p180,p181,p182,p183,p184,p185,p186,p187,p188,p189,p190,p191,p192,p193,p194,p195,p196,p197,p198,p199,p200,p201,p202,p203,p204,p205,p206,p207,p208,p209,p210,p211,p212,p213,p214,p215,p216,p217,p218,p219,p220,p221,p222,p223,p224,p225,p226,p227,p228,p229,p230,p231,p232,p233,p234,p235,p236,p237,p238,p239,p240,p241,p242,p243,p244,p245,p246,p247,p248,p249,p250,p251,p252,p253,p254,p255) {}", 
 			loc(1, 1)
 		),
 		newPECase("fun a() {\nsuper.init();\n}", loc(2, 1)),
 		newPECase("fun a() {\nreturn a \na -;\n}\nreturn", loc(3, 4), loc(5, 1)),
+		newPECase("fun a();{}", loc(1, 8)),
+		newPECase("fun test(a, b, a) {}", loc(1, 1)), // repeat parameter
+		newPECase("fun ", loc(1, 5), loc(1, 5), loc(1, 5), loc(1, 5)),
+		newPECase("fun a(a, *) {}", loc(1, 11)),
+		
 		newPECase("var a = lambda -> {\nreturn a \na -;\n}\nreturn", loc(3, 4), loc(5, 1)),
+		
 		newPECase("class A { fun a(){\n return a \na -;\n}}\nreturn", loc(3, 4), loc(5, 1)),
 		newPECase("class A {\nfun init() {\nreturn a; }}", loc(3, 1)),
+		newPECase("class A {\nfun a();\n {}}", loc(2, 8)),
+		newPECase("class ", loc(1, 7), loc(1, 7), loc(1, 7)),
+		newPECase("class a :", loc(1, 10), loc(1, 10), loc(1, 10)),
+		newPECase("class A { fun test() {super.a(); super.b();}\nfalse}\n", loc(1, 44), loc(2, 6))
 	};
 	 
 	public static ParserErrorCase newPECase(String input, SimulationPositions.Location... expectedLocations) {

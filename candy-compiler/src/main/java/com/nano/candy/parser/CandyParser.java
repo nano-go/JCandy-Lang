@@ -166,7 +166,7 @@ class CandyParser implements Parser {
 		}
 		return tok.getLiteral();
 	}
-
+	
 	private static <R extends ASTreeNode> R locate(Token token, R node) {
 		return locate(token.getPos(), node);
 	}
@@ -274,7 +274,9 @@ class CandyParser implements Parser {
 	 *        ...
 	 */
 	private void ignorableLinebreak() {
-		matchIf(SEMI, false);
+		if (Token.isNewLineSEMI(peek())) {
+			consume();
+		}
 	}
 	
 	/**
@@ -524,7 +526,7 @@ class CandyParser implements Parser {
 	 * @param stopAt Ensures the last token kind is the stopAt or EOF.
 	 */
 	private void parseStmts(List<Stmt> stmts, TokenKind stopAt) {
-		while (peekKind() != EOF && peekKind() != RBRACE) {
+		while (peekKind() != EOF) {
 			try {
 				Stmt stmt = parseStmt();
 				if (stmt == null) {
@@ -602,7 +604,10 @@ class CandyParser implements Parser {
 	 *
 	 * Called by "IfStmt", "WhileStmt", "ForStmt", "LambdaExpr"
 	 */
-	private Stmt.Block parseBody(Position posIfErr, String msgIfErr) {	
+	private Stmt.Block parseBody(Position posIfErr, String msgIfErr) {
+		if (peekKind() == SEMI) {
+			reportError(peek(), "Unexpected '%s'.", tokStr(peek()));
+		}
 		Stmt body = parseStmt();
 		if (body == null) {
 			reportError(posIfErr, msgIfErr);
@@ -762,7 +767,7 @@ class CandyParser implements Parser {
 	}
 
 	/**
-	 * Method = [ "fun" ] <IDENTIFIER> Params Block
+	 * Method = [ "fun" ] <IDENTIFIER> Params [ "\n" ] Block
 	 */
 	private Stmt.FuncDef parseMethod(boolean isStatic) {
 		FunctionType previousFuncType = curFunctionType;
@@ -1007,13 +1012,9 @@ class CandyParser implements Parser {
 	 */
 	private Stmt.Parameters parseParams(boolean optionalParentheses) {
 		boolean leftParenMatched = matchIf(LPAREN, !optionalParentheses);
-		if (leftParenMatched && matchIf(RPAREN)) {
-			ignorableLinebreak();
-			return Stmt.Parameters.empty();
-		}
 		Stmt.Parameters params = parseParameterList();
 		if (!optionalParentheses || leftParenMatched) {
-			matchIf(RPAREN);
+			matchIf(RPAREN, true);
 		}
 		ignorableLinebreak();
 		return params;
@@ -1550,10 +1551,10 @@ class CandyParser implements Parser {
 				case SEMI:
 					// chained method syntax:
 					//     stream()\n.filter()\n.map()\n.close()
-					if (peek(1).getKind() != DOT) {
-						break;
+					if (!Token.isNewLineSEMI(tok) || peek(1).getKind() != DOT) {
+						return expr;
 					}
-					// consume SEMI(may be '\n' or '\;')
+					// consume '\n'
 					consume();
 					// reset position marker.
 					tok = peek();
@@ -1561,7 +1562,7 @@ class CandyParser implements Parser {
 				case DOT:
 					consume();
 					Token attr = match(IDENTIFIER,
-						"Expecting an attribute name after '.'");
+						"Expecting an identifier after '.'");
 					expr = locate(tok, new Expr.GetAttr(expr, attr.getLiteral()));
 					continue;
 				case ARROW:
