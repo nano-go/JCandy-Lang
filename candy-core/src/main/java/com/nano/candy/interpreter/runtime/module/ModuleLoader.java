@@ -12,10 +12,15 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
- * This class is used to load a module, which is a file or a directory.
+ * This class is used to load modules.
  *
- * This is an abstract class, and it provides an abstract method used to
- * find a module by a given relative path.
+ * <p>In Candy, A module consists of one or more source files. Any Candy source
+ * file may be a module.
+ *
+ * <p>ModuleLoader provides a method used for loading modules through a path,
+ * and the ModuleObject cache that avoids loading the same module twice.
+ *
+ * @see CandyPathModuleLoader
  */
 public abstract class ModuleLoader {
 	
@@ -41,12 +46,12 @@ public abstract class ModuleLoader {
 	}
 
 	/**
-	 * Finds a module by the specified relative path.
+	 * Finds a module through the specified relative path.
 	 *
 	 * @throws ModuleNotFoundException 
 	 *         If the moudle could not be found.
 	 *
-	 * @return Can't be null.
+	 * @return A module. Can't be null.
 	 */
 	protected abstract Module findModule(CNIEnv env, String relativePath) 
 		throws ModuleNotFoundException;
@@ -76,9 +81,13 @@ public abstract class ModuleLoader {
 		return runModule(env, module);
 	}
 	
+	/**
+	 * Check if the module is running. E.g A -> B -> A.
+	 */
 	private void checkModule(CNIEnv env, Module module) throws ModuleLoadingException {
 		boolean cyclic = false;
-		for (int i = 0; i < module.getSubFilesCount(); i ++) {
+		final int subfilesCount = module.getSubFilesCount();
+		for (int i = 0; i < subfilesCount; i ++) {
 			if (isRunning(module.getSubFileIdentifier(i))) {
 				cyclic = true;
 				break;
@@ -86,21 +95,29 @@ public abstract class ModuleLoader {
 		}
 		if (cyclic || isRunning(module.getModuleIdentifier())) {
 			throw new ModuleLoadingException
-				("cyclic import, in " + 
+				("cyclic importation. in " + 
 				 env.getEvaluatorEnv().getCurRunningFile().getSimpleName() +
-				 " import the running module " + module.getName());
+				 " imports the running module " + module.getName());
 		}
 	}
 	
 	private ModuleObj runModule(CNIEnv env, Module module) {
 		if (module.isModuleSet()) {
-			// means this module consists of multiple files.
-			ModuleObj[] subModules = runModuleSet(env, module);
-			ModuleObj moduleObj = mergeModules(module.getName(), subModules);
+			// It means this module consists of multiple source files.
+			ModuleObj[] subModuleObjects = runModuleSet(env, module);
+			ModuleObj moduleObj = mergeModules(module.getName(), subModuleObjects);
 			moduleObjectCache.put(module.getName(), moduleObj);
 			return moduleObj;
 		}
 		return runSingleFileModule(env, module);
+	}
+	
+	private ModuleObj runSingleFileModule(CNIEnv env, Module module) {
+		String moduleIdentifier = module.getModuleIdentifier();
+		ModuleObj moduleObj = runSourceFile(
+			env, moduleIdentifier, new File(module.getModulePath()));
+		moduleObjectCache.put(moduleIdentifier, moduleObj);
+		return moduleObj;
 	}
 	
 	private ModuleObj[] runModuleSet(CNIEnv env, Module module) {
@@ -120,15 +137,6 @@ public abstract class ModuleLoader {
 		return subModuleObjs;
 	}
 	
-	private ModuleObj runSingleFileModule(CNIEnv env, Module module) {
-		String moduleIdentifier = module.getModuleIdentifier();
-		ModuleObj moduleObj = runSourceFile(
-			env, moduleIdentifier, new File(module.getModulePath()));
-		moduleObjectCache.put(moduleIdentifier, moduleObj);
-		return moduleObj;
-	}
-	
-
 	private ModuleObj runSourceFile(CNIEnv env, String id, File srcFile) {
 		CompiledFileInfo compiledFile = RuntimeCompiler.compile(
 			srcFile, env.getEvaluatorEnv().getOptions(), true
