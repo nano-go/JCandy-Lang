@@ -16,7 +16,7 @@ public abstract class ASTreeNode {
 		return stmt.accept(visitor);
 	}
 	
-	public static void accept(ASTreeNode node, AstVisitor visitor) {
+	public static void accept(ASTreeNode node, AstVisitor<?, ?> visitor) {
 		if (node instanceof Expr) {
 			visitExpr((Expr)node, visitor);
 			return;
