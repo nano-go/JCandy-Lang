@@ -22,7 +22,7 @@ hi def link cdConditional        Conditional
 hi def link cdRepeat             Repeat
 hi def link cdException          Exception
 
-syn keyword cdBuiltin            print println max min range curTime importMudule setAttr getAttr str bool methods select selectByFilter cmdArgs loadLibrary readLine sleep
+syn keyword cdBuiltin            print println max min range curTime importMudule setAttr getAttr str bool methods select selectByFilter cmdArgs loadLibrary readLine sleep array tuple repeat exit
 syn keyword cdConstants          true false null
 
 hi def link cdBuiltin            Identifier
@@ -96,14 +96,18 @@ syn region cdParen               start="(" end=")" transparent
 
 " Candy Integers
 syn match cdDecimalInt           "\<\d\+\>"
-syn match cdOctInt               "\<0\o\+\>"
-syn match cdHexInt               "\<0x\x\+\>"
-syn match cdDecimalIntError      "\<\d\+[abcdefABCDEF]\x*\>"
-syn match cdOctIntError          "\<0\o*[89abcdefABCDEF]\x*\>"
+syn match cdBinaryInt            "\<0[bB][01]\+\>"
+syn match cdOctInt               "\<0[oO]\=\o\+\>"
+syn match cdHexInt               "\<0[xX]\x\+\>"
+
+syn match cdBinaryIntError       "\<0[bB][01]\+[2345678abcdefABCDEF]\x*\>"
+syn match cdDecimalIntError      "\<[123456789]\d*[abcdefABCDEF]\x*\>"
+syn match cdOctIntError          "\<0[oO]\=\o\+[89abcdefABCDEF]\x*\>"
 
 hi def link cdDecimalInt         Integer
 hi def link cdOctInt             Integer
 hi def link cdHexInt             Integer
+hi def link cdBinaryInt          Integer
 hi def link Integer              Number
 
 syn match cdFloat                "\<\d+\.\d+\>"
@@ -113,6 +117,7 @@ hi def link Float                Number
 
 hi def link cdOctIntError        Error
 hi def link cdDecimalIntError    Error
+hi def link cdBinaryIntError     Error
 
 syn sync minlines=500
 
