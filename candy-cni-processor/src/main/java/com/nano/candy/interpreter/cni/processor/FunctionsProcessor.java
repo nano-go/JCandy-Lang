@@ -63,7 +63,7 @@ public class FunctionsProcessor extends AbstractProcessor {
 		});
 		
 		processElements(roundEnv, NativeMethod.class, new MethodsCodeGenerator(), (e) -> {
-			if (!Tools.isPublicMethod(e)) {
+			if (!Tools.isPublicOrProtectedMethod(e)) {
 				error(e, "Only public method can be annotated with @%s.",
 					  NativeMethod.class.getSimpleName());
 				return false;

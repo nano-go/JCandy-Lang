@@ -1,5 +1,6 @@
 package com.nano.candy.interpreter.cni.processor;
 
+import java.util.Set;
 import javax.lang.model.element.Element;
 import javax.lang.model.element.ElementKind;
 import javax.lang.model.element.Modifier;
@@ -15,13 +16,15 @@ public class Tools {
 		throw new IllegalArgumentException(msg);
 	}
 	
-	public static boolean isPublicMethod(Element e) {
+	public static boolean isPublicOrProtectedMethod(Element e) {
+		Set<Modifier> modifiers = e.getModifiers();
 		return e.getKind() == ElementKind.METHOD &&
 			e.getEnclosingElement() != null &&
 			e.getEnclosingElement().getKind() == ElementKind.CLASS &&
-			!e.getModifiers().contains(Modifier.STATIC) &&
-			!e.getModifiers().contains(Modifier.ABSTRACT) &&
-			e.getModifiers().contains(Modifier.PUBLIC);
+			!modifiers.contains(Modifier.STATIC) &&
+			!modifiers.contains(Modifier.ABSTRACT) &&
+			(modifiers.contains(Modifier.PUBLIC) ||
+			 modifiers.contains(Modifier.PROTECTED));
 	}
 	
 	public static boolean isPublicStaticMethod(Element e) {
