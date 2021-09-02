@@ -38,6 +38,9 @@ public class Names {
 	public static final String METHOD_OP_LT   = "_lt";
 	public static final String METHOD_OP_LTEQ = "_lteq";
 	
+	public static final String METHOD_OP_LSHIFT = "_lshift";
+	public static final String METHOD_OP_RSHIFT = "_rshift";
+	
 	private Names(){}
 	
 	public static boolean isCandyIdentifier(String name) {

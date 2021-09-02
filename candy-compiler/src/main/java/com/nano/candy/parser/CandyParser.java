@@ -1149,7 +1149,7 @@ class CandyParser implements Parser {
 	
 	/**
 	 * Assignment = AssignOp Expr
-	 * AssignOp = "+=" | "-=" | "*=" | "/=" | "%=" | "="
+	 * AssignOp = "+=" | "-=" | "*=" | "/=" | "%=" | "=" | ">>=" | "<<="
 	 */
 	private Expr parseeAssignment(Expr lhs) {
 		TokenKind assOperator = peek().getKind();

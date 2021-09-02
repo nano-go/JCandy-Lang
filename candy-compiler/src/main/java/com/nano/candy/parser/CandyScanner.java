@@ -1,6 +1,5 @@
 package com.nano.candy.parser;
 
-import com.nano.candy.sys.CandySystem;
 import com.nano.candy.utils.Characters;
 import com.nano.candy.utils.Position;
 import java.util.LinkedList;
@@ -143,10 +142,24 @@ class CandyScanner implements Scanner {
 					kind = switch2('=', TokenKind.NOT_EQUAL, TokenKind.NOT);
 					break;		
 				case '>' :
-					kind = switch2('=', TokenKind.GTEQ, TokenKind.GT);
+					ch = reader.peek();
+					if (ch == '>') {
+						reader.consume();
+						kind = switch2('=', 
+							TokenKind.RIGHT_SHIFT_ASSIGN, TokenKind.RIGHT_SHIFT);
+					} else {
+						kind = switch2('=', TokenKind.GTEQ, TokenKind.GT);
+					}
 					break;	
 				case '<' :
-					kind = switch2('=', TokenKind.LTEQ, TokenKind.LT);	
+					ch = reader.peek();
+					if (ch == '<') {
+						reader.consume();
+						kind = switch2('=', 
+							TokenKind.LEFT_SHIFT_ASSIGN, TokenKind.LEFT_SHIFT);
+					} else {
+						kind = switch2('=', TokenKind.LTEQ, TokenKind.LT);
+					}
 					break;
 				case '+' :
 					kind = switch2('=', TokenKind.PLUS_ASSIGN, TokenKind.PLUS);

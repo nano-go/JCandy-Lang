@@ -37,10 +37,12 @@ public class CandyObject {
 	private static final int GTEQ_MASK = 1 << 13;
 	private static final int LT_MASK = 1 << 14;
 	private static final int LTEQ_MASK = 1 << 15;
-	private static final int EQ_MASK = 1 << 16;
-	private static final int HASH_MASK = 1 << 17;
-	private static final int STR_MASK = 1 << 18;
-	private static final int ITERATOR_MASK = 1 << 19;
+	private static final int LSHIFT_MASK = 1 << 16;
+	private static final int RSHIFT_MASK = 1 << 17;
+	private static final int EQ_MASK = 1 << 18;
+	private static final int HASH_MASK = 1 << 19;
+	private static final int STR_MASK = 1 << 20;
+	private static final int ITERATOR_MASK = 1 << 21;
 	
 	private Map<String, CandyObject> metaData = Collections.emptyMap();
 	private CandyClass klass;
@@ -476,6 +478,37 @@ public class CandyObject {
 		return lteq(env, args[0]);
 	}
 	
+	public CandyObject callLShift(CNIEnv env, CandyObject operand) {
+		if (isBuiltinMetnod(LSHIFT_MASK)) {
+			return lshift(env, operand);
+		}
+		return callBinaryOp(
+			env, operand, Names.METHOD_OP_LSHIFT, LSHIFT_MASK);
+	}
+	protected CandyObject lshift(CNIEnv env, CandyObject operand) {
+		throwUnsupportBinaryOperator("<<", operand);
+		return null;
+	}
+	@NativeMethod(name = Names.METHOD_OP_LSHIFT, arity = 1)
+	public final CandyObject lshiftMet(CNIEnv env, CandyObject[] args) {
+		return lshift(env, args[0]);
+	}
+	
+	public CandyObject callRShift(CNIEnv env, CandyObject operand) {
+		if (isBuiltinMetnod(RSHIFT_MASK)) {
+			return rshift(env, operand);
+		}
+		return callBinaryOp(
+			env, operand, Names.METHOD_OP_RSHIFT, RSHIFT_MASK);
+	}
+	protected CandyObject rshift(CNIEnv env, CandyObject operand) {
+		throwUnsupportBinaryOperator(">>", operand);
+		return null;
+	}
+	@NativeMethod(name = Names.METHOD_OP_RSHIFT, arity = 1)
+	public final CandyObject rshiftMet(CNIEnv env, CandyObject[] args) {
+		return rshift(env, args[0]);
+	}
 	
 	public BoolObj callEquals(CNIEnv env, CandyObject operand) {
 		if (isBuiltinMetnod(EQ_MASK)) {

@@ -1,4 +1,5 @@
 package com.nano.candy.interpreter.runtime;
+
 import com.nano.candy.code.Chunk;
 import com.nano.candy.code.ConstantPool;
 import com.nano.candy.code.ConstantValue;
@@ -618,6 +619,20 @@ public class CandyV1Evaluator implements Evaluator {
 					CandyObject val2 = pop();
 					CandyObject val1 = pop();
 					push(val1.callEquals(env.cniEnv, val2).not(env.cniEnv));
+					break;
+				}
+				
+				case OP_LS: {
+					CandyObject val2 = pop();
+					CandyObject val1 = pop();
+					push(val1.callLShift(env.cniEnv, val2));
+					break;
+				}
+				
+				case OP_RS: {
+					CandyObject val2 = pop();
+					CandyObject val1 = pop();
+					push(val1.callRShift(env.cniEnv, val2));
 					break;
 				}
 				

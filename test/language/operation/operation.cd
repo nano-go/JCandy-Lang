@@ -19,3 +19,10 @@ assert a2 % 7 == 100 % 7
 
 var a1 = null || a1
 assert a1 == 50
+
+var a = 0b00001
+assert (a <<= 5) == 0b100000
+assert a >> 3 == 0b00100
+
+assert 0b00001 << 3 == 0b1000
+assert 0b01000 >> 3 == 1

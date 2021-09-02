@@ -307,6 +307,12 @@ public final class ArrayObj extends CandyObject {
 		ArgumentError.checkValueTooLarge(repat, "repeat");
 		return new ArrayObj(ArrayUtils.repeat(elements, length, (int) repat));
 	}
+
+	@Override
+	protected CandyObject lshift(CNIEnv env, CandyObject operand) {
+		append(operand);
+		return this;
+	}
 	
 	@Override
 	public CandyObject iterator(CNIEnv env) {

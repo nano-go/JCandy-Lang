@@ -6,6 +6,8 @@ import java.util.HashMap;
 public enum TokenKind {
 	
 	ASSIGN("="),
+	LEFT_SHIFT_ASSIGN("<<="),
+	RIGHT_SHIFT_ASSIGN(">>="),
 	PLUS_ASSIGN("+="),
 	MINUS_ASSIGN("-="),
 	STAR_ASSIGN("*="),
@@ -35,6 +37,8 @@ public enum TokenKind {
 	DOT_DOT(".."),
 	LOGICAL_AND("and"),
 	LOGICAL_OR("or"),
+	LEFT_SHIFT("<<"),
+	RIGHT_SHIFT(">>"),
 	IS("is"),
 	EQUAL("=="),
 	NOT_EQUAL("!="),
@@ -158,10 +162,12 @@ public enum TokenKind {
 			case LT: case LTEQ: 
 			case IS:
 				return 5;
-			case PLUS: case MINUS: 
+			case LEFT_SHIFT: case RIGHT_SHIFT:
 				return 6;
+			case PLUS: case MINUS: 
+				return 7;
 			case STAR: case DIV: case MOD: 
-				return 7;	
+				return 8;
 		}
 		return 0;
 	}

@@ -214,18 +214,20 @@ public class ScannerTestCase {
 			id("a"), QUESITION, id("b"), COLON, id("c"), SEMIEOF),
 		
 		newTKCase(
-			"+ - * / % is == != > >= < <= and or && || ..", 
+			"+ - * / % is == != > >= < <= >> << and or && || ..", 
 			PLUS, MINUS, STAR, DIV, MOD, 
 			IS, EQUAL, NOT_EQUAL,
 			GT, GTEQ, LT, LTEQ,
+			RIGHT_SHIFT, LEFT_SHIFT,
 			tk(LOGICAL_AND, "and"), tk(LOGICAL_OR, "or"),
 			tk(LOGICAL_AND, "&&"), tk(LOGICAL_OR, "||"),
 			DOT_DOT
 		),
 		newTKCase(
-			"= += -= *= /= %=",
+			"= += -= *= /= %= >>= <<=",
 			ASSIGN, PLUS_ASSIGN, MINUS_ASSIGN, 
-			STAR_ASSIGN, DIV_ASSIGN, MOD_ASSIGN
+			STAR_ASSIGN, DIV_ASSIGN, MOD_ASSIGN, 
+			RIGHT_SHIFT_ASSIGN, LEFT_SHIFT_ASSIGN
 		),
 		newTKCase(
 			">===", GTEQ, EQUAL

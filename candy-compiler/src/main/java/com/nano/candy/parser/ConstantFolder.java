@@ -185,6 +185,17 @@ public class ConstantFolder {
 			case MOD:
 				leftV %= rightV;
 				break;
+			case LEFT_SHIFT: case RIGHT_SHIFT: {
+				if (left.isDouble() || right.isDouble()) {
+					return null;
+				}
+				ret = new Expr.IntegerLiteral(
+					operator == TokenKind.LEFT_SHIFT 
+						? (long)leftV << (long)rightV
+						: (long)leftV >> (long)rightV);
+				ret.pos = left.pos;
+				return ret;
+			}
 			case EQUAL:
 				return makeBooleanNode(leftV == rightV, left);
 			case NOT_EQUAL:

@@ -24,6 +24,13 @@ public class OperatorInstructionMap {
 		map(TokenKind.MOD, OpCodes.OP_MOD);
 		map(TokenKind.MOD_ASSIGN, OpCodes.OP_MOD);
 		
+		map(TokenKind.LEFT_SHIFT, OpCodes.OP_LS);
+		map(TokenKind.LEFT_SHIFT_ASSIGN, OpCodes.OP_LS);
+		
+		map(TokenKind.RIGHT_SHIFT, OpCodes.OP_RS);
+		map(TokenKind.RIGHT_SHIFT_ASSIGN, OpCodes.OP_RS);
+		
+		
 		map(TokenKind.IS, OpCodes.OP_INSTANCE_OF);
 		map(TokenKind.GT, OpCodes.OP_GT);
 		map(TokenKind.GTEQ, OpCodes.OP_GTEQ);

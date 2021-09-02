@@ -57,6 +57,22 @@ public class IntegerObj extends NumberObj {
 	}
 
 	@Override
+	protected CandyObject lshift(CNIEnv env, CandyObject operand) {
+		if (operand instanceof IntegerObj) {
+			return valueOf(value << ((IntegerObj) operand).value);
+		}
+		return super.lshift(env, operand);
+	}
+	
+	@Override
+	protected CandyObject rshift(CNIEnv env, CandyObject operand) {
+		if (operand instanceof IntegerObj) {
+			return valueOf(value >> ((IntegerObj) operand).value);
+		}
+		return super.lshift(env, operand);
+	}
+
+	@Override
 	public CandyObject negative(CNIEnv env) {
 		return valueOf(-value);
 	}

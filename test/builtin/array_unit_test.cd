@@ -99,5 +99,8 @@ class ArrayTest : unit.TestCase {
 		arr = [1, 2, 3]
 		arr.freeze()
 		@expectedErrorRaised(AttributeError, -> arr[0..1]=0)
+
+		arr = [1, 2, 3]
+		@assertEquals([1, 2, 3, 4], arr << 4)
 	}
 }
