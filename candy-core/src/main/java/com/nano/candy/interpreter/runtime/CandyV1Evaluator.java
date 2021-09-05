@@ -916,13 +916,21 @@ public class CandyV1Evaluator implements Evaluator {
 				/**
 				 * Other.
 				 */
-				case OP_IMPORT: {
+				case OP_IMPORT_NAME: {
 					ModuleObj moudleObj = ModuleManager.getManager().importModule(
 						env.cniEnv, ObjectHelper.asString(pop())
 					);
 					env.globalEnv.setVariable(readIndex(), moudleObj);
 					break;
 				}
+				
+				case OP_IMPORT: {
+					ModuleManager.getManager().importModule(
+						env.cniEnv, ObjectHelper.asString(pop())
+					).addToEnv(env.getCurrentFileEnv());
+					break;
+				}
+				
 				case OP_ASSERT: {
 					new com.nano.candy.interpreter.builtin.type.error.
 						AssertionError(pop().callStr(env.cniEnv).value()).throwSelfNative();

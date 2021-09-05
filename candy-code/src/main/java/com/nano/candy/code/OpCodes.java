@@ -90,21 +90,22 @@ public class OpCodes {
 	public static final byte OP_RAISE             = (byte)70;
 	public static final byte OP_MATCH_ERRORS      = (byte)71;
 
-	public static final byte OP_IMPORT            = (byte)72;
+	public static final byte OP_IMPORT_NAME       = (byte)72;
+	public static final byte OP_IMPORT            = (byte)73;
 
-	public static final byte OP_NEW_ARRAY         = (byte)73;
-	public static final byte OP_BUILT_TUPLE       = (byte)74;
-	public static final byte OP_APPEND            = (byte)75;
-	public static final byte OP_NEW_MAP           = (byte)76;
-	public static final byte OP_PUT               = (byte)77;
-	public static final byte OP_ASSERT            = (byte)78;
-	public static final byte OP_PRINT             = (byte)79;
+	public static final byte OP_NEW_ARRAY         = (byte)74;
+	public static final byte OP_BUILT_TUPLE       = (byte)75;
+	public static final byte OP_APPEND            = (byte)76;
+	public static final byte OP_NEW_MAP           = (byte)77;
+	public static final byte OP_PUT               = (byte)78;
+	public static final byte OP_ASSERT            = (byte)79;
+	public static final byte OP_PRINT             = (byte)80;
 
-	public static final byte OP_EXIT              = (byte)80;
+	public static final byte OP_EXIT              = (byte)81;
 
-	public static final byte INSTRUCTION_NUMBER = 81;
+	public static final byte INSTRUCTION_NUMBER = 82;
 
-	public static final String[] INSTRUCTION_NAMES = new String[81];
+	public static final String[] INSTRUCTION_NAMES = new String[82];
 	static {
 		INSTRUCTION_NAMES[OP_NOP]               = "nop";
 		INSTRUCTION_NAMES[OP_POP]               = "pop";
@@ -178,6 +179,7 @@ public class OpCodes {
 		INSTRUCTION_NAMES[OP_FUN]               = "fun";
 		INSTRUCTION_NAMES[OP_RAISE]             = "raise";
 		INSTRUCTION_NAMES[OP_MATCH_ERRORS]      = "match_errors";
+		INSTRUCTION_NAMES[OP_IMPORT_NAME]       = "import_name";
 		INSTRUCTION_NAMES[OP_IMPORT]            = "import";
 		INSTRUCTION_NAMES[OP_NEW_ARRAY]         = "new_array";
 		INSTRUCTION_NAMES[OP_BUILT_TUPLE]       = "built_tuple";

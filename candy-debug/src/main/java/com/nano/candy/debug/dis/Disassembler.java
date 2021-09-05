@@ -68,7 +68,7 @@ public class Disassembler {
 			case OP_GLOBAL_DEFINE:
 			case OP_GLOBAL_SET:
 			case OP_GLOBAL_GET:
-			case OP_IMPORT:
+			case OP_IMPORT_NAME:
 				return disassGlobalVariableIns(pc);
 			
 			case OP_INVOKE:

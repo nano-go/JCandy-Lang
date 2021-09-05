@@ -554,9 +554,13 @@ public class CodeGenerator implements AstVisitor<Void, Void> {
 
 	@Override
 	public Void visit(Stmt.Import node) {
-		node.fileExpr.accept(this);
-		builder.emitop(OP_IMPORT, line(node));
-		builder.emitIndex(globalVarIndex(node.asIdentifier));
+		node.modulePath.accept(this);
+		if (node.asIdentifier.isPresent()) {
+			builder.emitop(OP_IMPORT_NAME, line(node));
+			builder.emitIndex(globalVarIndex(node.asIdentifier.get()));
+		} else {
+			builder.emitop(OP_IMPORT, line(node));
+		}
 		return null;
 	}
 

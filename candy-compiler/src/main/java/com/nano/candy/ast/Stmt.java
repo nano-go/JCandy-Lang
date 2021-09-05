@@ -73,12 +73,12 @@ public abstract class Stmt extends ASTreeNode {
 	}
 	
 	public static class Import extends Stmt {
-		public Expr fileExpr;
-		public String asIdentifier;
+		public Expr modulePath;
+		public Optional<String> asIdentifier;
 
-		public Import(Expr fileExpr, String identifier) {
-			this.fileExpr = fileExpr;
-			this.asIdentifier = identifier;
+		public Import(Expr modulePath, String identifier) {
+			this.modulePath = modulePath;
+			this.asIdentifier = Optional.ofNullable(identifier);
 		}
 		@Override
 		public <S extends Object> S accept(AstVisitor<S, ?> visitor) {

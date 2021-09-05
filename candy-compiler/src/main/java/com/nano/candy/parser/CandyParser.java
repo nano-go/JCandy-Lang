@@ -884,22 +884,24 @@ class CandyParser implements Parser {
 			matchSEMI();
 			return locate(location, new Stmt.ImportList(imports));		
 		}
-		return parseImportStmt(location);
+		return parseImportStmt(location.getPos());
 	}
 	
 	/**
-	 * ImportStmt = Expr "as" <IDENTIFIER> <SEMI>
+	 * ImportStmt = Expr [ "as" <IDENTIFIER> ] <SEMI>
 	 */
-	private Stmt.Import parseImportStmt(Token begainning) {
-		Expr fileExpr = parseExpr();
-		match(AS);
-		String identigier = match(IDENTIFIER).getLiteral();
-		matchSEMI();
-		Stmt.Import importstmt = new Stmt.Import(fileExpr, identigier);
-		if (begainning != null) {
-			return locate(begainning, importstmt);
+	private Stmt.Import parseImportStmt(Position pos) {
+		String identifier = null;
+		Expr modulePath = parseExpr();
+		if (matchIf(AS)) {
+			identifier = match(IDENTIFIER).getLiteral();
 		}
-		return locate(fileExpr.pos, importstmt);
+		matchSEMI();
+		Stmt.Import importStmt = new Stmt.Import(modulePath, identifier);
+		if (pos == null) {
+			pos = modulePath.pos;
+		}
+		return locate(pos, importStmt);
 	}
 
 	/**
