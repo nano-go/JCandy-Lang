@@ -16,10 +16,24 @@ import com.nano.candy.interpreter.cni.NativeMethod;
 import com.nano.candy.std.AttributeModifiers;
 import com.nano.candy.std.CandyAttrSymbol;
 import com.nano.candy.std.Names;
-import java.util.Objects;
 import java.util.Set;
 
-@NativeClass(name = "Object")
+/**
+ * Candy objects are Java objects allocated on the heap. 
+ *
+ * <p>In Candy language, everything is an object, including numbers, classes, 
+ * functions and modules...
+ * 
+ * <p>There is a Candy class for each object and the Candy class is also an object.
+ * It's an instance of the `Callable` class.
+ *
+ * <p>Each object has a symbol table used to store attributes of the object.
+ *
+ * <p>The {@code NativeClass} annotation helps we to create a CandyClass object 
+ * correspoding a Java class. For more details see the {@code candy-cni-processor} 
+ * module and {@link com.nano.candy.interpreter.cni.NativeClassRegister}.
+ */
+@NativeClass(name = "Object", isInheritable = true)
 public class CandyObject {
 	
 	private static final int SET_ATTR_MASK = 1;
@@ -46,19 +60,28 @@ public class CandyObject {
 	private static final int ITERATOR_MASK = 1 << 21;
 	
 	private SymbolTable metaData = SymbolTable.empty();
+	
+	/**
+	 * Each object has a Candy class object.
+	 *
+	 * <p>Note that the {@link com.nano.candy.interpreter.builtin.type.CallableObj}
+	 * is a special class which its class object it itself.
+	 */
 	private CandyClass klass;
+	
+	/**
+	 * If an object is frozen, its attributes can not be changed.
+	 */
 	private boolean frozen;
 	
 	/**
-	 * (builtinMethodFlags & methodMask) means that the  method is 
-	 * a builtin method.
+	 * (builtinMethodFlags & methodMask) means that the method is 
+	 * a built-in method.
 	 */
 	private int builtinMethodFlags;
 	
 	/**
-	 * Every Candy object have a constructor with no-args.
-	 * 
-	 * If the constructor with no-args is missing, the object can't
+	 * If the constructor with no-args is present, the object can
 	 * be created in the Candy language level.
 	 *
 	 * This constructor is reflectly called by the CandyClass.
@@ -71,35 +94,61 @@ public class CandyObject {
 		this.klass = klass;
 	}
 	
+	/**
+	 * This method is provided for the Candy class.
+	 *
+	 * <p>When a class creates an object, it will set the class of the 
+	 * object by this method.
+	 *
+	 * @see CandyClass
+	 */
 	protected final void setCandyClass(CandyClass klass) {
-		this.klass = Objects.requireNonNull(klass);
+		this.klass = klass;
 	}
 	
 	protected CandyClass initSelfCandyClass() {
 		return null;
 	}
 	
+	/**
+	 * Returns the class of this object.
+	 */
 	public final CandyClass getCandyClass() {
 		if (klass == null) klass = initSelfCandyClass();
 		return klass;
 	}
-
+	
+	/**
+	 * Returns the class name of this object.
+	 */
 	public final String getCandyClassName() {
 		return getCandyClass().getName();
 	}
 	
+	/**
+	 * Returns whether this object is a class.
+	 */
 	public final boolean isCandyClass() {
 		return this instanceof CandyClass;
 	}
 	
+	/**
+	 * Freezes this object. A frozen object can not be changed.
+	 */
 	public final void freeze() {
 		this.frozen = true;
 	}
 
+	/**
+	 * Returns whether this object is frozen.
+	 */
 	public final boolean frozen() {
 		return frozen;
 	}
 	
+	/**
+	 * If this object is frozen, An attribute error is thrown.
+	 */
 	public final void checkFrozen() {
 		if (frozen) {
 			new AttributeError("The frozen object can't be changed.")
@@ -107,15 +156,30 @@ public class CandyObject {
 		}
 	}
 	
+	/**
+	 * Returns whether this object is callable.
+	 */
 	public boolean isCallable() {
 		return false;
 	}
 	
-	public boolean isInstanceOf(CandyObject obj) {
-		CandyClass klass = TypeError.requiresClass(obj);
-		return getCandyClass().isSubClassOf(klass);
+	/**
+	 * Returns this object is an instance of the specified class.
+	 *
+	 * <p>Note that if the specified object is not a class, A type error
+	 * will be thrown.
+	 *
+	 * @param klass The class object.
+	 *
+	 * @return True if this object is an instance of the specified class.
+	 */
+	public boolean isInstanceOf(CandyObject klass) {
+		return getCandyClass().isSubClassOf(TypeError.requiresClass(klass));
 	}
 	
+	/**
+	 * Returns the number of attributes in this object.
+	 */
 	public int getMetaDataSize() {
 		return this.metaData.size();
 	}
@@ -161,24 +225,27 @@ public class CandyObject {
 		return metaData.remove(name);
 	}
 	
+	
+	/************************** Native Methods **************************/
+	
 	@NativeMethod(name = "isClass")
-	public CandyObject isClass(CNIEnv env, CandyObject[] args) {
+	protected CandyObject isClass(CNIEnv env, CandyObject[] args) {
 		return BoolObj.valueOf(isCandyClass());
 	}
 	
 	@NativeMethod(name = "isCallable")
-	public CandyObject isCallable(CNIEnv env, CandyObject[] args) {
+	protected CandyObject isCallable(CNIEnv env, CandyObject[] args) {
 		return BoolObj.valueOf(isCallable());
 	}
 	
 	@NativeMethod(name = "freeze")
-	public CandyObject freeze(CNIEnv env, CandyObject[] args) {
+	protected CandyObject freeze(CNIEnv env, CandyObject[] args) {
 		freeze();
 		return null;
 	}
 
 	@NativeMethod(name = "frozen")
-	public CandyObject frozen(CNIEnv env, CandyObject[] args) {
+	protected CandyObject frozen(CNIEnv env, CandyObject[] args) {
 		return BoolObj.valueOf(frozen());
 	}
 	
