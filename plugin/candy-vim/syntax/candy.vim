@@ -8,7 +8,7 @@ syn case match
 
 syn cluster cdNotTop contains=cdException,cdComment,cdCommentTodo,cdConditional,cdException,cdStatements,cdRepeat,cdDebug,cdDeclaration,cdString,cdBlock,cdIdentifier
 
-syn keyword cdDeclaration        var static
+syn keyword cdDeclaration        var static pri pub reader writer
 
 hi def link cdDeclaration        Keyword
 
