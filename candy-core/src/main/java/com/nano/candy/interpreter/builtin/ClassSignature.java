@@ -2,9 +2,14 @@ package com.nano.candy.interpreter.builtin;
 
 import com.nano.candy.interpreter.builtin.CandyObject;
 import com.nano.candy.interpreter.builtin.type.CallableObj;
+import com.nano.candy.interpreter.builtin.type.error.OverrideError;
+import com.nano.candy.std.CandyAttrSymbol;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Modifier;
+import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Set;
 
 /**
  * Builds a Candy class with this signature.
@@ -17,6 +22,7 @@ public class ClassSignature {
 	protected boolean isInheritable;
 
 	protected HashMap<String, CallableObj> methods;
+	protected Set<CandyAttrSymbol> attrs;
 	protected CallableObj initializer;
 	
 	/**
@@ -29,8 +35,10 @@ public class ClassSignature {
 		
 		if (this.superClass == null) {
 			this.methods = new HashMap<>();
+			this.attrs = Collections.emptySet();
 		} else {
 			this.methods = new HashMap<>(superClass.methods);
+			this.attrs = new HashSet<>(superClass.predefinedAttrs);
 			this.initializer = superClass.initializer;
 			this.objectAllocator = superClass.objectAllocator;
 		}
@@ -47,6 +55,23 @@ public class ClassSignature {
 
 	public boolean isInheritable() {
 		return isInheritable;
+	}
+	
+	public ClassSignature setPredefinedAttrs(Set<CandyAttrSymbol> attrs) {
+		if (this.attrs.isEmpty()) {
+			this.attrs = attrs;
+		} else {
+			for (CandyAttrSymbol attr : attrs) {
+				if (this.attrs.contains(attr)) {
+					new OverrideError(
+						"The attribute '%s' can not be override.",
+						attr.getName()
+					).throwSelfNative();
+				}
+				this.attrs.add(attr);
+			}
+		}
+		return this;
 	}
 	
 	public ClassSignature setObjEntityClass(Class<? extends CandyObject> objEntityClass) {

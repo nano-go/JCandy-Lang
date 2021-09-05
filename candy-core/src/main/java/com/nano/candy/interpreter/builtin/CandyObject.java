@@ -6,20 +6,21 @@ import com.nano.candy.interpreter.builtin.type.MethodObj;
 import com.nano.candy.interpreter.builtin.type.StringObj;
 import com.nano.candy.interpreter.builtin.type.error.AttributeError;
 import com.nano.candy.interpreter.builtin.type.error.TypeError;
+import com.nano.candy.interpreter.builtin.utils.HashSymbolTable;
+import com.nano.candy.interpreter.builtin.utils.ObjAttribute;
 import com.nano.candy.interpreter.builtin.utils.ObjectHelper;
+import com.nano.candy.interpreter.builtin.utils.SymbolTable;
 import com.nano.candy.interpreter.cni.CNIEnv;
 import com.nano.candy.interpreter.cni.NativeClass;
 import com.nano.candy.interpreter.cni.NativeMethod;
+import com.nano.candy.std.AttributeModifiers;
+import com.nano.candy.std.CandyAttrSymbol;
 import com.nano.candy.std.Names;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 
 @NativeClass(name = "Object")
 public class CandyObject {
-
-	public static final boolean DEBUG = false;
 	
 	private static final int SET_ATTR_MASK = 1;
 	private static final int GET_ATTR_MASK = 1 << 1;
@@ -44,12 +45,13 @@ public class CandyObject {
 	private static final int STR_MASK = 1 << 20;
 	private static final int ITERATOR_MASK = 1 << 21;
 	
-	private Map<String, CandyObject> metaData = Collections.emptyMap();
+	private SymbolTable metaData = SymbolTable.empty();
 	private CandyClass klass;
 	private boolean frozen;
 	
 	/**
-	 * (builtinMethodFlags & methodMask) means a builtin method.
+	 * (builtinMethodFlags & methodMask) means that the  method is 
+	 * a builtin method.
 	 */
 	private int builtinMethodFlags;
 	
@@ -114,11 +116,41 @@ public class CandyObject {
 		return getCandyClass().isSubClassOf(klass);
 	}
 	
+	public int getMetaDataSize() {
+		return this.metaData.size();
+	}
+	
 	public void setMetaData(String name, CandyObject value) {
 		if (metaData.isEmpty()) {
-			metaData = new HashMap<>();
+			metaData = providesSymbolTable();
 		}
 		metaData.put(name, value);
+	}
+	
+	public void setMetaData(String name, CandyObject value, byte modifiers) {
+		if (metaData.isEmpty()) {
+			metaData = providesSymbolTable();
+		}
+		metaData.putWithModfiers(name, value, modifiers);
+	}
+	
+	public void setBuiltinMetaData(String name, CandyObject value) {
+		setMetaData(name, value, AttributeModifiers.BUILTIN);
+	}
+	
+	public CandyObject addAttrs(Set<CandyAttrSymbol> attrs) {
+		if (attrs.isEmpty()) {
+			return this;
+		}
+		if (metaData.isEmpty()) {
+			metaData = providesSymbolTable();
+		}
+		metaData.putAll(attrs);
+		return this;
+	}
+	
+	protected SymbolTable providesSymbolTable() {
+		return new HashSymbolTable();
 	}
 	
 	public CandyObject getMetaData(String name) {
@@ -173,7 +205,33 @@ public class CandyObject {
 			.call(env, StringObj.valueOf(name), value);
 	}
 	public CandyObject setAttr(CNIEnv env, String name, CandyObject value) {
-		setMetaData(name, value);
+		boolean isAccessedFromThis = AttributeModifiers.isAccessedFromThis(name);
+		if (isAccessedFromThis) {
+			name = AttributeModifiers.getAttrNameIfAccessedFromThis(name);
+		}
+		ObjAttribute attr = metaData.getAttr(name);
+		if (attr == null) {
+			setMetaData(name, value);
+			return value;
+		}
+		byte modifiers = attr.getModifiers();
+		if (AttributeModifiers.isBuiltin(modifiers)) {
+			AttributeError.throwReadOnlyError(name);
+		}
+		value = ObjectHelper.preventNull(value);
+		if (isAccessedFromThis) {
+			// Attributes modified by any modifiers can be changed from
+			// 'this'(keyword) except 'builtin'.
+			attr.setValue(value);
+			return value;
+		}
+		if (AttributeModifiers.isPrivate(modifiers)) {
+			AttributeError.throwHasNoAttr(this, name);
+		}
+		if (AttributeModifiers.isReadOnly(modifiers)) {
+			AttributeError.throwReadOnlyError(name);
+		}
+		attr.setValue(value);
 		return value;
 	}
 	@NativeMethod(name = Names.METHOD_SET_ATTR, arity = 2)
@@ -191,11 +249,26 @@ public class CandyObject {
 			.call(env, StringObj.valueOf(name));
 	}
 	public CandyObject getAttr(CNIEnv env, String name) {
-		CandyObject val = getMetaData(name);
-		if (val == null) {
-			val = getCandyClass().getBoundMethod(name, this);
+		boolean isAccessFromThis = AttributeModifiers.isAccessedFromThis(name);
+		if (isAccessFromThis) {
+			name = AttributeModifiers.getAttrNameIfAccessedFromThis(name);
 		}
-		return val;
+		ObjAttribute attr = metaData.getAttr(name);
+		if (attr == null) {
+			return getCandyClass().getBoundMethod(name, this);
+		}
+		if (isAccessFromThis) { 
+			// 'this' keyword has the highest access permission.
+			return attr.getValue();
+		}
+		byte modifiers = attr.getModifiers();
+		if (AttributeModifiers.isPrivate(modifiers)) {
+			AttributeError.throwHasNoAttr(this, name);
+		}
+		if (AttributeModifiers.isWriteOnly(modifiers)) {
+			AttributeError.throwWriteOnlyError(name);
+		}
+		return attr.getValue();
 	}
 	@NativeMethod(name = Names.METHOD_GET_ATTR, arity = 1)
 	public final CandyObject getAttrMet(CNIEnv env, CandyObject[] args) {
@@ -216,7 +289,7 @@ public class CandyObject {
 			.call(env, StringObj.valueOf(name));
 	}
 	protected CandyObject getUnknownAttr(CNIEnv env, String name) {
-		AttributeError.checkAttributeNull(this, name, null);
+		AttributeError.throwHasNoAttr(this, name);
 		return null;
 	}
 	@NativeMethod(name = Names.METHOD_GET_UNKNOWN_ATTR, arity = 1)

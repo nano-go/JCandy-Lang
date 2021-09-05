@@ -11,11 +11,13 @@ import com.nano.candy.interpreter.builtin.type.error.TypeError;
 import com.nano.candy.interpreter.cni.CNIEnv;
 import com.nano.candy.interpreter.cni.JavaFunctionObj;
 import com.nano.candy.interpreter.runtime.OperandStack;
+import com.nano.candy.std.CandyAttrSymbol;
 import com.nano.candy.std.Names;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.Set;
 
 /**
  * A candy class provides a language level class object.
@@ -45,10 +47,8 @@ public class CandyClass extends CallableObj {
 	 *
 	 * <p>We create Candy objects by reflection.
 	 *
-	 * <pre>
-	 * Note that only public or protected non-args constructors can be 
+	 * <p>Note that only public or protected non-args constructors can be 
 	 * considered as an object allocator.
-	 * </pre>
 	 */
 	protected final Constructor<? extends CandyObject> objectAllocator;
 
@@ -61,26 +61,50 @@ public class CandyClass extends CallableObj {
 	protected final boolean canBeCreated;
 	
 	/**
-	 * You can't interit this class from the Candy language level if false.
+	 * You can't interit this class from Candy language level if false.
 	 *
-	 * Some built-in classes don't allow themselves to be inherited by the
-	 * prototype class(wrote by the Candy programer).
+	 * <p>Some built-in classes don't allow themselves to be inherited by
+	 * prototype classes(written in Candy language level).
 	 */
 	protected final boolean isInheritable;
-
+	
+	/**
+	 * The superclass of this. Nullable.
+	 */
 	protected final CandyClass superClass;
+	
+	/**
+	 * The declared class name.
+	 */
 	protected final String className;
-
+	
+	/**
+	 * The definied methods, excluding {@code initializer('init')}.
+	 */
 	protected final HashMap<String, CallableObj> methods;
+	
+	/**
+	 * Those are predefined attributes with modifiers
+	 *
+	 * <pre>
+	 * class Foo {
+	 *     pri a, b, c
+	 * }
+	 * </pre>
+	 *
+	 * <p> In above class, {@code a, b, c} are predefined attributes 
+	 * with the {@code private('pri')} modifier.
+	 */
+	protected final Set<CandyAttrSymbol> predefinedAttrs;
+	
+	/**
+	 * The initializer of this class. Nullable.
+	 */
 	protected final CallableObj initializer;
 	
-	private JavaFunctionObj isSubclassOf, 
-	                        isSuperclassOf,
-	                        instance,
-	                        methodsMethod;
-
 	protected CandyClass(ClassSignature signature) {
 		super(signature.className, genParamtersInfo(signature.initializer));
+		this.predefinedAttrs = signature.attrs;
 		this.superClass = signature.superClass;
 		this.className = signature.className;
 		this.isInheritable = signature.isInheritable;
@@ -196,58 +220,25 @@ public class CandyClass extends CallableObj {
 		}
 		return arr;
 	}
-
+	
 	@Override
-	public CandyObject getAttr(CNIEnv env, String name) {
-		switch (name) {
-			case "className": 
-				return StringObj.valueOf(className);
-			case "superClass": 
-				return superClass == null ? NullPointer.nil() : superClass;
-			case "isSubclassOf":
-				if (isSubclassOf == null) {
-					isSubclassOf = new JavaFunctionObj(
-						getName(), "isSubclassOf", 1, this::isSubclassOf
-					);
-				}
-				return isSubclassOf;
-			case "isSuperclassOf":
-				if (isSuperclassOf == null) {
-					isSuperclassOf = new JavaFunctionObj(
-						getName(), "isSuperclassOf", 1, this::isSuperclassOf
-					);
-				}
-				return isSuperclassOf;
-			case "methods":
-				if (methodsMethod == null) {
-					methodsMethod = new JavaFunctionObj(
-						getName(), "methods", 0, this::methods
-					);
-				}
-				return methodsMethod;
-			case "instance":
-				if (instance == null) {
-					instance = new JavaFunctionObj(
-						getName(), "instance", 1, this::instance
-					);
-				}
-				return instance;
-		}
-		return super.getAttr(env, name);
+	protected void initAttrs() {
+		super.initAttrs();
+		setBuiltinMetaData("className", StringObj.valueOf(className));
+		setBuiltinMetaData("superClass", 
+			superClass == null ? NullPointer.nil() : superClass);
+		defineJavaFunction(new JavaFunctionObj(
+			getName(), "isSubclassOf", 1, this::isSubclassOf));
+		defineJavaFunction(new JavaFunctionObj(
+			getName(), "isSuperclassOf", 1, this::isSuperclassOf));
+		defineJavaFunction(new JavaFunctionObj(
+			getName(), "methods", 0, this::methods));
+		defineJavaFunction(new JavaFunctionObj(
+			getName(), "instance", 1, this::instance));
 	}
-
-	@Override
-	protected boolean isBuiltinAttribute(String name) {
-		switch(name) {
-			case "className": 
-			case "superClass":
-			case "isSubclassOf":
-			case "isSuperclassOf":
-			case "methods":
-			case "instance":
-				return true;
-		}
-		return super.isBuiltinAttribute(name);
+	
+	private final void defineJavaFunction(JavaFunctionObj fn) {
+		setBuiltinMetaData(fn.funcName(), fn);
 	}
 	
 	@Override
@@ -271,25 +262,25 @@ public class CandyClass extends CallableObj {
 			).throwSelfNative();
 		}
 		if (objectAllocator == null) {
-			return new CandyObject(this);
+			return new CandyObject(this).addAttrs(predefinedAttrs);
 		}
 		try {
 			CandyObject obj = objectAllocator.newInstance();
 			obj.setCandyClass(this);
-			return obj;
+			return obj.addAttrs(predefinedAttrs);
 		} catch (InvocationTargetException e) {
 			if (e.getTargetException() instanceof RuntimeException) {
 				throw (RuntimeException) e.getTargetException();
 			}
 			new NativeError(e.getTargetException()).throwSelfNative();
-		} catch (IllegalAccessException e) {
-			throw new RuntimeException("The non-args constructor must be public.");
-		} catch (IllegalArgumentException | InstantiationException  e) {
+		} catch (IllegalArgumentException | 
+		         InstantiationException | 
+				 IllegalAccessException e) {
 			// Unreachable.
 		}
 		throw new RuntimeException("Unreachable.");
 	}
-
+	
 	@Override
 	protected String strTag() {
 		return "class";

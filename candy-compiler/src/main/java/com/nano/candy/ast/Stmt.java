@@ -1,12 +1,12 @@
 package com.nano.candy.ast;
 
-import com.nano.candy.ast.dumper.FieldName;
+import com.nano.candy.std.CandyAttrSymbol;
 import com.nano.candy.utils.Position;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 public abstract class Stmt extends ASTreeNode {
 	
@@ -309,14 +309,62 @@ public abstract class Stmt extends ASTreeNode {
 	
 	public static class ClassDef extends Stmt {
 
-		@FieldName("className")
+		/**
+		 * The declared name of this class.
+		 */
 		public String name;
+		
+		/**
+		 * The optional super class.
+		 */
 		public Optional<Expr> superClass;
+		
+		/**
+		 * The initializer of this class. Each class has only one 
+		 * or zero initializer.
+		 */
 		public Optional<Stmt.FuncDef> initializer;
+		
+		/**
+		 * The static block initalizes some attributes of this class
+		 * object.
+		 */
 		public Optional<Block> staticBlock;
+		
+		/**
+		 * The predefined some attributes with modifiers.
+		 *
+		 * <pre>
+		 * class Foo {
+		 *     pri a, b
+		 * }
+		 */
+		public Set<CandyAttrSymbol> attrs;
+		
+		/**
+		 * The method list.
+		 */
 		public List<Stmt.FuncDef> methods;
+		
+		/**
+		 * The class is inside of the static block of other classes.
+		 *
+		 * <pre>
+		 * For Example:
+		 *     class Foo {
+		 *         static class Bar {...}
+		 *     }
+		 * </pre>
+		 *
+		 * The {@code Foo} class will be a static class.
+		 */
 		public boolean isStaticClass;
 		
+		/**
+		 * The character '}' position.
+		 *
+		 * <p> This position is used for the debugger.
+		 */
 		public Optional<Position> endPos;
 
 		public ClassDef(boolean isStaticClass, 
@@ -331,6 +379,7 @@ public abstract class Stmt extends ASTreeNode {
 			this.isStaticClass = isStaticClass;
 			this.name = name;
 			this.methods = methods;
+			this.attrs = Collections.emptySet();
 			this.superClass = Optional.ofNullable(superClass);
 			this.staticBlock = Optional.ofNullable(staticBlock);
 			this.initializer = Optional.empty();

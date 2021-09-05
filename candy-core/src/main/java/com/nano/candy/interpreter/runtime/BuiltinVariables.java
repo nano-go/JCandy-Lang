@@ -24,6 +24,7 @@ import com.nano.candy.interpreter.builtin.type.error.InterruptedError;
 import com.nano.candy.interpreter.builtin.type.error.ModuleError;
 import com.nano.candy.interpreter.builtin.type.error.NameError;
 import com.nano.candy.interpreter.builtin.type.error.NativeError;
+import com.nano.candy.interpreter.builtin.type.error.OverrideError;
 import com.nano.candy.interpreter.builtin.type.error.RangeError;
 import com.nano.candy.interpreter.builtin.type.error.StackOverflowError;
 import com.nano.candy.interpreter.builtin.type.error.StackTraceElementObj;
@@ -78,6 +79,7 @@ public class BuiltinVariables {
 		defineClass(TypeError.TYPE_ERROR_CLASS);
 		defineClass(StateError.STATE_ERROR_CLASS);
 		defineClass(InterruptedError.INRERRUPTED_ERROR_CLASS);
+		defineClass(OverrideError.OVERRIDE_ERROR_CLASS);
 
 		defineClass(StackTraceElementObj.STACK_TRACE_ELEMENT_CLASS);
 	}

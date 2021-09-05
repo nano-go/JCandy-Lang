@@ -19,8 +19,20 @@ public class AttributeError extends ErrorObj {
 		}
 	}
 	
+	public static void throwHasNoAttr(CandyObject object, String name) {
+		new AttributeError(
+			"'%s' object has no attribute '%s'.", 
+			object.getCandyClassName(), name
+		).throwSelfNative();
+	}
+	
 	public static void throwReadOnlyError(String name) {
 		new AttributeError("The attribute '%s' is read-only.", name)
+			.throwSelfNative();
+	}
+	
+	public static void throwWriteOnlyError(String name) {
+		new AttributeError("The attribute '%s' is write-only.", name)
 			.throwSelfNative();
 	}
 		

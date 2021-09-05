@@ -1,7 +1,9 @@
 package com.nano.candy.code;
 
+import com.nano.candy.std.CandyAttrSymbol;
 import java.util.Arrays;
 import java.util.Optional;
+import java.util.Set;
 
 public abstract class ConstantValue {
 	
@@ -129,6 +131,7 @@ public abstract class ConstantValue {
 		public String className;
 		public boolean hasSuperClass;
 		public Optional<MethodInfo> initializer;
+		public Set<CandyAttrSymbol> attrs;
 		public MethodInfo[] methods;
 		
 		private int length;

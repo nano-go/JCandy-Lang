@@ -4,6 +4,8 @@ import com.nano.candy.ast.ASTreeNode;
 import com.nano.candy.ast.Expr;
 import com.nano.candy.ast.Program;
 import com.nano.candy.ast.Stmt;
+import com.nano.candy.std.AttributeModifiers;
+import com.nano.candy.std.CandyAttrSymbol;
 import com.nano.candy.std.Names;
 import com.nano.candy.utils.Logger;
 import com.nano.candy.utils.Position;
@@ -14,6 +16,7 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 import static com.nano.candy.parser.TokenKind.*;
 
@@ -681,13 +684,19 @@ class CandyParser implements Parser {
 	}
 	
 	/**
-	 * ClassBody = "{" ( Method | StaticStmt )* "}"
+	 * ClassBody = "{" ( Method | StaticStmt | Fields )* "}"
 	 */
 	@SuppressWarnings("fallthrough")
 	private void parseClassBody(Stmt.ClassDef classDef) {
 		matchIf(LBRACE, true);
 		loop: while (peekKind() != RBRACE && peekKind() != EOF) {
-			switch (peekKind()) {			
+			switch (peekKind()) {
+				case PRIVATE:
+				case PUBLIC:
+				case READER:
+				case WRITER:
+					parseFields(classDef);
+					break;
 				case FUN: 
 				case IDENTIFIER: {
 					Stmt.FuncDef method = parseMethod(false);
@@ -719,6 +728,56 @@ class CandyParser implements Parser {
 		if (matchIf(RBRACE, true)) {
 			classDef.endPos = Optional.of(previous().getPos());
 		}
+	}
+
+	/**
+	 * Fields = Modifiers FieldList <SEMI>
+	 * FieldList = <IDENTIFIER> [ "," FieldList ]
+	 */
+	private void parseFields(Stmt.ClassDef classDef) {
+		Set<CandyAttrSymbol> attrs = classDef.attrs;
+		if (attrs.isEmpty()) {
+			attrs = new HashSet<>();
+			classDef.attrs = attrs;
+		}
+		byte modifiers = parseModifiers();
+		do {
+			Token attrName = match(IDENTIFIER);
+			CandyAttrSymbol attrSymbol = 
+				new CandyAttrSymbol(modifiers, attrName.getLiteral());
+			if (!attrs.add(attrSymbol)) {
+				reportWarn(attrName, 
+					"The duplicated attribute '%s' will be discarded.",
+					attrName.getLiteral());
+			} 
+		} while (matchIf(COMMA));
+		matchSEMI();
+	}
+
+	/**
+	 * Modifiers = "pri" | "pub" | "reader" | "writer"
+	 */
+	private byte parseModifiers() {
+		byte modifiers = 0;
+		switch (peekKind()) {
+			case PRIVATE:
+				modifiers = AttributeModifiers.PRIVATE;
+				break;
+			case PUBLIC:
+				modifiers = AttributeModifiers.PUBLIC;
+				break;
+			case READER:
+				modifiers = AttributeModifiers.READ_ONLY;
+				break;
+			case WRITER:
+				modifiers = AttributeModifiers.WRITE_ONLY;
+				break;
+			default: {
+				unexpected(peek());
+			}
+		}
+		consume();
+		return modifiers;
 	}
 	
 	/**

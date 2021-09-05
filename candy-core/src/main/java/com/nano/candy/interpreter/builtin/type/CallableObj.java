@@ -74,6 +74,8 @@ public abstract class CallableObj extends CandyObject {
 	
 	protected final ParametersInfo parameter;
 	
+	private boolean isInitializedAttrs;
+	
 	public CallableObj(String name, ParametersInfo parameter) {
 		this(name, name, parameter);
 	}
@@ -131,37 +133,27 @@ public abstract class CallableObj extends CandyObject {
 
 	@Override
 	public CandyObject getAttr(CNIEnv env, String name) {
-		switch (name) {
-			case "name":
-				return StringObj.valueOf(funcName);
-			case "fullName":
-				return StringObj.valueOf(fullName);
-			case "arity":
-				return IntegerObj.valueOf(arity());
-			case "vararg":
-				return IntegerObj.valueOf(vaargIndex());
+		if (!isInitializedAttrs) {
+			initAttrs();
+			isInitializedAttrs = true;
 		}
 		return super.getAttr(env, name);
 	}
 
 	@Override
 	public CandyObject setAttr(CNIEnv env, String name, CandyObject value) {
-		if (isBuiltinAttribute(name)) {
-			AttributeError.throwReadOnlyError(name);
+		if (!isInitializedAttrs) {
+			initAttrs();
+			isInitializedAttrs = true;
 		}
-		setMetaData(name, value);
-		return value;
+		return super.setAttr(env, name, value);
 	}
 	
-	protected boolean isBuiltinAttribute(String name) {
-		switch (name) {
-			case "name":
-			case "fullName":
-			case "arity":
-			case "vararg":
-				return true;	
-		}
-		return false;
+	protected void initAttrs() {
+		setBuiltinMetaData("name", StringObj.valueOf(funcName));
+		setBuiltinMetaData("fullName", StringObj.valueOf(fullName));
+		setBuiltinMetaData("arity", IntegerObj.valueOf(arity()));
+		setBuiltinMetaData("vararg", IntegerObj.valueOf(vaargIndex()));
 	}
 	
 	@Override

@@ -1,6 +1,7 @@
 package com.nano.candy.ast;
 import com.nano.candy.parser.Token;
 import com.nano.candy.parser.TokenKind;
+import com.nano.candy.std.AttributeModifiers;
 import com.nano.candy.std.StringFunctions;
 import com.nano.candy.utils.Position;
 import java.util.ArrayList;
@@ -459,7 +460,14 @@ public abstract class Expr extends ASTreeNode {
 
 		public GetAttr(Expr objExpr, String attr) {
 			this.objExpr = objExpr;
-			this.attr = attr;
+			if (objExpr instanceof Expr.This) {
+				// For the 'this.abc', will convert the 'abc' into the '.abc' 
+				// it means this attribute is accessed from 'this'.
+				this.attr = 
+					AttributeModifiers.getAttrNameAccessedFromThis(attr);
+			} else {
+				this.attr = attr;
+			}
 		}
 		
 		@Override

@@ -437,6 +437,7 @@ public class CodeGenerator implements AstVisitor<Void, Void> {
 		classInfo.fromPC = builder.curCp();	
 		emitClass(classInfo, line(node));	
 		classInfo.className = node.name;
+		classInfo.attrs = node.attrs;
 		classInfo.initializer = initalizer(node, classInfo);
 		classInfo.methods = methods(node, classInfo);
 		if (isDebugMode && node.endPos.isPresent()) {

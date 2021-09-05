@@ -48,6 +48,10 @@ public enum TokenKind {
 	LTEQ("<="),
 
 	VAR("var"),
+	PUBLIC("pub"),
+	PRIVATE("pri"),
+	READER("reader"),
+	WRITER("writer"),
 	ASSERT("assert"),
 	IF("if"),
 	ELSE("else"),

@@ -234,7 +234,8 @@ public class CandyV1Evaluator implements Evaluator {
 			signature.defineMethod(methodInfo.name, prototypefunc);
 			frame.pc += methodInfo.getLength();
 		}
-		return signature.setIsInheritable(true).build();
+		return signature.setPredefinedAttrs(classInfo.attrs)
+			.setIsInheritable(true).build();
 	}
 
 	/**

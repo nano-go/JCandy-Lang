@@ -1,5 +1,35 @@
 import "unit" as unit
 
+/**
+ * For modifiers tests.
+ */
+class User {
+	reader id, name
+	writer config
+	pri verification
+
+	fun init(id, name) {
+		@id = id
+		@name = name
+		@verification = @name + @id
+	}
+
+	fun modifyId(id) {
+		@id = id
+	}
+	fun modifyName(name) {
+		@name = name
+	}
+	fun getConfig() {
+		@config
+	}
+	fun verify(v) {
+		return @verification == v
+	}
+}
+
+
+
 class ClassTest : unit.TestCase {
 	fun declr_test() {
 		class Foo {
@@ -244,5 +274,57 @@ class ClassTest : unit.TestCase {
 		}
 		[1, 2, 3, 4, 5].foreach(Range)
 		[1, 2, 3, 4, 5].foreach(Foo)
+	}
+
+	
+
+
+
+	/**
+	 * Access Modifiers Tests
+	 */
+
+	fun testUser(user, id, name) {
+		 @assertEquals(id, user.id)
+		 @assertEquals(name, user.name)
+		 // read-only
+		 @expectedErrorRaised(AttributeError, -> user.id = 0)
+		 @expectedErrorRaised(AttributeError, -> user.name = "abc")
+		 user.modifyId(5)
+		 user.modifyName("abc")
+		 @assertEquals(5, user.id)
+		 @assertEquals("abc", user.name)
+
+		 user.config = {"color": 0xFF00FF00}
+		 @assertEquals({"color": 0xFF00FF00}, user.getConfig())
+		 // write-only
+		 @expectedErrorRaised(AttributeError, -> user.config)
+
+		 @expectedErrorRaised(AttributeError, -> user.verification)
+		 @expectedErrorRaised(AttributeError, -> user.verification = 5)
+		 @assertTrue(user.verify(name + id))
+	}
+
+	fun modifiers1_test() {
+		var user = User(0, "foo")
+		@testUser(user, 0, "foo")
+	}
+
+	fun modifers2_test() {
+		class RootUser : User {
+			fun modifyId(id) {
+				@id = id
+			}
+			fun modifyName(name) {
+				@name = name
+			}
+			fun getConfig() {
+				@config
+			}
+			fun verify(v) {
+				return @verification == v
+			}
+		}
+		@testUser(RootUser(0, "root"), 0, "root")
 	}
 }
