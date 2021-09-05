@@ -22,6 +22,7 @@ public class NullPointer extends CandyObject {
 
 	private NullPointer() {
 		super(NULL_POINTER_CLASS);
+		freeze();
 	}
 
 	@Override
