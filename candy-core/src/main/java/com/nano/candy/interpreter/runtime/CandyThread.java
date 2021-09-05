@@ -209,7 +209,8 @@ public class CandyThread extends CandyObject {
 		try {
 			start();
 		} catch (IllegalThreadStateException e) {
-			new StateError("This thread '" + getName() + "' has already started.");
+			new StateError("This thread '" + getName() + "' has already started.")
+				.throwSelfNative();
 		}
 		return null;
 	}
@@ -219,7 +220,7 @@ public class CandyThread extends CandyObject {
 		try {
 			this.javaThread.join();
 		} catch (InterruptedException e) {
-			new InterruptedError(e);
+			new InterruptedError(e).throwSelfNative();
 		}
 		return null;
 	}
