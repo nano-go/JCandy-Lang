@@ -213,7 +213,7 @@ public class CandyV1Evaluator implements Evaluator {
 			CandyClass superClass = (CandyClass) superObj;
 			if (!superClass.isInheritable()) {
 				new TypeError("The '%s' is a non-inheritable class.", 
-					superClass.getCandyClassName()
+					superClass.getName()
 				).throwSelfNative();
 			}
 			return (CandyClass) superObj;
