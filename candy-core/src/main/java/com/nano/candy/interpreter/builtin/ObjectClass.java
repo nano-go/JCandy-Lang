@@ -25,6 +25,7 @@ public class ObjectClass {
 				signature.defineMethod(method);
 			}
 		}
+		signature.setIsInheritable(true);
 		return signature;
 	}
 	
