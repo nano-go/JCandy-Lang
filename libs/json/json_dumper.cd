@@ -37,6 +37,8 @@
 
 class JsonDumper {
 
+	pri indent, format, method, curIndent, indentCount
+
 	static fun dump(element, *options) {
 		this(*options).dump(element)
 	}
