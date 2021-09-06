@@ -29,9 +29,7 @@ public class CandyClass extends CallableObj {
 	
 	private static ParametersInfo genParamtersInfo(CallableObj initalizer) {
 		return new ParametersInfo(
-			// The initalizer takes an extra argument.
-			// We will call the initalizer when this call is called and
-			// pass a new instance to the initalizer.
+			// The initalizer takes an extra argument representing 'this'.
 			initalizer == null ? 0 : initalizer.arity()-1,
 			initalizer == null ? -1 : initalizer.vaargIndex()
 		);
@@ -53,18 +51,17 @@ public class CandyClass extends CallableObj {
 	protected final Constructor<? extends CandyObject> objectAllocator;
 
 	/**
-	 * False if the object class (java class) has no a constructor 
-	 * with no-args or the constructor is private or protected.
+	 * False if there is no a constructor with non-args.
 	 *
-	 * This class can't create instances if false.
+	 * <p>This class can not be instantiated if false.
 	 */
-	protected final boolean canBeCreated;
+	protected final boolean canBeInstantiated;
 	
 	/**
 	 * You can't interit this class from Candy language level if false.
 	 *
-	 * <p>Some built-in classes don't allow themselves to be inherited by
-	 * prototype classes(written in Candy language level).
+	 * <p>Some built-in classes don't allow themselves to be inherited,
+	 * such as {@code Module}, {@code Callable}...
 	 */
 	protected final boolean isInheritable;
 	
@@ -79,7 +76,7 @@ public class CandyClass extends CallableObj {
 	protected final String className;
 	
 	/**
-	 * The definied methods, excluding {@code initializer('init')}.
+	 * The definied methods.
 	 */
 	protected final HashMap<String, CallableObj> methods;
 	
@@ -111,7 +108,7 @@ public class CandyClass extends CallableObj {
 		this.methods = signature.methods;
 		this.initializer = signature.initializer;
 		this.objectAllocator = signature.objectAllocator;
-		this.canBeCreated = signature.canBeCreated;
+		this.canBeInstantiated = signature.canBeInstantiated;
 		
 		if (this.initializer != null) {
 			methods.put(Names.METHOD_INITALIZER, initializer);
@@ -255,7 +252,7 @@ public class CandyClass extends CallableObj {
 	}
 
 	protected CandyObject createInstance(CNIEnv env) {		
-		if (!canBeCreated) {
+		if (!canBeInstantiated) {
 			new NativeError(
 				"The built-in class can't be instantiated: " 
 				+ getName()

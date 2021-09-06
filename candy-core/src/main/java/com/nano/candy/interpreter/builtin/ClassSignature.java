@@ -15,8 +15,9 @@ import java.util.Set;
  * Builds a Candy class with this signature.
  */
 public class ClassSignature {
+	
 	protected Constructor<? extends CandyObject> objectAllocator;
-	protected boolean canBeCreated;
+	protected boolean canBeInstantiated;
 	protected CandyClass superClass;
 	protected String className;
 	protected boolean isInheritable;
@@ -25,10 +26,6 @@ public class ClassSignature {
 	protected Set<CandyAttrSymbol> attrs;
 	protected CallableObj initializer;
 	
-	/**
-	 * If the super class is non-null, this class will inherit all the methods and
-	 * the initializer of the super class.
-	 */
 	public ClassSignature(String className, CandyClass superClass) {
 		this.className = className;
 		this.superClass = superClass;
@@ -42,7 +39,7 @@ public class ClassSignature {
 			this.initializer = superClass.initializer;
 			this.objectAllocator = superClass.objectAllocator;
 		}
-		this.canBeCreated = true;
+		this.canBeInstantiated = true;
 	}
 
 	public CandyClass getSuperClass() {
@@ -78,7 +75,7 @@ public class ClassSignature {
 		try {
 			// Abstract classes can't create instances!
 			if (Modifier.isAbstract(objEntityClass.getClass().getModifiers())) {
-				this.canBeCreated = false;
+				this.canBeInstantiated = false;
 				return this;
 			}
 			this.objectAllocator = objEntityClass.getDeclaredConstructor();
@@ -93,7 +90,7 @@ public class ClassSignature {
 			// It means that can't get the allocator.
 		}
 		this.objectAllocator = null;
-		this.canBeCreated = false;
+		this.canBeInstantiated = false;
 		return this;
 	}
 
