@@ -1,4 +1,5 @@
 package com.nano.candy.interpreter.builtin.utils;
+
 import com.nano.candy.interpreter.builtin.CandyObject;
 import com.nano.candy.interpreter.builtin.type.ArrayObj;
 import com.nano.candy.interpreter.builtin.type.CallableObj;
@@ -12,29 +13,41 @@ import java.util.LinkedList;
 public class ElementsUnpacker {
 	
 	/**
-	 * Fetchs elements from the stack to the target elements.
+	 * Fetchs n elements and unpacks them into target elements and returns 
+	 * them.
 	 *
-	 * @param n
-	 *        Fetchs n elements from the stack in the vm.
+	 * <p>This method is used for calling functions.
+	 *
+	 * <p>For example:
+	 * <pre>
+	 * fun foo(a, *b) {...}
+	 * foo(1, *arr)
+	 * </pre>
+	 *
+	 * <p> In the above code part, we use this method to unpack the 
+	 * argument {@code arr} which is an array and assign arguments to
+	 * the {@code a} and {@code b} which is a variable argument.
+	 *
+	 * @param n Fetchs n elements from the specified operand stack.
 	 *
 	 * @param starIndex
-	 *        The index in the target elements will greedily fetch 
-	 *        elements from the buffer as an array.
-	 *        For example: {@code a, *b = 1, 2, 3, 4;}
-	 *        The {@code b} will be assigned as the array {@code [1, 2, 3]}.
+	 *        {@code targetElements[startIndex]} will be fetched from the 
+	 *        unpacked elements as far as possiable and combined into an array.
+	 *        <p>For example:
+	 *        <p>{@code a, *b = 1, 2, 3, 4;(starIndex = 1)} and {@code [2, 3, 4]}
+	 *        will be assigned to {@code b}.
 	 *
-	 * @param targetLen
-	 *        The length of the returned array.
+	 * @param targetLen The length of target elements
 	 *
 	 * @param unpackFlags
-	 *        This is a bit-set of the elements in the stack. If the bit
-	 *        of the index corresponding the element in the stack is
-	 *        true (1), it will be unpacked (iter) to the buffer.
-	 *        For example: {@code callMe(*a, *b, c);}
-	 *        The bit-set is 0...110. It means that the {@code a} and the
-	 *        {@code b} will be unpacked.
+	 *        This is a bit-set (a vector of bits) which is used to specify
+	 *        whether an source element(in the operand stack) needs to be 
+	 *        unpacked or not.
+	 *        <p>For example: For the expression {@code a, b = 1, *a, *b},
+	 *        The {@code unpackFlags} is {@code 011(lower-bits)} which means
+	 *        the {@code a} and the {@code b} will be unpacked.
 	 *
-	 * @return the target elements or null if fail to unpack.
+	 * @return Target elements or null if unable to unpack.
 	 */
 	public static CandyObject[] unpackFromStack(CNIEnv env, OperandStack opStack,
 	                                            int n,
@@ -49,6 +62,12 @@ public class ElementsUnpacker {
 			return fetchFromStack(opStack, n, starIndex, targetLen);
 		}
 		
+		if (starIndex < 0 || starIndex >= targetLen) {
+			CandyObject[] elements = new CandyObject[targetLen];
+			return unpackToElements(env, opStack, n, unpackFlags, elements) ?
+				elements : null;
+		}
+		
 		LinkedList<CandyObject> buffer = new LinkedList<>();
 		unpackToBuffer(env, opStack, n, unpackFlags, buffer);
 		if (buffer.size() < targetLen-1) {
@@ -59,7 +78,7 @@ public class ElementsUnpacker {
 		while (!buffer.isEmpty() && i < targetLen) {
 			if (i == starIndex) {
 				elements[i] = 
-					greedilyFetchElements(buffer, starIndex, targetLen);
+					fetchElementsAsFarAsPossiable(buffer, starIndex, targetLen);
 			} else {
 				elements[i] = buffer.poll();
 			}
@@ -108,6 +127,36 @@ public class ElementsUnpacker {
 	}
 	
 	/**
+	 * Fetchs/Unpacks n elements from the stack into the elements.
+	 */
+	public static boolean unpackToElements(CNIEnv env, OperandStack opStack, 
+	                                       int n, int unpackingBits,
+	                                       CandyObject[] elements) {
+		int i ,j;
+		outter: for (i = 0, j = 0; i < n && j < elements.length; i ++) {
+			if (((unpackingBits >> i) & 1) == 1) {
+				CandyObject srcElement = opStack.pop();
+				if (srcElement == NullPointer.nil()) {
+					elements[j ++] = srcElement;
+					continue;
+				}
+				for (CandyObject e : 
+					new IterableCandyObject(env, srcElement)) {		
+					elements[j ++] = e;
+					if (j >= elements.length) {
+						i ++;
+						break outter;
+					}
+				}
+			} else {
+				elements[j ++] = opStack.pop();
+			}
+		}
+		for (;i < n; i ++) opStack.pop();
+		return j >= elements.length;
+	}
+	
+	/**
 	 * Fetchs/Unpacks n elements from the stack into the buffer.
 	 */
 	public static void unpackToBuffer(CNIEnv env, OperandStack opStack, 
@@ -123,10 +172,10 @@ public class ElementsUnpacker {
 	}
 	
 	/**
-	 * Unpacks the specified element (must be a iterable object) into 
+	 * Unpacks the specified element (must be an iterable object) into 
 	 * the buffer. 
 	 *
-	 * If the element is {@link NullPointer.nil()}, the {@code null} will
+	 * <p>If the element is {@link NullPointer.nil()}, the {@code null} will
 	 * not be unpacked, but it will be offered to the buffer.
 	 */
 	public static void unpackElement(CNIEnv env, CandyObject element, 
@@ -152,13 +201,13 @@ public class ElementsUnpacker {
 	}
 	
 	/**
-	 * Fetchs greedily the elements from the buffer as the array and 
-	 * returns it. If the buffer has not enough elements to fetch, 
-	 * it returns an empty Candy array.
+	 * Fetchs elements from the buffer as far as possiable and 
+	 * combined into an array.
 	 */
-	public static CandyObject greedilyFetchElements(LinkedList<CandyObject> buffer, 
-	                                                int starIndex, 
-											        int targetLen)
+	public static CandyObject fetchElementsAsFarAsPossiable(
+	                                      LinkedList<CandyObject> buffer, 
+	                                      int starIndex, 
+										  int targetLen)
 	{
 		// The number of the next target elements.
 		// For example: a, *b, c, d nextTargetElements = 2 (c and d)

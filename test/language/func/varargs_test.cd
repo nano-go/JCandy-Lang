@@ -2,10 +2,13 @@ fun expectedError(name, arity, argc, fn) {
 	try {
 		fn()
 	} intercept ArgumentError as e {
-		// println(e.getMessage())
+		println(e.getMessage())
+		println("The " + name +
+		       " takes " + (arity-1) + "+ arguments, but " + 
+		       argc + " were given." )
 		assert e.getMessage() == "The " + name +
 		       " takes " + (arity-1) + "+ arguments, but " + 
-		       argc + " were given." : e.getMessage()
+		       argc + " were given." : e.getMessage() + "~${(arity-1)} ${argc}"
 	}
 }
 
@@ -79,7 +82,7 @@ class Test {
 
 fun method_test() {
 	var t = Test(1, 2, 3, 4)
-	assert t.a == 1
+	assert t.a == 1 : str(t.a)
 	assert t.b == [2, 3, 4]
 	
 	var t = Test(1)
@@ -156,3 +159,96 @@ fun t1(a) {
 	return a
 }
 assert t1(*null) == null
+
+
+
+/**
+ * Perf Test
+ */
+
+class SpecialArgument {
+	fun init(arr) {
+		@arr = arr
+		@iterN = 0
+	}
+
+	fun _iterator() {
+		var iterator = Object() 
+		var arrIterator = @arr._iterator()
+		iterator._hasNext = arrIterator._hasNext
+		iterator._next = -> {
+			var e = arrIterator._next()
+			@iterN += 1
+			return e
+		}
+		return iterator
+	}
+}
+
+fun forFn(fn) {
+	class Handler {
+		fun expected(expected) {
+			var actual = fn()
+			assert actual == expected :
+				"expected: ${expected}, actual: ${actual}."
+		}
+
+		fun error(errType) {
+			try {
+				fn()
+			} intercept errType as e {
+				return
+			}
+			assert false : "expected ${errType} error raised."
+		}
+	}
+	return Handler()
+}
+
+fun warn(arg, expectedIterN) {
+	if (arg.iterN != expectedIterN) 
+		println("Unsupported the performance of unpacking elements.")
+
+}
+
+fun foo0() {
+	return []
+}
+
+fun foo1(a) {
+	return [a]
+}
+
+fun foo2(a, b) {
+	return [a, b]
+}
+
+fun foo3(a, b, c) {
+	return [a, b, c]
+}
+
+fun test() {
+	var specialArg = SpecialArgument([1, 2, 3])
+	forFn(-> foo3(0, *specialArg)).expected([0, 1, 2])
+	warn(specialArg, 2)
+
+	specialArg = SpecialArgument([1])
+	forFn(-> foo2(*specialArg)).error(ArgumentError)
+
+	specialArg = SpecialArgument([1, 2])
+	forFn(-> foo1(1, *specialArg)).expected([1])
+	warn(specialArg, 0)
+
+	specialArg = SpecialArgument([1, 2, 3])
+	forFn(-> foo0(1, *specialArg)).expected([])
+	warn(specialArg, 0)
+	
+	specialArg = SpecialArgument([1, 2, 3])
+	forFn(-> foo1(*specialArg, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11)).expected([1])
+	warn(specialArg, 1)
+
+	specialArg = SpecialArgument([1])
+	forFn(-> foo3(0, *specialArg, 2)).expected([0, 1, 2])
+}
+
+test()
