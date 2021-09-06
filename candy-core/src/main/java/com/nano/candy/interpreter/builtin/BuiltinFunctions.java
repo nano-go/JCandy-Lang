@@ -223,7 +223,7 @@ public class BuiltinFunctions {
 		try {
 			NativeContext context = NativeLibraryLoader
 				.loadLibrary(env.getEvaluatorEnv().getJavaLibraryPaths(), path, className);
-			context.action(env.getEvaluatorEnv().getGlobalEnv());
+			context.action(env);
 		} catch (IOException e) {
 			new IOError(e).throwSelfNative();
 		} catch (ClassNotFoundException e) {

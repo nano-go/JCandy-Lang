@@ -86,6 +86,8 @@ public class CandyV1Evaluator implements Evaluator {
 		return frames;
 	}
 	
+	
+	
 	private final void returnFrame() {
 		Frame old = stack.popFrame();	
 		old.closeAllUpvalues();
@@ -104,7 +106,7 @@ public class CandyV1Evaluator implements Evaluator {
 		this.cp = frame.getChunk().getConstantPool();
 		this.code = frame.getChunk().getByteCode();
 		this.bp = frame.bp;
-		env.globalEnv.setCurrentFileEnv(frame.getFileEnv());
+		env.curFileEnv = frame.getFileEnv();
 	}
 
 	private void resetFrameData() {
@@ -112,7 +114,7 @@ public class CandyV1Evaluator implements Evaluator {
 		this.code = null;
 		this.frame = null;
 		this.bp = 0;
-		env.globalEnv.setCurrentFileEnv((FileEnvironment) null);
+		env.curFileEnv = null;
 	}
 	
 	/* -------------------- Execution Helper -------------------- */
@@ -253,7 +255,7 @@ public class CandyV1Evaluator implements Evaluator {
 		return new PrototypeFunction(
 			stack.peek().getChunk(), frame.pc, // Start pc.
 			upvalues, tagName, 
-			methodInfo, env.globalEnv.getCurrentFileEnv()
+			methodInfo, env.curFileEnv
 		);
 	}
 
@@ -342,18 +344,18 @@ public class CandyV1Evaluator implements Evaluator {
 	}
 
 	private CandyObject getGlobalVariable(int index, boolean throwsErrorIfNotFound) {
-		CandyObject obj = env.globalEnv.getVariableValue(index);
+		CandyObject obj = env.getVariableValue(index);
 		if (obj == null && throwsErrorIfNotFound) {
-			new NameError("the variable '%s' not found.", env.globalEnv.getVariableName(index))
+			new NameError("the variable '%s' not found.", env.getVariableName(index))
 				.throwSelfNative();
 		}
 		return obj;
 	}
 
 	private boolean setGlobalVariable(int index, CandyObject val, boolean throwsErrorIfNotFound) {
-		if (!env.globalEnv.setVariableIfExists(index, val)) {
+		if (!env.setVariableIfExists(index, val)) {
 			if (throwsErrorIfNotFound) {
-				new NameError("the variable '%s' not found.", env.globalEnv.getVariableName(index))
+				new NameError("the variable '%s' not found.", env.getVariableName(index))
 					.throwSelfNative();
 			}
 			return false;
@@ -416,14 +418,14 @@ public class CandyV1Evaluator implements Evaluator {
 	
 	@Override
 	public ModuleObj eval(CompiledFileInfo file) {
-		env.globalEnv.setCurrentFileEnv(file);
+		env.curFileEnv = new FileEnvironment(file);
 		PrototypeFunction topFunction = new PrototypeFunction(
-			file.getChunk(), env.globalEnv.getCurrentFileEnv()
+			file.getChunk(), env.curFileEnv
 		);
 		// OP_EXIT will return the eval method.
 		eval(Frame.fetchFrame(topFunction, opStack), false);
 		ModuleObj moudleObj = 
-			env.globalEnv.getCurrentFileEnv().generateModuleObject();
+			env.curFileEnv.generateModuleObject();
 		popFrame();
 		return moudleObj;
 	}
@@ -714,7 +716,7 @@ public class CandyV1Evaluator implements Evaluator {
 				 * Global Operarions.
 				 */
 				case OP_GLOBAL_DEFINE: {
-					env.globalEnv.setVariable(
+					env.setVariable(
 						readIndex(),               /* name index */
 						pop()                      /* value */
 					);
@@ -920,7 +922,7 @@ public class CandyV1Evaluator implements Evaluator {
 					ModuleObj moudleObj = ModuleManager.getManager().importModule(
 						env.cniEnv, ObjectHelper.asString(pop())
 					);
-					env.globalEnv.setVariable(readIndex(), moudleObj);
+					env.setVariable(readIndex(), moudleObj);
 					break;
 				}
 				

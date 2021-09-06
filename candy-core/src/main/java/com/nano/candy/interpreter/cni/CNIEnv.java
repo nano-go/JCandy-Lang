@@ -32,10 +32,10 @@ public class CNIEnv {
 	}
 	
 	public CandyObject getVariableValue(String name) {
-		return evalEnv.getGlobalEnv().getVariableValue(name);
+		return evalEnv.getVariableValue(name);
 	}
 	
 	public void setVariable(String name, CandyObject value) {
-		evalEnv.getGlobalEnv().setVariable(name, value);
+		evalEnv.setVariable(name, value);
 	}
 }
