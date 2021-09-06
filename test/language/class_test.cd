@@ -312,6 +312,7 @@ class ClassTest : unit.TestCase {
 
 	fun modifers2_test() {
 		class RootUser : User {
+			pri root
 			fun modifyId(id) {
 				@id = id
 			}
@@ -326,5 +327,11 @@ class ClassTest : unit.TestCase {
 			}
 		}
 		@testUser(RootUser(0, "root"), 0, "root")
+		@expectedErrorRaised(AttributeError, -> RootUser(0, "root").root)
+		@expectedErrorRaised(OverrideError, -> {
+			class RootUser : User {
+				pub name
+			}
+		})
 	}
 }
