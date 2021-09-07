@@ -3,13 +3,11 @@ package com.nano.candy.interpreter.builtin.type;
 import com.nano.candy.code.ConstantValue;
 import com.nano.candy.interpreter.builtin.CandyClass;
 import com.nano.candy.interpreter.builtin.CandyObject;
-import com.nano.candy.interpreter.builtin.type.error.AttributeError;
 import com.nano.candy.interpreter.builtin.utils.ObjectHelper;
 import com.nano.candy.interpreter.cni.CNIEnv;
 import com.nano.candy.interpreter.cni.NativeClass;
 import com.nano.candy.interpreter.cni.NativeClassRegister;
 import com.nano.candy.interpreter.runtime.OperandStack;
-import com.nano.candy.interpreter.runtime.FrameStack;
 
 /**
  * Superclass of all functions.
@@ -28,40 +26,6 @@ public abstract class CallableObj extends CandyObject {
 		return CALLABLE_CLASS;
 	}
 	
-	public static class ParametersInfo {	
-		/**
-		 * The number of arguments.
-		 */
-		private final int arity;
-
-		/**
-		 * The parameter that this index is entry can accept zero or 
-		 * more arguments.
-		 *
-		 * If this value is -1, it means no such parameters.
-		 */
-		private final int varArgsIndex;
-
-		public ParametersInfo(int arity, int varArgsIndex) {
-			this.arity = arity;
-			this.varArgsIndex = varArgsIndex;
-		}
-		
-		public ParametersInfo(ConstantValue.MethodInfo info) {
-			this.arity = info.arity;
-			this.varArgsIndex = info.varArgsIndex;
-		}
-		
-		public int getArity() {
-			return arity;
-		}
-
-		public int getVaargIndex() {
-			return varArgsIndex;
-		}
-	}
-	
-	
 	/**
 	 * Full name of a method. For example: LinkedList#append.
 	 */
@@ -72,19 +36,36 @@ public abstract class CallableObj extends CandyObject {
 	 */
 	protected final String funcName;
 	
-	protected final ParametersInfo parameter;
+	/**
+	 * The number of arguments that this function can take.
+	 */
+	private final int arity;
+
+	/**
+	 * It means {@code parameters[varargsIndex]} can accept variable-length
+	 * arguments.
+	 *
+	 * If this value is -1, it means no such parameters.
+	 */
+	private final int varargsIndex;
 	
 	private boolean isInitializedAttrs;
 	
-	public CallableObj(String name, ParametersInfo parameter) {
-		this(name, name, parameter);
+	public CallableObj(String funcName, String fullName, 
+	                   ConstantValue.MethodInfo met) {
+		this(funcName, fullName, met.arity, met.varArgsIndex);
+	}
+	
+	public CallableObj(String name, int arity, int varargsIndex) {
+		this(name, name, arity, varargsIndex);
 	}
 	
 	public CallableObj(String funcName,
-	                   String fullName, ParametersInfo parameter) {
+	                   String fullName, int arity, int varargsIndex) {
 		this.funcName = funcName;
 		this.fullName = fullName;
-		this.parameter = parameter;
+		this.arity = arity;
+		this.varargsIndex = varargsIndex;
 	}
 
 	@Override
@@ -100,16 +81,12 @@ public abstract class CallableObj extends CandyObject {
 		return fullName;
 	}
 	
-	public ParametersInfo getParameter() {
-		return parameter;
-	}
-	
 	public int vaargIndex() {
-		return getParameter().getVaargIndex();
+		return varargsIndex;
 	}
 	
 	public int arity() {
-		return getParameter().getArity();
+		return arity;
 	}
 	
 	/**

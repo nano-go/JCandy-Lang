@@ -19,8 +19,9 @@ public class JavaMethodObj extends CallableObj {
 	public JavaMethodObj(String className, String methodName, 
 	                     int arity, int varArgsIndex, 
 						 Callback callback) {
-		super(methodName, ObjectHelper.methodName(className, methodName),
-			new ParametersInfo(arity + 1, varArgsIndex));
+		super(
+			methodName, ObjectHelper.methodName(className, methodName), 
+			arity + 1, varArgsIndex);
 		this.callback = callback;
 	}
 	

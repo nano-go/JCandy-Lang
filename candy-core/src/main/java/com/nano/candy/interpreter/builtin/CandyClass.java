@@ -27,14 +27,6 @@ import java.util.Set;
  */
 public class CandyClass extends CallableObj {
 	
-	private static ParametersInfo genParamtersInfo(CallableObj initalizer) {
-		return new ParametersInfo(
-			// The initalizer takes an extra argument representing 'this'.
-			initalizer == null ? 0 : initalizer.arity()-1,
-			initalizer == null ? -1 : initalizer.vaargIndex()
-		);
-	}
-	
 	/**
 	 * We use the non-args constructor to create various objects.
 	 *
@@ -100,7 +92,9 @@ public class CandyClass extends CallableObj {
 	protected final CallableObj initializer;
 	
 	protected CandyClass(ClassSignature signature) {
-		super(signature.className, genParamtersInfo(signature.initializer));
+		super(signature.className, 
+			  signature.initializer == null ? 0 : signature.initializer.arity()-1,
+			  signature.initializer == null ? -1 : signature.initializer.vaargIndex());
 		this.predefinedAttrs = signature.attrs;
 		this.superClass = signature.superClass;
 		this.className = signature.className;

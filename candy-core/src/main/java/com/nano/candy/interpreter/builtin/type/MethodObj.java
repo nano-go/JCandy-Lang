@@ -4,7 +4,6 @@ import com.nano.candy.interpreter.builtin.CandyObject;
 import com.nano.candy.interpreter.builtin.type.CallableObj;
 import com.nano.candy.interpreter.cni.CNIEnv;
 import com.nano.candy.interpreter.runtime.OperandStack;
-import com.nano.candy.interpreter.runtime.FrameStack;
 import java.util.Objects;
 
 /**
@@ -18,7 +17,7 @@ public class MethodObj extends CallableObj {
 	public MethodObj(CandyObject receiver, CallableObj method) {
 		super(
 			method.funcName(), method.fullName(),
-			new ParametersInfo(method.arity()-1, method.vaargIndex())
+			method.arity()-1, method.vaargIndex()
 		);
 		this.receiver = receiver;
 		this.method = method;

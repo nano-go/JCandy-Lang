@@ -33,10 +33,7 @@ public final class PrototypeFunction extends CallableObj {
 	                         ConstantValue.MethodInfo methodInfo, 
 	                         FileEnvironment fileEnv)
 	{
-		super(
-			methodInfo.name, fullName, 
-			new ParametersInfo(methodInfo)
-		);
+		super(methodInfo.name, fullName, methodInfo);
 		this.chunk = chunk;
 		this.pc = pc;
 		this.upvalues = upvalues;
@@ -47,7 +44,7 @@ public final class PrototypeFunction extends CallableObj {
 	}
 	
 	public PrototypeFunction(Chunk chunk, FileEnvironment fileEnv) {
-		super(chunk.getSimpleName(), new ParametersInfo(0, -1));
+		super(chunk.getSimpleName(), 0, -1);
 		this.chunk = chunk;
 		this.pc = 0;
 		this.upvalues = Upvalue.EMPTY_UPVALUES;

@@ -24,7 +24,7 @@ public class JavaFunctionObj extends CallableObj {
 	public JavaFunctionObj(String name,
 	                       int arity,
 						   int varArgsIndex, Callback callback) {
-		super(name, name, new ParametersInfo(arity, varArgsIndex));
+		super(name, name, arity, varArgsIndex);
 		this.callback = callback;
 	}
 	
@@ -36,9 +36,9 @@ public class JavaFunctionObj extends CallableObj {
 	public JavaFunctionObj(String className, String name,
 	                       int arity, int varArgsIndex,
 	                       Callback callback) {
-		super(name, ObjectHelper.methodName(className, name), 
-			new ParametersInfo(arity, varArgsIndex)
-		);
+		super(
+			name, ObjectHelper.methodName(className, name), 
+			arity, varArgsIndex);
 		this.callback = callback;
 	}
 
