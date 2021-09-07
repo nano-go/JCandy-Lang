@@ -130,7 +130,7 @@ public abstract class CallableObj extends CandyObject {
 		setBuiltinMetaData("name", StringObj.valueOf(funcName));
 		setBuiltinMetaData("fullName", StringObj.valueOf(fullName));
 		setBuiltinMetaData("arity", IntegerObj.valueOf(arity()));
-		setBuiltinMetaData("vararg", IntegerObj.valueOf(vaargIndex()));
+		setBuiltinMetaData("varargs", IntegerObj.valueOf(vaargIndex()));
 	}
 	
 	@Override

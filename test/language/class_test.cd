@@ -248,7 +248,7 @@ class ClassTest : unit.TestCase {
 		@expectedErrorRaised(AttributeError, -> Object.name = "a")
 		@expectedErrorRaised(AttributeError, -> Object.fullName = "a")
 		@expectedErrorRaised(AttributeError, -> Object.arity = 0)
-		@expectedErrorRaised(AttributeError, -> Object.vararg = 0)
+		@expectedErrorRaised(AttributeError, -> Object.varargs= 0)
 		@expectedErrorRaised(AttributeError, -> Object.className = "a")
 		@expectedErrorRaised(AttributeError, -> Object.superClass = "a")
 		@expectedErrorRaised(AttributeError, -> Object.isSubclassOf = "")

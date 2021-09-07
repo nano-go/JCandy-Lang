@@ -16,7 +16,7 @@ class CallableObjTest : unit.TestCase {
 			this.assertEquals(name, fn.name)
 			this.assertEquals(fullName, fn.fullName)
 			this.assertEquals(arity, fn.arity)
-			this.assertEquals(vararg, fn.vararg)
+			this.assertEquals(vararg, fn.varargs)
 		}
 
 		assertAttrs(bar1, "bar1", "bar1", 0, -1)
