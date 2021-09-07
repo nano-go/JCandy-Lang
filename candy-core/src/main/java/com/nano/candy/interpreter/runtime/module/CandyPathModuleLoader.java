@@ -24,7 +24,7 @@ public class CandyPathModuleLoader extends ModuleLoader {
 		throws ModuleNotFoundException {
 		Module module = null;
 		String[] paths = {
-			env.getEvaluatorEnv().getCurrentDirectory(),
+			env.getCurrentDirectory(),
 			CandySystem.getCandyLibsPath(),
 			System.getProperty("user.dir")
 		};

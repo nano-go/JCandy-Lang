@@ -1,10 +1,13 @@
 package com.nano.candy.interpreter.cni;
 
+import com.nano.candy.interpreter.InterpreterOptions;
 import com.nano.candy.interpreter.builtin.CandyObject;
+import com.nano.candy.interpreter.runtime.CandyThread;
+import com.nano.candy.interpreter.runtime.CompiledFileInfo;
 import com.nano.candy.interpreter.runtime.Evaluator;
 import com.nano.candy.interpreter.runtime.EvaluatorEnv;
+import com.nano.candy.interpreter.runtime.FileEnvironment;
 import com.nano.candy.interpreter.runtime.Frame;
-import com.nano.candy.interpreter.runtime.CandyThread;
 
 public class CNIEnv {
 	private EvaluatorEnv evalEnv;
@@ -17,10 +20,26 @@ public class CNIEnv {
 	
 	public Evaluator getEvaluator() {
 		return evaluator;
-	} 
+	}
 	
-	public EvaluatorEnv getEvaluatorEnv() {
-		return evalEnv;
+	public FileEnvironment getCurrentFileEnv() {
+		return evalEnv.getCurrentFileEnv();
+	}
+	
+	public CompiledFileInfo getCurRunningFile() {
+		return evalEnv.getCurRunningFile();
+	}
+	
+	public String getCurrentDirectory() {
+		return evalEnv.getCurrentDirectory();
+	}
+	
+	public InterpreterOptions getOptions() {
+		return evalEnv.getOptions();
+	}
+	
+	public String[] getJavaLibraryPaths() {
+		return evalEnv.getJavaLibraryPaths();
 	}
 	
 	public Frame[] getStack() {

@@ -86,20 +86,18 @@ public class CandyThread extends CandyObject {
 	}
 
 	private static class InnerThread extends Thread {
-		private CandyThread candyThread;
-		private EvaluatorEnv env;
+		private Evaluator evaluator;
 		private CallableObj target;
 
-		public InnerThread(CandyThread candyThread, EvaluatorEnv env, CallableObj target) {
-			this.candyThread = candyThread;
-			this.env = env;
+		public InnerThread(Evaluator evaluator, CallableObj target) {
+			this.evaluator = evaluator;
 			this.target = target;
 		}
 
 		@Override
 		public void run() {		
 			try {
-				candyThread.mEnv.getEvaluator().eval(target, 0);
+				evaluator.eval(target, 0);
 			} catch (VMExitException e) {
 				// Means an error occurred.
 				// We catch the exception to avoid printing unnecessary message.
@@ -130,9 +128,9 @@ public class CandyThread extends CandyObject {
 	}
 
 	private void init(CNIEnv env, CallableObj runner) {	
-		Thread javaThread = new InnerThread(this, env.getEvaluatorEnv(), runner);
+		this.mEnv = new EvaluatorEnv(this, env.getOptions());
+		Thread javaThread = new InnerThread(mEnv.getEvaluator(), runner);
 		setThread(javaThread);
-		this.mEnv = new EvaluatorEnv(this, env.getEvaluatorEnv().getOptions());
 	}
 
 	private void setThread(Thread javaThread) {

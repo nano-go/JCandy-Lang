@@ -167,7 +167,7 @@ public class BuiltinFunctions {
 		for (int i = 0; i < size; i ++) {
 			ModuleObj moduleObj =
 				m.importModule(env, ObjectHelper.asString(files.get(i)));
-			moduleObj.addToEnv(env.getEvaluatorEnv().getCurrentFileEnv());
+			moduleObj.addToEnv(env.getCurrentFileEnv());
 		}
 		return null;
 	}
@@ -180,7 +180,7 @@ public class BuiltinFunctions {
 	public static CandyObject selectByFilter(CNIEnv env, CandyObject[] args) {
 		TypeError.checkIsCallable(args[0]);
 		CallableObj filter = (CallableObj) args[0];
-		File currentDirectory = new File(env.getEvaluatorEnv().getCurrentDirectory());
+		File currentDirectory = new File(env.getCurrentDirectory());
 		File[] subfiles = currentDirectory.listFiles();
 		if (subfiles == null) {
 			return null;
@@ -199,7 +199,7 @@ public class BuiltinFunctions {
 				(env, filter, StringObj.valueOf(f.getName()));
 			if (accept.boolValue(env).value()) {
 				ModuleObj moduleObj = m.importModule(env, f.getName());
-				moduleObj.addToEnv(env.getEvaluatorEnv().getCurrentFileEnv());
+				moduleObj.addToEnv(env.getCurrentFileEnv());
 				selectedFiles.add(StringObj.valueOf(f.getName()));
 			}
 		}
@@ -208,7 +208,7 @@ public class BuiltinFunctions {
 
 	@NativeFunc(name = "cmdArgs", arity = 0)
 	public static CandyObject cmd_args(CNIEnv env, CandyObject[] args) {
-		String[] cmdArgsStr = env.getEvaluatorEnv().getOptions().getArgs();
+		String[] cmdArgsStr = env.getOptions().getArgs();
 		CandyObject[] cmdArgs = new CandyObject[cmdArgsStr.length];
 		for (int i = 0; i < cmdArgsStr.length; i ++) {
 			cmdArgs[i] = StringObj.valueOf(cmdArgsStr[i]);
@@ -222,7 +222,7 @@ public class BuiltinFunctions {
 		String className = ObjectHelper.asString(args[1]);
 		try {
 			NativeContext context = NativeLibraryLoader
-				.loadLibrary(env.getEvaluatorEnv().getJavaLibraryPaths(), path, className);
+				.loadLibrary(env.getJavaLibraryPaths(), path, className);
 			context.action(env);
 		} catch (IOException e) {
 			new IOError(e).throwSelfNative();

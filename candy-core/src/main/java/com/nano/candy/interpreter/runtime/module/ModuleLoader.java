@@ -96,7 +96,7 @@ public abstract class ModuleLoader {
 		if (cyclic || isRunning(module.getModuleIdentifier())) {
 			throw new ModuleLoadingException
 				("cyclic importation. in " + 
-				 env.getEvaluatorEnv().getCurRunningFile().getSimpleName() +
+				 env.getCurRunningFile().getSimpleName() +
 				 " imports the running module " + module.getName());
 		}
 	}
@@ -139,7 +139,7 @@ public abstract class ModuleLoader {
 	
 	private ModuleObj runSourceFile(CNIEnv env, String id, File srcFile) {
 		CompiledFileInfo compiledFile = RuntimeCompiler.compile(
-			srcFile, env.getEvaluatorEnv().getOptions(), true
+			srcFile, env.getOptions(), true
 		);
 		try {
 			markRunning(id);

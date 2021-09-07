@@ -79,7 +79,7 @@ public class ModuleObj extends CandyObject {
 	
 	@NativeMethod(name = "importAll")
 	public CandyObject importAll(CNIEnv env, CandyObject[] args) {
-		addToEnv(env.getEvaluatorEnv().getCurrentFileEnv());
+		addToEnv(env.getCurrentFileEnv());
 		return null;
 	}
 }
