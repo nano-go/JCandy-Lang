@@ -6,12 +6,40 @@ import com.nano.candy.interpreter.cni.CNIEnv;
 import com.nano.candy.sys.CandySystem;
 import java.io.File;
 
+/**
+ * Every thread has an evaluator-environment which is needed 
+ * for the evaluator(VM).
+ */ 
 public class EvaluatorEnv {
 	
+	/**
+	 * The interface for Candy language in the Java level.
+	 */
 	protected CNIEnv cniEnv;
+	
+	/**
+	 * One For One.
+	 *
+	 * A Candy thread corresponds with a Java thread.
+	 */
 	protected CandyThread thread;
+	
+	/**
+	 * The evaluator used to execute a {@code chunk}.
+	 */
 	protected Evaluator evaluator;
+	
+	/**
+	 * This represents a source file environment used to store variables 
+	 * in the source file.
+	 *
+	 * <p>Every function will remember the file environment when it was created.
+	 * 
+	 * <p>When a function is called, the {@code curFileEnv} will be reset to
+	 * the file environment that the function is remembered.
+	 */
 	protected FileEnvironment curFileEnv;
+	
 	private InterpreterOptions options;
 	
 	protected EvaluatorEnv(CandyThread thread, InterpreterOptions options) {
