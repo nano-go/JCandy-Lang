@@ -86,8 +86,6 @@ public class CandyV1Evaluator implements Evaluator {
 		return frames;
 	}
 	
-	
-	
 	private final void returnFrame() {
 		Frame old = stack.popFrame();	
 		old.closeAllUpvalues();
@@ -468,22 +466,25 @@ public class CandyV1Evaluator implements Evaluator {
 	}
 	
 	private void evalCore() {
+		OperandStack opStack = this.opStack;
+		Frame frame = this.frame;
+		byte[] code = this.code;
 		loop: for (;;) {
 			switch (code[frame.pc ++]) {
 				case OP_NOP: break;
 				case OP_POP: {
-					pop();
+					opStack.pop();
 					break;
 				}
 				case OP_DUP: {
-					push(peek(0));
+					opStack.push(opStack.peek(0));
 					break;
 				}
 				case OP_DUP_2: {
-					CandyObject i = peek(1);
-					CandyObject j = peek(0);
-					push(i);
-					push(j);
+					CandyObject i = opStack.peek(1);
+					CandyObject j = opStack.peek(0);
+					opStack.push(i);
+					opStack.push(j);
 					break;
 				}
 				case OP_ROT_2: {
@@ -499,22 +500,22 @@ public class CandyV1Evaluator implements Evaluator {
 				 * Label Instructions.
 				 */
 				case OP_POP_JUMP_IF_FALSE: {
-					frame.pc += !pop().boolValue(env.cniEnv).value() ?
+					frame.pc += !opStack.pop().boolValue(env.cniEnv).value() ?
 						readJumpOffset() : 2;
 					break;
 				}	
 				case OP_POP_JUMP_IF_TRUE: {
-					frame.pc += pop().boolValue(env.cniEnv).value() ?
+					frame.pc += opStack.pop().boolValue(env.cniEnv).value() ?
 						readJumpOffset() : 2;
 					break;
 				}		
 				case OP_JUMP_IF_FALSE: {
-					frame.pc += !peek(0).boolValue(env.cniEnv).value() ?
+					frame.pc += !opStack.peek(0).boolValue(env.cniEnv).value() ?
 						readJumpOffset() : 2;
 					break;
 				}		
 				case OP_JUMP_IF_TRUE: {
-					frame.pc += peek(0).boolValue(env.cniEnv).value() ?
+					frame.pc += opStack.peek(0).boolValue(env.cniEnv).value() ?
 						readJumpOffset() : 2;
 					break;
 				}		
@@ -531,15 +532,15 @@ public class CandyV1Evaluator implements Evaluator {
 				 * Unary Operations.
 				 */
 				case OP_NEGATIVE: {
-					push(pop().callNegative(env.cniEnv));
+					opStack.push(opStack.pop().callNegative(env.cniEnv));
 					break;
 				}
 				case OP_POSITIVE: {
-					push(pop().callPositive(env.cniEnv));
+					opStack.push(opStack.pop().callPositive(env.cniEnv));
 					break;
 				}
 				case OP_NOT: {
-					push(pop().not(env.cniEnv));
+					opStack.push(opStack.pop().not(env.cniEnv));
 					break;
 				}
 
@@ -547,33 +548,33 @@ public class CandyV1Evaluator implements Evaluator {
 				 * Alrithmetical Operations.
 				 */		
 				case OP_ADD: {
-					CandyObject val2 = pop();
-					CandyObject val1 = pop();
-					push(val1.callAdd(env.cniEnv, val2));
+					CandyObject val2 = opStack.pop();
+					CandyObject val1 = opStack.pop();
+					opStack.push(val1.callAdd(env.cniEnv, val2));
 					break;
 				}
 				case OP_SUB: {
-					CandyObject val2 = pop();
-					CandyObject val1 = pop();
-					push(val1.callSub(env.cniEnv, val2));
+					CandyObject val2 = opStack.pop();
+					CandyObject val1 = opStack.pop();
+					opStack.push(val1.callSub(env.cniEnv, val2));
 					break;
 				}				
 				case OP_MUL: {
-					CandyObject val2 = pop();
-					CandyObject val1 = pop();
-					push(val1.callMul(env.cniEnv, val2));
+					CandyObject val2 = opStack.pop();
+					CandyObject val1 = opStack.pop();
+					opStack.push(val1.callMul(env.cniEnv, val2));
 					break;
 				}				
 				case OP_DIV: {
-					CandyObject val2 = pop();
-					CandyObject val1 = pop();
-					push(val1.callDiv(env.cniEnv, val2));
+					CandyObject val2 = opStack.pop();
+					CandyObject val1 = opStack.pop();
+					opStack.push(val1.callDiv(env.cniEnv, val2));
 					break;
 				}
 				case OP_MOD: {
-					CandyObject val2 = pop();
-					CandyObject val1 = pop();
-					push(val1.callMod(env.cniEnv, val2));
+					CandyObject val2 = opStack.pop();
+					CandyObject val1 = opStack.pop();
+					opStack.push(val1.callMod(env.cniEnv, val2));
 					break;
 				}
 
@@ -581,61 +582,61 @@ public class CandyV1Evaluator implements Evaluator {
 				 * Relation Operations.
 				 */
 				case OP_INSTANCE_OF: {
-					CandyObject val2 = pop();
-					CandyObject val1 = pop();
-					push(BoolObj.valueOf(
+					CandyObject val2 = opStack.pop();
+					CandyObject val1 = opStack.pop();
+					opStack.push(BoolObj.valueOf(
 						val1.isInstanceOf(val2)
 					));
 					break;
 				}	
 				case OP_GT: {
-					CandyObject val2 = pop();
-					CandyObject val1 = pop();
-					push(val1.callGt(env.cniEnv, val2));
+					CandyObject val2 = opStack.pop();
+					CandyObject val1 = opStack.pop();
+					opStack.push(val1.callGt(env.cniEnv, val2));
 					break;
 				}
 				case OP_GTEQ: {
-					CandyObject val2 = pop();
-					CandyObject val1 = pop();
-					push(val1.callGteq(env.cniEnv, val2));
+					CandyObject val2 = opStack.pop();
+					CandyObject val1 = opStack.pop();
+					opStack.push(val1.callGteq(env.cniEnv, val2));
 					break;
 				}
 				case OP_LT: {
-					CandyObject val2 = pop();
-					CandyObject val1 = pop();
-					push(val1.callLt(env.cniEnv, val2));
+					CandyObject val2 = opStack.pop();
+					CandyObject val1 = opStack.pop();
+					opStack.push(val1.callLt(env.cniEnv, val2));
 					break;
 				}
 				case OP_LTEQ: {
-					CandyObject val2 = pop();
-					CandyObject val1 = pop();
-					push(val1.callLteq(env.cniEnv, val2));
+					CandyObject val2 = opStack.pop();
+					CandyObject val1 = opStack.pop();
+					opStack.push(val1.callLteq(env.cniEnv, val2));
 					break;
 				}
 				case OP_EQ: {
-					CandyObject val2 = pop();
-					CandyObject val1 = pop();
-					push(val1.callEquals(env.cniEnv, val2));
+					CandyObject val2 = opStack.pop();
+					CandyObject val1 = opStack.pop();
+					opStack.push(val1.callEquals(env.cniEnv, val2));
 					break;
 				}
 				case OP_NOTEQ: {
-					CandyObject val2 = pop();
-					CandyObject val1 = pop();
-					push(val1.callEquals(env.cniEnv, val2).not(env.cniEnv));
+					CandyObject val2 = opStack.pop();
+					CandyObject val1 = opStack.pop();
+					opStack.push(val1.callEquals(env.cniEnv, val2).not(env.cniEnv));
 					break;
 				}
 				
 				case OP_LS: {
-					CandyObject val2 = pop();
-					CandyObject val1 = pop();
-					push(val1.callLShift(env.cniEnv, val2));
+					CandyObject val2 = opStack.pop();
+					CandyObject val1 = opStack.pop();
+					opStack.push(val1.callLShift(env.cniEnv, val2));
 					break;
 				}
 				
 				case OP_RS: {
-					CandyObject val2 = pop();
-					CandyObject val1 = pop();
-					push(val1.callRShift(env.cniEnv, val2));
+					CandyObject val2 = opStack.pop();
+					CandyObject val1 = opStack.pop();
+					opStack.push(val1.callRShift(env.cniEnv, val2));
 					break;
 				}
 				
@@ -643,9 +644,9 @@ public class CandyV1Evaluator implements Evaluator {
 				 * Other Operator
 				 */
 				case OP_RANGE: {
-					CandyObject val2 = pop();
-					CandyObject val1 = pop();
-					push(new Range(
+					CandyObject val2 = opStack.pop();
+					CandyObject val1 = opStack.pop();
+					opStack.push(new Range(
 						ObjectHelper.asInteger(val1), 
 						ObjectHelper.asInteger(val2)
 					));
@@ -656,27 +657,27 @@ public class CandyV1Evaluator implements Evaluator {
 				 * Constants.
 				 */
 				case OP_NULL: {
-					push(NullPointer.nil()); 
+					opStack.push(NullPointer.nil()); 
 					break;
 				}		
 				case OP_DCONST: {
-					push(DoubleObj.valueOf(cp.getDouble(readIndex())));
+					opStack.push(DoubleObj.valueOf(cp.getDouble(readIndex())));
 					break;
 				}		
 				case OP_ICONST: {
-					push(IntegerObj.valueOf(cp.getInteger(readIndex())));
+					opStack.push(IntegerObj.valueOf(cp.getInteger(readIndex())));
 					break;
 				}		
 				case OP_SCONST: {
-					push(StringObj.valueOf(cp.getString(readIndex())));
+					opStack.push(StringObj.valueOf(cp.getString(readIndex())));
 					break;
 				}
 				case OP_FALSE: {
-					push(BoolObj.FALSE);
+					opStack.push(BoolObj.FALSE);
 					break;
 				}			
 				case OP_TRUE: {
-					push(BoolObj.TRUE);
+					opStack.push(BoolObj.TRUE);
 					break;
 				}
 
@@ -684,7 +685,7 @@ public class CandyV1Evaluator implements Evaluator {
 				 * Array.
 				 */
 				case OP_NEW_ARRAY: {
-					push(new ArrayObj(cp.getInteger(readIndex())));
+					opStack.push(new ArrayObj(cp.getInteger(readIndex())));
 					break;
 				}
 				case OP_APPEND: {
@@ -696,7 +697,7 @@ public class CandyV1Evaluator implements Evaluator {
 				 * Map
 				 */
 				case OP_NEW_MAP: {
-					push(new MapObj(cp.getInteger(readIndex())));
+					opStack.push(new MapObj(cp.getInteger(readIndex())));
 					break;
 				}
 				case OP_PUT: {
@@ -718,20 +719,20 @@ public class CandyV1Evaluator implements Evaluator {
 				case OP_GLOBAL_DEFINE: {
 					env.setVariable(
 						readIndex(),               /* name index */
-						pop()                      /* value */
+						opStack.pop()              /* value */
 					);
 					break;
 				}		
 				case OP_GLOBAL_SET: {
 					setGlobalVariable(
 						readIndex(),               /* name index */
-						peek(0),                   /* value */
+						opStack.peek(0),           /* value */
 						true
 					);					
 					break;
 				}		
 				case OP_GLOBAL_GET: {
-					push(getGlobalVariable(readIndex(), true));
+					opStack.push(getGlobalVariable(readIndex(), true));
 					break;
 				}
 
@@ -739,29 +740,45 @@ public class CandyV1Evaluator implements Evaluator {
 				 * Local Operations.
 				 */
 				case OP_LOAD:
-					push(load(readUint8()));
+					opStack.push(opStack.operands[bp + readUint8()]);
 					break;
 				case OP_LOAD0:
+					opStack.push(opStack.operands[bp + 0]);
+					break;
 				case OP_LOAD1:
+					opStack.push(opStack.operands[bp + 1]);
+					break;
 				case OP_LOAD2:
+					opStack.push(opStack.operands[bp + 2]);
+					break;
 				case OP_LOAD3:
+					opStack.push(opStack.operands[bp + 3]);
+					break;
 				case OP_LOAD4: 
-					push(load(code[frame.pc-1]-OP_LOAD0));
+					opStack.push(opStack.operands[bp + 4]);
 					break;
 
 				case OP_STORE:
-					store(readUint8(), peek(0));
+					opStack.operands[bp + readUint8()] = opStack.peek(0);
 					break;
 				case OP_STORE0: 
+					opStack.operands[bp + 0] = opStack.peek(0);
+					break;
 				case OP_STORE1: 
+					opStack.operands[bp + 1] = opStack.peek(0);
+					break;
 				case OP_STORE2: 
-				case OP_STORE3: 
+					opStack.operands[bp + 2] = opStack.peek(0);
+					break;
+				case OP_STORE3:
+					opStack.operands[bp + 3] = opStack.peek(0);
+					break;
 				case OP_STORE4:
-					store(code[frame.pc-1]-OP_STORE0, peek(0));
+					opStack.operands[bp + 4] = opStack.peek(0);
 					break;	
 
 				case OP_POP_STORE: {
-					store(readUint8(), pop());
+					opStack.operands[bp + readUint8()] = opStack.pop();
 					break;
 				}
 
@@ -771,7 +788,7 @@ public class CandyV1Evaluator implements Evaluator {
 				case OP_CLOSE: {
 					ConstantValue.CloseIndexes close =
 						(ConstantValue.CloseIndexes) cp.getConstants()[readIndex()];
-					stack.peek().closeUpvalues(close);
+					frame.closeUpvalues(close);
 					break;
 				}		
 
@@ -779,11 +796,11 @@ public class CandyV1Evaluator implements Evaluator {
 				 * Upvalues.
 				 */
 				case OP_LOAD_UPVALUE: {
-					push(stack.peek().closure.upvalues[readUint8()].load());
+					opStack.push(frame.closure.upvalues[readUint8()].load());
 					break;
 				}				
 				case OP_STORE_UPVALUE: {
-					stack.peek().closure.upvalues[readUint8()].store(peek(0));
+					frame.closure.upvalues[readUint8()].store(opStack.peek(0));
 					break;
 				}
 
@@ -792,24 +809,24 @@ public class CandyV1Evaluator implements Evaluator {
 				 * Object Operations.
 				 */
 				case OP_GET_ATTR: {
-					push(pop().callGetAttr(env.cniEnv, cp.getString(readIndex())));
+					opStack.push(opStack.pop().callGetAttr(env.cniEnv, cp.getString(readIndex())));
 					break;
 				}		
 				case OP_SET_ATTR: {
-					CandyObject obj = pop();
-					CandyObject value = pop();
-					push(obj.callSetAttr(env.cniEnv, cp.getString(readIndex()), value));
+					CandyObject obj = opStack.pop();
+					CandyObject value = opStack.pop();
+					opStack.push(obj.callSetAttr(env.cniEnv, cp.getString(readIndex()), value));
 					break;
 				}
 				case OP_GET_ITEM: {
-					push(pop().callGetItem(env.cniEnv, pop()));
+					opStack.push(opStack.pop().callGetItem(env.cniEnv, opStack.pop()));
 					break;
 				}
 				case OP_SET_ITEM: {
-					CandyObject obj = pop();
-					CandyObject key = pop();
-					CandyObject value = pop();
-					push(obj.callSetItem(env.cniEnv, key, value));
+					CandyObject obj = opStack.pop();
+					CandyObject key = opStack.pop();
+					CandyObject value = opStack.pop();
+					opStack.push(obj.callSetItem(env.cniEnv, key, value));
 					break;
 				}
 
@@ -818,7 +835,7 @@ public class CandyV1Evaluator implements Evaluator {
 				 */
 				case OP_FUN: {
 					ConstantValue.MethodInfo methodInfo = cp.getMethodInfo(readIndex());
-					push(createFunctionObj(null, methodInfo));
+					opStack.push(createFunctionObj(null, methodInfo));
 					frame.pc += methodInfo.getLength();
 					break;
 				}
@@ -831,14 +848,14 @@ public class CandyV1Evaluator implements Evaluator {
 					CandyClass superClass = getSuperClassOf(classInfo);
 					store(readUint8(), superClass);
 					CandyClass clazz = createClass(superClass, classInfo);
-					push(clazz);
+					opStack.push(clazz);
 					break;
 				}
 
 				case OP_SUPER_GET: {
-					CandyClass superClass = (CandyClass) pop();
+					CandyClass superClass = (CandyClass) opStack.pop();
 					String name = cp.getString(readIndex());
-					CandyObject superMethod = superClass.getBoundMethod(name, pop());
+					CandyObject superMethod = superClass.getBoundMethod(name, opStack.pop());
 					if (superMethod == null) {
 						new AttributeError(
 							"The attribute '%s' is not found in the super class '%s'.",
@@ -853,8 +870,8 @@ public class CandyV1Evaluator implements Evaluator {
 				 */
 				case OP_SUPER_INVOKE: {
 					int argc = readUint8();
-					CandyClass superClass = (CandyClass) pop();
-					CandyObject instance = pop();
+					CandyClass superClass = (CandyClass) opStack.pop();
+					CandyObject instance = opStack.pop();
 					String name = cp.getString(readIndex());
 					CallableObj method= superClass.getBoundMethod(name, instance);
 					if (method == null) {
@@ -864,20 +881,26 @@ public class CandyV1Evaluator implements Evaluator {
 						).throwSelfNative();
 					}
 					call(method, argc, EMPTY_UNPACK_FLAGS);
+					frame = this.frame;
+					code = this.code;
 					break;
 				}
 				case OP_INVOKE: {
 					int arity = readUint8();
 					String attr = cp.getString(readIndex());
-					CandyObject method = pop().callGetAttr(env.cniEnv, attr);
+					CandyObject method = opStack.pop().callGetAttr(env.cniEnv, attr);
 					call(TypeError.requiresCallable(method),
 						arity, EMPTY_UNPACK_FLAGS);
+					frame = this.frame;
+					code = this.code;
 					break;
 				}
 				case OP_CALL_SLOT: {
 					int arity = readUint8();
 					call(TypeError.requiresCallable(load(readUint8())),
 						arity, EMPTY_UNPACK_FLAGS);
+					frame = this.frame;
+					code = this.code;
 					break;
 				}
 				case OP_CALL_GLOBAL: {
@@ -885,19 +908,25 @@ public class CandyV1Evaluator implements Evaluator {
 					call(TypeError.requiresCallable(
 						getGlobalVariable(readIndex(), true)
 					), arity, EMPTY_UNPACK_FLAGS);
+					frame = this.frame;
+					code = this.code;
 					break;
 				}
 				case OP_CALL: {
 					int arity = readUint8();
-					call(TypeError.requiresCallable(pop()), 
+					call(TypeError.requiresCallable(opStack.pop()), 
 						arity, EMPTY_UNPACK_FLAGS);
+					frame = this.frame;
+					code = this.code;
 					break;
 				}
 				case OP_CALL_EX: {
 					int arity = readUint8();
 					int unpackFlags = cp.getUnpackFlags(readIndex());
-					call(TypeError.requiresCallable(pop()), 
+					call(TypeError.requiresCallable(opStack.pop()), 
 						arity, unpackFlags);
+					frame = this.frame;
+					code = this.code;
 					break;
 				}
 
@@ -905,9 +934,9 @@ public class CandyV1Evaluator implements Evaluator {
 				 * Error Handler.
 				 */
 				case OP_RAISE: {
-					CandyObject err = pop();
+					CandyObject err = opStack.pop();
 					TypeError.checkTypeMatched(ErrorObj.ERROR_CLASS, err);
-					((ErrorObj) err).throwSelfNative();
+					((ErrorObj) err).throwSelfNative();				
 					break;
 				}
 				case OP_MATCH_ERRORS: {
@@ -920,7 +949,7 @@ public class CandyV1Evaluator implements Evaluator {
 				 */
 				case OP_IMPORT_NAME: {
 					ModuleObj moudleObj = ModuleManager.getManager().importModule(
-						env.cniEnv, ObjectHelper.asString(pop())
+						env.cniEnv, ObjectHelper.asString(opStack.pop())
 					);
 					env.setVariable(readIndex(), moudleObj);
 					break;
@@ -928,18 +957,18 @@ public class CandyV1Evaluator implements Evaluator {
 				
 				case OP_IMPORT: {
 					ModuleManager.getManager().importModule(
-						env.cniEnv, ObjectHelper.asString(pop())
+						env.cniEnv, ObjectHelper.asString(opStack.pop())
 					).addToEnv(env.getCurrentFileEnv());
 					break;
 				}
 				
 				case OP_ASSERT: {
 					new com.nano.candy.interpreter.builtin.type.error.
-						AssertionError(pop().callStr(env.cniEnv).value()).throwSelfNative();
+						AssertionError(opStack.pop().callStr(env.cniEnv).value()).throwSelfNative();
 					break;
 				}
 				case OP_PRINT: {
-					CandyObject obj = pop();
+					CandyObject obj = opStack.pop();
 					if (obj == NullPointer.nil()) {
 						break;
 					}
@@ -951,16 +980,20 @@ public class CandyV1Evaluator implements Evaluator {
 						returnFrame();
 						break loop;
 					}
-					returnFrame(); 
+					returnFrame();
+					frame = this.frame;
+					code = this.code;
 					break;
 				}
 				case OP_RETURN_NIL: {
-					push(NullPointer.nil());
+					opStack.push(NullPointer.nil());
 					if (stack.peek().exitRunAtReturn) {
 						returnFrame();
 						break loop;
 					}
 					returnFrame(); 
+					frame = this.frame;
+					code = this.code;
 					break;
 				}
 				case OP_EXIT: {
