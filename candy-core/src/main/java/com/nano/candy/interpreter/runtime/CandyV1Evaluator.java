@@ -35,6 +35,7 @@ import com.nano.candy.interpreter.runtime.Upvalue;
 import com.nano.candy.interpreter.runtime.module.ModuleManager;
 import com.nano.candy.sys.CandySystem;
 import java.io.File;
+import java.io.PrintStream;
 
 import static com.nano.candy.code.OpCodes.*;
 
@@ -164,13 +165,14 @@ public class CandyV1Evaluator implements Evaluator {
 			return true;
 		}	
 		if (printError) {
+			PrintStream stderr = env.getOptions().getStderr();
 			if (env.getCurrentThread().getId() != 1) {
-				System.err.printf(
+				stderr.printf(
 					"An error ocurrs in the thread '%s'.\n",
 					env.getCurrentThread().getName()
 				);
 			}
-			System.err.print(err.sprintStackTrace(24));
+			stderr.print(err.sprintStackTrace(24));
 		}
 		resetFrameData();
 		return false;
@@ -972,7 +974,8 @@ public class CandyV1Evaluator implements Evaluator {
 					if (obj == NullPointer.nil()) {
 						break;
 					}
-					System.out.println(obj.callStr(env.cniEnv).value());
+					env.getOptions().getStdout().println(
+						obj.callStr(env.cniEnv).value());
 					break;
 				}
 				case OP_RETURN: {

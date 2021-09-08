@@ -29,20 +29,21 @@ public class BuiltinFunctions {
 
 	@NativeFunc(name = "print")
 	public static CandyObject print(CNIEnv env, CandyObject arg) {
-		System.out.print(arg.callStr(env).value());
+		env.getOptions().getStdout().print(arg.callStr(env).value());
 		return null;
 	}
 
 	@NativeFunc(name = "println")
 	public static CandyObject println(CNIEnv env, CandyObject arg) {
-		System.out.println(arg.callStr(env).value());
+		env.getOptions().getStdout().println(arg.callStr(env).value());
 		return null;
 	}
 	
 	@NativeFunc(name = "readLine")
 	public static CandyObject read(CNIEnv env) {
 		try {
-			return StringObj.valueOf(new Scanner(System.in).nextLine());
+			return StringObj.valueOf(
+				new Scanner(env.getOptions().getStdin()).nextLine());
 		} catch (NoSuchElementException e) {
 			new IOError("No line found").throwSelfNative();
 		}
