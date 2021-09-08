@@ -170,16 +170,14 @@ public class StringObj extends CandyObject {
 		return hashCode;
 	}
 	
-	@NativeMethod(name = Names.METHOD_INITALIZER, arity = 1)
-	public CandyObject init(CNIEnv env, CandyObject[] args) {
-		this.value = ObjectHelper.asString(args[0]);
+	@NativeMethod(name = Names.METHOD_INITALIZER)
+	protected CandyObject init(CNIEnv env, String value) {
+		this.value = value;
 		return this;
 	}
 	
-	@NativeMethod(name = "substr", arity = 2)
-	public CandyObject substring(CNIEnv env, CandyObject[] args) {
-		long beginIndex = ObjectHelper.asInteger(args[0]);
-		long endIndex = ObjectHelper.asInteger(args[1]);
+	@NativeMethod(name = "substr")
+	public CandyObject substring(CNIEnv env, long beginIndex, long endIndex) {
 		final int size = value.length();
 		beginIndex = RangeError.checkIndex(beginIndex, size);
 		endIndex = RangeError.checkIndexForAdd(endIndex, size);
@@ -191,26 +189,25 @@ public class StringObj extends CandyObject {
 	}
 	
 	@NativeMethod(name = "length")
-	public CandyObject length(CNIEnv env, CandyObject[] args) {
+	public CandyObject length(CNIEnv env) {
 		return IntegerObj.valueOf(value.length());
 	}
 	
-	@NativeMethod(name = "startWith", arity = 1)
-	public CandyObject startWith(CNIEnv env, CandyObject[] args) {
-		String str = args[0].callStr(env).value;
-		return BoolObj.valueOf(value.startsWith(str));
+	@NativeMethod(name = "startWith")
+	public CandyObject startWith(CNIEnv env, CandyObject prefixObj) {
+		String prefix = prefixObj.callStr(env).value;
+		return BoolObj.valueOf(value.startsWith(prefix));
 	}
 	
-	@NativeMethod(name = "endWith", arity = 1)
-	public CandyObject endWith(CNIEnv env, CandyObject[] args) {
-		String str = args[0].callStr(env).value;
-		return BoolObj.valueOf(value.endsWith(str));
+	@NativeMethod(name = "endWith")
+	public CandyObject endWith(CNIEnv env, CandyObject suffxObj) {
+		String suffix = suffxObj.callStr(env).value;
+		return BoolObj.valueOf(value.endsWith(suffix));
 	}
 	
-	@NativeMethod(name = "split", arity = 1)
-	public CandyObject split(CNIEnv env, CandyObject[] args) {
-		String regex = ObjectHelper.asString(args[0]);
-		String[] res = value.split(regex);
+	@NativeMethod(name = "split")
+	public CandyObject split(CNIEnv env, StringObj regex) {
+		String[] res = value.split(regex.value);
 		CandyObject[] elements = new CandyObject[res.length];
 		for (int i = 0; i < res.length; i ++) {
 			elements[i] = valueOf(res[i]);
@@ -219,7 +216,7 @@ public class StringObj extends CandyObject {
 	}
 	
 	@NativeMethod(name = "splitlines")
-	public CandyObject splitlines(CNIEnv env, CandyObject[] args) {
+	public CandyObject splitlines(CNIEnv env) {
 		if (value.length() == 0) {
 			return new ArrayObj(0);
 		}
@@ -243,35 +240,27 @@ public class StringObj extends CandyObject {
 	}
 	
 	@NativeMethod(name = "trim")
-	public CandyObject trim(CNIEnv env, CandyObject[] args) {
+	public CandyObject trim(CNIEnv env) {
 		return valueOf(value.trim());
 	}
 	
-	@NativeMethod(name = "replaceFirst", arity = 2)
-	public CandyObject replace(CNIEnv env, CandyObject[] args) {
-		String regex = ObjectHelper.asString(args[0]);
-		String replacement = args[1].callStr(env).value;
-		return valueOf(value.replaceFirst(regex, replacement));
+	@NativeMethod(name = "replaceFirst")
+	public CandyObject replace(CNIEnv env, StringObj regex, String replacement) {
+		return valueOf(value.replaceFirst(regex.value, replacement));
 	}
 	
 
-	@NativeMethod(name = "replaceAll", arity = 2)
-	public CandyObject replaceAll(CNIEnv env, CandyObject[] args) {
-		String regex = ObjectHelper.asString(args[0]);
-		String replacement = args[1].callStr(env).value;
-		return valueOf(value.replaceAll(regex, replacement));
+	@NativeMethod(name = "replaceAll")
+	public CandyObject replaceAll(CNIEnv env, StringObj regex, String replacement) {
+		return valueOf(value.replaceAll(regex.value, replacement));
 	}
 	
-	@NativeMethod(name = "join", arity = 1)
-	public CandyObject join(CNIEnv env, CandyObject[] args) {
-		CandyObject obj = args[0];
-		TypeError.checkTypeMatched(ArrayObj.ARRAY_CLASS, obj);
-		ArrayObj array = (ArrayObj) obj;
+	@NativeMethod(name = "join")
+	public CandyObject join(CNIEnv env, ArrayObj array) {
 		final int size = array.length();
 		if (size == 0) {
 			return EMPTY_STR;
 		}
-		
 		StringBuilder builder = new StringBuilder();
 		int i = 0;
 		int iMax = size-1;
@@ -286,22 +275,18 @@ public class StringObj extends CandyObject {
 		return valueOf(builder.toString());
 	}
 	
-	@NativeMethod(name = "lastIndexOf", arity=1) 
-	public CandyObject lastIndexOf(CNIEnv env, CandyObject[] args){
-		return IntegerObj.valueOf(
-			value.lastIndexOf(ObjectHelper.asString(args[0]))
-		);
+	@NativeMethod(name = "lastIndexOf") 
+	public CandyObject lastIndexOf(CNIEnv env, StringObj str){
+		return IntegerObj.valueOf(value.lastIndexOf(str.value));
 	}
 	
-	@NativeMethod(name = "indexOf", arity=1) 
-	public CandyObject indexOf(CNIEnv env, CandyObject[] args){
-		return IntegerObj.valueOf(
-			value.indexOf(ObjectHelper.asString(args[0]))
-		);
+	@NativeMethod(name = "indexOf") 
+	public CandyObject indexOf(CNIEnv env, StringObj str){
+		return IntegerObj.valueOf(value.indexOf(str.value));
 	}
 	
-	@NativeMethod(name = "codePoint", arity=0)
-	public CandyObject toCodePoint(CNIEnv env, CandyObject[] args){
+	@NativeMethod(name = "codePoint")
+	public CandyObject toCodePoint(CNIEnv env){
 		if (value.length() != 1) {
 			new TypeError("The object is not a single char: <%s>", value)
 				.throwSelfNative();
@@ -310,17 +295,17 @@ public class StringObj extends CandyObject {
 	}
 	
 	@NativeMethod(name = "toUpperCase") 
-	public CandyObject toUpperCase(CNIEnv env, CandyObject[] args){
+	public CandyObject toUpperCase(CNIEnv env){
 		return valueOf(value.toUpperCase());
 	}
 	
 	@NativeMethod(name = "toLowerCase") 
-	public CandyObject toLowerCase(CNIEnv env, CandyObject[] args){
+	public CandyObject toLowerCase(CNIEnv env){
 		return valueOf(value.toLowerCase());
 	}
 	
 	@NativeMethod(name = "capitalize")
-	public CandyObject capitalize(CNIEnv env, CandyObject[] args){
+	public CandyObject capitalize(CNIEnv env){
 		return valueOf(
 			value.substring(0, 1).toUpperCase().concat(
 				value.substring(1)
@@ -328,17 +313,17 @@ public class StringObj extends CandyObject {
 		);
 	}
 	
-	@NativeMethod(name = "toInt", arity = 1, varArgsIndex = 0)
-	public CandyObject toInt(CNIEnv env, CandyObject[] args){
+	@NativeMethod(name = "toInt", varArgsIndex = 0)
+	public CandyObject toInt(CNIEnv env, ArrayObj array){
 		CandyObject radix = 
-			ObjectHelper.getOptionalArgument(args[0], IntegerObj.valueOf(10));
+			ObjectHelper.getOptionalArgument(array, IntegerObj.valueOf(10));
 		return IntegerObj.valueOf(
 			Integer.valueOf(value, (int) ObjectHelper.asInteger(radix))
 		);
 	}
 	
 	@NativeMethod(name = "toDouble")
-	public CandyObject toDouble(CNIEnv env, CandyObject[] args){
+	public CandyObject toDouble(CNIEnv env){
 		return DoubleObj.valueOf(Double.valueOf(value));
 	}
 }

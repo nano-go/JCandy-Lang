@@ -9,6 +9,5 @@ import java.lang.annotation.Target;
 @Target(ElementType.METHOD)
 public @interface NativeMethod {
 	public String name();
-	public int arity() default 0;
 	public int varArgsIndex() default -1;
 }

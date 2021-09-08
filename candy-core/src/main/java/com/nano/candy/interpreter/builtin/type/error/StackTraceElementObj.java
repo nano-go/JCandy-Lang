@@ -61,17 +61,17 @@ public class StackTraceElementObj extends CandyObject {
 	}
 	
 	@NativeMethod(name = "getLineNumber")
-	public CandyObject getLineNumber(CNIEnv env, CandyObject[] args) {
+	public CandyObject getLineNumber(CNIEnv env) {
 		return IntegerObj.valueOf(lineNumber);
 	}
 	
 	@NativeMethod(name = "getFileName")
-	public CandyObject getFileName(CNIEnv env, CandyObject[] args) {
+	public CandyObject getFileName(CNIEnv env) {
 		return StringObj.valueOf(fileName);
 	}
 	
 	@NativeMethod(name = "getFrameName")
-	public CandyObject getFrameName(CNIEnv env, CandyObject[] args) {
+	public CandyObject getFrameName(CNIEnv env) {
 		return StringObj.valueOf(frameName);
 	}
 }

@@ -1,9 +1,9 @@
 package com.nano.candy.interpreter.cni;
 
 import com.nano.candy.interpreter.builtin.CandyObject;
-import com.nano.candy.interpreter.builtin.type.ArrayObj;
 import com.nano.candy.interpreter.builtin.type.CallableObj;
 import com.nano.candy.interpreter.builtin.type.NullPointer;
+import com.nano.candy.interpreter.builtin.type.error.NativeError;
 import com.nano.candy.interpreter.builtin.utils.ObjectHelper;
 import com.nano.candy.interpreter.runtime.OperandStack;
 
@@ -11,7 +11,7 @@ public class JavaMethodObj extends CallableObj {
 	
 	@FunctionalInterface
 	public static interface Callback {
-		public CandyObject onCall(CNIEnv env, CandyObject instance, CandyObject[] args);
+		public CandyObject onCall(CNIEnv env, CandyObject instance, OperandStack opStack);
 	}
 	
 	private Callback callback;
@@ -30,19 +30,8 @@ public class JavaMethodObj extends CallableObj {
 		CandyObject retVal;
 		CandyObject instance = opStack.pop();
 		argc --;
-		if (argc == 0) {
-			retVal = callback.onCall(env, instance, ArrayObj.EMPTY_ARRAY);
-		} else {
-			CandyObject[] args = new CandyObject[argc];
-			for (int i = argc - 1; i >= 0; i --) {
-				args[i] = opStack.pop();
-			}
-			retVal = callback.onCall(env, instance, args);
-		}
-		if (retVal == null) {
-			retVal = NullPointer.nil();
-		}
-		opStack.push(retVal);
+		retVal = callback.onCall(env, instance, opStack);
+		opStack.push(retVal != null ? retVal : NullPointer.nil());
 	}
 
 	@Override

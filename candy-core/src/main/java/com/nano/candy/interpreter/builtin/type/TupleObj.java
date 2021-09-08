@@ -153,26 +153,26 @@ public final class TupleObj extends CandyObject {
 		return StringObj.valueOf(builder.toString());
 	}
 	
-	@NativeMethod(name = Names.METHOD_INITALIZER, arity = 1)
-	public CandyObject init(CNIEnv env, CandyObject[] args) {
-		if (args[0] instanceof  TupleObj) {
-			TupleObj tuple = (TupleObj) args[0];
+	@NativeMethod(name = Names.METHOD_INITALIZER)
+	public CandyObject init(CNIEnv env, CandyObject arg) {
+		if (arg instanceof  TupleObj) {
+			TupleObj tuple = (TupleObj) arg;
 			this.elements = Arrays.copyOf(
 				tuple.elements, tuple.elements.length
 			);
-		} else if (args[0] instanceof ArrayObj) {
-			ArrayObj arr = (ArrayObj) args[0];
+		} else if (arg instanceof ArrayObj) {
+			ArrayObj arr = (ArrayObj) arg;
 			this.elements = Arrays.copyOfRange(
 				arr.elements, 0, arr.length()
 			);
 		} else {
-			this.elements = ObjectHelper.iterableObjToArray(env, args[0]);
+			this.elements = ObjectHelper.iterableObjToArray(env, arg);
 		}
 		return this;
 	}
 	
 	@NativeMethod(name = "length")
-	public CandyObject len(CNIEnv env, CandyObject[] args) {
+	public CandyObject len(CNIEnv env) {
 		return IntegerObj.valueOf(elements.length);
 	}
 }

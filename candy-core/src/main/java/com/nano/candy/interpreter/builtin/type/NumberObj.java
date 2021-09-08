@@ -133,7 +133,7 @@ public abstract class NumberObj extends CandyObject {
 	}
 	
 	@NativeMethod(name = "intVal")
-	public CandyObject intValue(CNIEnv env, CandyObject[] args) {
+	public CandyObject intValue(CNIEnv env) {
 		if (getCandyClass() == IntegerObj.INTEGER_CLASS) {
 			return this;
 		}
@@ -141,7 +141,7 @@ public abstract class NumberObj extends CandyObject {
 	}
 	
 	@NativeMethod(name = "doubleVal")
-	public CandyObject doubleValue(CNIEnv env, CandyObject[] args) {
+	public CandyObject doubleValue(CNIEnv env) {
 		if (getCandyClass() == DoubleObj.DOUBLE_CLASS) {
 			return this;
 		}

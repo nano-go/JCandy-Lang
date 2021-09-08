@@ -45,14 +45,14 @@ public class IntegerObj extends NumberObj {
 		this.value = value;
 	}
 	
-	@NativeMethod(name = Names.METHOD_INITALIZER, arity = 1)
-	public CandyObject init(CNIEnv env, CandyObject[] args) {
-		this.value = ObjectHelper.asInteger(args[0]);
+	@NativeMethod(name = Names.METHOD_INITALIZER)
+	public CandyObject init(CNIEnv env, long value) {
+		this.value = value;
 		return this;
 	}
 	
 	@NativeMethod(name = "toChar")
-	public CandyObject toChar(CNIEnv env, CandyObject[] args) {
+	public StringObj toChar(CNIEnv env) {
 		return StringObj.valueOf((char) value);
 	}
 

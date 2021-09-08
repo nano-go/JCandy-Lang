@@ -4,6 +4,7 @@ import com.nano.candy.interpreter.builtin.ObjectClass;
 import com.nano.candy.interpreter.builtin.type.IteratorObj;
 import com.nano.candy.interpreter.cni.CNIEnv;
 import com.nano.candy.interpreter.cni.JavaFunctionObj;
+import com.nano.candy.interpreter.runtime.OperandStack;
 import com.nano.candy.interpreter.runtime.Variable;
 import com.nano.candy.std.Names;
 import java.util.Iterator;
@@ -144,11 +145,11 @@ public abstract class IteratorObj extends CandyObject {
 		return super.getAttr(env, attr);
 	}
 	
-	public final CandyObject hasNext(CNIEnv env, CandyObject[] args) {
+	public final CandyObject hasNext(CNIEnv env, OperandStack opStack) {
 		return BoolObj.valueOf(hasNext(env));
 	}
 	
-	public final CandyObject next(CNIEnv env, CandyObject[] args) {
+	public final CandyObject next(CNIEnv env, OperandStack opStack) {
 		return next(env);
 	}
 	

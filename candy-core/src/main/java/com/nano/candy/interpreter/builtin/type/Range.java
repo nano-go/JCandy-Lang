@@ -62,7 +62,7 @@ public class Range extends CandyObject {
 	public IntegerObj hashCode(CNIEnv env) {
 		return IntegerObj.valueOf(Objects.hash(getLeft(), getRight()));
 	}
-
+	
 	@Override
 	public BoolObj equals(CNIEnv env, CandyObject operand) {
 		if (operand == this) {
@@ -80,15 +80,15 @@ public class Range extends CandyObject {
 
 	/*===================== Native Methods ===================*/
 
-	@NativeMethod(name = Names.METHOD_INITALIZER, arity = 2)
-	public CandyObject initializer(CNIEnv env, CandyObject[] args) {
-		setMetaData("left", args[0]);
-		setMetaData("right", args[1]);
+	@NativeMethod(name = Names.METHOD_INITALIZER)
+	public CandyObject initializer(CNIEnv env, CandyObject left, CandyObject right) {
+		setMetaData("left", left);
+		setMetaData("right", right);
 		return this;
 	}
 
 	@NativeMethod(name = "rand")
-	public CandyObject rand(CNIEnv env, CandyObject[] args) {
+	public CandyObject rand(CNIEnv env) {
 		long left = getLeft();
 		long right = getRight();
 		if (left == right) {

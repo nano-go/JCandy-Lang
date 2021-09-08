@@ -235,71 +235,71 @@ public final class MapObj extends CandyObject {
 		}
 	}
 	
-	@NativeMethod(name = Names.METHOD_INITALIZER, arity = 1)
-	public CandyObject init(CNIEnv env, CandyObject[] args) {
-		setInitCapacity(ObjectHelper.asInteger(args[0]));
+	@NativeMethod(name = Names.METHOD_INITALIZER)
+	protected final CandyObject init(CNIEnv env, long initialCapacity) {
+		setInitCapacity(initialCapacity);
 		return this;
 	}
 	
-	@NativeMethod(name = "get", arity = 1)
-	public CandyObject get(CNIEnv env, CandyObject[] args) {
-		return get(env, args[0]);
+	@NativeMethod(name = "get")
+	protected final CandyObject getMet(CNIEnv env, CandyObject key) {
+		return get(env, key);
 	}
 	
-	@NativeMethod(name = "getOrDefault", arity = 2)
-	public CandyObject getOrDefault(CNIEnv env, CandyObject[] args) {
-		return getOrDefault(env, args[0], args[1]);
+	@NativeMethod(name = "getOrDefault")
+	protected final CandyObject getOrDefaultMet(CNIEnv env, CandyObject key, CandyObject defaultValue) {
+		return getOrDefault(env, key, defaultValue);
 	}
 
 	@Override
-	public CandyObject getItem(CNIEnv env, CandyObject key) {
+	protected final CandyObject getItem(CNIEnv env, CandyObject key) {
 		return ObjectHelper.preventNull(get(env, key));
 	}
 	
-	@NativeMethod(name = "put", arity = 2)
-	public CandyObject put(CNIEnv env, CandyObject[] args) {
-		return put(env, args[0], args[1]);
+	@NativeMethod(name = "put")
+	protected final CandyObject putMet(CNIEnv env, CandyObject key, CandyObject value) {
+		return put(env, key, value);
 	}
 	
-	@NativeMethod(name = "putIfAbsent", arity = 2)
-	public CandyObject putIfAbsent(CNIEnv env, CandyObject[] args) {
-		return putIfAbsent(env, args[0], args[1]);
+	@NativeMethod(name = "putIfAbsent")
+	protected final CandyObject putIfAbsentMet(CNIEnv env, CandyObject key, CandyObject value) {
+		return putIfAbsent(env, key, value);
 	}
 	
-	@NativeMethod(name = "putAll", arity = 1) 
-	public CandyObject putAll(CNIEnv env, CandyObject[] args) {
-		TypeError.checkTypeMatched(MAP_CLASS, args[0]);
-		return putAll(env, (MapObj) args[0]);
+	@NativeMethod(name = "putAll") 
+	protected final CandyObject putAll(CNIEnv env, CandyObject map) {
+		TypeError.checkTypeMatched(MAP_CLASS, map);
+		return putAll(env, (MapObj) map);
 	}
 	
 	@Override
-	public CandyObject setItem(CNIEnv env, CandyObject key, CandyObject value) {
+	protected final CandyObject setItem(CNIEnv env, CandyObject key, CandyObject value) {
 		put(env, key, value);
 		return value;
 	}
 	
-	@NativeMethod(name = "remove", arity = 1)
-	public CandyObject remove(CNIEnv env, CandyObject[] args) {
-		return remove(env, args[0]);
+	@NativeMethod(name = "remove")
+	protected final CandyObject removeMet(CNIEnv env, CandyObject key) {
+		return remove(env, key);
 	}
 	
-	@NativeMethod(name = "contains", arity = 1)
-	public CandyObject contains(CNIEnv env, CandyObject[] args) {
-		return BoolObj.valueOf(contains(env, args[0]));
+	@NativeMethod(name = "contains")
+	protected final CandyObject containsMet(CNIEnv env, CandyObject key) {
+		return BoolObj.valueOf(contains(env, key));
 	}
 	
-	@NativeMethod(name = "length", arity = 0)
-	public CandyObject size(CNIEnv env, CandyObject[] args) {
+	@NativeMethod(name = "length")
+	protected final CandyObject size(CNIEnv env) {
 		return IntegerObj.valueOf(size);
 	}
 	
-	@NativeMethod(name = "isEmpty", arity = 0)
-	public CandyObject isEmpty(CNIEnv env, CandyObject[] args) {
+	@NativeMethod(name = "isEmpty")
+	protected final CandyObject isEmpty(CNIEnv env) {
 		return BoolObj.valueOf(size == 0);
 	}
 	
-	@NativeMethod(name = "clear", arity = 0)
-	public CandyObject clear(CNIEnv env, CandyObject[] args) {
+	@NativeMethod(name = "clear")
+	protected final CandyObject clear(CNIEnv env) {
 		clear();
 		return null;
 	}

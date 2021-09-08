@@ -3,7 +3,6 @@ package com.nano.candy.interpreter.builtin.type;
 import com.nano.candy.interpreter.builtin.CandyClass;
 import com.nano.candy.interpreter.builtin.CandyObject;
 import com.nano.candy.interpreter.builtin.type.error.InterruptedError;
-import com.nano.candy.interpreter.builtin.type.error.TypeError;
 import com.nano.candy.interpreter.builtin.utils.ObjectHelper;
 import com.nano.candy.interpreter.cni.CNIEnv;
 import com.nano.candy.interpreter.cni.NativeClass;
@@ -30,9 +29,8 @@ public class LockObj extends CandyObject {
 		return StringObj.valueOf(lock.toString());
 	}
 	
-	@NativeMethod(name = "synchronize", arity = 1)
-	public CandyObject synchronize(CNIEnv env, CandyObject[] args) {
-		CallableObj fn = TypeError.requiresCallable(args[0]);
+	@NativeMethod(name = "synchronize")
+	public CandyObject synchronize(CNIEnv env, CallableObj fn) {
 		lock.lock();
 		try {
 			ObjectHelper.callFunction(env, fn);
@@ -43,14 +41,14 @@ public class LockObj extends CandyObject {
 	}
 	
 	@NativeMethod(name = "lock")
-	public CandyObject lock(CNIEnv env, CandyObject[] args) {
+	public CandyObject lock(CNIEnv env) {
 		lock.lock();
 		return this;
 	}
 	
-	@NativeMethod(name = "tryLock", arity = 1, varArgsIndex = 0)
-	public CandyObject tryLock(CNIEnv env, CandyObject[] args) {
-		CandyObject second = ObjectHelper.getOptionalArgument(args[0], IntegerObj.valueOf(0));
+	@NativeMethod(name = "tryLock", varArgsIndex = 0)
+	public CandyObject tryLock(CNIEnv env, ArrayObj sec) {
+		CandyObject second = ObjectHelper.getOptionalArgument(sec, IntegerObj.valueOf(0));
 		long s = ObjectHelper.asInteger(second);
 		try {
 			return BoolObj.valueOf(lock.tryLock(s, TimeUnit.SECONDS));
@@ -61,28 +59,28 @@ public class LockObj extends CandyObject {
 	}
 	
 	@NativeMethod(name = "unlock")
-	public CandyObject ulock(CNIEnv env, CandyObject[] args) {
+	public CandyObject ulock(CNIEnv env) {
 		lock.unlock();
 		return this;
 	}
 	
 	@NativeMethod(name = "getHoldCount")
-	public CandyObject getHoldCount(CNIEnv env, CandyObject[] args) {
+	public CandyObject getHoldCount(CNIEnv env) {
 		return IntegerObj.valueOf(lock.getHoldCount());
 	}
 	
 	@NativeMethod(name = "isHeldByCurrentThread")
-	public CandyObject isHeldByCurrentThread(CNIEnv env, CandyObject[] args) {
+	public CandyObject isHeldByCurrentThread(CNIEnv env) {
 		return BoolObj.valueOf(lock.isHeldByCurrentThread());
 	}
 	
 	@NativeMethod(name = "isLocked")
-	public CandyObject isLocked(CNIEnv env, CandyObject[] args) {
+	public CandyObject isLocked(CNIEnv env) {
 		return BoolObj.valueOf(lock.isLocked());
 	}
 	
 	@NativeMethod(name = "isFair")
-	public CandyObject isFair(CNIEnv env, CandyObject[] args) {
+	public CandyObject isFair(CNIEnv env) {
 		return BoolObj.valueOf(lock.isFair());
 	}
 }

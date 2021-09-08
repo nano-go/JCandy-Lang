@@ -171,8 +171,8 @@ public class CandyClass extends CallableObj {
 	 *
 	 * Prototype: isSubclassOf(klass)
 	 */
-	private final CandyObject isSubclassOf(CNIEnv env, CandyObject[] args) {
-		CandyClass klass = TypeError.requiresClass(args[0]);
+	private final CandyObject isSubclassOf(CNIEnv env, OperandStack opStack) {
+		CandyClass klass = TypeError.requiresClass(opStack.pop());
 		return BoolObj.valueOf(isSubClassOf(klass));
 	}
 	
@@ -182,8 +182,8 @@ public class CandyClass extends CallableObj {
 	 *
 	 * Prototype: isSuperclassOf(klass)
 	 */
-	private final CandyObject isSuperclassOf(CNIEnv env, CandyObject[] args) {
-		CandyClass klass = TypeError.requiresClass(args[0]);
+	private final CandyObject isSuperclassOf(CNIEnv env, OperandStack opStack) {
+		CandyClass klass = TypeError.requiresClass(opStack.pop());
 		return BoolObj.valueOf(isSuperClassOf(klass));
 	}
 	
@@ -193,8 +193,8 @@ public class CandyClass extends CallableObj {
 	 *
 	 * Prototype: instance(object)
 	 */
-	private final CandyObject instance(CNIEnv env, CandyObject[] args) {
-		CandyClass klz = args[0].getCandyClass();
+	private final CandyObject instance(CNIEnv env, OperandStack opStack) {
+		CandyClass klz = opStack.pop().getCandyClass();
 		return BoolObj.valueOf(isSubClassOf(klz));
 	}
 	
@@ -204,7 +204,7 @@ public class CandyClass extends CallableObj {
 	 *
 	 * Prototype: methods()
 	 */
-	private final CandyObject methods(CNIEnv env, CandyObject[] args) {
+	private final CandyObject methods(CNIEnv env, OperandStack opStack) {
 		ArrayObj arr = new ArrayObj(methods.size());
 		for (String name : methods.keySet()) {
 			arr.append(StringObj.valueOf(name));

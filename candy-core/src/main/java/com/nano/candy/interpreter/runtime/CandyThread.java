@@ -13,7 +13,6 @@ import com.nano.candy.interpreter.builtin.type.error.ArgumentError;
 import com.nano.candy.interpreter.builtin.type.error.AttributeError;
 import com.nano.candy.interpreter.builtin.type.error.InterruptedError;
 import com.nano.candy.interpreter.builtin.type.error.StateError;
-import com.nano.candy.interpreter.builtin.type.error.TypeError;
 import com.nano.candy.interpreter.builtin.utils.ObjectHelper;
 import com.nano.candy.interpreter.cni.CNIEnv;
 import com.nano.candy.interpreter.cni.NativeClass;
@@ -40,29 +39,28 @@ public class CandyThread extends CandyObject {
 	}
 	
 	@NativeFunc(name = "waitOtherThreadsEnd")
-	public static CandyObject waitOtherThreadsEnd(CNIEnv env, CandyObject[] args) {
+	public static CandyObject waitOtherThreadsEnd(CNIEnv env) {
 		waitOtherThreadsEnd();
 		return null;
 	}
 	
-	@NativeFunc(name = "start", arity = 1)
-	public static CandyObject startThread(CNIEnv env, CandyObject[] args) {
-		CallableObj runner = TypeError.requiresCallable(args[0]);
+	@NativeFunc(name = "start")
+	public static CandyObject startThread(CNIEnv env, CallableObj runner) {
 		CandyThread t = new CandyThread(env, runner);
 		t.start();
 		return t;
 	}
 	
 	@NativeFunc(name = "yield")
-	public static CandyObject yield(CNIEnv env, CandyObject[] args) {
+	public static CandyObject yield(CNIEnv env) {
 		Thread.yield();
 		return null;
 	}
 	
 	@NativeFunc(name = "sleep")
-	public static CandyObject sleep(CNIEnv env, CandyObject[] args) {
+	public static CandyObject sleep(CNIEnv env, long time) {
 		try {
-			Thread.sleep(ObjectHelper.asInteger(args[0]));
+			Thread.sleep(time);
 		} catch (InterruptedException e) {
 			new InterruptedError(e).throwSelfNative();
 		} catch (IllegalArgumentException e) {
@@ -72,7 +70,7 @@ public class CandyThread extends CandyObject {
 	}
 	
 	@NativeFunc(name = "current")
-	public static CandyObject currentThread(CNIEnv env, CandyObject[] args) {
+	public static CandyObject currentThread(CNIEnv env) {
 		return env.getCurrentThread();
 	}
 	
@@ -195,15 +193,14 @@ public class CandyThread extends CandyObject {
 		return super.getAttr(env, name);
 	}
 	
-	@NativeMethod(name = Names.METHOD_INITALIZER, arity = 1)
-	public CandyObject init(CNIEnv env, CandyObject[] args) {
-		CallableObj runner = TypeError.requiresCallable(args[0]);
+	@NativeMethod(name = Names.METHOD_INITALIZER)
+	protected CandyObject initMet(CNIEnv env, CallableObj runner) {
 		init(env, runner);
 		return this;
 	}
 	
 	@NativeMethod(name = "start")
-	public CandyObject start(CNIEnv env, CandyObject[] args) {
+	public CandyObject start(CNIEnv env) {
 		try {
 			start();
 		} catch (IllegalThreadStateException e) {
@@ -214,7 +211,7 @@ public class CandyThread extends CandyObject {
 	}
 	
 	@NativeMethod(name = "join")
-	public CandyObject join(CNIEnv env, CandyObject[] args) {
+	public CandyObject join(CNIEnv env) {
 		try {
 			this.javaThread.join();
 		} catch (InterruptedException e) {
@@ -224,7 +221,7 @@ public class CandyThread extends CandyObject {
 	}
 	
 	@NativeMethod(name = "interrupt")
-	public CandyObject interrupt(CNIEnv env, CandyObject[] args) {
+	public CandyObject interrupt(CNIEnv env) {
 		this.javaThread.interrupt();
 		return null;
 	}

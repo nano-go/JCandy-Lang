@@ -2,6 +2,7 @@ package com.nano.candy.interpreter.cni.processor;
 
 import java.io.IOException;
 import java.util.List;
+import javax.lang.model.element.VariableElement;
 
 /**
  * Generating java code used to register candy functions.
@@ -31,11 +32,36 @@ public class FunctionsCodeGenerator extends CodeFileGenerator {
 			w.writeStatement(
 				"funs[%d] = new JavaFunctionObj(\"%s\", %d, %d, %s)",
 				i, f.getName(), f.getArity(), f.getVarArgIndex(),
-				// Java8 method reference.
-				f.getQualifiedClassName() + "::" + f.getAnnotatedJavaMethodName());
+				generateCallbackLambda(f));
 			i ++;
 		}
 		w.writeStatement("return funs");
 	}
 	
+	private static String generateCallbackLambda(FunctionEnitity method) {
+		final List<? extends VariableElement> parameters = 
+			method.getAnnotatedElement().getParameters();
+		final int parametersSize = parameters.size();
+
+		final StringBuilder callbackLambda = new StringBuilder("(env, opStack) -> {");
+
+		for (int i = parametersSize-1; i >= 1; i --) {
+			callbackLambda
+				.append("\n            ")
+				.append(parameters.get(i).asType().toString())
+				.append(" arg" + (i-1))
+				.append(" = ")
+				.append(converArg(parameters.get(i).asType(), "opStack.pop()"))
+				.append(";");
+		}
+		callbackLambda.append("\n           ")
+			.append(String.format("return %s.%s(env",
+					method.getQualifiedClassName(),
+					method.getAnnotatedJavaMethodName()));
+		for (int i = 0; i < parametersSize-1; i ++) {
+			callbackLambda.append(", ").append("arg" + i);
+		}
+		callbackLambda.append(");");
+		return callbackLambda.append("\n           }").toString();
+	}
 }

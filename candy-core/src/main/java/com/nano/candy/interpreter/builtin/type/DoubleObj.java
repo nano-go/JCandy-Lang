@@ -32,9 +32,9 @@ public class DoubleObj extends NumberObj {
 		this.value = value;
 	}
 	
-	@NativeMethod(name = Names.METHOD_INITALIZER, arity = 1)
-	public CandyObject init(CNIEnv env, CandyObject[] args) {
-		this.value = ObjectHelper.asDouble(args[0]);
+	@NativeMethod(name = Names.METHOD_INITALIZER)
+	public CandyObject init(CNIEnv env, double value) {
+		this.value = value;
 		return this;
 	}
 

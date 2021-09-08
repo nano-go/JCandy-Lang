@@ -6,9 +6,10 @@ import java.util.List;
 import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.element.VariableElement;
+import javax.lang.model.type.TypeMirror;
 
 /**
- * This class represents a function or a method defined in a class.
+ * This class represents a Java method.
  */
 public class FunctionEnitity {
     
@@ -34,78 +35,57 @@ public class FunctionEnitity {
 		if (annotationClass == NativeMethod.class) {
 			NativeMethod javaMet = annotatedElement.getAnnotation(NativeMethod.class);
 			this.name = javaMet.name();
-			this.arity = javaMet.arity();
 			this.varArgsIndex = javaMet.varArgsIndex();
 		} else {
 			NativeFunc javaFunc = annotatedElement.getAnnotation(NativeFunc.class);
 			this.name = javaFunc.name();
-			this.arity = javaFunc.arity();
 			this.varArgsIndex = javaFunc.varArgsIndex();
+			checkValidateFunction();
 		}
-
+		this.arity = annotatedElement.getParameters().size()-1;
 		checkValidateFunction();
 	}
-
+	
 	private void checkValidateFunction() {
-		if (!Tools.isCandyIdentifier(this.name)) {
-			Tools.throwArgException(
-				"It is not allow that the name() of the %s is not a" +
-				" Candy identifier: %s", 
-				annotationClass.getSimpleName(), name);
-		}
-
-		if (arity < 0) {
-			Tools.throwArgException(
-				"The arity() of the %s must be greater than zero, but " +
-				"the arity() is %d.",
-				annotationClass.getSimpleName(), arity);
-		}
-
-		// varArgsIndex is -1 or < arity
-		if (varArgsIndex < -1 || (varArgsIndex != -1 && varArgsIndex >= arity)) {
-			Tools.throwArgException(
-				"Illegal varArgIndex(): %d. it must (= -1) or (< arity).", 
-				varArgsIndex);
-		}
-		checkJavaMethodType();
-	}
-
-	/**
-	 * Requires the annotated Java method has two parameters.
-	 *
-	 * The first parameter is a `CNIEnv` type and the secondary parameter 
-	 * is a `CandyObject[]`.
-	 *
-	 * And requires the return type is a `CandyObject`. 
-	 */
-	private void checkJavaMethodType() {
 		List<? extends VariableElement> params = annotatedElement.getParameters();
-		if (params.size() != 2) {
+		if (params.size() < 1) {
 			Tools.throwArgException(
-				"The method '%s' annotated with @%s requires three parameters.",
+				"The method '%s' annotated with @%s requires 1 parameter at least.",
 				annotationClass.getSimpleName() ,annotatedJavaMethodName);
 		}
-
 		if (!TypeNames.isCNIEnc(params.get(0).asType())) {
 			Tools.throwArgException(
 				"The first parameter of the method '%s' annotated with @%s" +
 				" must be a CNIEnv.",
 				annotatedJavaMethodName, annotationClass.getSimpleName());
 		}
-
-		if (!TypeNames.isCandyObjectArray(params.get(1).asType())) {
+		if (varArgsIndex < -1 || (varArgsIndex != -1 && varArgsIndex >= arity)) {
 			Tools.throwArgException(
-				"The secondary parameter of the method '%s' annotated with @%s" +
-				" must be a CandyObject array.",
-				annotatedJavaMethodName, annotationClass.getSimpleName());
+				"Illegal varArgIndex(): %d. it must (= -1) or (< arity).", 
+				varArgsIndex);
+		} else if (varArgsIndex != -1) {
+			TypeMirror vararg = params.get(varArgsIndex + 1).asType();
+			if (!TypeNames.CANDY_ARRAY_TYPE.equals(vararg.toString())) {
+				Tools.throwArgException(
+					"Variable-arguments must be a %s, but %s.", 
+					TypeNames.CANDY_ARRAY_TYPE, vararg.toString());
+			}
 		}
-
-		if (!TypeNames.isCandyObject(annotatedElement.getReturnType())) {
-			Tools.throwArgException(
-				"The return type of the method '%s' annotated with @%s" +
-				" must be a CandyObject.",
-				annotatedJavaMethodName, annotationClass.getSimpleName());
+		for (int i = 1; i < params.size(); i ++) {
+			VariableElement ve = params.get(i);
+			checkValidArgType(ve);
 		}
+	}
+	
+	private void checkValidArgType(VariableElement ve) {
+		TypeMirror type = ve.asType();
+		if (TypeNames.isBaseCandyObjType(type)) {
+			return;
+		}
+		if (TypeNames.isSupportedPriType(type)) {
+			return;
+		}
+		Tools.throwArgException("Unsupported argument type: %s", type.toString());
 	}
 	
 	public ExecutableElement getAnnotatedElement() {

@@ -1,8 +1,6 @@
 package com.nano.candy.interpreter.cni;
 
-import com.nano.candy.interpreter.builtin.CandyClass;
 import com.nano.candy.interpreter.builtin.CandyObject;
-import com.nano.candy.interpreter.builtin.type.ArrayObj;
 import com.nano.candy.interpreter.builtin.type.CallableObj;
 import com.nano.candy.interpreter.builtin.type.NullPointer;
 import com.nano.candy.interpreter.builtin.utils.ObjectHelper;
@@ -12,12 +10,12 @@ public class JavaFunctionObj extends CallableObj {
 	
 	@FunctionalInterface
 	public static interface Callback {
-		public CandyObject onCall(CNIEnv env, CandyObject[] args);
+		public CandyObject onCall(CNIEnv env, OperandStack opStack);
 	}
 	
 	private Callback callback;
 	public JavaFunctionObj(String name,
-	                          int arity, Callback callback) {
+	                       int arity, Callback callback) {
 		this(name, arity, -1, callback);
 	}
 	
@@ -29,7 +27,7 @@ public class JavaFunctionObj extends CallableObj {
 	}
 	
 	public JavaFunctionObj(String className, String name,
-	                          int arity, Callback callback) {
+	                       int arity, Callback callback) {
 		this(className, name, arity, -1, callback);
 	}
 	
@@ -44,20 +42,8 @@ public class JavaFunctionObj extends CallableObj {
 
 	@Override
 	public void onCall(CNIEnv env, OperandStack opStack, int argc, int unpackFlags) {
-		CandyObject retVal;
-		if (argc == 0) {
-			retVal = callback.onCall(env, ArrayObj.EMPTY_ARRAY);
-		} else {
-			CandyObject[] args = new CandyObject[argc];
-			for (int i = argc - 1; i >= 0; i --) {
-				args[i] = opStack.pop();
-			}
-			retVal = callback.onCall(env, args);
-		}
-		if (retVal == null) {
-			retVal = NullPointer.nil();
-		}
-		opStack.push(retVal);
+		CandyObject retVal = callback.onCall(env, opStack);
+		opStack.push(retVal != null ? retVal : NullPointer.nil());
 	}
 	
 	@Override
