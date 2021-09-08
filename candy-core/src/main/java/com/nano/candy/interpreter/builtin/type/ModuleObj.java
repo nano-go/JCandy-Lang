@@ -76,10 +76,4 @@ public class ModuleObj extends CandyObject {
 	public CandyObject getName(CNIEnv env) {
 		return StringObj.valueOf(name);
 	}
-	
-	@NativeMethod(name = "importAll")
-	public CandyObject importAll(CNIEnv env) {
-		addToEnv(env.getCurrentFileEnv());
-		return null;
-	}
 }

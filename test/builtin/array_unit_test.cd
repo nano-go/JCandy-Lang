@@ -1,7 +1,5 @@
 import "unit" as unit
-import "../custom" as custom
-
-custom.importAll()
+import "../custom"
 
 class ArrayTest : unit.TestCase {
 	fun indexAccess_test() {
