@@ -75,6 +75,10 @@ public class FunctionEnitity {
 			VariableElement ve = params.get(i);
 			checkValidArgType(ve);
 		}
+		if (!TypeNames.isCandyObject(annotatedElement.getReturnType())) {
+			Tools.throwArgException(
+				"The return-type must be a CandyObject.");
+		}
 	}
 	
 	private void checkValidArgType(VariableElement ve) {

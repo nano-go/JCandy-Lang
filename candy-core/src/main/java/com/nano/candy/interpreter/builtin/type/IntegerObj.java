@@ -3,7 +3,6 @@ import com.nano.candy.interpreter.builtin.CandyClass;
 import com.nano.candy.interpreter.builtin.CandyObject;
 import com.nano.candy.interpreter.builtin.type.IntegerObj;
 import com.nano.candy.interpreter.builtin.type.NumberObj;
-import com.nano.candy.interpreter.builtin.utils.ObjectHelper;
 import com.nano.candy.interpreter.cni.CNIEnv;
 import com.nano.candy.interpreter.cni.NativeClass;
 import com.nano.candy.interpreter.cni.NativeClassRegister;
@@ -52,7 +51,7 @@ public class IntegerObj extends NumberObj {
 	}
 	
 	@NativeMethod(name = "toChar")
-	public StringObj toChar(CNIEnv env) {
+	public CandyObject toChar(CNIEnv env) {
 		return StringObj.valueOf((char) value);
 	}
 
