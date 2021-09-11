@@ -100,5 +100,11 @@ class ArrayTest : unit.TestCase {
 
 		arr = [1, 2, 3]
 		@assertEquals([1, 2, 3, 4], arr << 4)
+
+		arr = [1, 2, 3]
+		arr << 4
+		@assertEquals([1, 2, 3, 4], arr)
+		arr += array(5..8)
+		@assertEquals(array(1..8), arr)
 	}
 }

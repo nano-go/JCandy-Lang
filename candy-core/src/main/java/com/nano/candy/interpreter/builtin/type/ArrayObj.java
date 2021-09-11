@@ -296,9 +296,11 @@ public final class ArrayObj extends CandyObject {
 	@Override
 	public CandyObject add(CNIEnv env, CandyObject operand) {
 		TypeError.checkTypeMatched(ARRAY_CLASS, operand);
-		return new ArrayObj(
-			ArrayUtils.mergeArray(elements, ((ArrayObj) operand).elements)
-		);
+		ArrayObj arr = (ArrayObj) operand;
+		CandyObject[] newElements = new CandyObject[this.length + arr.length];
+		System.arraycopy(this.elements, 0, newElements, 0, this.length);
+		System.arraycopy(arr.elements, 0, newElements, this.length, arr.length);
+		return new ArrayObj(newElements);
 	}
 
 	@Override
