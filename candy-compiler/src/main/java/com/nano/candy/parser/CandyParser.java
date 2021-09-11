@@ -365,14 +365,14 @@ class CandyParser implements Parser {
 		String funcName = node.name.isPresent() ? node.name.get() : "lambda";
 		HashSet<String> duplicatedNameHelper = 
 			new HashSet<>(node.parameters.size());
-		for (String param : node.parameters.params) {
-			if (duplicatedNameHelper.contains(param)) {
+		for (Stmt.Parameter param : node.parameters.params) {
+			if (duplicatedNameHelper.contains(param.name)) {
 				reportError(
 					node, "Duplicated parameter name '%s' in the function '%s'.", 
 					param, funcName
 				);
 			} else {
-				duplicatedNameHelper.add(param);
+				duplicatedNameHelper.add(param.name);
 			}
 		}
 		if (node.parameters.size() > MAX_PARAMETER_NUMBER) {
@@ -608,7 +608,10 @@ class CandyParser implements Parser {
 	 * Called by "IfStmt", "WhileStmt", "ForStmt", "LambdaExpr"
 	 */
 	private Stmt.Block parseBody(Position posIfErr, String msgIfErr) {
-		if (peekKind() == SEMI) {
+		// parseStmt will ignore the ";", but we want to report
+		// an error when a ";" occurs.
+		// "if (...);" is illegal.
+		if (peekKind() == SEMI && !Token.isNewLineSEMI(peek())) {
 			reportError(peek(), "Unexpected '%s'.", tokStr(peek()));
 		}
 		Stmt body = parseStmt();
@@ -1082,29 +1085,61 @@ class CandyParser implements Parser {
 	}
 	
 	/**
-	 * ParameterList = [ ( [ "*" ] <IDENTIFIER> )  [ "," ParameterList ] ]
+	 * ParameterList = [ Parameter [ "," ParameterList ] ]
 	 */
 	private Stmt.Parameters parseParameterList() {
 		if (peekKind() != STAR && peekKind() != IDENTIFIER) {
 			return Stmt.Parameters.empty();
 		}
 		int vaArgIndex = -1;
-		ArrayList<String> params = new ArrayList<>(6);
+		int optionalArgFlags = 0;
+		ArrayList<Stmt.Parameter> params = new ArrayList<>(4);
 		do {
-			if (matchIf(STAR)) {
+			Token errpos = peek();
+			Stmt.Parameter param = parseParameter();
+			if (param == null) break;
+			if (param.isVararg) {
 				if (vaArgIndex != -1) {
-					reportError(previous, "A function only have a parameter to" 
-						+ " aceept variable arguments.");
-				}
+					reportError(errpos, "A function only have a parameter that" 
+						+ " receives any number of arguments.");
+				} 
 				vaArgIndex = params.size();
-				matchIf(IDENTIFIER, true);
-			} else if (!matchIf(IDENTIFIER)) {
-				break;
 			}
-			String paramName = previous().getLiteral();
-			params.add(paramName);
+			if (param.defaultValue.isPresent()) {
+				if (vaArgIndex != -1) {
+					reportError(errpos, "Can't declare an optional argument after" 
+						+ " the parameter that receives any number of arguments.");
+				}
+				if (params.size() >= 32) {
+					reportError(errpos, 
+						"Invalid optional argument at %d (>= 32).", params.size());
+				} else {
+					optionalArgFlags |= (1<<params.size());
+				}
+			}
+			params.add(param);
 		} while (matchIf(COMMA));
-		return new Stmt.Parameters(params, vaArgIndex);
+		return new Stmt.Parameters(params, vaArgIndex, optionalArgFlags);
+	}
+
+	/**
+	 * Parameter = [ [ "*" ] <IDENTIFIER> [ "=" Expr ] ]
+	 */
+	private Stmt.Parameter parseParameter() {
+		String name;
+		boolean isVararg = false;
+		Expr defaultValue = null;
+		if (matchIf(STAR)) {	
+			isVararg = true;
+			matchIf(IDENTIFIER, true);
+		} else if (!matchIf(IDENTIFIER)) {
+			return null;
+		}
+		name = previous().getLiteral();
+		if (matchIf(ASSIGN)) {
+			defaultValue = parseExpr();
+		}
+		return new Stmt.Parameter(name, isVararg, defaultValue);
 	}
 	
 	/**
@@ -1659,16 +1694,16 @@ class CandyParser implements Parser {
 	 * LambdaExpr and LambdaExpr2).
 	 */
 	private Stmt.Parameters convertToParameters(Expr expr) {
-		ArrayList<String> list = new ArrayList<>(4);
+		ArrayList<Stmt.Parameter> list = new ArrayList<>(4);
 		if (expr instanceof Expr.Tuple) {
 			Expr.Tuple tuple = (Expr.Tuple) expr;
 			for (Expr e : tuple.elements) {
-				list.add(varRefToName(e));
+				list.add(new Stmt.Parameter(varRefToName(e)));
 			}
 		} else {
-			list.add(varRefToName(expr));
+			list.add(new Stmt.Parameter(varRefToName(expr)));
 		}
-		return new Stmt.Parameters(list, -1);
+		return new Stmt.Parameters(list, -1, 0);
 	}
 	
 	private String varRefToName(Expr expr) {

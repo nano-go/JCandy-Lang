@@ -265,10 +265,10 @@ public abstract class Stmt extends ASTreeNode {
 	public static class Parameters {
 		
 		public static Parameters empty() {
-			return new Parameters(new ArrayList<String>(), -1);
+			return new Parameters(new ArrayList<Parameter>(), -1, 0);
 		}
 		
-		public final List<String> params;
+		public final List<Parameter> params;
 		
 		/**
 		 * The parameter in the vaArgsIndex allows that variable arguments 
@@ -276,13 +276,37 @@ public abstract class Stmt extends ASTreeNode {
 		 */
 		public final int vaArgsIndex;
 		
-		public Parameters(List<String> params, int isVaArgs) {
+		public final int optionalArgFlags;
+		
+		public Parameters(List<Parameter> params, 
+		                  int vaArgsIndex, int optionalArgFlags) {
 			this.params = params;
-			this.vaArgsIndex = isVaArgs;
+			this.vaArgsIndex = vaArgsIndex;
+			this.optionalArgFlags = optionalArgFlags;
 		}
 		
 		public int size() {
 			return params.size();
+		}
+	}
+	
+	public static class Parameter {
+		public final String name;
+		public final Optional<Expr> defaultValue;
+		public final boolean isVararg;
+		
+		public Parameter(String name) {
+			this(name, false, null);
+		}
+		
+		public Parameter(String name, boolean isVararg) {
+			this(name, isVararg, null);
+		}
+		
+		public Parameter(String name, boolean isVararg, Expr defaultValue) {
+			this.name = name;
+			this.isVararg = isVararg;
+			this.defaultValue = Optional.ofNullable(defaultValue);
 		}
 	}
 	

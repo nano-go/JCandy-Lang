@@ -64,6 +64,9 @@ public class ParserTest {
 		"fun test(a, b, c) \n { a * b * c ; }",
 		"fun test(a, *b) {}",
 		"fun test(*a) {}",
+		"fun test(a, b=0) {}",
+		"fun test(a=0, b=0) {}",
+		"fun test(a, b, c = {\"a\": 5}, *e) {}",
 		"test(a, *b)",
 		"test(*a, b)",
 		"test(lambda a, b -> if (a > b) b else c)",
@@ -92,6 +95,8 @@ public class ParserTest {
 		"var lambdaExpr = |a, *b, c| -> return b",
 		"var lambdaExpr = |a| -> { return b; }",
 		"var lambdaExpr = a -> return b",
+		"var lambdaExpr = |a, b=5, c| -> {}",
+		"var lambdaExpr = |a={\"a\":5}, b=5, *c| -> {}",
 		"var a = lambda a -> return lambda a -> a",
 		"a.b.c = 1566 * 55\n manager.getUser(5).getId = lambda -> return user.id",
 		"stream()\n\t.filter(a).map(b).\nlimit(5)\n.skip(15)\n",
@@ -201,7 +206,16 @@ public class ParserTest {
 		newPECase("fun ", loc(1, 5), loc(1, 5), loc(1, 5), loc(1, 5)),
 		newPECase("fun a(a, *) {}", loc(1, 11)),
 		
+		newPECase("fun foo(a, *b, c=0){}", loc(1, 16)),
+		newPECase("fun foo(*b, c=0){}", loc(1, 13)),
+		newPECase("fun foo(*c=0){}", loc(1, 9)),
+		newPECase("fun foo(b=0, *c, \nd=0){}", loc(2, 1)),
+		newPECase("fun foo(p0, p1, p2, p3, p4, p5, p6, p7, p8, p9, p10, p11, p12, p13, p14, p15, p16, p17, p18, p19, p20, p21, p22, p23, p24, p25, p26, p27, p28, p29, p30, p31, p32=0) {}", 
+			loc(1, 159)),
+		
 		newPECase("var a = lambda -> {\nreturn a \na -;\n}\nreturn", loc(3, 4), loc(5, 1)),
+		newPECase("var a = lambda \n(a, *b, c=0) -> {}", loc(2, 9)),
+		newPECase("var a = \n|a, *b, c=0| -> {}", loc(2, 9)),
 		
 		newPECase("class A { fun a(){\n return a \na -;\n}}\nreturn", loc(3, 4), loc(5, 1)),
 		newPECase("class A {\nfun init() {\nreturn a; }}", loc(3, 1)),
@@ -210,7 +224,7 @@ public class ParserTest {
 		newPECase("class a :", loc(1, 10), loc(1, 10), loc(1, 10)),
 		newPECase("class A { fun test() {super.a(); super.b();}\nfalse}\n", loc(1, 44), loc(2, 6))
 	};
-	 
+	
 	public static ParserErrorCase newPECase(String input, SimulationPositions.Location... expectedLocations) {
 		return new ParserErrorCase(input, expectedLocations);
 	}
