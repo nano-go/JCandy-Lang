@@ -73,4 +73,12 @@ public class Tools {
 	public static char lower(char letter) {
 		return (char)(('a' - 'A') | letter);
 	}
+	
+	public static boolean isOptionalArg(int optionalArgsFlags, int i) {
+		return ((optionalArgsFlags >> i) & 1) == 1;
+	}
+	
+	public static int getOptionalArgCount(int optionalArgsFlags) {
+		return Integer.bitCount(optionalArgsFlags);
+	}
 }

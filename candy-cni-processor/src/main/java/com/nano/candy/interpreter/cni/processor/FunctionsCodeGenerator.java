@@ -30,8 +30,9 @@ public class FunctionsCodeGenerator extends CodeFileGenerator {
 		int i = 0;
 		for (FunctionEnitity f : funcs) {
 			w.writeStatement(
-				"funs[%d] = new JavaFunctionObj(\"%s\", %d, %d, %s)",
-				i, f.getName(), f.getArity(), f.getVarArgIndex(),
+				"funs[%d] = new JavaFunctionObj(\"%s\", %d, %d, %d, %s)",
+				i, f.getName(), f.getArity(), 
+				f.getVarArgIndex(), f.getOptionalArgFlags(),
 				generateCallbackLambda(f));
 			i ++;
 		}

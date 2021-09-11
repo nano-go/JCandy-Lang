@@ -27,16 +27,27 @@ public class ArgumentError extends ErrorObj {
 		}
 	}
 	
-	public static void throwsArgumentError(CallableObj callable, 
+	public static void throwsArgumentError(CallableObj func, 
 	                                       int actual) {
-		if (callable.vaargIndex() != -1) {
-			new ArgumentError(
-				"The %s takes %d+ arguments, but %d were given.",
-				name(callable), callable.arity()-1, actual
-			).throwSelfNative();
+		String fnArgs;
+		int arity = func.arity();
+		int optionalArgFlags = func.optionalArgFlags();
+		
+		if (func.vaargIndex() != -1) {
+			arity --;
+			if (optionalArgFlags != 0) {
+				arity -= func.optionalArgCount();
+			}
+			fnArgs = String.format("%d+", arity);
+		} else if (optionalArgFlags != 0) {
+			fnArgs = String.format(
+				"%d..%d", arity-func.optionalArgCount(), arity);
 		} else {
-			new ArgumentError(callable, actual).throwSelfNative();
+			fnArgs = "" + arity;
 		}
+		new ArgumentError(
+			"The %s takes %s arguments, but %d were given.",
+			name(func), fnArgs, actual).throwSelfNative();
 	}
 	
 	public static void checkValueTooLarge(long value, String argName) {

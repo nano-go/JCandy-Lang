@@ -355,7 +355,10 @@ public class CodeGenerator implements AstVisitor<Void, Void> {
 		enterFunctionScope();
 		int arity = node.parameters.size();
 		int vaArgsIndex = node.parameters.vaArgsIndex;	
-		locals.addLocals(node.parameters.params);
+		int optionalArgFlags = node.parameters.optionalArgFlags;
+		for (Stmt.Parameter param : node.parameters.params) {
+			locals.addLocal(param.name);
+		}
 		if (classDefinedIn != null) {
 			// declare 'this' as the last argument.
 			methodInfo.classDefinedIn = classDefinedIn;
@@ -366,14 +369,34 @@ public class CodeGenerator implements AstVisitor<Void, Void> {
 		if (isDebugMode && classDefinedIn != null) {
 			builder.emitop(OP_NOP, node.pos.getLine());
 		}
+		genOptionalArgsCode(node);
 		walkBlock(node.body);
 		methodInfo.name = name;	
 		methodInfo.arity = arity;
+		methodInfo.optionalArgFlags = optionalArgFlags;
 		methodInfo.varArgsIndex = vaArgsIndex;
 		methodInfo.upvalues = genUpvalueBytes(locals.upvalues());
 		methodInfo.attrs = builder.buildCodeAttr(locals.maxSlotCount());
 		closeFunctionScope();
 		return methodInfo;
+	}
+
+	private void genOptionalArgsCode(Stmt.FuncDef node) {
+		if (node.parameters.optionalArgFlags == 0) {
+			return;
+		}
+		for (Stmt.Parameter param : node.parameters.params) {
+			if (!param.defaultValue.isPresent()) {
+				continue;
+			}
+			Expr defaultVal = param.defaultValue.get();
+			loadVariable(param.name, line(defaultVal));
+			int lablePos = 
+				builder.emitLabel(OP_POP_JUMP_IF_NOT_UNDEFINED, line(defaultVal));
+			defaultVal.accept(this);
+			defineVariable(param.name, line(defaultVal));
+			builder.backpatch(lablePos);
+		}
 	}
 	
 	private byte[] genUpvalueBytes(LocalTable.Upvalue[] upvalues) {

@@ -94,7 +94,8 @@ public class CandyClass extends CallableObj {
 	protected CandyClass(ClassSignature signature) {
 		super(signature.className, 
 			  signature.initializer == null ? 0 : signature.initializer.arity()-1,
-			  signature.initializer == null ? -1 : signature.initializer.vaargIndex());
+			  signature.initializer == null ? -1 : signature.initializer.vaargIndex(),
+			  signature.initializer == null ? 0 : signature.initializer.optionalArgFlags());
 		this.predefinedAttrs = signature.attrs;
 		this.superClass = signature.superClass;
 		this.className = signature.className;

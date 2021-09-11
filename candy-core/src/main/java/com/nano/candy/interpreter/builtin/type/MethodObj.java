@@ -17,7 +17,8 @@ public class MethodObj extends CallableObj {
 	public MethodObj(CandyObject receiver, CallableObj method) {
 		super(
 			method.funcName(), method.fullName(),
-			method.arity()-1, method.vaargIndex()
+			method.arity()-1, method.vaargIndex(), 
+			method.optionalArgFlags()
 		);
 		this.receiver = receiver;
 		this.method = method;

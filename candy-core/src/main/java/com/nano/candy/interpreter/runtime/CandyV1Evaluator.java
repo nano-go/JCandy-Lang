@@ -382,7 +382,8 @@ public class CandyV1Evaluator implements Evaluator {
 	}
 	
 	private final int checkArgument(CallableObj fn, int argc, int unpackFlags) {
-		if (unpackFlags == EMPTY_UNPACK_FLAGS && fn.vaargIndex() < 0) {
+		if (unpackFlags == EMPTY_UNPACK_FLAGS && fn.vaargIndex() < 0 &&
+		    fn.optionalArgFlags() == 0) {
 			if (fn.arity() != argc) {
 				ArgumentError.throwsArgumentError(fn, argc);
 			}
@@ -397,7 +398,9 @@ public class CandyV1Evaluator implements Evaluator {
 	private final CandyObject[] unpack(CallableObj fn, int argc, int unpackFlags) {
 		opStack.reverse(argc);
 		CandyObject[] args = ElementsUnpacker.unpackFromStack
-			(env.cniEnv, opStack, argc, fn.vaargIndex(), fn.arity(), unpackFlags);
+			(env.cniEnv, opStack, argc, 
+				fn.vaargIndex(), fn.arity(), 
+				unpackFlags, fn.optionalArgFlags());
 		if (args == null) {
 			ArgumentError.throwsArgumentError(fn, argc);
 		}
@@ -510,7 +513,12 @@ public class CandyV1Evaluator implements Evaluator {
 					frame.pc += opStack.pop().boolValue(env.cniEnv).value() ?
 						readJumpOffset() : 2;
 					break;
-				}		
+				}
+				case OP_POP_JUMP_IF_NOT_UNDEFINED: {
+					frame.pc += opStack.pop() != NullPointer.undefined() ?
+						readJumpOffset() : 2;
+					break;
+				}
 				case OP_JUMP_IF_FALSE: {
 					frame.pc += !opStack.peek(0).boolValue(env.cniEnv).value() ?
 						readJumpOffset() : 2;
@@ -528,7 +536,7 @@ public class CandyV1Evaluator implements Evaluator {
 				case OP_LOOP: {
 					frame.pc -= readJumpOffset();
 					break;
-				}
+				}		
 
 				/**
 				 * Unary Operations.

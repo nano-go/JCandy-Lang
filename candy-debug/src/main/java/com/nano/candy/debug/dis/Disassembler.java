@@ -93,6 +93,7 @@ public class Disassembler {
 				return disassSimpleInsWithArg(pc, 1, true);
 			case OP_POP_JUMP_IF_FALSE:
 			case OP_POP_JUMP_IF_TRUE:
+			case OP_POP_JUMP_IF_NOT_UNDEFINED:
 			case OP_JUMP_IF_FALSE:
 			case OP_JUMP_IF_TRUE:
 			case OP_JUMP:

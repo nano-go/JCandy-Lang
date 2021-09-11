@@ -77,6 +77,7 @@ public abstract class ConstantValue {
 		public String name;
 		public int arity;
 		public int varArgsIndex;
+		public int optionalArgFlags;
 		public byte[] upvalues;
 		public ClassInfo classDefinedIn;
 		public CodeAttribute attrs;

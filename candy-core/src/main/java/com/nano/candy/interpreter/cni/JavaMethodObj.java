@@ -17,11 +17,12 @@ public class JavaMethodObj extends CallableObj {
 	private Callback callback;
 	
 	public JavaMethodObj(String className, String methodName, 
-	                     int arity, int varArgsIndex, 
-						 Callback callback) {
+	                     int arity, int varArgsIndex,
+	                     int optionalArgFlags,
+	                     Callback callback) {
 		super(
 			methodName, ObjectHelper.methodName(className, methodName), 
-			arity + 1, varArgsIndex);
+			arity + 1, varArgsIndex, optionalArgFlags);
 		this.callback = callback;
 	}
 	

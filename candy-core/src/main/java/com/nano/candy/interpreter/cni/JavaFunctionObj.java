@@ -16,27 +16,29 @@ public class JavaFunctionObj extends CallableObj {
 	private Callback callback;
 	public JavaFunctionObj(String name,
 	                       int arity, Callback callback) {
-		this(name, arity, -1, callback);
+		this(name, arity, -1, 0, callback);
 	}
 	
 	public JavaFunctionObj(String name,
-	                       int arity,
-						   int varArgsIndex, Callback callback) {
-		super(name, name, arity, varArgsIndex);
+	                       int arity, int varArgsIndex, 
+	                       int optionalArgFlags, 
+	                       Callback callback) {
+		super(name, name, arity, varArgsIndex, optionalArgFlags);
 		this.callback = callback;
 	}
 	
 	public JavaFunctionObj(String className, String name,
 	                       int arity, Callback callback) {
-		this(className, name, arity, -1, callback);
+		this(className, name, arity, -1, 0, callback);
 	}
 	
 	public JavaFunctionObj(String className, String name,
 	                       int arity, int varArgsIndex,
+	                       int optionalArgFlags,
 	                       Callback callback) {
 		super(
 			name, ObjectHelper.methodName(className, name), 
-			arity, varArgsIndex);
+			arity, varArgsIndex, optionalArgFlags);
 		this.callback = callback;
 	}
 

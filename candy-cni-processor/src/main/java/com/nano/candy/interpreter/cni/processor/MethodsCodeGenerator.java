@@ -34,8 +34,9 @@ public class MethodsCodeGenerator extends CodeFileGenerator {
 		int i = 0;
 		for (FunctionEnitity f : methods) {
 			w.writeStatement(
-				"methods[%d] = new JavaMethodObj(className, \"%s\", %d, %d, %s)",
-				i, f.getName(), f.getArity(), f.getVarArgIndex(),
+				"methods[%d] = new JavaMethodObj(className, \"%s\", %d, %d, %d, %s)",
+				i, f.getName(), f.getArity(), 
+				f.getVarArgIndex(), f.getOptionalArgFlags(),
 				generateCallbackLambda(f));
 			i ++;
 		}

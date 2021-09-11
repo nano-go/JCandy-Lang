@@ -4,38 +4,42 @@ import com.nano.candy.interpreter.builtin.CandyObject;
 import com.nano.candy.interpreter.builtin.type.ArrayObj;
 import com.nano.candy.interpreter.builtin.type.CallableObj;
 import com.nano.candy.interpreter.builtin.type.NullPointer;
-import com.nano.candy.interpreter.builtin.type.error.TypeError;
 import com.nano.candy.interpreter.cni.CNIEnv;
 import com.nano.candy.interpreter.runtime.OperandStack;
-import com.nano.candy.std.Names;
 import java.util.LinkedList;
 
 public class ElementsUnpacker {
 	
 	/**
-	 * Fetchs n elements and unpacks them into target elements and returns 
+	 * Fetches n elements and unpacks them into the target elements and returns 
 	 * them.
 	 *
 	 * <p>This method is used for calling functions.
 	 *
 	 * <p>For example:
 	 * <pre>
+	 * // Define a function, which the secondary parameter 'b' is a variable-length
+	 * // argument.
 	 * fun foo(a, *b) {...}
-	 * foo(1, *arr)
+	 *
+	 * var arr = [1, 2, 3]
+	 * // Call it. We unpack the 'arr'.
+	 * foo(1, *arr, 2)
 	 * </pre>
 	 *
-	 * <p> In the above code part, we use this method to unpack the 
-	 * argument {@code arr} which is an array and assign arguments to
-	 * the {@code a} and {@code b} which is a variable argument.
+	 * <p> In the above code part, we will use this `unpackFromStack` to
+	 * unpack the argument {@code arr}, which is an array, and assign the unpacked
+	 * arguments to the {@code a} and the {@code b}, which is a parameter that
+	 * accepts variable-length arguments.
 	 *
 	 * @param n Fetchs n elements from the specified operand stack.
 	 *
-	 * @param starIndex
+	 * @param starInqdex
 	 *        {@code targetElements[startIndex]} will be fetched from the 
 	 *        unpacked elements as far as possiable and combined into an array.
 	 *        <p>For example:
 	 *        <p>{@code a, *b = 1, 2, 3, 4;(starIndex = 1)} and {@code [2, 3, 4]}
-	 *        will be assigned to {@code b}.
+	 *        will be assigned to the {@code b}.
 	 *
 	 * @param targetLen The length of target elements
 	 *
@@ -53,107 +57,164 @@ public class ElementsUnpacker {
 	                                            int n,
 	                                            int starIndex,
 												int targetLen,
-												int unpackFlags) 
+												int unpackFlags,
+												int optionalArgsFlags) 
 	{
-		if (!checkArgs(n, starIndex, targetLen, unpackFlags)) {
+		if (!checkArgs(n, starIndex, targetLen, unpackFlags, optionalArgsFlags)) {
 			return null;
 		}
 		if (unpackFlags == CallableObj.EMPTY_UNPACK_FLAGS) {
-			return fetchFromStack(opStack, n, starIndex, targetLen);
+			// none of the elements to be unpacked.
+			// fast get
+			return fetchFromStack(opStack, n, starIndex, targetLen, optionalArgsFlags);
 		}
-		
-		if (starIndex < 0 || starIndex >= targetLen) {
-			CandyObject[] elements = new CandyObject[targetLen];
-			return unpackToElements(env, opStack, n, unpackFlags, elements) ?
-				elements : null;
+		if ((starIndex < 0 || starIndex >= targetLen) && optionalArgsFlags == 0) {
+			// none of variable-length arguments.
+			// fast get
+			CandyObject[] target = new CandyObject[targetLen];
+			return unpackToTargetElements(env, opStack, n, unpackFlags, target) ?
+				target : null;
 		}
-		
+		return getTargetElements(
+			env, opStack, n, starIndex, targetLen, unpackFlags, optionalArgsFlags);
+	}
+	
+	private static CandyObject[] getTargetElements(CNIEnv env, OperandStack opStack,
+												   int n,
+												   int starIndex,
+												   int targetLen,
+											  	   int unpackFlags,
+												   int optionlArgsFlags) {
 		LinkedList<CandyObject> buffer = new LinkedList<>();
 		unpackToBuffer(env, opStack, n, unpackFlags, buffer);
-		if (buffer.size() < targetLen-1) {
+		int optionalParameterN = Integer.bitCount(optionlArgsFlags);
+		// the number of the non-optional paramerers.
+		// excluding variable-length argument.
+		int nonOptionalParamN = targetLen-optionalParameterN;
+		if (starIndex >= 0) nonOptionalParamN --;
+		if (buffer.size() < nonOptionalParamN) {
 			return null;
 		}
-		CandyObject[] elements = new CandyObject[targetLen];
-		int i = 0;
-		while (!buffer.isEmpty() && i < targetLen) {
+		CandyObject[] target = new CandyObject[targetLen];
+		for (int i = 0; i < targetLen; i ++) {
+			target[i] = NullPointer.undefined();
+		}
+		int i;
+		for (i = 0; i < targetLen && !buffer.isEmpty(); i ++) {
 			if (i == starIndex) {
-				elements[i] = 
+				target[i] = 
 					fetchElementsAsFarAsPossiable(buffer, starIndex, targetLen);
-			} else {
-				elements[i] = buffer.poll();
+			} else if (((optionlArgsFlags >> i) & 1) != 1) {
+				target[i] = buffer.poll();
+				nonOptionalParamN --;
+			} else if (buffer.size() > nonOptionalParamN) {
+				target[i] = buffer.poll();
 			}
-			i ++;
 		}
-		if (i == starIndex) {
-			// the buffer is empty;
-			elements[i ++] = ArrayObj.emptyArray();
+		if (i <= starIndex) {
+			target[starIndex] = ArrayObj.emptyArray();
 		}
-		return i < targetLen ? null : elements;
+		if (unpackFlags == 0 && !buffer.isEmpty()) {
+			return null;
+		}
+		return nonOptionalParamN <= 0 ? target : null;
 	}
 
 	private static CandyObject[] fetchFromStack(OperandStack opStack, int n, 
 	                                            int starIndex,
-	                                            int targetLen) {
-		CandyObject[] elements = new CandyObject[targetLen];
-		if (starIndex < 0) { 
-			// targetLen == n
-			for (int i = 0; i < n; i ++) {
-				elements[i] = opStack.pop();
-			}
-			return elements;
+	                                            int targetLen,
+												int optionalArgFlags) {
+		CandyObject[] target = new CandyObject[targetLen];
+		if (starIndex < 0) {
+			assignToTargetDirectly(opStack, n, target, optionalArgFlags);
+			return target;
 		}
 		
-		int nextTargetElements = targetLen - starIndex - 1;
+		int noOptionalArgsN = target.length-Integer.bitCount(optionalArgFlags)-1;
+		int nextTargetElements = targetLen-starIndex-1;
 		int i;
-		for (i = 0; i < starIndex; i ++, n --) {
-			elements[i] = opStack.pop();
+		for (i = 0; i < starIndex; i ++) {
+			if (((optionalArgFlags >> i) & 1) != 1) {
+				target[i] = opStack.pop();
+				n--;
+				noOptionalArgsN --;
+			} else if (n > noOptionalArgsN) {
+				target[i] = opStack.pop();
+				n--;
+			} else {
+				target[i] = NullPointer.undefined();
+			}
 		}
 		// StarIndex Assign
 		if (nextTargetElements >= n) {
-			elements[i] = ArrayObj.emptyArray();
+			target[i] = ArrayObj.emptyArray();
 		} else {
 			ArrayObj arr = new ArrayObj(8);
 			while (nextTargetElements < n) {
 				arr.append(opStack.pop());
 				n --;
 			}
-			elements[i] = arr;
+			target[i] = arr;
 		}
 		i ++;
-		for (; i < targetLen; i ++, n --) {
-			elements[i] = opStack.pop();
+		for (; i < targetLen; i ++) {
+			target[i] = opStack.pop();
 		}
-		return elements;
+		return target;
+	}
+
+	private static void assignToTargetDirectly(OperandStack opStack, int n, 
+	                                           CandyObject[] target,
+											   int optionalArgFlags) {
+		if (optionalArgFlags == 0) {
+			// n == targetLen
+			for (int i = 0; i < n; i ++) {
+				target[i] = opStack.pop();
+			}
+			return;
+		}
+		int noOptionalArgsN = target.length-Integer.bitCount(optionalArgFlags);
+		for (int i = 0; i < target.length; i ++) {
+			if (((optionalArgFlags >> i) & 1) != 1) {
+				target[i] = opStack.pop();
+				n--;
+				noOptionalArgsN --;
+			} else if (n > noOptionalArgsN) {
+				target[i] = opStack.pop();
+				n--;
+			} else {
+				target[i] = NullPointer.undefined();
+			}
+		}
 	}
 	
 	/**
-	 * Fetchs/Unpacks n elements from the stack into the elements.
+	 * Fetchs/Unpacks n elements from the stack into the specified target elements.
 	 */
-	public static boolean unpackToElements(CNIEnv env, OperandStack opStack, 
-	                                       int n, int unpackingBits,
-	                                       CandyObject[] elements) {
+	public static boolean unpackToTargetElements(CNIEnv env, OperandStack opStack, 
+	                                             int n, int unpackingBits,
+	                                             CandyObject[] target) {
 		int i ,j;
-		outter: for (i = 0, j = 0; i < n && j < elements.length; i ++) {
+		outter: for (i = 0, j = 0; i < n && j < target.length; i ++) {
 			if (((unpackingBits >> i) & 1) == 1) {
-				CandyObject srcElement = opStack.pop();
-				if (srcElement == NullPointer.nil()) {
-					elements[j ++] = srcElement;
+				CandyObject element = opStack.pop();
+				if (element == NullPointer.nil()) {
+					target[j ++] = element;
 					continue;
 				}
-				for (CandyObject e : 
-					new IterableCandyObject(env, srcElement)) {		
-					elements[j ++] = e;
-					if (j >= elements.length) {
+				for (CandyObject e : new IterableCandyObject(env, element)) {		
+					target[j ++] = e;
+					if (j >= target.length) {
 						i ++;
 						break outter;
 					}
 				}
 			} else {
-				elements[j ++] = opStack.pop();
+				target[j ++] = opStack.pop();
 			}
 		}
 		for (;i < n; i ++) opStack.pop();
-		return j >= elements.length;
+		return j >= target.length;
 	}
 	
 	/**
@@ -172,11 +233,13 @@ public class ElementsUnpacker {
 	}
 	
 	/**
-	 * Unpacks the specified element (must be an iterable object) into 
-	 * the buffer. 
+	 * Unpacks the specfied element into the buffer.
 	 *
-	 * <p>If the element is {@link NullPointer.nil()}, the {@code null} will
-	 * not be unpacked, but it will be offered to the buffer.
+	 * <p>If the element is null, it will be added into the buffer directly.
+	 *
+	 * <p>We treat the specified element as an iterable object and use the
+	 * {@link IterableCandyObject} to iterate over elements of the iterable
+	 * object.
 	 */
 	public static void unpackElement(CNIEnv env, CandyObject element, 
 	                                 LinkedList<CandyObject> buffer) {
@@ -184,33 +247,26 @@ public class ElementsUnpacker {
 			buffer.offer(element);
 			return;
 		}
-		CandyObject obj = element.callIterator(env);
-		CandyObject hasNext =
-			obj.callGetAttr(env, Names.METHOD_ITERATOR_HAS_NEXT);
-		CandyObject next =
-			obj.callGetAttr(env, Names.METHOD_ITERATOR_NEXT);
-		TypeError.checkIsCallable(hasNext);
-		TypeError.checkIsCallable(next);
-		int size = 0;
-		while (((CallableObj) hasNext).call(env)
-		       .boolValue(env).value()) {
-			CandyObject e = ((CallableObj) next).call(env);
+		for (CandyObject e : new IterableCandyObject(env, element)) {		
 			buffer.offer(e);
-			size ++;
 		}
 	}
 	
 	/**
 	 * Fetchs elements from the buffer as far as possiable and 
 	 * combined into an array.
+	 *
+	 * @param buffer      The element buffer.
+	 * @param starIndex   The index of the variable-arguments.
+	 * @param targetLen   The length of the target elements.
 	 */
-	public static CandyObject fetchElementsAsFarAsPossiable(
-	                                      LinkedList<CandyObject> buffer, 
+	public static ArrayObj fetchElementsAsFarAsPossiable(
+	                                      LinkedList<CandyObject> buffer,
 	                                      int starIndex, 
 										  int targetLen)
 	{
 		// The number of the next target elements.
-		// For example: a, *b, c, d nextTargetElements = 2 (c and d)
+		// For example: a, *b, c, d; nextTargetElements = 2 (c and d)
 		int nextTargetElements = targetLen - starIndex - 1;
 		if (nextTargetElements >= buffer.size()) {
 			return ArrayObj.emptyArray();
@@ -223,18 +279,27 @@ public class ElementsUnpacker {
 	}
 	
 	private static boolean checkArgs(int n, int starIndex, 
-	                                 int targetLen, int unpackingBits) {
+	                                 int targetLen, 
+									 int unpackingBits,
+									 int optionalArgsFlags) {
 		if (starIndex >= targetLen) {
 			throw new Error
 				("Unexpected Arguments: StarInxex(" + starIndex + 
 			 	 "), TargetLen(" + targetLen + ")");
 		}
-		if (unpackingBits != 0) {
-			return !(n == 0 && targetLen != 0);
+		if (unpackingBits != CallableObj.EMPTY_UNPACK_FLAGS) {
+			if (n == 0) {
+				throw new Error("Invalid 'unpackingBits: " + unpackingBits);
+			}
+			return true;
 		}
-		if (starIndex < 0) {
-			return targetLen == n;
+		if (optionalArgsFlags == 0) {
+			return starIndex < 0 ? targetLen==n : n>=targetLen-1;
 		}
-		return n >= targetLen-1;
+		int optionalArgsCount = Integer.bitCount(optionalArgsFlags);
+		if (starIndex < 0) {	
+			return n >= targetLen-optionalArgsCount && n <= targetLen; 
+		}
+		return n >= targetLen-1-optionalArgsCount;
 	}
 }

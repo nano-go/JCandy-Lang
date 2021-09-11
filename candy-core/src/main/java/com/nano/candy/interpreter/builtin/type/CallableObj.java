@@ -49,23 +49,30 @@ public abstract class CallableObj extends CandyObject {
 	 */
 	private final int varargsIndex;
 	
+	private final int optionalArgFlags;
+	
 	private boolean isInitializedAttrs;
 	
 	public CallableObj(String funcName, String fullName, 
 	                   ConstantValue.MethodInfo met) {
-		this(funcName, fullName, met.arity, met.varArgsIndex);
+		this(funcName, fullName, met.arity, met.varArgsIndex, met.optionalArgFlags);
 	}
 	
-	public CallableObj(String name, int arity, int varargsIndex) {
-		this(name, name, arity, varargsIndex);
+	public CallableObj(String name, 
+	                   int arity,
+	                   int varargsIndex,
+	                   int optionalArgFlags) {
+		this(name, name, arity, varargsIndex, optionalArgFlags);
 	}
 	
 	public CallableObj(String funcName,
-	                   String fullName, int arity, int varargsIndex) {
+	                   String fullName, 
+	                   int arity, int varargsIndex, int optionalArgFlags) {
 		this.funcName = funcName;
 		this.fullName = fullName;
 		this.arity = arity;
 		this.varargsIndex = varargsIndex;
+		this.optionalArgFlags = optionalArgFlags;
 	}
 
 	@Override
@@ -83,6 +90,14 @@ public abstract class CallableObj extends CandyObject {
 	
 	public int vaargIndex() {
 		return varargsIndex;
+	}
+	
+	public int optionalArgFlags() {
+		return optionalArgFlags;
+	}
+	
+	public int optionalArgCount() {
+		return Integer.bitCount(optionalArgFlags);
 	}
 	
 	public int arity() {

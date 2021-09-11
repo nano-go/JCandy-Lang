@@ -15,7 +15,12 @@ public class NullPointer extends CandyObject {
 		NativeClassRegister.generateNativeClass(NullPointer.class);
 	
 	private static NullPointer nil = new NullPointer() ;
-
+	private static NullPointer undefined = new NullPointer();
+	
+	public static NullPointer undefined() { 
+		return undefined;
+	}
+	
 	public static NullPointer nil() {
 		return nil ;
 	}

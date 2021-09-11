@@ -8,7 +8,6 @@ import com.nano.candy.interpreter.cni.CNIEnv;
 import com.nano.candy.interpreter.runtime.FileEnvironment;
 import com.nano.candy.interpreter.runtime.Frame;
 import com.nano.candy.interpreter.runtime.OperandStack;
-import com.nano.candy.interpreter.runtime.FrameStack;
 import com.nano.candy.interpreter.runtime.Upvalue;
 
 public final class PrototypeFunction extends CallableObj {
@@ -44,7 +43,7 @@ public final class PrototypeFunction extends CallableObj {
 	}
 	
 	public PrototypeFunction(Chunk chunk, FileEnvironment fileEnv) {
-		super(chunk.getSimpleName(), 0, -1);
+		super(chunk.getSimpleName(), 0, -1, 0);
 		this.chunk = chunk;
 		this.pc = 0;
 		this.upvalues = Upvalue.EMPTY_UPVALUES;

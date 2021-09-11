@@ -24,6 +24,8 @@ public abstract class CodeFileGenerator {
 		ARG_CONVERTOR.put(CANDY_TUPLE_TYPE, "TypeError.requiresTupleObj(%s)");
 		ARG_CONVERTOR.put(CANDY_ARRAY_TYPE, "TypeError.requiresArrayObj(%s)");
 		ARG_CONVERTOR.put(CANDY_CALLABLE_TYPE, "TypeError.requiresCallable(%s)");
+		
+		ARG_CONVERTOR.put(OPTIONAL_ARG_TYPE, "new OptionalArg(%s)");
 
 		ARG_CONVERTOR.put(byte.class.getName(), "(byte)ObjectHelper.asInteger(%s)");
 		ARG_CONVERTOR.put(short.class.getName(), "(short)ObjectHelper.asInteger(%s)");
@@ -89,6 +91,7 @@ public abstract class CodeFileGenerator {
 		w.writeImport("com.nano.candy.interpreter.cni.*");
 		w.writeImport("com.nano.candy.interpreter.builtin.CandyObject");
 		w.writeImport("com.nano.candy.interpreter.builtin.utils.ObjectHelper");
+		w.writeImport("com.nano.candy.interpreter.builtin.utils.OptionalArg");
 		w.writeImport("com.nano.candy.interpreter.builtin.type.error.TypeError");
 		w.write("\n");
 	}
