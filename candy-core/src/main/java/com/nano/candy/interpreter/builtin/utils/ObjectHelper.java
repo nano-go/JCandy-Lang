@@ -8,7 +8,6 @@ import com.nano.candy.interpreter.builtin.type.IntegerObj;
 import com.nano.candy.interpreter.builtin.type.NullPointer;
 import com.nano.candy.interpreter.builtin.type.NumberObj;
 import com.nano.candy.interpreter.builtin.type.StringObj;
-import com.nano.candy.interpreter.builtin.type.error.ArgumentError;
 import com.nano.candy.interpreter.builtin.type.error.AttributeError;
 import com.nano.candy.interpreter.builtin.type.error.TypeError;
 import com.nano.candy.interpreter.cni.CNIEnv;
