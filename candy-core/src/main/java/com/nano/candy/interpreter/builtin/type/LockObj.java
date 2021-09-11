@@ -4,6 +4,7 @@ import com.nano.candy.interpreter.builtin.CandyClass;
 import com.nano.candy.interpreter.builtin.CandyObject;
 import com.nano.candy.interpreter.builtin.type.error.InterruptedError;
 import com.nano.candy.interpreter.builtin.utils.ObjectHelper;
+import com.nano.candy.interpreter.builtin.utils.OptionalArg;
 import com.nano.candy.interpreter.cni.CNIEnv;
 import com.nano.candy.interpreter.cni.NativeClass;
 import com.nano.candy.interpreter.cni.NativeClassRegister;
@@ -46,10 +47,9 @@ public class LockObj extends CandyObject {
 		return this;
 	}
 	
-	@NativeMethod(name = "tryLock", varArgsIndex = 0)
-	public CandyObject tryLock(CNIEnv env, ArrayObj sec) {
-		CandyObject second = ObjectHelper.getOptionalArgument(sec, IntegerObj.valueOf(0));
-		long s = ObjectHelper.asInteger(second);
+	@NativeMethod(name = "tryLock")
+	public CandyObject tryLock(CNIEnv env, OptionalArg timeout) {
+		long s = ObjectHelper.asInteger(timeout.getValue(0));
 		try {
 			return BoolObj.valueOf(lock.tryLock(s, TimeUnit.SECONDS));
 		} catch (InterruptedException e) {

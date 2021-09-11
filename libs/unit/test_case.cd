@@ -123,8 +123,7 @@ class TestCase {
 	/**
 	 * Raise an error to report the running method is failure.
 	 */
-	fun assertFail(*msg) {
-		msg = msg.isEmpty() ? "" : msg[0]
+	fun assertFail(msg="") {
 		raise AssertionError(msg)
 	}
 	
@@ -133,7 +132,7 @@ class TestCase {
 	 * error will be raised by this method used to report that the
 	 * running method is failure.
 	 */
-	fun assertEquals(expected, actual, *msg) {
+	fun assertEquals(expected, actual, msg="") {
 		if (expected != actual) {
 			msg = msg.isEmpty() ? "" : msg[0]
 			this.assertFail("Expected " + expected + ", but was " + 
@@ -146,9 +145,8 @@ class TestCase {
 	 * error will be raised by this method used to report that the
 	 * running method is failure.
 	 */
-	fun assertNotEquals(unexpected, actual, *msg) {
+	fun assertNotEquals(unexpected, actual, msg="") {
 		if (unexpected == actual) {
-			msg = msg.isEmpty() ? "" : msg[0]
 			this.assertFail("Unexpected " + actual + ": [" + msg + "]")
 		}
 	}
@@ -159,8 +157,8 @@ class TestCase {
 	 * Note that this method will compare the 'bool(expr) == true' 
 	 * instead of the '(expr == true)'
 	 */
-	fun assertTrue(expr, *msg) {
-		this.assertEquals(true, bool(expr), *msg)
+	fun assertTrue(expr, msg="") {
+		this.assertEquals(true, bool(expr), msg)
 	}
 	
 	/**
@@ -169,29 +167,28 @@ class TestCase {
 	 * Note that this method will compare the 'bool(expr) == false' 
 	 * instead of the '(expr == false)'
 	 */
-	fun assertFalse(expr, *msg) {
-		this.assertEquals(false, bool(expr), *msg)
+	fun assertFalse(expr, msg="") {
+		this.assertEquals(false, bool(expr), msg)
 	}
 
 	/**
 	 * Test that the 'expr' is null.
 	 */
-	fun assertNull(expr, *msg) {
-		this.assertEquals(null, expr, *msg)
+	fun assertNull(expr, msg="") {
+		this.assertEquals(null, expr, msg)
 	}
 	
 	/**
 	 * Test that the 'expr' is not null.
 	 */
-	fun assertNotNull(expr, *msg) {
-		this.assertNotEquals(null, expr, *msg)
+	fun assertNotNull(expr, msg="") {
+		this.assertNotEquals(null, expr, msg)
 	}
 
 	/**
 	 * Test that the 'obj' is an instance of 'cls'.
 	 */
-	fun assertIsInstance(cls, obj, *msg) {
-		msg = msg.isEmpty() ? "" : msg[0]
+	fun assertIsInstance(cls, obj, msg="") {
 		if (!(obj is cls)) {
 			this.assertFail(
 				"Expected the obj is an instance of the class '" +
@@ -204,8 +201,7 @@ class TestCase {
 	/**
 	 * Test that the 'obj' is not an instance of 'cls'.
 	 */
-	fun assertIsNotInstance(cls, obj, *msg) {
-		msg = msg.isEmpty() ? "" : msg[0]
+	fun assertIsNotInstance(cls, obj, msg="") {
 		if (obj is cls) {
 			this.assertFail(
 				"Expected the obj is not an instance of the class '" +
@@ -226,8 +222,7 @@ class TestCase {
 	 *
 	 * If the 'errType' is null, it represents any error.
 	 */
-	fun expectedErrorRaised(errType, fn, *msg) {
-		msg = msg.isEmpty() ? "" : msg[0]
+	fun expectedErrorRaised(errType, fn, msg="") {
 		if (errType == null) {
 			errType = Error
 		} else if (!errType.isClass()) {

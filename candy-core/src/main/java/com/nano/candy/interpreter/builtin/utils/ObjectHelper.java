@@ -2,7 +2,6 @@ package com.nano.candy.interpreter.builtin.utils;
 
 import com.nano.candy.interpreter.builtin.CandyClass;
 import com.nano.candy.interpreter.builtin.CandyObject;
-import com.nano.candy.interpreter.builtin.type.ArrayObj;
 import com.nano.candy.interpreter.builtin.type.CallableObj;
 import com.nano.candy.interpreter.builtin.type.IntegerObj;
 import com.nano.candy.interpreter.builtin.type.NullPointer;
@@ -95,11 +94,6 @@ public class ObjectHelper {
 			elements.add(iterator.next());
 		}
 		return elements.toArray(new CandyObject[elements.size()]);
-	}
-	
-	public static CandyObject getOptionalArgument(CandyObject vargs, CandyObject defaultVal) {
-		ArrayObj arr = (ArrayObj) vargs;
-		return arr.length() == 0 ? defaultVal : arr.get(0);
 	}
 	
 	public static CandyObject callFunction(CNIEnv env, CallableObj callable, CandyObject... args) {

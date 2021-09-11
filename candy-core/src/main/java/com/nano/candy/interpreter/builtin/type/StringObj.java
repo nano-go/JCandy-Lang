@@ -8,6 +8,7 @@ import com.nano.candy.interpreter.builtin.type.error.RangeError;
 import com.nano.candy.interpreter.builtin.type.error.TypeError;
 import com.nano.candy.interpreter.builtin.utils.IndexHelper;
 import com.nano.candy.interpreter.builtin.utils.ObjectHelper;
+import com.nano.candy.interpreter.builtin.utils.OptionalArg;
 import com.nano.candy.interpreter.cni.CNIEnv;
 import com.nano.candy.interpreter.cni.NativeClass;
 import com.nano.candy.interpreter.cni.NativeClassRegister;
@@ -313,13 +314,10 @@ public class StringObj extends CandyObject {
 		);
 	}
 	
-	@NativeMethod(name = "toInt", varArgsIndex = 0)
-	public CandyObject toInt(CNIEnv env, ArrayObj array){
-		CandyObject radix = 
-			ObjectHelper.getOptionalArgument(array, IntegerObj.valueOf(10));
-		return IntegerObj.valueOf(
-			Integer.valueOf(value, (int) ObjectHelper.asInteger(radix))
-		);
+	@NativeMethod(name = "toInt")
+	public CandyObject toInt(CNIEnv env, OptionalArg radixArg){
+		int radix = (int) ObjectHelper.asInteger(radixArg.getValue(10));
+		return IntegerObj.valueOf(Integer.valueOf(value, radix));
 	}
 	
 	@NativeMethod(name = "toDouble")

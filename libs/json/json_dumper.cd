@@ -39,16 +39,16 @@ class JsonDumper {
 
 	pri indent, format, method, curIndent, indentCount
 
-	static fun dump(element, *options) {
-		this(*options).dump(element)
+	static fun dump(element, options={}) {
+		this(options).dump(element)
 	}
 
-	fun init(*options) {
+	fun init(options={}) {
 		@options = {
 			"indent": "   ",
 			"format": true,
 			"method": "toElement",
-		}.putAll(!options.isEmpty() ? options[0] : {})
+		}.putAll(options)
 
 		@indent = @options["indent"]
 		@format = @options["format"]
