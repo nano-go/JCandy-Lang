@@ -6,6 +6,7 @@ import com.nano.candy.interpreter.builtin.type.ArrayObj;
 import com.nano.candy.interpreter.builtin.type.StringObj;
 import com.nano.candy.interpreter.builtin.type.error.ErrorObj;
 import com.nano.candy.interpreter.builtin.utils.ObjectHelper;
+import com.nano.candy.interpreter.builtin.utils.OptionalArg;
 import com.nano.candy.interpreter.cni.CNIEnv;
 import com.nano.candy.interpreter.cni.NativeClass;
 import com.nano.candy.interpreter.cni.NativeClassRegister;
@@ -146,7 +147,8 @@ public class ErrorObj extends CandyObject {
 	}
 	
 	@NativeMethod(name = "sprintStackTrace")
-	public CandyObject sprintStackTrace(CNIEnv env, int maxFrames) {
-		return StringObj.valueOf(sprintStackTrace(maxFrames));
+	public CandyObject sprintStackTrace(CNIEnv env, OptionalArg maxFrames) {
+		int maxFramesVal = (int) ObjectHelper.asInteger(maxFrames.getValue(24));
+		return StringObj.valueOf(sprintStackTrace(maxFramesVal));
 	}
 }
