@@ -1,0 +1,45 @@
+import "unit" as unit
+
+class RangeTest : unit.TestCase {
+
+	fun assertRange(r, left, right) {
+		var cmpI = left
+		var v = right > left ? 1 : -1
+		for (i in r) {
+			@assertEquals(cmpI, i)
+			cmpI += v
+		}
+		@assertEquals(right, cmpI)
+	}
+
+	fun simple_test() {
+		var r = range(0, 15)
+		@assertEquals(0, r.left)
+		@assertEquals(15, r.right)
+		@assertRange(r, 0, 15)
+		r.left = 5
+		@assertRange(r, 5, 15)
+		r.right = 20
+		@assertRange(r, 5, 20)
+		var r = range(15, 0)
+		@assertRange(r, 15, 0)
+		for (i in 0..100) {
+			@assertTrue(r.rand() <= 15)
+			@assertTrue(r.rand() > 0)
+		}
+	}
+
+	fun empty_range_test() {
+		var r = range(0, 0)
+		var flag = false
+		for (i in r) flag = true
+		@assertFalse(flag)
+	}
+
+	fun error_test() {
+		var r = Range("1", "2")
+		@expectedErrorRaised(TypeError, -> for (i in r){})
+		@expectedErrorRaised(TypeError, -> range("123", "123"))
+		@expectedErrorRaised(TypeError, -> range(1, 1).rand())
+	}
+}
