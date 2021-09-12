@@ -148,7 +148,7 @@ fun insertion_deletion_1_test() {
 	assert arr.length() == 0
 	arr.appendAll(*Array(50, null))
 	assert arr.length() == 50
-	arr.foreach(lambda i, e -> assert e == null)
+	arr.foreach(lambda e, i -> assert e == null)
 	
 	assert [1].insertAll(1, 2, 2, 3) == [1, 2, 2, 3]
 	assert [1, 2, 3].insertAll(3, *[2, 2, 3]) == [1, 2, 3, 2, 2, 3]
@@ -227,23 +227,23 @@ fun set_get_foreach_test() {
 	var sample = Array(100, lambda e -> range(0, 100000).rand())
 	var arr = []
 	
-	sample.foreach(lambda i, e -> arr.append(e))
+	sample.foreach(lambda e, i -> arr.append(e))
 	assert sample == arr
 	
-	arr.foreach(lambda i, e -> {
+	arr.foreach(lambda e, i -> {
 		assert arr[i] == e
 		assert sample[i] == e
 	})
 	
 	expectedError(TypeError, lambda -> 
-		arr.foreach(lambda i, e -> raise TypeError("")))
+		arr.foreach(lambda e, i -> raise TypeError("")))
 	
 	var arr = sample.copy()
 	assert arr == sample
-	arr.foreach(lambda i, e -> arr.insert(i + 1, e))
+	arr.foreach(lambda e, i -> arr.insert(i + 1, e))
 	
 	expectedError(RangeError, lambda ->
-		arr.foreach(lambda i, e -> arr.deleteAt(i)))
+		arr.foreach(lambda e, i -> arr.deleteAt(i)))
 	
 	var i = 0
 	for (e in arr) {
@@ -315,26 +315,6 @@ fun indexof_test() {
 	assert !arr.contains(CustomClass(false))
 }
 
-fun map_test() {
-	var empty_arr = []
-	empty_arr.map(lambda i, e -> assert false)
-	
-	var one_element_arr = [1]
-	one_element_arr.map(lambda i, e -> e * 2 + (i+1)*2)
-	assert one_element_arr[0] == 4
-
-	var random_arr = []
-	for (i in range(50, 1000)) random_arr.append(range(0, 100).rand())
-
-	var mapper = lambda i, e -> e*2/3 + i
-	fun ans() {
-		var ansArr = random_arr.copy()
-		ansArr.foreach(lambda i, e -> ansArr[i] = mapper(i, e))
-		return ansArr
-	}
-	assert ans() == random_arr.map(mapper)
-}
-
 fun misc_0_test() {
 	var arr = [1, 2]
 	arr.swap(0, 1)
@@ -398,7 +378,6 @@ operator_str_test()
 insertion_deletion_0_test()
 insertion_deletion_1_test()
 set_get_foreach_test()
-map_test()
 indexof_test()
 misc_0_test()
 clear_test()

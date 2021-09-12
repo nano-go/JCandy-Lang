@@ -32,7 +32,7 @@ class SuiteTestCase : unit.TestCase {
 		}
 
 		var ts = unit.TestSuite(null, Foo(), Foo())
-		assertTestSuite(ts, 4, 2).taskResults.foreach(lambda i, e -> {
+		assertTestSuite(ts, 4, 2).taskResults.foreach(lambda e, i -> {
 			this.assertEquals("Foo", e.getName())
 		})
 		var ts = unit.TestSuite("abc", Foo(), Foo())

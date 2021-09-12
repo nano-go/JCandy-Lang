@@ -54,7 +54,7 @@ class MapTest : unit.TestCase {
 			("", ""),
 		]
 
-		arr.foreach(lambda i, e -> map.put(e[0], e[1]))
+		arr.foreach(lambda e, i -> map.put(e[0], e[1]))
 		this.assertEquals(arr.length(), map.length())
 
 		var expectedSize = arr.length()

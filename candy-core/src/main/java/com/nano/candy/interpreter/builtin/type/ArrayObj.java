@@ -6,10 +6,12 @@ import com.nano.candy.interpreter.builtin.type.ArrayObj;
 import com.nano.candy.interpreter.builtin.type.error.ArgumentError;
 import com.nano.candy.interpreter.builtin.type.error.NativeError;
 import com.nano.candy.interpreter.builtin.type.error.RangeError;
+import com.nano.candy.interpreter.builtin.type.error.StateError;
 import com.nano.candy.interpreter.builtin.type.error.TypeError;
 import com.nano.candy.interpreter.builtin.utils.ArrayHelper;
 import com.nano.candy.interpreter.builtin.utils.IndexHelper;
 import com.nano.candy.interpreter.builtin.utils.ObjectHelper;
+import com.nano.candy.interpreter.builtin.utils.OptionalArg;
 import com.nano.candy.interpreter.cni.CNIEnv;
 import com.nano.candy.interpreter.cni.NativeClass;
 import com.nano.candy.interpreter.cni.NativeClassRegister;
@@ -487,6 +489,35 @@ public final class ArrayObj extends CandyObject {
 		return this;
 	}
 	
+	@NativeMethod(name = "pop")
+	protected CandyObject pop(CNIEnv env) {
+		if (length == 0) {
+			new StateError("This is an empty stack.").throwSelfNative();
+		}
+		CandyObject r = elements[--length];
+		elements[length] = null;
+		return r;
+	}
+	
+	@NativeMethod(name = "push")
+	protected CandyObject push(CNIEnv env, CandyObject element) {
+		append(element);
+		return this;
+	}
+	
+	@NativeMethod(name = "peek")
+	protected CandyObject peek(CNIEnv env, OptionalArg k) {
+		long kVal = ObjectHelper.asInteger(k.getValue(0));
+		ArgumentError.checkValueTooLarge(kVal, "peek(k)");
+		if (kVal >= length) {
+			new ArgumentError(
+				"The length of the array is %d, but the arg 'peek(k)' is %d.",
+				length, kVal)
+				.throwSelfNative();
+		}
+		return get(length-(int)kVal-1);
+	}
+	
 	private static Random rad;
 	@NativeMethod(name = "shuffle")
 	protected CandyObject shuffle(CNIEnv env) {
@@ -504,21 +535,126 @@ public final class ArrayObj extends CandyObject {
 	
 	@NativeMethod(name = "map")
 	protected CandyObject map(CNIEnv env, CallableObj mapper) {
-		final int SIZE = length;
-		for (int i = 0; i < SIZE; i ++) {
-			elements[i] = 
-				mapper.call(env, IntegerObj.valueOf(i), elements[i]);
+		CandyObject[] newElements = new CandyObject[length];
+		for (int i = 0; i < length; i ++) {
+			newElements[i] = 
+				mapper.flexiblyCall(env, 1, elements[i], IntegerObj.valueOf(i));
 		}
-		return this;
+		return new ArrayObj(newElements);
+	}
+	
+	@NativeMethod(name = "filter")
+	protected CandyObject filter(CNIEnv env, CallableObj filter) {
+		CandyObject[] newElements = new CandyObject[length];
+		int size = 0;
+		for (int i = 0; i < length; i ++) {
+			boolean accept = filter
+				.flexiblyCall(env, 1, elements[i], IntegerObj.valueOf(i))
+				.boolValue(env).value();
+			if (accept) {
+				newElements[size ++] = elements[i];
+			}
+		}
+		return new ArrayObj(newElements, size);
+	}
+	
+	@NativeMethod(name = "reduce")
+	protected CandyObject reduce(CNIEnv env, 
+	                             OptionalArg initialValArg, CallableObj operator) {
+		CandyObject total = initialValArg.getValue(NullPointer.nil());
+		if (length == 0) {
+			return total;
+		}
+		int i = 0;
+		if (total == NullPointer.nil()) {
+			total = elements[0];
+			i = 1;
+		}
+		for (;i < length; i ++) {
+			total = operator.flexiblyCall(
+				env, 1, total, elements[i], IntegerObj.valueOf(i));
+		}
+		return total;
+	}
+	
+	@NativeMethod(name = "reduceRight")
+	protected CandyObject reduceRight(CNIEnv env, 
+	                                  OptionalArg initialValArg, CallableObj operator) {
+		CandyObject total = initialValArg.getValue(NullPointer.nil());
+		if (length == 0) {
+			return total;
+		}
+		int i = length-1;
+		if (total == NullPointer.nil()) {
+			total = elements[i];
+			i --;
+		}
+		for (;i >= 0; i --) {
+			total = operator.flexiblyCall(
+				env, 1, total, elements[i], IntegerObj.valueOf(i));
+		}
+		return total;
 	}
 	
 	@NativeMethod(name = "foreach")
 	protected CandyObject foreach(CNIEnv env, CallableObj walker) {
 		final int SIZE = length;
 		for (int i = 0; i < SIZE; i ++) {
-			walker.call(env, IntegerObj.valueOf(i), elements[i]);
+			walker.flexiblyCall(env, 1, elements[i], IntegerObj.valueOf(i));
 		}
 		return this;
+	}
+	
+	@NativeMethod(name = "max")
+	protected CandyObject max(CNIEnv env, OptionalArg comparator) {
+		if (length == 0) {
+			return null;
+		}
+		CandyObject comparatorObj = comparator.getValue(NullPointer.nil());
+		CandyObject max = elements[0];
+		if (comparatorObj == NullPointer.nil()){
+			for (int i = 1; i < length; i ++) {
+				if (elements[i].callGt(env, max).boolValue(env).value()) {
+					max = elements[i];
+				}
+			}
+		} else {
+			CallableObj comparatorFn = TypeError.requiresCallable(comparatorObj);
+			for (int i = 1; i < length; i ++) {
+				long result = ObjectHelper.asInteger(
+					comparatorFn.call(env, max, elements[i]));
+				if (result < 0) {
+					max = elements[i];
+				}
+			}
+		}
+		return max;
+	}
+	
+	@NativeMethod(name = "min")
+	protected CandyObject min(CNIEnv env, OptionalArg comparator) {
+		if (length == 0) {
+			return null;
+		}
+		CandyObject comparatorObj = comparator.getValue(NullPointer.nil());
+		CandyObject min = elements[0];
+		if (comparatorObj == NullPointer.nil()){
+			for (int i = 1; i < length; i ++) {
+				if (elements[i].callLt(env, min).boolValue(env).value()) {
+					min = elements[i];
+				}
+			}
+		} else {
+			CallableObj comparatorFn = TypeError.requiresCallable(comparatorObj);
+			for (int i = 1; i < length; i ++) {
+				long result = ObjectHelper.asInteger(
+					comparatorFn.call(env, min, elements[i]));
+				if (result > 0) {
+					min = elements[i];
+				}
+			}
+		}
+		return min;
 	}
 	
 	@NativeMethod(name = "length")

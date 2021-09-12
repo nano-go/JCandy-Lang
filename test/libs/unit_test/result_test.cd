@@ -64,25 +64,25 @@ class ResultTest : unit.TestCase {
 		
 		this.assertEquals(10, res.getTaskCount())
 
-		res.getSuccessResults().foreach(lambda i, e -> {
+		res.getSuccessResults().foreach(lambda e, i -> {
 			this.assertTrue(e.isSuccess())
 			this.assertEquals("foo"+i, e.getName())
 			this.assertEquals(4, e.getDuration())
 		})
 
-		res.getFailureResults().foreach(lambda i, e -> {
+		res.getFailureResults().foreach(lambda e, i -> {
 			this.assertTrue(e.isFailure())
 			this.assertEquals("foo"+i, e.getName())
 			this.assertEquals(5, e.getDuration())
 		})
 
-		res.getErrorResults().foreach(lambda i, e -> {
+		res.getErrorResults().foreach(lambda e, i -> {
 			this.assertTrue(e.isError())
 			this.assertEquals("foo"+i, e.getName())
 			this.assertEquals(6, e.getDuration())
 		})
 
-		res.getSkippedResults().foreach(lambda i, e -> {
+		res.getSkippedResults().foreach(lambda e, i -> {
 			this.assertTrue(e.isSkipped())
 			this.assertEquals("foo"+i, e.getName())
 			this.assertEquals(0, e.getDuration())

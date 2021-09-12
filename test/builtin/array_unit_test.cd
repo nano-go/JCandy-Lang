@@ -1,4 +1,5 @@
 import "unit" as unit
+import "stream"
 import "../custom"
 
 class ArrayTest : unit.TestCase {
@@ -107,4 +108,167 @@ class ArrayTest : unit.TestCase {
 		arr += array(5..8)
 		@assertEquals(array(1..8), arr)
 	}
+
+	fun api_test() {
+
+		fun indexParameter_test(arr, predicate) {
+			var indexes = []
+			predicate(|*args, i| -> {
+				indexes.append(i)
+			})
+			@assertEquals(array(0..arr.length()), indexes)
+		}
+
+		/**
+		 * Tests for Array#filter, Array#map and Array#foreach
+		 */
+		fun twoParameters_test(arr, predicate, applier) {
+			var indexes = []
+			var elements = []
+			var result = predicate((e, i) -> {
+				indexes.append(i)
+				elements.append(e)
+				return applier(e, i)
+			})
+			@assertEquals(array(0..arr.length()), indexes)
+			@assertEquals(elements, arr)
+			return result
+		}
+
+		/**
+		 * Tests Array#filter.
+		 */
+		fun filter_test() {
+			fun filter_assert(arr, filter) {
+				var result = arr.filter(filter)
+				var ans = Stream(arr).filter(filter).toArray()
+				@assertEquals(ans, result)
+			}
+
+			filter_assert([], (a, b, c, d) -> {})
+			filter_assert([].append(1), i -> i%2==0)
+			filter_assert([].appendAll(*0..5), i -> i%2==0)
+			filter_assert(array(0..15), i -> i%2==0)
+			
+			var arr = array(5..15)
+			indexParameter_test(arr, arr.filter)
+			@assertEquals(
+				Stream(arr).filter(e->e%2==0).toArray(),
+				twoParameters_test(arr, arr.filter, (e, i)->e%2==0)
+			)
+			@expectedErrorRaised(ArgumentError, -> array(0..1).filter(->1))
+			@expectedErrorRaised(ArgumentError, -> array(0..1).filter((e,i,arr)->1))
+		}
+
+
+		/**
+		 * Tests Array#map
+		 */
+		fun map_test() {
+			fun map_assert(arr, mapper) {
+				var result = arr.map(mapper)
+				var ans = Stream(arr).map(mapper).toArray()
+				@assertEquals(ans, result)
+			}
+			map_assert([], (a, b, c, d)->{})
+			map_assert([].append(1), e -> e*2)
+			map_assert([].appendAll(*0..15), e -> e*2)
+			map_assert(array(0..5), e -> e*2)
+
+			var arr = array(5..15)
+			indexParameter_test(arr, arr.map)
+			@assertEquals(
+				Stream(arr).map(e->e*2).toArray(),
+				twoParameters_test(arr, arr.map, (e, i)->e*2)
+			)
+			@expectedErrorRaised(ArgumentError, -> array(0..1).map(->1))
+			@expectedErrorRaised(ArgumentError, -> array(0..1).map((e,i,arr)->1))
+		}
+
+		/**
+		 * Tests Array#foreach
+		 */
+		fun foreach_test() {
+			fun foreach_assert(arr) {
+				var elements = []
+				arr.foreach(elements.append)
+				@assertEquals(arr, elements)
+			}
+			foreach_assert([])
+			foreach_assert([1])
+			foreach_assert(array(0..5))
+			var arr = array(5..15)
+			indexParameter_test(arr, arr.foreach)
+			twoParameters_test(arr, arr.foreach, (e, i)->{})
+			@expectedErrorRaised(ArgumentError, -> array(0..1).foreach(->1))
+			@expectedErrorRaised(ArgumentError, -> array(0..1).foreach((e,i,arr)->1))
+		}
+
+		/**
+		 * Tests Array#reduce and Array#reduceRight
+		 */
+		fun reduce_test() {
+
+			fun reduce_assert(arr, initialVal, operator) {
+				var result = arr.reduce(operator)
+				var ans = Stream(arr).fold(operator)
+				@assertEquals(ans, result)
+
+				var result = arr.reduce(initialVal, operator)
+				var ans = Stream(arr).reduce(initialVal, operator)
+				@assertEquals(ans, result)
+
+				var result = arr.reduceRight(operator)
+				var ans = Stream(arr.copy().reverse()).fold(operator)
+				@assertEquals(ans, result)
+
+				var result = arr.reduceRight(initialVal, operator)
+				var ans = Stream(arr.copy().reverse()).reduce(initialVal, operator)
+				@assertEquals(ans, result)
+			}
+
+			reduce_assert(array(1..5), 5, (x, y)->x+y)
+			reduce_assert(array(5..9), 100, (x, y)->x-y)
+			reduce_assert([1], 100, (x, y)->x-y)
+			reduce_assert([], 100, (x, y)->x-y)
+			var arr = array(5..15)
+			[1].reduce(->{})
+			@expectedErrorRaised(ArgumentError, -> [1, 2].reduce(->{}))
+			@expectedErrorRaised(ArgumentError, -> [1, 2].reduce((a,b,c,d)->1))
+		}
+
+		/**
+		 * Tests Array#max and Array#min
+		 */
+		fun max_min_test() {
+			var arr = array(3..15)
+			@assertEquals(14, arr.max())
+			@assertEquals(3, arr.max((x, y) -> y-x))
+			@assertEquals(3, arr.min())
+			@assertEquals(14, arr.min((x, y) -> y-x))
+		}
+
+		filter_test()
+		map_test()
+		foreach_test()
+		reduce_test()
+		max_min_test()
+	}
+
+
+	fun stack_test() {
+		var arr = []
+		arr.push(1)
+		arr.push(2)
+		@assertEquals(2, arr.peek())
+		@assertEquals(1, arr.peek(1))
+		@assertEquals(2, arr.pop())
+		@assertEquals(1, arr.peek())
+		@expectedErrorRaised(ArgumentError, -> arr.peek(15))
+		@expectedErrorRaised(ArgumentError, -> arr.peek(1))
+		@expectedErrorRaised(ArgumentError, -> arr.peek(10000000000))
+		@assertEquals(1, arr.pop())
+		@expectedErrorRaised(StateError, -> arr.pop())
+	}
+
 }
