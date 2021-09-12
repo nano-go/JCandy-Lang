@@ -49,18 +49,17 @@ public class FunctionsCodeGenerator extends CodeFileGenerator {
 		for (int i = parametersSize-1; i >= 1; i --) {
 			callbackLambda
 				.append("\n            ")
-				.append(parameters.get(i).asType().toString())
+				.append("CandyObject ")
 				.append(" arg" + (i-1))
-				.append(" = ")
-				.append(converArg(parameters.get(i).asType(), "opStack.pop()"))
-				.append(";");
+				.append(" = opStack.pop();");
 		}
-		callbackLambda.append("\n           ")
+		callbackLambda.append("\n            ")
 			.append(String.format("return %s.%s(env",
-					method.getQualifiedClassName(),
-					method.getAnnotatedJavaMethodName()));
+								  method.getQualifiedClassName(),
+								  method.getAnnotatedJavaMethodName()));
 		for (int i = 0; i < parametersSize-1; i ++) {
-			callbackLambda.append(", ").append("arg" + i);
+			callbackLambda.append(", ")
+				.append(converArg(parameters.get(i+1).asType(), "arg" + i));
 		}
 		callbackLambda.append(");");
 		return callbackLambda.append("\n           }").toString();
