@@ -8,6 +8,7 @@ import com.nano.candy.interpreter.cni.CNIEnv;
 import com.nano.candy.interpreter.cni.NativeClass;
 import com.nano.candy.interpreter.cni.NativeClassRegister;
 import com.nano.candy.interpreter.runtime.OperandStack;
+import java.util.Arrays;
 
 /**
  * Superclass of all functions.
@@ -102,6 +103,14 @@ public abstract class CallableObj extends CandyObject {
 	
 	public int arity() {
 		return arity;
+	}
+	
+	public final CandyObject flexiblyCall(CNIEnv env, int leastArgc, CandyObject... args) {
+		int arity = arity();
+		if (vaargIndex() < 0 && arity < args.length && arity >= leastArgc) {
+			args = Arrays.copyOf(args, arity());	
+		}
+		return call(env, args);
 	}
 	
 	/**
