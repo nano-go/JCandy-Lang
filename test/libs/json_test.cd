@@ -1,0 +1,103 @@
+import "unit" as unit
+import "json" as json
+
+class JsonTest : unit.TestCase {
+	fun parse(jsons, expected) {
+		@assertEquals(expected, json.JsonParser.parse(jsons))
+	}
+
+	fun error(jsons) {
+		@expectedErrorRaised(json.ParseError, -> json.JsonParser.parse(jsons))
+	}
+
+	fun literals_test() {
+		@parse("123", 123)
+		@parse("-123", -123)
+		@parse("9", 9)
+		@parse("45.56", 45.56)
+		@parse("45.5e+10", "45.5e+10".toDouble())
+		@parse("45.5e10", "45.5e10".toDouble())
+		@parse("-45.5E10", "-45.5e10".toDouble())
+		@parse("45.5E10", "45.5e10".toDouble())
+		@parse("-45.5E10", "-45.5e10".toDouble())
+		@parse("45.5e-10", "45.5e-10".toDouble())	
+		@parse("\"abc\"", "abc")
+		@parse("\"\\n\\f\\t\"", "\n\f\t")
+		@parse("\"\\b\\r\\u00FF\"", "\b\r\u00FF")
+		@parse("\"\"", "")
+		@parse("true", true)
+		@parse("false", false)
+		@parse("null", null)
+		@parse("{}", {})
+		@parse("[]", [])
+
+		@error("45.")
+		@error("\"\\u00GG\"")
+		@error("\"\\u00G\"")
+		@error("\"\\u00F\"")
+		@error("\"")
+		@error("tru")
+		@error("fals")
+		@error("nul")
+	}
+
+	fun dump_test() {
+		var dumper0 = json.JsonDumper({"format": false})
+		var dumper1 = json.JsonDumper({"format": true})
+
+		fun dumpLiteral(expected, element) {
+			@assertEquals(expected, dumper0.dump(element))
+			@assertEquals(expected, dumper1.dump(element))
+		}
+		dumpLiteral("{}", {})
+		dumpLiteral("[]", [])
+		dumpLiteral("123", 123)
+		dumpLiteral("123.456", 123.456)
+		dumpLiteral("true", true)
+		dumpLiteral("false", false)
+		dumpLiteral("null", null)
+		dumpLiteral("\"\"", "")
+		dumpLiteral("\"9981\"", "9981")
+	}
+
+	fun dumpObject_test() {
+		class Song {
+			fun init(id, albumId, singer) {
+				@id = id
+				@albumId = albumId
+				@singer = singer
+			}
+			fun toElement() {
+				return {
+					"id": @id,
+					"albumId": @albumId,
+					"singler": @singer,
+				}
+			}
+			fun toJson() {
+				return @id
+			}
+		}
+		var dumper1 = json.JsonDumper({})
+		var dumper2 = json.JsonDumper({"method": "toJson"})
+		fun dumpObject1(obj) {
+			@assertEquals(dumper1.dump(obj.toElement()), dumper1.dump(obj))
+		}
+		fun dumpObject2(obj) {
+			@assertEquals(dumper2.dump(obj.toJson()), dumper2.dump(obj))
+		}
+		dumpObject1(Song(1, 1, "Eric"))
+		dumpObject2(Song(1, 1, "Eric"))
+
+		@expectedErrorRaised(ArgumentError, -> dumper1.dump(()))
+		@expectedErrorRaised(ArgumentError, -> dumper1.dump(Object()))
+
+		class Foo {
+			fun init() {
+				@toElement = 0
+			}
+		}
+		@expectedErrorRaised(ArgumentError, -> dumper1.dump(Foo()))
+	}
+
+}
