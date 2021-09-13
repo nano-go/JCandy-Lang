@@ -264,14 +264,13 @@ public class CandyObject {
 	
 	public final CandyObject callSetAttr(CNIEnv env, String name, CandyObject value) {
 		if (isBuiltinMetnod(SET_ATTR_MASK)) {
-			checkFrozen();
-			setAttr(env, name, value);
-			return value;
+			return ObjectHelper.preventNull(setAttr(env, name, value));
 		}
+		checkFrozen();
 		return getBoundMethod(Names.METHOD_SET_ATTR, SET_ATTR_MASK)
 			.call(env, StringObj.valueOf(name), value);
 	}
-	public CandyObject setAttr(CNIEnv env, String name, CandyObject value) {
+	protected CandyObject setAttr(CNIEnv env, String name, CandyObject value) {
 		boolean isAccessedFromThis = AttributeModifiers.isAccessedFromThis(name);
 		if (isAccessedFromThis) {
 			name = AttributeModifiers.getAttrNameIfAccessedFromThis(name);
@@ -302,9 +301,9 @@ public class CandyObject {
 		return value;
 	}
 	@NativeMethod(name = Names.METHOD_SET_ATTR)
-	protected final CandyObject setAttrMet(CNIEnv env, String name, CandyObject value) {
+	public final CandyObject setAttrMet(CNIEnv env, String name, CandyObject value) {
 		checkFrozen();
-		return setAttr(env, name, value);	
+		return setAttr(env, name, value);
 	}
 
 	
@@ -315,7 +314,7 @@ public class CandyObject {
 		return getBoundMethod(Names.METHOD_GET_ATTR, GET_ATTR_MASK)
 			.call(env, StringObj.valueOf(name));
 	}
-	public CandyObject getAttr(CNIEnv env, String name) {
+	protected CandyObject getAttr(CNIEnv env, String name) {
 		boolean isAccessFromThis = AttributeModifiers.isAccessedFromThis(name);
 		if (isAccessFromThis) {
 			name = AttributeModifiers.getAttrNameIfAccessedFromThis(name);
@@ -349,29 +348,27 @@ public class CandyObject {
 	
 	public CandyObject callGetUnknownAttr(CNIEnv env, String name) {
 		if (isBuiltinMetnod(GET_UNKNOWN_ATTR_MASK)) {
-			return getUnknownAttr(env, name);
+			return ObjectHelper.preventNull(getUnknownAttr(env, name));
 		}
 		return getBoundMethod(Names.METHOD_GET_UNKNOWN_ATTR, GET_UNKNOWN_ATTR_MASK)
 			.call(env, StringObj.valueOf(name));
 	}
-	protected CandyObject getUnknownAttr(CNIEnv env, String name) {
+	@NativeMethod(name = Names.METHOD_GET_UNKNOWN_ATTR)
+	public CandyObject getUnknownAttr(CNIEnv env, String name) {
 		AttributeError.throwHasNoAttr(this, name);
 		return null;
-	}
-	@NativeMethod(name = Names.METHOD_GET_UNKNOWN_ATTR)
-	protected final CandyObject getUnknownAttrMet(CNIEnv env, String name) {
-		return getUnknownAttr(env, name);
 	}
 	
 	
 	public CandyObject callSetItem(CNIEnv env, CandyObject key, CandyObject value) {
 		if (isBuiltinMetnod(SET_ITEM_MASK)) {
-			checkFrozen();
-			return setItem(env, key, value);
+			return ObjectHelper.preventNull(setItem(env, key, value));
 		}
+		checkFrozen();
 		return getBoundMethod(Names.METHOD_SET_ITEM, SET_ITEM_MASK)
 			.call(env, key, value);
 	}
+	
 	protected CandyObject setItem(CNIEnv env, CandyObject key, CandyObject value) {
 		new TypeError(
 			"'%s'['%s'] = '%s'", 
@@ -381,6 +378,7 @@ public class CandyObject {
 		).throwSelfNative();
 		return null;
 	}
+	
 	@NativeMethod(name = Names.METHOD_SET_ITEM)
 	protected final CandyObject setItemMet(CNIEnv env, CandyObject key, CandyObject value) {
 		checkFrozen();
@@ -390,55 +388,45 @@ public class CandyObject {
 	
 	public CandyObject callGetItem(CNIEnv env, CandyObject key) {
 		if (isBuiltinMetnod(GET_ITEM_MASK)) {
-			checkFrozen();
-			return getItem(env, key);
+			return ObjectHelper.preventNull(getItem(env, key));
 		}
 		return getBoundMethod(Names.METHOD_GET_ITEM, GET_ITEM_MASK)
 			.call(env, key);
 	}
+	@NativeMethod(name = Names.METHOD_GET_ITEM)
 	protected CandyObject getItem(CNIEnv env, CandyObject key) {
 		new TypeError(
 			"'%s'['%s']", getCandyClassName(), key.getCandyClassName()
 		).throwSelfNative();
 		return null;
 	}
-	@NativeMethod(name = Names.METHOD_GET_ITEM)
-	protected final CandyObject getItemMet(CNIEnv env, CandyObject key) {
-		return getItem(env, key);
-	}
 	
 	
 	public CandyObject callPositive(CNIEnv env) {
 		if (isBuiltinMetnod(POSTIVE_MASK)) {
-			return positive(env);
+			return ObjectHelper.preventNull(positive(env));
 		}
 		return getBoundMethod(Names.METHOD_OP_POSITIVE, POSTIVE_MASK)
 			.call(env);
 	}
-	protected CandyObject positive(CNIEnv env) {
+	@NativeMethod(name = Names.METHOD_OP_POSITIVE)
+	public CandyObject positive(CNIEnv env) {
 		new TypeError("+").throwSelfNative();
 		return null;
-	}
-	@NativeMethod(name = Names.METHOD_OP_POSITIVE)
-	protected final CandyObject positiveMet(CNIEnv env) {
-		return positive(env);
 	}
 
 	
 	public CandyObject callNegative(CNIEnv env) {
 		if (isBuiltinMetnod(NEGATIVE_MASK)) {
-			return negative(env);
+			return ObjectHelper.preventNull(negative(env));
 		}
 		return getBoundMethod(Names.METHOD_OP_NEGATIVE, NEGATIVE_MASK)
 			.call(env);
 	}
+	@NativeMethod(name = Names.METHOD_OP_NEGATIVE)
 	protected CandyObject negative(CNIEnv env) {
 		new TypeError("-").throwSelfNative();
 		return null;
-	}
-	@NativeMethod(name = Names.METHOD_OP_NEGATIVE)
-	protected final CandyObject negativeMet(CNIEnv env) {
-		return negative(env);
 	}
 	
 	
@@ -473,10 +461,11 @@ public class CandyObject {
 	
 	public CandyObject callAdd(CNIEnv env, CandyObject operand) {
 		if (isBuiltinMetnod(ADD_MASK)) {
-			return add(env, operand);
+			return ObjectHelper.preventNull(add(env, operand));
 		}
 		return callBinaryOp(env, operand, Names.METHOD_OP_ADD, ADD_MASK);
 	}
+	@NativeMethod(name = Names.METHOD_OP_ADD)
 	protected CandyObject add(CNIEnv env, CandyObject operand) {
 		if (operand instanceof StringObj || this instanceof StringObj) {
 			return callStr(env).add(env, operand);
@@ -484,57 +473,43 @@ public class CandyObject {
 		throwUnsupportBinaryOperator("+", operand);
 		return null;
 	}
-	@NativeMethod(name = Names.METHOD_OP_ADD)
-	protected final CandyObject addMet(CNIEnv env, CandyObject operand) {
-		return add(env, operand);
-	}
-	
 	
 	public CandyObject callSub(CNIEnv env, CandyObject operand) {
 		if (isBuiltinMetnod(SUB_MASK)) {
-			return sub(env, operand);
+			return ObjectHelper.preventNull(sub(env, operand));
 		}
 		return callBinaryOp(env, operand, Names.METHOD_OP_SUB, SUB_MASK);
 	}
+	@NativeMethod(name = Names.METHOD_OP_SUB)
 	protected CandyObject sub(CNIEnv env, CandyObject operand) {
 		throwUnsupportBinaryOperator("-", operand);
 		return null;
-	}
-	@NativeMethod(name = Names.METHOD_OP_SUB)
-	protected final CandyObject subMet(CNIEnv env, CandyObject operand) {
-		return sub(env, operand);
 	}
 	
 	
 	public CandyObject callMul(CNIEnv env, CandyObject operand) {
 		if (isBuiltinMetnod(MUL_MASK)) {
-			return mul(env, operand);
+			return ObjectHelper.preventNull(mul(env, operand));
 		}
 		return callBinaryOp(env, operand, Names.METHOD_OP_MUL, MUL_MASK);
 	}
+	@NativeMethod(name = Names.METHOD_OP_MUL)
 	protected CandyObject mul(CNIEnv env, CandyObject operand) {
 		throwUnsupportBinaryOperator("*", operand);
 		return null;
-	}
-	@NativeMethod(name = Names.METHOD_OP_MUL)
-	protected final CandyObject mulMet(CNIEnv env, CandyObject operand) {
-		return mul(env, operand);
 	}
 	
 	
 	public CandyObject callDiv(CNIEnv env, CandyObject operand) {
 		if (isBuiltinMetnod(DIV_MASK)) {
-			return div(env, operand);
+			return ObjectHelper.preventNull(div(env, operand));
 		}
 		return callBinaryOp(env, operand, Names.METHOD_OP_DIV, DIV_MASK);
 	}
+	@NativeMethod(name = Names.METHOD_OP_DIV)
 	protected CandyObject div(CNIEnv env, CandyObject operand) {
 		throwUnsupportBinaryOperator("/", operand);
 		return null;
-	}
-	@NativeMethod(name = Names.METHOD_OP_DIV)
-	protected final CandyObject divMet(CNIEnv env, CandyObject operand) {
-		return div(env, operand);
 	}
 	
 	
@@ -544,124 +519,104 @@ public class CandyObject {
 		}
 		return callBinaryOp(env, operand, Names.METHOD_OP_MOD, MOD_MASK);
 	}
+	@NativeMethod(name = Names.METHOD_OP_MOD)
 	protected CandyObject mod(CNIEnv env, CandyObject operand) {
 		throwUnsupportBinaryOperator("%", operand);
 		return null;
 	}
-	@NativeMethod(name = Names.METHOD_OP_MOD)
-	protected final CandyObject modMet(CNIEnv env, CandyObject operand) {
-		return mod(env, operand);
+	
+	public CandyObject callRShift(CNIEnv env, CandyObject operand) {
+		if (isBuiltinMetnod(RSHIFT_MASK)) {
+			return ObjectHelper.preventNull(rshift(env, operand));
+		}
+		return callBinaryOp(
+			env, operand, Names.METHOD_OP_RSHIFT, RSHIFT_MASK);
+	}
+	@NativeMethod(name = Names.METHOD_OP_RSHIFT)
+	protected CandyObject rshift(CNIEnv env, CandyObject operand) {
+		throwUnsupportBinaryOperator(">>", operand);
+		return null;
 	}
 	
+	public CandyObject callLShift(CNIEnv env, CandyObject operand) {
+		if (isBuiltinMetnod(LSHIFT_MASK)) {
+			return ObjectHelper.preventNull(lshift(env, operand));
+		}
+		return callBinaryOp(
+			env, operand, Names.METHOD_OP_LSHIFT, LSHIFT_MASK);
+	}
+	@NativeMethod(name = Names.METHOD_OP_LSHIFT)
+	protected CandyObject lshift(CNIEnv env, CandyObject operand) {
+		throwUnsupportBinaryOperator("<<", operand);
+		return null;
+	}
+	
+	
+	public static BoolObj preventNullForBool(BoolObj obj) {
+		return obj == null ? BoolObj.FALSE : obj;
+	}
 	
 	public BoolObj callGt(CNIEnv env, CandyObject operand) {
 		if (isBuiltinMetnod(GT_MASK)) {
-			return gt(env, operand);
+			return preventNullForBool(gt(env, operand));
 		}
 		return callRelativeBinaryOp(env, operand, Names.METHOD_OP_GT, GT_MASK);
 	}
+	@NativeMethod(name = Names.METHOD_OP_GT)
 	protected BoolObj gt(CNIEnv env, CandyObject operand) {
 		throwUnsupportBinaryOperator(">", operand);
 		return null;
-	}
-	@NativeMethod(name = Names.METHOD_OP_GT)
-	protected final CandyObject gtMet(CNIEnv env, CandyObject operand) {
-		return gt(env, operand);
 	}
 	
 	
 	public BoolObj callGteq(CNIEnv env, CandyObject operand) {
 		if (isBuiltinMetnod(GTEQ_MASK)) {
-			return gteq(env, operand);
+			return preventNullForBool(gteq(env, operand));
 		}
 		return callRelativeBinaryOp(env, operand, Names.METHOD_OP_GTEQ, GTEQ_MASK);
 	}
+	@NativeMethod(name = Names.METHOD_OP_GTEQ)
 	protected BoolObj gteq(CNIEnv env, CandyObject operand) {
 		throwUnsupportBinaryOperator(">=", operand);
 		return null;
-	}
-	@NativeMethod(name = Names.METHOD_OP_GTEQ)
-	protected final CandyObject gteqMet(CNIEnv env, CandyObject operand) {
-		return gteq(env, operand);
 	}
 	
 	
 	public BoolObj callLt(CNIEnv env, CandyObject operand) {
 		if (isBuiltinMetnod(LT_MASK)) {
-			return lt(env, operand);
+			return preventNullForBool(lt(env, operand));
 		}
 		return callRelativeBinaryOp(env, operand, Names.METHOD_OP_LT, LT_MASK);
 	}
+	@NativeMethod(name = Names.METHOD_OP_LT)
 	protected BoolObj lt(CNIEnv env, CandyObject operand) {
 		throwUnsupportBinaryOperator("<", operand);
 		return null;
-	}
-	@NativeMethod(name = Names.METHOD_OP_LT)
-	protected final CandyObject ltMet(CNIEnv env, CandyObject operand) {
-		return lt(env, operand);
 	}
 	
 	
 	public BoolObj callLteq(CNIEnv env, CandyObject operand) {
 		if (isBuiltinMetnod(LTEQ_MASK)) {
-			return lteq(env, operand);
+			return preventNullForBool(lteq(env, operand));
 		}
 		return callRelativeBinaryOp(env, operand, Names.METHOD_OP_LTEQ, LTEQ_MASK);
 	}
+	@NativeMethod(name = Names.METHOD_OP_LTEQ)
 	protected BoolObj lteq(CNIEnv env, CandyObject operand) {
 		throwUnsupportBinaryOperator("<=", operand);
 		return null;
 	}
-	@NativeMethod(name = Names.METHOD_OP_LTEQ)
-	protected final CandyObject lteqMet(CNIEnv env, CandyObject operand) {
-		return lteq(env, operand);
-	}
-	
-	public CandyObject callLShift(CNIEnv env, CandyObject operand) {
-		if (isBuiltinMetnod(LSHIFT_MASK)) {
-			return lshift(env, operand);
-		}
-		return callBinaryOp(
-			env, operand, Names.METHOD_OP_LSHIFT, LSHIFT_MASK);
-	}
-	protected CandyObject lshift(CNIEnv env, CandyObject operand) {
-		throwUnsupportBinaryOperator("<<", operand);
-		return null;
-	}
-	@NativeMethod(name = Names.METHOD_OP_LSHIFT)
-	protected final CandyObject lshiftMet(CNIEnv env, CandyObject operand) {
-		return lshift(env, operand);
-	}
-	
-	public CandyObject callRShift(CNIEnv env, CandyObject operand) {
-		if (isBuiltinMetnod(RSHIFT_MASK)) {
-			return rshift(env, operand);
-		}
-		return callBinaryOp(
-			env, operand, Names.METHOD_OP_RSHIFT, RSHIFT_MASK);
-	}
-	protected CandyObject rshift(CNIEnv env, CandyObject operand) {
-		throwUnsupportBinaryOperator(">>", operand);
-		return null;
-	}
-	@NativeMethod(name = Names.METHOD_OP_RSHIFT)
-	protected final CandyObject rshiftMet(CNIEnv env, CandyObject operand) {
-		return rshift(env, operand);
-	}
 	
 	public BoolObj callEquals(CNIEnv env, CandyObject operand) {
 		if (isBuiltinMetnod(EQ_MASK)) {
-			return equals(env, operand);
+			return preventNullForBool(equals(env, operand));
 		}
 		return getBoundMethod(Names.METHOD_EQUALS, EQ_MASK)
 			.call(env, operand).boolValue(env);
 	}
-	public BoolObj equals(CNIEnv env, CandyObject operand) {
-		return BoolObj.valueOf(this == operand);
-	}
 	@NativeMethod(name = Names.METHOD_EQUALS)
-	protected final CandyObject equalsMet(CNIEnv env, CandyObject operand) {
-		return equals(env, operand);
+	protected BoolObj equals(CNIEnv env, CandyObject operand) {
+		return BoolObj.valueOf(this == operand);
 	}
 	
 	
@@ -674,12 +629,12 @@ public class CandyObject {
 		checkReturnedType(Names.METHOD_HASH_CODE, obj, IntegerObj.INTEGER_CLASS);
 		return (IntegerObj) obj;
 	}
-	public IntegerObj hashCode(CNIEnv env) {
-		return IntegerObj.valueOf(super.hashCode());
-	}
+	/**
+	 * Note that the return value can not be {@code null}.
+	 */
 	@NativeMethod(name = Names.METHOD_HASH_CODE)
-	protected final CandyObject hashCodeMethod(CNIEnv env) {
-		return hashCode(env);
+	protected IntegerObj hashCode(CNIEnv env) {
+		return IntegerObj.valueOf(super.hashCode());
 	}
 	
 	
@@ -692,12 +647,12 @@ public class CandyObject {
 		checkReturnedType(Names.METHOD_STR_VALUE, obj, StringObj.STRING_CLASS);
 		return obj.str(env);
 	}
-	public StringObj str(CNIEnv env) {
-		return StringObj.valueOf(this.toString());
-	}
+	/**
+	 * Note that the return value can not be {@code null}.
+	 */
 	@NativeMethod(name = Names.METHOD_STR_VALUE)
-	protected final CandyObject strMet(CNIEnv env) {
-		return str(env);
+	protected StringObj str(CNIEnv env) {
+		return StringObj.valueOf(this.toString());
 	}
 	@Override
 	public String toString() {
@@ -709,19 +664,16 @@ public class CandyObject {
 	
 	public CandyObject callIterator(CNIEnv env) {
 		if (isBuiltinMetnod(ITERATOR_MASK)) {
-			return iterator(env);
+			return ObjectHelper.preventNull(iterator(env));
 		}
 		return getBoundMethod(Names.METHOD_ITERATOR, ITERATOR_MASK)
 			.call(env);
 	}
-	public CandyObject iterator(CNIEnv env) {
+	@NativeMethod(name = Names.METHOD_ITERATOR)
+	protected CandyObject iterator(CNIEnv env) {
 		new TypeError("the object is not iterable.")
 			.throwSelfNative();
 		return null;
-	}
-	@NativeMethod(name = Names.METHOD_ITERATOR)
-	protected final CandyObject iteratorMet(CNIEnv env) {
-		return iterator(env);
 	}
 	
 	
