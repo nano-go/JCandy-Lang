@@ -127,7 +127,8 @@ public class FunctionEnitity {
 	}
 	
 	private void checkReturnType() {
-		if (!TypeNames.isCandyObject(annotatedElement.getReturnType())) {
+		TypeMirror retType = annotatedElement.getReturnType();
+		if (!TypeNames.isBaseCandyObjType(retType)) {
 			Tools.throwArgException("The return-type must be a CandyObject.");
 		}
 	}
