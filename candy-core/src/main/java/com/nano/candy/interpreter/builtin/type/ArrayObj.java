@@ -289,9 +289,9 @@ public final class ArrayObj extends CandyObject {
 			} else {
 				replaceRange((Range) key, new CandyObject[]{value});
 			}
-			return value;
+		} else {
+			elements[IndexHelper.asIndex(key, length)] = value;
 		}
-		elements[IndexHelper.asIndex(key, length)] = value;
 		return value;
 	}
 

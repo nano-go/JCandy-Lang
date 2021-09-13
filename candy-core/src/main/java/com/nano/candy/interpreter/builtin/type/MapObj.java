@@ -235,6 +235,17 @@ public final class MapObj extends CandyObject {
 		}
 	}
 	
+	@Override
+	protected final CandyObject getItem(CNIEnv env, CandyObject key) {
+		return ObjectHelper.preventNull(get(env, key));
+	}
+
+	@Override
+	protected final CandyObject setItem(CNIEnv env, CandyObject key, CandyObject value) {
+		put(env, key, value);
+		return value;
+	}
+	
 	@NativeMethod(name = Names.METHOD_INITALIZER)
 	protected final CandyObject init(CNIEnv env, long initialCapacity) {
 		setInitCapacity(initialCapacity);
@@ -249,11 +260,6 @@ public final class MapObj extends CandyObject {
 	@NativeMethod(name = "getOrDefault")
 	protected final CandyObject getOrDefaultMet(CNIEnv env, CandyObject key, CandyObject defaultValue) {
 		return getOrDefault(env, key, defaultValue);
-	}
-
-	@Override
-	protected final CandyObject getItem(CNIEnv env, CandyObject key) {
-		return ObjectHelper.preventNull(get(env, key));
 	}
 	
 	@NativeMethod(name = "put")
@@ -270,12 +276,6 @@ public final class MapObj extends CandyObject {
 	protected final CandyObject putAll(CNIEnv env, CandyObject map) {
 		TypeError.checkTypeMatched(MAP_CLASS, map);
 		return putAll(env, (MapObj) map);
-	}
-	
-	@Override
-	protected final CandyObject setItem(CNIEnv env, CandyObject key, CandyObject value) {
-		put(env, key, value);
-		return value;
 	}
 	
 	@NativeMethod(name = "remove")

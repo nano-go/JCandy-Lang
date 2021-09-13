@@ -9,10 +9,10 @@ public interface Evaluator {
 	/**
 	 * The differnece between the 'call' and the 'eval';
 	 *
-	 *    'call': only push a frame to stack top if the fn is a prototype
+	 *    'call': Only push a frame to stack top if the fn is a prototype
 	 *            function written by Candy programmers.
 	 *
-	 *    'eval': run the frame of the fn and returns the result.
+	 *    'eval': Run the frame of the fn and return the result.
 	 */
 	public void call(CallableObj fn, int argc, int unpackFlags);
 	public CandyObject eval(CallableObj fn, int unpackFlags, 
