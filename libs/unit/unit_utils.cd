@@ -1,0 +1,14 @@
+fun pipel(*fns) {
+	return arg -> {	
+		for (f in fns) {
+			if (!(arg = f(arg))) 
+				return arg
+		}
+		return arg
+	}
+}
+
+fun partial(fn, *presetArgs) {
+	return lambda *laterArgs -> fn(*presetArgs, *laterArgs)
+}
+

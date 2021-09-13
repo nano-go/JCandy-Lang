@@ -1,4 +1,5 @@
 import "result" as result
+import "unit_utils" as u
 
 class AssertionError : Error {
 	fun init(msg) {
@@ -19,68 +20,54 @@ class SkipError : Error {
 class TestCase {
 
 	/**
-	 * The filter returns a filter to accept all test methods
-	 * will be running.
-	 *
-	 * The returned filter must accept an argument to represent
-	 * the test method name.
+	 * This method must return a function used to find all test methods of this
+	 * class.
 	 */
 	fun filter() {
-		return lambda e -> e.endWith("_test")
+		return lambda e -> e.name.endWith("_test")
 	}
 
 	/**
-	 * Returns the name of this test case.
+	 * Returns a name of this test case.
 	 */
 	fun name() {
 		return this._class().className
 	}
 	
 	fun run(result) {
-		result.pushGroup(this.name())
-		var ms = methods(this)
-		var filter = this.filter()
-		for (m in ms) {
-			if (filter(m.name)) {
-				this._exeMethod(result, m)
-			}
-		}
+		result.pushGroup(@name())
+		methods(this)
+			.filter(@filter())
+			.foreach(u.partial(@_exeMethod, result))
 		result.popGroup()
 	}
 	
-	fun _exeMethod(result, m) {
-		var name = m.name
-		// execute setUp. It represents error if returns false.
-		if (!this._exeSpecialMethod(this.setUp, result, name, 0)) {
-			return
+	fun _exeMethod(result, method) {
+		var name = method.name
+		var partial = u.partial
+
+		fun exeSpecialMethod(fn, duration) {
+			var s = curTime()
+			try {
+				fn()
+			} intercept as e {
+				@_addResultByError(result, name, e, curTime()-s+duration)
+				// stop the pipel.
+				return false
+			}
+			return curTime()-s+duration
 		}
-		var s = curTime()
-		var e = null
-		try {
-			m()
-		} intercept as err {
-			e = err
-		}
-		var t = curTime() - s
-		// execute tearDown. It represents error if returns false.
-		if (!this._exeSpecialMethod(this.tearDown, result, name, t)) {
-			return
-		}
-		this._addResultByError(result, name, t, e)
+
+		u.pipel(
+			partial(exeSpecialMethod, @setUp),
+			partial(exeSpecialMethod, method),
+			partial(exeSpecialMethod, @tearDown),
+			// success.
+			partial(result.addSuccess, name)
+		)(0)
 	}
 	
-	fun _exeSpecialMethod(method, result, name, t) {
-		var s = curTime()
-		try {
-			method()
-		} intercept as e {
-			this._addResultByError(result, name, curTime()-s + t, e)
-			return false
-		}
-		return true
-	}
-
-	fun _addResultByError(result, name, t, e) {
+	fun _addResultByError(result, name, e, t) {
 		if (e == null) {
 			result.addSuccess(name, t)
 		} else if (e is SkipError) {
@@ -121,127 +108,118 @@ class TestCase {
 	fun setUp() {}
 	
 	/**
-	 * Raise an error to report the running method is failure.
+	 * Fails a test.
 	 */
 	fun assertFail(msg="") {
 		raise AssertionError(msg)
 	}
 	
 	/**
-	 * If the 'expected' is not equal to 'actual' (!=), an assertion
-	 * error will be raised by this method used to report that the
-	 * running method is failure.
+	 * Asserts that the `actual` is equal to the `expected`.
+	 * If it isn't, will stop the test method and mark it with failure.
 	 */
 	fun assertEquals(expected, actual, msg="") {
 		if (expected != actual) {
-			this.assertFail("Expected " + expected + ", but was " + 
-				actual + ": [" + msg + "]")
+			@assertFail("Expected ${expected}, but was ${actual}: <${msg}>")
 		}
 	}
 	
 	/**
-	 * If the 'unexpected' is equal to 'actual' (==), an assertion
-	 * error will be raised by this method used to report that the
-	 * running method is failure.
+	 * Asserts that the `actual` is not equal to the `unexpected`.
+	 * If it isn't, will stop the test method and mark it with failure.
 	 */
 	fun assertNotEquals(unexpected, actual, msg="") {
 		if (unexpected == actual) {
-			this.assertFail("Unexpected " + actual + ": [" + msg + "]")
+			@assertFail("Unexpected ${unexpected}: <${msg}>")
 		}
 	}
 	
 	/**
-	 * Test that the 'expr' is true.
-	 *
-	 * Note that this method will compare the 'bool(expr) == true' 
-	 * instead of the '(expr == true)'
+	 * Asserts that the `condition` is true. If it isn't, will stop
+	 * the test method and mark it with failure.
 	 */
-	fun assertTrue(expr, msg="") {
-		this.assertEquals(true, bool(expr), msg)
+	fun assertTrue(condition, msg="") {
+		if (!condition) {
+			@assertFail(msg)
+		}
 	}
 	
 	/**
-	 * Test that the 'expr' is false.
-	 *
-	 * Note that this method will compare the 'bool(expr) == false' 
-	 * instead of the '(expr == false)'
+	 * Asserts that the `condition` is false. If it isn't, will stop
+	 * the test method and mark it with failure.
 	 */
-	fun assertFalse(expr, msg="") {
-		this.assertEquals(false, bool(expr), msg)
-	}
-
-	/**
-	 * Test that the 'expr' is null.
-	 */
-	fun assertNull(expr, msg="") {
-		this.assertEquals(null, expr, msg)
-	}
-	
-	/**
-	 * Test that the 'expr' is not null.
-	 */
-	fun assertNotNull(expr, msg="") {
-		this.assertNotEquals(null, expr, msg)
-	}
-
-	/**
-	 * Test that the 'obj' is an instance of 'cls'.
-	 */
-	fun assertIsInstance(cls, obj, msg="") {
-		if (!(obj is cls)) {
-			this.assertFail(
-				"Expected the obj is an instance of the class '" +
-				cls.name, "', but the obj's class is '" +
-				obj._class().className
-		 )
+	fun assertFalse(condition, msg="") {
+		if (condition) {
+			@assertFail(msg)
 		}
 	}
 
 	/**
-	 * Test that the 'obj' is not an instance of 'cls'.
+	 * Asserts that the `object` is null. If it isn't, will stop
+	 * the test method and mark it with failure.
 	 */
-	fun assertIsNotInstance(cls, obj, msg="") {
-		if (obj is cls) {
+	fun assertNull(object, msg="") {
+		this.assertEquals(null, object, msg)
+	}
+	
+	/**
+	 * Asserts that the `object` is not null. If it isn't, will stop
+	 * the test method and mark it with failure.
+	 */
+	fun assertNotNull(object, msg="") {
+		this.assertNotEquals(null, object, msg)
+	}
+
+	/**
+	 * Asserts that the 'object' is an instance of 'cls'. If it isn't, 
+	 * will stop the test method and mark it with failure.
+	 */
+	fun assertIsInstance(cls, object, msg="") {
+		if (!(object is cls)) {
 			this.assertFail(
-				"Expected the obj is not an instance of the class '" +
-				cls.className + "'."
+				"Expected <${cls.className}> but the class of the <${object}> was "+
+				"<${object._class().className}>: <${msg}>"
+			)
+		}
+	}
+
+	/**
+	 * Asserts that the 'object' is not an instance of 'cls'. If it isn't, 
+	 * will stop the test method and mark it with failure.
+	 */
+	fun assertIsNotInstance(cls, object, msg="") {
+		if (object is cls) {
+			this.assertFail(
+				"Unexpected that the <${object}> was an instance of the <${cls}>"
 			)
 		}
 	}
 	
 	/**
-	 * Test that an error instanced of the 'errType' is raised
-	 * when the 'fn' is called.
+	 * Asserts that an error which is an instance of the given errType
+	 * is raised when the fn is called. If it isn't, will stop the test
+	 * method and mark it with failure.
 	 *
-	 * If any error other than 'errType' or no error raised,
-	 * the running test method is failure.
-	 *
-	 * If the 'errType' is not an 'Error', an 'AssertionError' will
-	 * be raised to warn users that the errType is incorrect type.
-	 *
-	 * If the 'errType' is null, it represents any error.
+	 * errType: If it's null, it represents Error. It must be an error type.
 	 */
-	fun expectedErrorRaised(errType, fn, msg="") {
+	fun expectedErrorRaised(errType = null, fn, msg="") {
 		if (errType == null) {
 			errType = Error
-		} else if (!errType.isClass()) {
-			raise AssertionError("The ${errType} is not a class.")
-		} else if (!errType.isSubclassOf(Error)) {
-			raise AssertionError("The '" + errType.className +
-			 "' is not an 'Error' type.")
-		}
-		var name = errType.className
+		} 
 		try {
 			fn()
 		} intercept errType {
 			return
-		} intercept as e {
-			this.assertFail("Expect that the '" + name +
-			 "' raised, but the '" + e._class().className + 
-			 "' raised: [" + msg + "]")
+		} intercept as e {	
+			@assertFail(
+				"It is expected that the <${errType.className}> is raised but " +
+				"the <${e._class().className}> was raised: <${msg}>"
+			)
 		} else {
-			this.assertFail("Expect that the '" + name +
-			 "' raised, but no error catched: [" + msg + "]")
+			@assertFail(
+				"It is expected that the <${errType.className}> is raised but " +
+				"no errors were raised: <${msg}>"
+			)
 		}
 	}
 } 
