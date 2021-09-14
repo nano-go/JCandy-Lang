@@ -41,6 +41,31 @@ public class ArrayHelper {
 		return str.toString();
 	}
 	
+	public static Object[] toJavaArrayForFormat(CNIEnv env, ArrayObj arr) {
+		Object[] args = new Object[arr.length()];
+		int length = arr.length();
+		for (int i = 0; i < length; i ++) {
+			args[i] = toJavaTypeForFormat(env, arr.get(i));
+		}
+		return args;
+	}
+
+	public static Object toJavaTypeForFormat(CNIEnv env, CandyObject obj) {
+		if (obj instanceof StringObj) {
+			return ((StringObj)obj).value();
+		}
+		if (obj instanceof IntegerObj) {
+			return ((IntegerObj)obj).intValue();
+		}
+		if (obj instanceof DoubleObj) {
+			return ((DoubleObj)obj).doubleValue();
+		}
+		if (obj instanceof BoolObj) {
+			return ((BoolObj)obj).value();
+		}
+		return obj.callStr(env);
+	}
+	
 	public static ArrayObj toArray(CNIEnv env, CandyObject obj) {
 		if (obj instanceof ArrayObj) {
 			return (ArrayObj) obj;

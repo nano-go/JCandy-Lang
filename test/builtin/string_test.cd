@@ -55,4 +55,21 @@ class StringTest : unit.TestCase {
 		@expectedErrorRaised(TypeError, -> "a"[1] = "a")
 		@expectedErrorRaised(TypeError, -> "a"[-1] = 0)
 	}
+
+	fun format_test() {
+		@assertEquals("123", "%s".format("123"))
+		@assertEquals("123", "%s".format(123))
+		@assertEquals("123.0", "%s".format(123.0))
+		@assertEquals("123.0756", "%s".format(123.0756))
+		@assertEquals("123.075600", "%f".format(123.0756))
+		@assertEquals("123", "%d".format(123))
+		@assertEquals("  123", "%5d".format(123))
+		@assertEquals("123  ", "%-5d".format(123))
+		@assertEquals("7b", "%x".format(123))
+		@assertEquals("173", "%o".format(123))
+
+		@expectedErrorRaised(ArgumentError, -> "%f".format("12"))
+		@expectedErrorRaised(ArgumentError, -> "%c".format("456"))
+		@expectedErrorRaised(ArgumentError, -> "%x".format(456.9))
+	}
 }
