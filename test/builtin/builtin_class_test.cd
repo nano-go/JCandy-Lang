@@ -55,7 +55,7 @@ class BuiltinClassTest : unit.TestCase {
 			}
 		}
 
-		BUILTIN_ERROR_CLASSES.foreach(lambda i, e -> testInheritance(e))
+		BUILTIN_ERROR_CLASSES.foreach(testInheritance)
 	}
 
 	/**
