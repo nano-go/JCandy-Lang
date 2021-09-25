@@ -1,16 +1,20 @@
 
-var EMPTY_STREAM = Object()
+class EmptyStream {
+	static var EMPTY_STREAM = this()
+}
 
 class StreamInterface {
+
 	fun init(eval) {
 		this.eval = eval
 	}
 
 	fun map(mapper) {
 		var eval = this.eval
+		var emptyS = EmptyStream.EMPTY_STREAM
 		this.eval = lambda -> {
 			var value = eval()
-			return EMPTY_STREAM == value ? value : mapper(value)
+			return emptyS == value ? value : mapper(value)
 		}
 		return this
 	}
@@ -18,17 +22,18 @@ class StreamInterface {
 	fun flatMap(mapper) {
 		var eval = this.eval
 		var stream = null
+		var emptyS = EmptyStream.EMPTY_STREAM
 		this.eval = lambda -> {
 			while (true){
 				if (stream) {	
 					var value = stream.eval()
-					if (EMPTY_STREAM != value) {
+					if (emptyS != value) {
 						return value;
 					}
 				}
 				var value = eval()
-				if (EMPTY_STREAM == value) {
-					return EMPTY_STREAM
+				if (emptyS == value) {
+					return emptyS
 				}
 				stream = mapper(value)
 				stream = stream is StreamInterface ? stream : Stream(stream)
@@ -39,9 +44,10 @@ class StreamInterface {
 
 	fun peek(consumer) {	
 		var eval = this.eval
+		var emptyS = EmptyStream.EMPTY_STREAM
 		this.eval = lambda -> {
 			var value = eval()
-			if (EMPTY_STREAM != value) consumer(value)
+			if (emptyS != value) consumer(value)
 			return value
 		}
 		return this
@@ -49,9 +55,10 @@ class StreamInterface {
 
 	fun filter(filter) {
 		var eval = this.eval
+		var emptyS = EmptyStream.EMPTY_STREAM
 		this.eval = lambda -> {
 			var value = eval()
-			while (EMPTY_STREAM != value && !filter(value)) {
+			while (emptyS != value && !filter(value)) {
 				value = eval()
 			}
 			return value
@@ -61,9 +68,10 @@ class StreamInterface {
 
 	fun skip(n) {
 		var eval = this.eval
+		var emptyS = EmptyStream.EMPTY_STREAM
 		this.eval = lambda -> {
 			var value = eval()
-			while (n > 0 && EMPTY_STREAM != value) {
+			while (n > 0 && emptyS != value) {
 				n -= 1
 				value = eval()
 			}
@@ -74,8 +82,9 @@ class StreamInterface {
 
 	fun limit(n) {
 		var eval = this.eval
+		var emptyS = EmptyStream.EMPTY_STREAM
 		this.eval = lambda -> {
-			if (n <= 0) return EMPTY_STREAM
+			if (n <= 0) return emptyS
 			n -= 1
 			return eval()
 		}
@@ -85,9 +94,10 @@ class StreamInterface {
 	fun distinct() {
 		var eval = this.eval
 		var set = {}
+		var emptyS = EmptyStream.EMPTY_STREAM
 		this.eval = lambda -> {
 			var value = eval()
-			while (EMPTY_STREAM != value && set.contains(value)) {
+			while (emptyS != value && set.contains(value)) {
 				value = eval()
 			}
 			set[value] = null
@@ -101,6 +111,7 @@ class StreamInterface {
 		var sortedArr = null
 		var p = 1
 		var size = 0
+		var emptyS = EmptyStream.EMPTY_STREAM
 
 		fun getElement(p, sortedArr) {
 			var value = sortedArr[p]
@@ -110,35 +121,37 @@ class StreamInterface {
 
 		this.eval = lambda -> {
 			if (sortedArr) {
-				if (p >= size) return EMPTY_STREAM
+				if (p >= size) return emptyS
 				p += 1
 				return getElement(p-1, sortedArr)
 			}
 			sortedArr = []
 			var value
-			while (EMPTY_STREAM != (value = eval())) {
+			while (emptyS != (value = eval())) {
 				sortedArr.append(value)
 			}
 			sortedArr.sort()
 			size = sortedArr.length()
-			return size != 0 ? getElement(0, sortedArr) : EMPTY_STREAM
+			return size != 0 ? getElement(0, sortedArr) : emptyS
 		}
 		return this
 	}
 
 	fun foreach(consumer) {
 		var eval = this.eval
+		var emptyS = EmptyStream.EMPTY_STREAM
 		var value
-		while (EMPTY_STREAM != (value = eval())) {
+		while (emptyS != (value = eval())) {
 			consumer(value)
 		}
 	}
 
 	fun reduce(initVal, operator) {
 		var eval = this.eval
+		var emptyS = EmptyStream.EMPTY_STREAM
 		var value
 		var result = initVal
-		while (EMPTY_STREAM != (value = eval())) {
+		while (emptyS != (value = eval())) {
 			result = operator(result, value)
 		}
 		return result
@@ -146,10 +159,11 @@ class StreamInterface {
 
 	fun fold(operator) {
 		var eval = this.eval
+		var emptyS = EmptyStream.EMPTY_STREAM
 		var value = eval()
-		if (value == EMPTY_STREAM) return null;
+		if (value == emptyS) return null;
 		var result = value
-		while (EMPTY_STREAM != (value = eval())) {
+		while (emptyS != (value = eval())) {
 			result = operator(result, value)
 		}
 		return result
@@ -169,9 +183,10 @@ class StreamInterface {
 
 	fun count() {
 		var eval = this.eval
+		var emptyS = EmptyStream.EMPTY_STREAM
 		var value
 		var count = 0
-		while (EMPTY_STREAM != (value = eval())) {
+		while (emptyS != (value = eval())) {
 			count += 1
 		}
 		return count
@@ -179,8 +194,9 @@ class StreamInterface {
 
 	fun allMatch(matcher) {
 		var eval = this.eval
+		var emptyS = EmptyStream.EMPTY_STREAM
 		var value
-		while (EMPTY_STREAM != (value = eval())) {
+		while (emptyS != (value = eval())) {
 			if (!matcher(value)) return false
 		}
 		return true
@@ -188,8 +204,9 @@ class StreamInterface {
 
 	fun anyMatch(matcher) {
 		var eval = this.eval
+		var emptyS = EmptyStream.EMPTY_STREAM
 		var value
-		while (EMPTY_STREAM != (value = eval())) {
+		while (emptyS != (value = eval())) {
 			if (matcher(value)) return true
 		}
 		return false
@@ -197,8 +214,9 @@ class StreamInterface {
 
 	fun noneMatch(matcher) {
 		var eval = this.eval
+		var emptyS = EmptyStream.EMPTY_STREAM
 		var value
-		while (EMPTY_STREAM != (value = eval())) {
+		while (emptyS != (value = eval())) {
 			if (matcher(value)) return false
 		}
 		return true
@@ -206,13 +224,15 @@ class StreamInterface {
 
 	fun findFirst() {
 		var value = this.eval()
-		return EMPTY_STREAM != value ? value : null
+		var emptyS = EmptyStream.EMPTY_STREAM
+		return emptyS != value ? value : null
 	}
 
 	fun _collect(suppiler, accumulator, finisher) {
 		var eval = this.eval
+		var emptyS = EmptyStream.EMPTY_STREAM
 		var value
-		while (EMPTY_STREAM != (value = eval())) {
+		while (emptyS != (value = eval())) {
 			accumulator(suppiler, value)
 		}
 		return finisher(suppiler)
@@ -250,5 +270,5 @@ class StreamInterface {
 fun Stream(iterable) {
 	var iterator = iterable._iterator()
 	return StreamInterface(lambda -> 
-		iterator._hasNext() ? iterator._next() : EMPTY_STREAM);
+		iterator._hasNext() ? iterator._next() : EmptyStream.EMPTY_STREAM);
 }
