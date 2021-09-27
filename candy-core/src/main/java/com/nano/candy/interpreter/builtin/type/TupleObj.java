@@ -148,7 +148,7 @@ public final class TupleObj extends CandyObject {
 			return StringObj.EMPTY_TUPLE;
 		}
 		StringBuilder builder = new StringBuilder("(");
-		builder.append(ArrayHelper.toString(env, elements, ", "));
+		builder.append(ArrayHelper.toString(env, elements, ", ", this));
 		builder.append(")");
 		return StringObj.valueOf(builder.toString());
 	}

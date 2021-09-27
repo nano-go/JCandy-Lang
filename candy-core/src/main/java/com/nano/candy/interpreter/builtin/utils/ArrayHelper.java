@@ -19,18 +19,23 @@ public class ArrayHelper {
 		return hash;
 	}
 	
-	public static String toString(CNIEnv env, CandyObject[] arr, String sperator) {
-		return toString(env, arr, 0, arr.length, sperator);
+	public static String toString(CNIEnv env, CandyObject[] arr, String sperator,
+								  CandyObject preventRecursion) {
+		return toString(env, arr, 0, arr.length, sperator, preventRecursion);
 	}
 	
 	public static String toString(CNIEnv env, CandyObject[] arr, int from, int to,
-	                              String separator) {
+	                              String separator, CandyObject preventRecursion) {
 		StringBuilder str = new StringBuilder();
 		int i = from;
 		int iMax = to-1;
 		if (i <= iMax) {
 			for (;;) {
-				str.append(arr[i].callStr(env).value());
+				if (arr[i] == preventRecursion) {
+					str.append(StringObj.RECURSIVE_LIST);
+				} else {
+					str.append(arr[i].callStr(env).value());
+				}
 				if (i >= iMax) {
 					break;
 				}

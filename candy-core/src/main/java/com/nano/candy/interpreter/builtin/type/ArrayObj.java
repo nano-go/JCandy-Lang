@@ -92,8 +92,6 @@ public final class ArrayObj extends CandyObject {
 	protected CandyObject[] elements;
 	private int length;
 	
-	private boolean isInProcessOfStr;
-	
 	protected ArrayObj() {
 		super(ARRAY_CLASS);
 	}
@@ -552,8 +550,12 @@ public final class ArrayObj extends CandyObject {
 	public IntegerObj hashCode(CNIEnv env) {
 		int hash = 0;
 		for (int i = 0; i < length; i ++) {
-			hash = hash * 31 + 
-				(int) elements[i].callHashCode(env).intValue();
+			if (elements[i] == this) {
+				hash = hash*31 + hash;
+			} else {
+				hash = hash * 31 + 
+					(int) elements[i].callHashCode(env).intValue();
+			}
 		}
 		return IntegerObj.valueOf(hash);
 	}
@@ -566,14 +568,9 @@ public final class ArrayObj extends CandyObject {
 		if (length == 0) {
 			return StringObj.EMPTY_LIST;
 		}
-		if (isInProcessOfStr) {
-			return StringObj.RECURSIVE_LIST;
-		}
-		isInProcessOfStr = true;
 		StringBuilder builder = new StringBuilder("[");
-		builder.append(ArrayHelper.toString(env, elements, 0, length, ", "));
+		builder.append(ArrayHelper.toString(env, elements, 0, length, ", ", this));
 		builder.append("]");
-		isInProcessOfStr = false;
 		return StringObj.valueOf(builder.toString());
 	}
 	
