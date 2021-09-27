@@ -292,7 +292,7 @@ public final class ArrayObj extends CandyObject {
 	 */
 	public CandyObject[] subarray(int begin, int end) {
 		begin = RangeError.checkIndex(begin, length);
-		end = RangeError.checkIndexForAdd(begin, length);
+		end = RangeError.checkIndexForAdd(end, length);
 		return privateSubarray(begin, end);
 	}
 	
@@ -711,7 +711,7 @@ public final class ArrayObj extends CandyObject {
 	@NativeMethod(name = "pop")
 	protected CandyObject pop(CNIEnv env) {
 		if (length == 0) {
-			new StateError("This is an empty stack.").throwSelfNative();
+			new StateError("This is an empty array.").throwSelfNative();
 		}
 		CandyObject r = elements[--length];
 		elements[length] = null;
@@ -737,6 +737,33 @@ public final class ArrayObj extends CandyObject {
 		return get(length-(int)kVal-1);
 	}
 	
+	@NativeMethod(name = "shift")
+	protected CandyObject shift(CNIEnv env) {
+		if (length == 0) {
+			new StateError("This is an empty array.").throwSelfNative();
+		}
+		return deleteAt(0);
+	}
+
+	@NativeMethod(name = "unshift")
+	protected CandyObject unshift(CNIEnv env, CandyObject element) {
+		insert(0, element);
+		return this;
+	}
+	
+	@NativeMethod(name = "slice")
+	protected CandyObject slice(CNIEnv env, OptionalArg from, OptionalArg to) {
+		if (!to.isPresent() && from.isPresent()) {
+			CandyObject rangeOrFrom = from.getValue();
+			if (rangeOrFrom instanceof Range) {
+				return new ArrayObj(subarray((Range) rangeOrFrom));
+			}
+		}
+		int fromInt = (int) TypeError.requiresIntegerObj(from.getValue(0)).value;
+		int toInt = (int) TypeError.requiresIntegerObj(to.getValue(length)).value;
+		return new ArrayObj(subarray(fromInt, toInt));
+	}
+	
 	private static Random rad;
 	@NativeMethod(name = "shuffle")
 	protected CandyObject shuffle(CNIEnv env) {
@@ -760,6 +787,21 @@ public final class ArrayObj extends CandyObject {
 				mapper.flexiblyCall(env, 1, elements[i], IntegerObj.valueOf(i));
 		}
 		return new ArrayObj(newElements);
+	}
+	
+	@NativeMethod(name = "flatMap")
+	protected CandyObject flatMap(CNIEnv env, CallableObj mapper) {
+		ArrayObj newElements = new ArrayObj(length);
+		for (int i = 0; i < length; i ++) {
+			CandyObject element = 
+				mapper.flexiblyCall(env, 1, elements[i], IntegerObj.valueOf(i));
+			if (element instanceof ArrayObj) {
+				newElements.appendAll(env, (ArrayObj) element);
+			} else {
+				newElements.append(element);
+			}
+		}
+		return newElements;
 	}
 	
 	@NativeMethod(name = "filter")
@@ -874,6 +916,11 @@ public final class ArrayObj extends CandyObject {
 			}
 		}
 		return min;
+	}
+	
+	@NativeMethod(name = "join")
+	protected CandyObject join(CNIEnv env, String separator) {
+		return StringObj.valueOf(separator).join(env, this);
 	}
 	
 	@NativeMethod(name = "length")
