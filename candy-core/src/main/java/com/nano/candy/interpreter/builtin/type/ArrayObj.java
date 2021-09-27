@@ -21,19 +21,67 @@ import com.nano.candy.utils.ArrayUtils;
 import java.util.Arrays;
 import java.util.Random;
 
+/**
+ * An Array represents an ordered collection of Candy objects. Any
+ * object may be an element of an array.
+ *
+ * <b> An array can be created by two ways:
+ *
+ * <ul>
+ * <li> 1. Syntax: 
+ * <p> You can use the syntax {@code [element?, ...]} to create an array. For example:
+ *
+ * <pre>
+ * // Creating an empty array.
+ * var arr = []
+ *
+ * // Creating an array that contains an Integer, a Double, a Bool and a String.
+ * var arr = [1, 2.3, true, "5"]
+ * </pre>
+ * </li>
+ *
+ * <li> 2. Class
+ * <p> You can also use the Array class to create an array. 
+ * The Array's initializer receives two argumenets, an initial size and a default
+ * value. But if the secondary argument (default value) is a Callable object,
+ * it will be considered as a generator of elements. For example:
+ *
+ * <pre>
+ * // Creating an array that contains 5 null elements.
+ * var arr = Array(5, null)
+ * println(arr) // -> [null, null, null, null, null]
+ *
+ * // Creating an array: ["0", "1", "2", "3", "4", "5"]
+ * var arr = Array(6, str)
+ * arr.foreach(print) // -> 012345
+ * </pre>
+ * </li>
+ * </ul>
+ *
+ * <p> In Candy langauge, an index may be negative, which represents counting
+ * from the last and ending at the first. For example:
+ *
+ * <pre>
+ * var arr = [1, 2, 3, 4, 5];
+ * println(arr[-1]) // -> 5
+ * println(arr[-2]) // -> 4
+ * ...
+ * println(arr[-5]) // -> 1
+ * println(arr[-6]) // -> IndexError: ...
+ * </pre>
+ */
 @NativeClass(name = "Array", isInheritable=true)
 public final class ArrayObj extends CandyObject {
 	
 	public static final CandyClass ARRAY_CLASS = 
 		NativeClassRegister.generateNativeClass(ArrayObj.class);
 	
-	private static final int MAX_ARRAY_SIZE = Integer.MAX_VALUE - 8;	
 	public static final CandyObject[] EMPTY_ARRAY = new CandyObject[0];
-	
 	public static final ArrayObj emptyArray() {
 		return new ArrayObj(EMPTY_ARRAY); 
 	}
 	
+	private static final int MAX_ARRAY_SIZE = Integer.MAX_VALUE - 8;
 	protected static void checkCapacity(long capacity) {
 		if (capacity > Integer.MAX_VALUE || capacity < 0) {
 			new ArgumentError("Illegal capacity: %d", capacity)
@@ -50,9 +98,9 @@ public final class ArrayObj extends CandyObject {
 		super(ARRAY_CLASS);
 	}
 	
-	public ArrayObj(long n) {
+	public ArrayObj(long initialCapacity) {
 		super(ARRAY_CLASS);
-		initArray(n);
+		initArray(initialCapacity);
 	}
 	
 	public ArrayObj(CandyObject[] elements) {
@@ -66,20 +114,19 @@ public final class ArrayObj extends CandyObject {
 		this.elements = elements;
 		this.length = size;
 		if (size > elements.length) {
-			new ArgumentError("Illegal size: %d", size)
-				.throwSelfNative();
+			new ArgumentError("Illegal size: %d", size).throwSelfNative();
 		}
 	}
 	
-	private void initArray(long n) {
-		if (n > MAX_ARRAY_SIZE || n < 0) {
-			new ArgumentError("Illegal capacity: %d", n)
+	private void initArray(long intialCapactiy) {
+		if (intialCapactiy > MAX_ARRAY_SIZE || intialCapactiy < 0) {
+			new ArgumentError("Illegal capacity: %d", intialCapactiy)
 				.throwSelfNative();
 		}
-		if (n == 0) {
+		if (intialCapactiy == 0) {
 			elements = EMPTY_ARRAY;
 		} else {
-			elements = new CandyObject[(int)n];
+			elements = new CandyObject[(int)intialCapactiy];
 		}
 	}
 	
@@ -107,15 +154,32 @@ public final class ArrayObj extends CandyObject {
 		return newCapacity;
 	}
 	
-	public void append(CandyObject obj) {
+	/**
+	 * Adds an element to the end of this array.
+	 */
+	public void append(CandyObject element) {
 		ensureCapacity(length + 1);
-		elements[length ++] = obj;
+		elements[length ++] = element;
 	}
 	
+	/**
+	 * Adds all elements of an array to the end of this array.
+	 *
+	 * @param arr The specified array.
+	 * @param len The length of the specified array.
+	 */
 	public void insertAll(CandyObject[] arr, int len) {
 		insertAll(this.length, arr, len);
 	}
 	
+	/**
+	 * Inserts all elements of an array to this array at the
+	 * specified position.
+	 *
+	 * @param index The specified position.
+	 * @param arr   The specified array.
+	 * @param len   The length of the specified array.
+	 */
 	public void insertAll(int index, CandyObject[] arr, int len) {
 		ensureCapacity(this.length + len);
 		System.arraycopy(
@@ -124,25 +188,58 @@ public final class ArrayObj extends CandyObject {
 		this.length += len;
 	}
 	
+	/**
+	 * Returns an element at the specified position.
+	 *
+	 * @param index The specified position. It may be a negative number.
+	 */
 	public CandyObject get(int index) {
 		index = RangeError.checkIndex(index, length);
 		return elements[index];
 	}
 	
+	/**
+	 * Replaces a range of elements in this array with the specified array.
+	 *
+	 * @param range    The range of the slice.
+	 * @param newArray The replacement array.
+	 */
 	public void replaceRange(Range range, CandyObject[] newArray) {
 		replaceRange(range, newArray, newArray.length);
 	}
 	
+	/**
+	 * Replaces a range of elements in this array with the specified array.
+	 *
+	 * @param range       The specified range.
+	 * @param newArrat    The replacement array.
+	 * @param newArrayLen The length of the replacement array.
+	 */
 	public void replaceRange(Range range, CandyObject[] newArray, int newArrayLen) {
 		int begin = IndexHelper.asIndex(range.getLeftObj(), length);
 		int end = IndexHelper.asIndexForAdd(range.getRightObj(), length);
 		privateReplaceRange(begin, end, newArray, newArrayLen);
 	}
 	
+	/**
+	 * Replaces a range of elements in this array with the specified array.
+	 *
+	 * @param begin    The begin index of the range.
+	 * @param end      The end index of the range (exclusion).
+	 * @param newArray The replacement array.
+	 */
 	public void replaceRange(int begin, int end, CandyObject[] newArray) {
 		replaceRange(begin, end, newArray);					 
 	}
 	
+	/**
+	 * Replaces a range of elements in this array with the specified array.
+	 *
+	 * @param begin       The begin index of the range.
+	 * @param end         The end index of the range (exclusion).
+	 * @param newArray    The replacement array.
+	 * @param newArrayLen The length of the replacement array.
+	 */
 	public void replaceRange(int begin, int end, CandyObject[] newArray, 
 	                         int newArrayLen) {
 		begin = RangeError.checkIndex(begin, length);
@@ -151,7 +248,7 @@ public final class ArrayObj extends CandyObject {
 	}
 	
 	/**
-	 * We assume that the begin index and the end index are invalid.
+	 * We assume that the begin index and the end index are valid.
 	 */
 	private void privateReplaceRange(int begin, int end, 
 	                                 CandyObject[] newArray, 
@@ -176,12 +273,23 @@ public final class ArrayObj extends CandyObject {
 		this.length = len;
 	}
 	
+	/**
+	 * Returns a copy of a porting of this array selected from the
+	 * {@code range.left} to {@code range.right} (exclusion).
+	 */
 	public CandyObject[] subarray(Range range) {
 		int begin = IndexHelper.asIndex(range.getLeftObj(), length);
 		int end = IndexHelper.asIndexForAdd(range.getRightObj(), length);
 		return privateSubarray(begin, end);
 	}
 	
+	/**
+	 * Returns a copy of a porting of this array selected from the
+	 * {@code begin} to {@code end} (exclusion).
+	 *
+	 * @param begin The begin index of the range.
+	 * @param end   The end index of the range (exclusion).
+	 */
 	public CandyObject[] subarray(int begin, int end) {
 		begin = RangeError.checkIndex(begin, length);
 		end = RangeError.checkIndexForAdd(begin, length);
@@ -202,37 +310,37 @@ public final class ArrayObj extends CandyObject {
 		return length;
 	}
 	
-	public int indexOf(CNIEnv env, CandyObject obj) {
+	public int indexOf(CNIEnv env, CandyObject element) {
 		for (int i = 0; i < length; i ++) {
-			if (elements[i].callEquals(env, obj).value()) {
+			if (elements[i].callEquals(env, element).value()) {
 				return i;
 			}
 		}
 		return -1;
 	}
 	
-	public int lastIndexOf(CNIEnv env, CandyObject obj) {
+	public int lastIndexOf(CNIEnv env, CandyObject element) {
 		for (int i = length-1; i >= 0; i --) {
-			if (elements[i].callEquals(env, obj).value()) {
+			if (elements[i].callEquals(env, element).value()) {
 				return i;
 			}
 		}
 		return -1;
 	}
 	
-	public void insert(int index, CandyObject e) {
+	public void insert(int index, CandyObject element) {
 		if (index == length) {
-			append(e);
+			append(element);
 			return;
 		}
 		ensureCapacity(length + 1);
 		System.arraycopy(elements, index, elements, index + 1, length-index);
-		elements[index] = e;
+		elements[index] = element;
 		length ++;
 	}
 	
-	public boolean delete(CNIEnv env, CandyObject obj) {
-		int i = indexOf(env, obj);
+	public boolean delete(CNIEnv env, CandyObject element) {
+		int i = indexOf(env, element);
 		if (i == -1) {
 			return false;
 		}
@@ -240,6 +348,15 @@ public final class ArrayObj extends CandyObject {
 		return true;
 	}
 	
+	/**
+	 * Removes the element at the specified position.
+	 *
+	 * <p> Note that the {@code index} can not be negative.
+	 *
+	 * @param index the specified position.
+	 *
+	 * @return The removed element.
+	 */
 	public CandyObject deleteAt(int index) {
 		CandyObject oldValue = elements[index];
 		length--;
@@ -250,6 +367,14 @@ public final class ArrayObj extends CandyObject {
 		return oldValue;
 	}
 	
+	/**
+	 * Removes a range of elements in this array.
+	 *
+	 * Note that the {@code from} and the {@code to} can not be negative.
+	 *
+	 * @param from The start index of the range.
+	 * @param to   The end index of the range.
+	 */
 	public void deleteRange(int from, int to) {
 		if (from > to) {
 			new RangeError("fromIndex(" + from + ") > toIndex(" + to + ")")
@@ -270,6 +395,23 @@ public final class ArrayObj extends CandyObject {
 		return new TupleObj(Arrays.copyOf(elements, length));
 	}
 	
+	/**
+	 * Overloading of the operator {@code []}.
+	 *
+	 * <p> If the key that use to access elements in this array is an
+	 * Integer, it represents an index. An index can be used to access 
+	 * some element in an array.
+	 *
+	 * <p> In order to access a range of elements in this array, you need
+	 * to use the {@link Range} to access. it will return a new array.
+	 * For example:
+	 *
+	 * <pre>
+	 * var arr = [1, 2, 3, 4, 5]
+	 * println(arr[0..2]) // -> [1, 2]
+	 * println(arr[0..-1]) // -> [1, 2, 3, 4, 5]
+	 * </pre>
+	 */
 	@Override
 	public CandyObject getItem(CNIEnv env, CandyObject key) {
 		if (key instanceof Range) {
@@ -280,6 +422,23 @@ public final class ArrayObj extends CandyObject {
 		);
 	}
 
+	/**
+	 * Overloading of the operator {@code []=}.
+	 *
+	 * <p> You can use the {@link Range} to replace a range of elements in 
+	 * this array with an element or an array. For example:
+	 *
+	 * <pre>
+	 * var arr = [1, 2, 3, 4, 5]
+	 * arr[0..2] = 1 // Replaced [1, 2] with the element 1
+	 * println(arr)
+	 * // -> [1, 3, 4, 5]
+	 *
+	 * arr[0..2] = [1, 2] // Replaced [1, 3] with [1, 2]
+	 * println(arr)
+	 * // -> [1, 2, 4, 5]
+	 * </pre>
+	 */
 	@Override
 	public CandyObject setItem(CNIEnv env, CandyObject key, CandyObject value) {
 		if (key instanceof Range) {
@@ -295,6 +454,11 @@ public final class ArrayObj extends CandyObject {
 		return value;
 	}
 
+	/**
+	 * Overloading of the operator {@code +}.
+	 *
+	 * <p> Merges two arrays and returns it.
+	 */
 	@Override
 	public CandyObject add(CNIEnv env, CandyObject operand) {
 		TypeError.checkTypeMatched(ARRAY_CLASS, operand);
@@ -305,6 +469,18 @@ public final class ArrayObj extends CandyObject {
 		return new ArrayObj(newElements);
 	}
 
+	/**
+	 * Overloading of the operator {@code *}.
+	 *
+	 * <p> Returns a new array that built by concatenating the {@code n} copies of
+	 * this array. For example:
+	 *
+	 * <pre>
+	 * var arr = [1, 2, 3]
+	 * println(arr * 3) // -> [1, 2, 3, 1, 2, 3, 1, 2, 3]
+	 * println(arr * 0) // -> []
+	 * </pre>
+	 */
 	@Override
 	protected CandyObject mul(CNIEnv env, CandyObject operand) {
 		long repat = ObjectHelper.asInteger(operand);
@@ -312,12 +488,61 @@ public final class ArrayObj extends CandyObject {
 		return new ArrayObj(ArrayUtils.repeat(elements, length, (int) repat));
 	}
 
+	/**
+	 * Overloading of the operator {@code <<}.
+	 *
+	 * <p> Appends an element to this array and returns this array.
+	 */
 	@Override
 	protected CandyObject lshift(CNIEnv env, CandyObject operand) {
 		append(operand);
 		return this;
 	}
 	
+	/**
+	 * Overloading of the operator {@code ==}.
+	 *
+	 * <p> Returns {@code true} if both 
+	 * {@code arr.length() == anotherArr.length()} and for each index {@code i}:
+	 * {@code arr[i] == anotherArr[i]}, Otherwise {@code false}.
+	 *
+	 * <pre>
+	 * var arr = [1, 2, 3]
+	 * println(arr == [1, 2, 3]) // -> True
+	 * println(arr == [1])       // -> False
+	 * </pre>
+	 */
+	@Override
+	public BoolObj equals(CNIEnv env, CandyObject operand) {
+		if (this == operand) {
+			return BoolObj.TRUE;
+		}
+		if (operand instanceof ArrayObj) {
+			ArrayObj arr = (ArrayObj) operand;
+			if (arr.length != length) {
+				return BoolObj.FALSE;
+			}
+			final int SIZE = this.length;
+			for (int i = 0; i < SIZE; i ++) {	
+				BoolObj result = get(i).callEquals(env, arr.get(i));
+				if (!result.value()) {
+					return BoolObj.FALSE;
+				}
+			}
+			return BoolObj.TRUE;
+		}
+		return super.equals(env, operand);
+	}
+	
+	/**
+	 * Returns an iterator over all elements in this array.
+	 *
+	 * <pre>
+	 * var arr = [1, 2, 3]
+	 * for (e in arr) print(e)
+	 * // print 123
+	 * </pre>
+	 */
 	@Override
 	public CandyObject iterator(CNIEnv env) {
 		return new IteratorObj.ArrIterator(elements, length);
@@ -332,29 +557,10 @@ public final class ArrayObj extends CandyObject {
 		}
 		return IntegerObj.valueOf(hash);
 	}
-
-	@Override
-	public BoolObj equals(CNIEnv env, CandyObject operand) {
-		if (this == operand) {
-			return BoolObj.TRUE;
-		}
-		if (!(operand instanceof ArrayObj)) {
-			return super.equals(env, operand);
-		}
-		ArrayObj arr = (ArrayObj) operand;
-		if (arr.length != length) {
-			return BoolObj.FALSE;
-		}
-		final int SIZE = this.length;
-		for (int i = 0; i < SIZE; i ++) {	
-			BoolObj result = get(i).callEquals(env, arr.get(i));
-			if (!result.value()) {
-				return BoolObj.FALSE;
-			}
-		}
-		return BoolObj.TRUE;
-	}
-
+	
+	/**
+	 * Returns the string representation of this array.
+	 */
 	@Override
 	public StringObj str(CNIEnv env) {
 		if (length == 0) {
@@ -371,19 +577,32 @@ public final class ArrayObj extends CandyObject {
 		return StringObj.valueOf(builder.toString());
 	}
 	
+	/**
+	 * Prototype: {@code Array(initialLength, defaultElement)}
+	 *
+	 * <p> This is the initializer of Array which it with two arguments, 
+	 * an initial length and a default element. But there is an exception that
+	 * if the secondary argument is a {@link CallableObj}, it will be considered
+	 * as a generator of elements which it receives only one argument 
+	 * representing the current index.
+	 *
+	 * <pre>
+	 * // Creating an array that contains five strings ["0".."4"]
+	 * var arr = Array(5, str)
+	 * println(arr) // -> [0, 1, 2, 3, 4]
+	 * </pre>
+	 */
 	@NativeMethod(name = Names.METHOD_INITALIZER)
-	protected CandyObject initalizer(CNIEnv env, long initialCapacity, CandyObject defElement) {
-		initArray(initialCapacity);
-		
+	protected CandyObject initalizer(CNIEnv env, long initialLength, CandyObject defElement) {
+		initArray(initialLength);
 		if (defElement.isCallable()) {
-			CallableObj callable = (CallableObj) defElement;
-			for (int i = 0; i < initialCapacity; i ++) {
-				CandyObject element = 
-					callable.call(env, IntegerObj.valueOf(i));
+			CallableObj generator = (CallableObj) defElement;
+			for (int i = 0; i < initialLength; i ++) {
+				CandyObject element = generator.call(env, IntegerObj.valueOf(i));
 				append(element);
 			}
 		} else {
-			for (int i = 0; i < initialCapacity; i ++) {
+			for (int i = 0; i < initialLength; i ++) {
 				append(defElement);
 			}
 		}	
