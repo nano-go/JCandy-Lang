@@ -1,4 +1,4 @@
-package com.nano.candy.interpreter.runtime;
+package com.nano.candy.interpreter.builtin;
 
 import com.nano.candy.interpreter.builtin.BuiltinFunctions;
 import com.nano.candy.interpreter.builtin.CandyClass;
@@ -32,6 +32,8 @@ import com.nano.candy.interpreter.builtin.type.error.StateError;
 import com.nano.candy.interpreter.builtin.type.error.TypeError;
 import com.nano.candy.interpreter.cni.JavaFunctionObj;
 import com.nano.candy.interpreter.cni.NativeFuncRegister;
+import com.nano.candy.interpreter.runtime.CandyThread;
+import com.nano.candy.interpreter.runtime.Variable;
 import java.util.HashMap;
 
 public class BuiltinVariables {

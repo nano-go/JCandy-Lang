@@ -7,7 +7,7 @@ public class Variable implements Comparable<Variable> {
 	private String name;
 	private CandyObject value;
 	
-	protected static Variable getVariable(String name, CandyObject value) {
+	public static Variable getVariable(String name, CandyObject value) {
 		return new Variable(name, value);
 	}
 	

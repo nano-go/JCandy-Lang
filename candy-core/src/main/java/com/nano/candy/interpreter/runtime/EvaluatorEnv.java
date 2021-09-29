@@ -1,6 +1,7 @@
 package com.nano.candy.interpreter.runtime;
 
 import com.nano.candy.interpreter.InterpreterOptions;
+import com.nano.candy.interpreter.builtin.BuiltinVariables;
 import com.nano.candy.interpreter.builtin.CandyObject;
 import com.nano.candy.interpreter.cni.CNIEnv;
 import com.nano.candy.sys.CandySystem;
