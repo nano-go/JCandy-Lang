@@ -61,16 +61,14 @@ public class CandyV1Evaluator implements Evaluator {
 		this.opStack = new OperandStack(32);
 	}
 	
-	@Override
-	public void pushFrame(Frame frame) {
+	private void pushFrame(Frame frame) {
 		stack.pushFrame(frame);	
 		opStack.push(frame.frameSize());
 		syncFrameData();
 		this.opStack.sp += frame.closure.localSizeWithoutArgs;
 	}
 	
-	@Override
-	public Frame popFrame() {
+	private Frame popFrame() {
 		Frame old = stack.popFrame();
 		opStack.pop(bp);
 		old.closeAllUpvalues();
@@ -361,6 +359,11 @@ public class CandyV1Evaluator implements Evaluator {
 			return false;
 		}
 		return true;
+	}
+
+	@Override
+	public void enterFunction(PrototypeFunction function) {
+		pushFrame(Frame.fetchFrame(function, opStack));
 	}
 	
 	@Override

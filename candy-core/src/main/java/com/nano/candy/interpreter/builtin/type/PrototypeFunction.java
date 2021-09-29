@@ -88,7 +88,7 @@ public final class PrototypeFunction extends CallableObj {
 
 	@Override
 	public void onCall(CNIEnv env, OperandStack opStack, int argc, int unpackFlags) {
-		env.getEvaluator().pushFrame(Frame.fetchFrame(this, opStack));
+		env.getEvaluator().enterFunction(this);
 	}
 	
 	@Override

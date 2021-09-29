@@ -3,6 +3,7 @@ import com.nano.candy.code.Chunk;
 import com.nano.candy.interpreter.builtin.CandyObject;
 import com.nano.candy.interpreter.builtin.type.CallableObj;
 import com.nano.candy.interpreter.builtin.type.ModuleObj;
+import com.nano.candy.interpreter.builtin.type.PrototypeFunction;
 
 public interface Evaluator {
 	
@@ -18,8 +19,7 @@ public interface Evaluator {
 	public CandyObject eval(CallableObj fn, int unpackFlags, 
 	                        CandyObject... args);
 	
-	public void pushFrame(Frame frame);
-	public Frame popFrame();
+	public void enterFunction(PrototypeFunction function);
 	public Frame[] getStack();
 	
 	public ModuleObj eval(Chunk chunk);
