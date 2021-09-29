@@ -97,7 +97,7 @@ public class CandyV1Evaluator implements Evaluator {
 	private void syncFrameData() {
 		this.frame = stack.peek();
 		if (frame == null) {
-			resetFrameData();
+			clearFrameData();
 			return;
 		}
 		this.cp = frame.getChunk().getConstantPool();
@@ -106,7 +106,7 @@ public class CandyV1Evaluator implements Evaluator {
 		env.curFileEnv = frame.getFileEnv();
 	}
 
-	private void resetFrameData() {
+	private void clearFrameData() {
 		this.cp = null;
 		this.code = null;
 		this.frame = null;
@@ -172,7 +172,7 @@ public class CandyV1Evaluator implements Evaluator {
 			}
 			stderr.print(err.sprintStackTrace(24));
 		}
-		resetFrameData();
+		clearFrameData();
 		return false;
 	}
 
