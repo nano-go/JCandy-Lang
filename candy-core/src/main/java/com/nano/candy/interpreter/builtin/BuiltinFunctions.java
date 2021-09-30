@@ -217,9 +217,4 @@ public class BuiltinFunctions {
 		return null;
 	}
 	
-	@NativeFunc(name = "exit")
-	public static CandyObject exit(CNIEnv env, int exitCode) {
-		System.exit(exitCode);
-		return null;
-	}
 }

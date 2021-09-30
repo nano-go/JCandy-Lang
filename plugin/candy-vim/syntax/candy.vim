@@ -22,7 +22,7 @@ hi def link cdConditional        Conditional
 hi def link cdRepeat             Repeat
 hi def link cdException          Exception
 
-syn keyword cdBuiltin            print println max min range curTime importMudule setAttr getAttr str bool methods select selectByFilter cmdArgs loadLibrary readLine sleep array tuple repeat exit
+syn keyword cdBuiltin            print println max min range curTime importMudule setAttr getAttr str bool methods select selectByFilter cmdArgs loadLibrary readLine sleep array tuple repeat
 syn keyword cdConstants          true false null
 
 hi def link cdBuiltin            Identifier
