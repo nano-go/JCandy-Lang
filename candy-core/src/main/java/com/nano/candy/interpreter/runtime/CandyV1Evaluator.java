@@ -446,7 +446,19 @@ public class CandyV1Evaluator implements Evaluator {
 		if (exitJavaMethodAtReturn) {
 			stack.peek().exitRunAtReturn = true;
 		}
-		int deepth = stack.sp();
+		stack.markDepth();
+		try {
+			evalCoreCatchExceptions();
+		} finally {
+			stack.unmarkDepth();
+		}
+	}
+	
+	/**
+	 * Only allowed to be called by {@code evalCurrentFrame} or, the 
+	 * current stack depth is marked before it's called.
+	 */
+	private void evalCoreCatchExceptions() {
 		while (true) {
 			try {
 				evalCore();
@@ -454,7 +466,7 @@ public class CandyV1Evaluator implements Evaluator {
 			} catch (VMExitException e) {
 				throw e;
 			} catch (ContinueRunException e) {
-				if (stack.sp() >= deepth) {
+				if (stack.sp() >= stack.getCurrentDepth()) {
 					continue;
 				}
 				throw e;
@@ -465,10 +477,10 @@ public class CandyV1Evaluator implements Evaluator {
 					// current thread.
 					throw new VMExitException(70);
 				}
-				if (stack.sp() < deepth) {
-					throw new ContinueRunException();
+				if (stack.sp() >= stack.getCurrentDepth()) {
+					continue;
 				}
-				continue;
+				throw new ContinueRunException();
 			}		
 		}
 	}
