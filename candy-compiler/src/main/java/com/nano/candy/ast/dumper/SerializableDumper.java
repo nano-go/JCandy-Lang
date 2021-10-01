@@ -1,4 +1,5 @@
 package com.nano.candy.ast.dumper;
+
 import com.nano.candy.ast.ASTreeNode;
 import com.nano.candy.ast.Expr;
 import com.nano.candy.ast.Stmt;
@@ -16,7 +17,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Spliterator;
 
-public abstract class SerializableDumper implements AstDumper {
+public abstract class SerializableDumper extends AstDumper {
 	
 	/**
 	 * This class represents a AST node.
@@ -141,8 +142,8 @@ public abstract class SerializableDumper implements AstDumper {
 	@Override
 	public void dump(DumperOptions options, ASTreeNode node) {
 		try {
-			options.os.write(accept(node).getBytes());
-			options.os.flush();
+			options.out.write(accept(node));
+			options.out.flush();
 		} catch (IOException e) {
 			e.printStackTrace();
 			System.exit(1);

@@ -1,31 +1,42 @@
 package com.nano.candy.ast.dumper;
 import java.io.OutputStream;
+import java.io.OutputStreamWriter;
+import java.io.Writer;
 
 public class DumperOptions {
-	protected OutputStream os = System.out;
+	protected Writer out = new OutputStreamWriter(System.out);
 	protected boolean isDumpPosition = false;
-	protected int indentWidth = -1;
+	protected String indent = "\t";
 
-	public void setOutStream(OutputStream os) {
-		this.os = os;
+	public DumperOptions setOut(OutputStream os) {
+		this.out = new OutputStreamWriter(os);
+		return this;
 	}
 	
-	public void setIsDumpPosition(boolean isDumpPosition) {
+	public DumperOptions setOut(Writer w) {
+		this.out = w;
+		return this;
+	}
+	
+	public Writer getOut() {
+		return this.out;
+	}
+	
+	public DumperOptions setIsDumpPosition(boolean isDumpPosition) {
 		this.isDumpPosition = isDumpPosition;
+		return this;
 	}
 
 	public boolean isDumpPosition() {
 		return isDumpPosition;
 	}
 
-	public void setIndentWidth(int indentWidth) {
-		this.indentWidth = indentWidth;
+	public DumperOptions setIndent(String indent) {
+		this.indent = indent;
+		return this;
 	}
 	
 	public String getIndent() {
-		if (indentWidth < 0) {
-			return "\t";
-		}
-		return " ".repeat(indentWidth);
+		return indent;
 	}
 }
