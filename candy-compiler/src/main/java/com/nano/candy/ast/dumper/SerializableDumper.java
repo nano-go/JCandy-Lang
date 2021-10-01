@@ -166,22 +166,22 @@ public abstract class SerializableDumper extends AstDumper {
 			return serialize((Expr.Argument)obj);
 		} else if (obj instanceof Stmt.Parameters) {
 			return serialize((Stmt.Parameters)obj);
+		} else if (obj instanceof Stmt.Parameter) {
+			return serialize((Stmt.Parameter)obj);
 		}
 		if (obj.getClass().isArray()) {
 			return serialize((Object[])obj);
 		}
 		return obj.toString();
 	}
-
-	/**
-	 * This returned value can't be ignored.
-	 */
+	
 	protected abstract String serialize(TreeNode treeNode);
 	protected abstract String serialize(TokenKind tk);
 	protected abstract String serialize(Object[] array);
 	protected abstract String serialize(List list);
 	protected abstract String serialize(String str);
 	protected abstract String serialize(Position pos);
-	protected abstract String serialize(Stmt.Parameters obj);
-	protected abstract String serialize(Expr.Argument obj);
+	protected abstract String serialize(Stmt.Parameters params);
+	protected abstract String serialize(Stmt.Parameter param);
+	protected abstract String serialize(Expr.Argument arg);
 }

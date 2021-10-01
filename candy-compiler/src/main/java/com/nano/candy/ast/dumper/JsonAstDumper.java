@@ -17,14 +17,28 @@ public class JsonAstDumper extends SerializableDumper {
 		return "\"" + str + "\"";
 	}
 	
-	private int indent = 0;
+	private int curIndentCount = 0;
 	private String indentStr = "\t";
+	private String curIndent = "";
 	private boolean dumpPosition;
 	
 	private String indent() {
-		return indentStr.repeat(indent);
+		return curIndent;
 	}
 	
+	private void indentInc() {
+		curIndentCount ++;
+		curIndent = indentStr.repeat(curIndentCount);
+	}
+	
+	private void indentDec() {
+		curIndentCount --;
+		curIndent = indentStr.repeat(curIndentCount);
+	}
+	
+	/**
+	 * "\n\r" -> "\\n\\r"
+	 */
 	private String toEscapeChars(String str) {
 		StringBuilder chars = new StringBuilder();
 		for (char c : str.toCharArray()) {
@@ -35,6 +49,8 @@ public class JsonAstDumper extends SerializableDumper {
 
 	@Override
 	public void dump(DumperOptions options, ASTreeNode node) {
+		this.curIndentCount = 0;
+		this.curIndent = "";
 		this.indentStr = options.getIndent();
 		this.dumpPosition = options.isDumpPosition;
 		super.dump(options, node);
@@ -42,33 +58,25 @@ public class JsonAstDumper extends SerializableDumper {
 	
 	@Override
 	protected String serialize(TreeNode node) {
-		JsonStrBuilder builder = new JsonStrBuilder();
-		indent ++;
-		builder.append("{");
-		builder.putKV("node_name", node.getNodeName(), false);
-		builder.putKV("position", node.getPos(), true);
-		for (Map.Entry<String, Object> entry : node) {
-			
-			builder.putKV(entry.getKey(), entry.getValue(), true);
-		}
-		indent --;
-		builder.append("\n").append(indent()).append("}").toString();
-		return builder.toString();
+		return new JsonStrBuilder()
+			.enterBlock()	
+			.putKV("node_name", node.getNodeName(), false)
+			.putKV("position", node.getPos(), true)
+			.putNode(node)
+			.closeBlock()
+			.toString();
 	}
 	
 	@Override
 	protected String serialize(Position pos) {
-		JsonStrBuilder builder = new JsonStrBuilder();
-		indent ++;
-		builder.append("{");
-		builder.putKV("line", pos.getLine(), false);
-		builder.putKV("col", pos.getCol(), true);
+		JsonStrBuilder builder = new JsonStrBuilder()
+			.enterBlock()
+			.putKV("line", pos.getLine(), false)
+			.putKV("col", pos.getCol(), true);
 		if (pos.getLineFromSource().isPresent()) {
 			builder.putKV("line_text", pos.getLineFromSource().get(), true);
 		}
-		indent --;
-		builder.append("\n").append(indent()).append("}").toString();
-		return builder.toString();
+		return builder.closeBlock().toString();
 	}
 
 	@Override
@@ -78,26 +86,37 @@ public class JsonAstDumper extends SerializableDumper {
 
 	@Override
 	protected String serialize(Expr.Argument obj) {
-		JsonStrBuilder builder = new JsonStrBuilder();
-		indent ++;
-		builder.append("{");
-		builder.putKV("isUnpack", obj.isUnpack, false);
-		builder.putKV("arg", obj.expr, true);
-		indent --;
-		builder.append("\n").append(indent()).append("}").toString();
-		return builder.toString();
+		return new JsonStrBuilder()
+			.enterBlock()
+			.putKV("isUnpack", obj.isUnpack, false)
+			.putKV("arg", obj.expr, true)
+			.closeBlock()
+			.toString();
 	}
 
 	@Override
 	protected String serialize(Stmt.Parameters obj) {
+		return new JsonStrBuilder()
+			.enterBlock()
+			.putKV("vaArgsIndex", obj.vaArgsIndex, false)
+			.putKV("params", obj.params, true)
+			.closeBlock()
+			.toString();
+	}
+
+	@Override
+	protected String serialize(Stmt.Parameter param) {
 		JsonStrBuilder builder = new JsonStrBuilder();
-		indent ++;
-		builder.append("{");
-		builder.putKV("vaArgsIndex", obj.vaArgsIndex, false);
-		builder.putKV("params", obj.params, true);
-		indent --;
-		builder.append("\n").append(indent()).append("}").toString();
-		return builder.toString();
+		builder.enterBlock();
+		String name = param.name;
+		if (param.isVararg) {
+			name = "*" + name;
+		}
+		builder.putKV("name", name, false);
+		if (param.defaultValue.isPresent()) {
+			builder.putKV("defaultValue", param.defaultValue.get(), true);
+		}
+		return builder.closeBlock().toString();
 	}
 	
 	@Override
@@ -126,6 +145,18 @@ public class JsonAstDumper extends SerializableDumper {
 		public JsonStrBuilder() {
 			builder = new StringBuilder();
 		}
+		
+		private JsonStrBuilder enterBlock() {
+			indentInc();
+			builder.append("{");
+			return this;
+		}
+		
+		private JsonStrBuilder closeBlock() {
+			indentDec();
+			builder.append("\n").append(indent()).append("}").toString();
+			return this;
+		}
 
 		private JsonStrBuilder append(String str) {
 			builder.append(str);
@@ -133,7 +164,7 @@ public class JsonAstDumper extends SerializableDumper {
 		}
 
 		private JsonStrBuilder putIterator(Iterator iterator) {	
-			indent ++;
+			indentInc();
 			builder.append("[");
 			if (iterator.hasNext()) {
 				putElement(iterator.next(), false);
@@ -141,14 +172,14 @@ public class JsonAstDumper extends SerializableDumper {
 					putElement(iterator.next(), true);
 				}
 			}
-			indent --;
+			indentDec();
 			builder.append("\n").append(indent()).append("]");
 			return this;
 		}
 
-		public void putKV(String key, Object value, boolean comma) {
+		public JsonStrBuilder putKV(String key, Object value, boolean comma) {
 			if (!dumpPosition && value instanceof Position) {
-				return;
+				return this;
 			}
 			builder.append(comma ? "," : "")
 				.append("\n")
@@ -156,13 +187,22 @@ public class JsonAstDumper extends SerializableDumper {
 				.append(wrapString(key))
 				.append(": ")
 				.append(accept(value));
+			return this;
+		}
+		
+		public JsonStrBuilder putNode(TreeNode node) {
+			for (Map.Entry<String, Object> entry : node) {
+				putKV(entry.getKey(), entry.getValue(), true);
+			}
+			return this;
 		}
 
-		public void putElement(Object element, boolean comma) {
+		public JsonStrBuilder putElement(Object element, boolean comma) {
 			builder.append(comma ? "," : "")
 				.append("\n")
 				.append(indent())
 				.append(accept(element));
+			return this;
 		}
 
 		@Override
