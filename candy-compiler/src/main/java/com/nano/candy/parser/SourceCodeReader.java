@@ -1,13 +1,14 @@
 package com.nano.candy.parser;
 
 import com.nano.candy.utils.Characters;
+import com.nano.candy.utils.Context;
 import com.nano.candy.utils.Logger;
 import com.nano.candy.utils.Position;
 import java.util.Arrays;
 
 public class SourceCodeReader {
 
-	protected final Logger logger = Logger.getLogger();
+	protected Logger logger;
 	
 	private String curLineStr;
 
@@ -31,7 +32,8 @@ public class SourceCodeReader {
 	private char[] savedBuf;
 	private int sp;
 
-	public SourceCodeReader(String filename, char[] input) {
+	public SourceCodeReader(Context context, String filename, char[] input) {
+		this.logger = context.get(Logger.class);
 		this.fileName = filename;
 		this.savedBuf = new char[128];
 		int len = input.length;

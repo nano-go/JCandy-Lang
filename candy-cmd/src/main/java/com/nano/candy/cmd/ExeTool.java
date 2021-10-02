@@ -7,14 +7,13 @@ import com.nano.candy.interpreter.Interpreter;
 import com.nano.candy.parser.ParserFactory;
 import com.nano.candy.std.Names;
 import com.nano.candy.sys.CandySystem;
+import com.nano.candy.utils.Context;
 import com.nano.candy.utils.Logger;
 import com.nano.common.io.FileUtils;
 import java.io.File;
 import java.io.IOException;
 
 public class ExeTool implements CandyTool {
-	
-	private static final Logger logger = Logger.getLogger();
 	
 	@Override
 	public String groupName() {
@@ -79,7 +78,9 @@ public class ExeTool implements CandyTool {
 	                      String content, 
 	                      boolean exitIfError) throws IOException
 	{
-		Program program = ParserFactory.newParser(fileName, content).parse();
+		Context c = new Context();
+		Logger logger = c.get(Logger.class);
+		Program program = ParserFactory.newParser(c, fileName, content).parse();
 		if (!logger.printAllMessage(exitIfError)) {
 			return 65;
 		}

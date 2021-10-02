@@ -1,18 +1,18 @@
 package com.nano.candy.parser;
 
+import com.nano.candy.utils.Context;
 import com.nano.candy.utils.Logger;
 import java.io.IOException;
 
 import static org.junit.Assert.* ;
 
 public class LoggerMsgChecker {
-	static final Logger logger = Logger.getLogger() ;
 	
-	public static void expectedErrors(boolean output, boolean clear) {
-		expectedErrors(output, clear, "");
+	public static void expectedErrors(Logger logger, boolean output, boolean clear) {
+		expectedErrors(logger, output, clear, "");
 	}
 	
-	public static void expectedErrors(boolean output, boolean clear, String msg) {
+	public static void expectedErrors(Logger logger, boolean output, boolean clear, String msg) {
 		try {
 			if (!logger.hadErrors()) {
 				fail("expected errors: " + msg) ;
@@ -29,7 +29,7 @@ public class LoggerMsgChecker {
 		}
 	}   
 	
-	public static void unexpectedErrors(boolean output, boolean clear) {
+	public static void unexpectedErrors(Logger logger, boolean output, boolean clear) {
 		try {		
 			if (output) {
 				logger.printErrors(System.err) ;

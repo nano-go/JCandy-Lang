@@ -7,6 +7,7 @@ import com.nano.candy.ast.dumper.AstDumpers;
 import com.nano.candy.ast.dumper.DumperOptions;
 import com.nano.candy.interpreter.Interpreter;
 import com.nano.candy.parser.ParserFactory;
+import com.nano.candy.utils.Context;
 import com.nano.candy.utils.Logger;
 import java.io.File;
 import java.io.IOException;
@@ -46,9 +47,10 @@ public class AstTool implements CandyTool {
 
 	private ASTreeNode getAstTreeNode(CandyOptions options) throws IOException {
 		options.checkHasSrcFile();
+		Context c = new Context();
 		File src = options.getSourceFile();
-		Program program = ParserFactory.newParser(src).parse();
-		Logger.getLogger().printAllMessage(true);
+		Program program = ParserFactory.newParser(c, src).parse();
+		c.get(Logger.class).printAllMessage(true);
 		return program;
 	}
 

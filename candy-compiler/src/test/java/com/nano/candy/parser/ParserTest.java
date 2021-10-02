@@ -1,6 +1,6 @@
 package com.nano.candy.parser;
 
-import com.nano.candy.parser.Parser;
+import com.nano.candy.utils.Context;
 import com.nano.candy.utils.Logger;
 import com.nano.candy.utils.Position;
 import java.util.ArrayList;
@@ -10,8 +10,11 @@ import static org.junit.Assert.*;
 import static com.nano.candy.parser.SimulationPositions.loc;
 
 public class ParserTest {
-	static final Logger logger = Logger.getLogger() ;
-
+	
+	public static Logger getLogger() {
+		return Context.getThreadLocalContext().get(Logger.class);
+	}
+	
 	public static final String[] UNEXPECTED_ERROR_CASES = {
 		"var a = 5; a += 15; a -= 15; a *= 15; a /= 15; a %= 15",
 		"var a = 1..2",
@@ -158,10 +161,11 @@ public class ParserTest {
 	};
 	
 	@Test public void unexpectedErrorsTest() {
+		Logger logger = getLogger();
 		for (String input : UNEXPECTED_ERROR_CASES) {
 			Parser parser = ParserFactory.newParser("unexpected_error.cd", input) ;
 			parser.parse() ;
-			LoggerMsgChecker.unexpectedErrors(true, true) ;
+			LoggerMsgChecker.unexpectedErrors(logger, true, true) ;
 		}
 	}
 	
@@ -238,12 +242,13 @@ public class ParserTest {
 			this.actualPos = new ArrayList<>() ;
 		}
 		public void assertErrors() {
-			Parser parser = new CandyParser(ScannerFactory.newScanner("test.cd", expected.input));
+			Logger logger = getLogger();
+			Parser parser = ParserFactory.newParser("test.cd", expected.input);
 			parser.parse();
 			for (Logger.LogMessage msg : logger.getErrorMessages()) {
 				actualPos.add(msg.getPos()) ;
 			}
-			LoggerMsgChecker.expectedErrors(true, true, expected.input);
+			LoggerMsgChecker.expectedErrors(logger, true, true, expected.input);
 			assertArrayEquals(expected.input, expected.positions, actualPos.toArray());
 		}
 	}

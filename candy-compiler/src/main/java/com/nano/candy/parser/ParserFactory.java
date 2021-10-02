@@ -1,24 +1,44 @@
 package com.nano.candy.parser;
 
+import com.nano.candy.utils.Context;
 import com.nano.common.io.FileUtils;
 import java.io.File;
 import java.io.IOException;
 
 public class ParserFactory {
-
+	
 	public static Parser newParser(File file) throws IOException {
-		return newParser(file.getPath(), FileUtils.readText(file).toCharArray());
+		return newParser(
+			Context.getThreadLocalContext(), file);
 	}
 
 	public static Parser newParser(String fileName, String input) {
-		return newParser(fileName, input.toCharArray());
+		return newParser(
+			Context.getThreadLocalContext(), fileName, input);
 	}
 
 	public static Parser newParser(String fileName, char[] input) {
-		return newParser(ScannerFactory.newScanner(fileName, input)) ;
+		return newParser(Context.getThreadLocalContext(), fileName, input);
+	}
+
+	public static Parser newParser(Scanner scanner) {
+		return new CandyParser(Context.getThreadLocalContext(), scanner);
+	}
+
+	public static Parser newParser(Context context, File file) throws IOException {
+		return newParser(context, file.getPath(), FileUtils.readText(file).toCharArray());
+	}
+
+	public static Parser newParser(Context context, String fileName, String input) {
+		return newParser(context, fileName, input.toCharArray());
+	}
+
+	public static Parser newParser(Context context, String fileName, char[] input) {
+		return newParser(context, 
+			ScannerFactory.newScanner(context, fileName, input)) ;
 	}
 	
-	public static Parser newParser(Scanner scanner) {
-		return new CandyParser(scanner);
+	public static Parser newParser(Context context, Scanner scanner) {
+		return new CandyParser(context, scanner);
 	}
 }

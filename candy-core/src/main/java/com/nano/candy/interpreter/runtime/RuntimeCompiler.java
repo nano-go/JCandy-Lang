@@ -10,6 +10,7 @@ import com.nano.candy.interpreter.builtin.type.error.IOError;
 import com.nano.candy.interpreter.runtime.CompiledFileInfo;
 import com.nano.candy.parser.Parser;
 import com.nano.candy.parser.ParserFactory;
+import com.nano.candy.utils.Context;
 import com.nano.candy.utils.Logger;
 import java.io.File;
 import java.io.IOException;
@@ -21,7 +22,7 @@ import java.io.StringWriter;
 public class RuntimeCompiler {
 
 	private static void checkLogger(boolean clearMsg) {
-		Logger logger = Logger.getLogger();
+		Logger logger = Context.getThreadLocalContext().get(Logger.class);
 		if (logger.hadErrors()) {
 			try {
 				StringWriter writer = new StringWriter();
@@ -41,7 +42,6 @@ public class RuntimeCompiler {
 	}
 
 	public static Chunk compileTree(ASTreeNode tree, InterpreterOptions options, boolean clearMsg) {
-		checkLogger(clearMsg);
 		return new CodeGenerator(options.isInteractionMode(), 
 								 options.isDebugMode()).genCode(tree);
 	}
@@ -51,7 +51,7 @@ public class RuntimeCompiler {
 	}
 
 	public static Chunk compileChunk(File file, InterpreterOptions options, boolean clearMsg) {
-		try {	
+		try {
 			Parser parser = ParserFactory.newParser(file);
 			Program program = parser.parse();
 			checkLogger(clearMsg);
@@ -69,8 +69,7 @@ public class RuntimeCompiler {
 	public static CompiledFileInfo compile(File file, InterpreterOptions options,
 										   boolean clearMsg) {
 		Chunk chunk = compileChunk(file, options, clearMsg);
-		return new CompiledFileInfo(
-			file.getAbsolutePath(), chunk);
+		return new CompiledFileInfo(file.getAbsolutePath(), chunk);
 	}
 
 	public static Chunk compileText(String text, InterpreterOptions options) {

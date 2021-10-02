@@ -5,13 +5,12 @@ import com.nano.candy.code.Chunk;
 import com.nano.candy.codegen.CodeGenerator;
 import com.nano.candy.interpreter.Interpreter;
 import com.nano.candy.parser.ParserFactory;
+import com.nano.candy.utils.Context;
 import com.nano.candy.utils.Logger;
 import com.nano.candy.utils.TableView;
 import java.io.File;
 
 public class PerformanceTool implements CandyTool {
-
-	private static final Logger logger = Logger.getLogger();
 
 	protected PerformanceTool() {}
 
@@ -35,13 +34,16 @@ public class PerformanceTool implements CandyTool {
 
 	@Override
 	public void run(Interpreter interpreter, CandyOptions options) throws Exception {
+		Context c = new Context();
+		Logger logger = c.get(Logger.class);
+		
 		long parserDuration = 0;
 		long codegenDuration = 0;
 		long runDuration = 0;
 		File src = options.getSourceFile();
 		
 		long startTimeMillis = System.currentTimeMillis();
-		ASTreeNode node = ParserFactory.newParser(src).parse();
+		ASTreeNode node = ParserFactory.newParser(c, src).parse();
 		logger.printAllMessage(true);
 		parserDuration += System.currentTimeMillis() - startTimeMillis;
 

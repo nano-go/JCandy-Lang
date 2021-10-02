@@ -1,6 +1,7 @@
 package com.nano.candy.parser;
 
 import com.nano.candy.utils.Characters;
+import com.nano.candy.utils.Context;
 import com.nano.candy.utils.Position;
 import java.util.LinkedList;
 import java.util.Queue;
@@ -20,8 +21,8 @@ class CandyScanner implements Scanner {
 	 */
 	private boolean insertSemi;
 
-	protected CandyScanner(String fileName, char[] in) {
-		reader = new SourceCodeReader(fileName, in);
+	protected CandyScanner(Context context, String fileName, char[] in) {
+		reader = new SourceCodeReader(context, fileName, in);
 		basePos = reader.pos();
 		nextToken();
 	}

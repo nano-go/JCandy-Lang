@@ -1,5 +1,6 @@
 package com.nano.candy.parser;
 
+import com.nano.candy.utils.Context;
 import com.nano.candy.utils.Logger;
 import com.nano.candy.utils.Position;
 import java.io.IOException;
@@ -13,7 +14,9 @@ public class ScannerTestCase {
 	private static final Token SEMIEOF= tk(TokenKind.SEMI, "EOF") ;
 	private static final Token SEMILN= tk(TokenKind.SEMI, Token.LN_SEMI_LITERAL) ;
 	
-	static final Logger logger = Logger.getLogger() ;
+	public static Logger getLogger() {
+		return Context.getThreadLocalContext().get(Logger.class);
+	}
 	
 	public static ArrayList<Token> toTokenList(Scanner scanner) {
 		ArrayList<Token> toks = new ArrayList<>();
@@ -454,7 +457,7 @@ public class ScannerTestCase {
 				scanner.nextToken() ;
 			}
 			
-			LoggerMsgChecker.unexpectedErrors(true, true);
+			LoggerMsgChecker.unexpectedErrors(getLogger(), true, true);
 			
 			assertEquals(msg(), expectedToks.length, actualToks.size()) ;
 			for (int i = 0; i < expectedToks.length; i ++) {
@@ -503,9 +506,8 @@ public class ScannerTestCase {
 		@Override
 		public void assertCase() {
 			Scanner scanner = ScannerFactory.newScanner("number literal", literal);
-			
 			Token tok = scanner.peek();
-			LoggerMsgChecker.unexpectedErrors(true, true);
+			LoggerMsgChecker.unexpectedErrors(getLogger(), true, true);
 			
 			assertEquals("Input:" + literal, kind, tok.getKind());
 			if (kind == TokenKind.DOUBLE) {
@@ -534,39 +536,41 @@ public class ScannerTestCase {
 	 */
 	private static class PositionAndErrorCase implements CandyTestCase {
 
-		SimulationPositions expected ;
-		boolean hasError ;
-		ArrayList<Position> actualPos = new ArrayList<>() ;
+		SimulationPositions expected;
+		boolean hasError;
+		ArrayList<Position> actualPos = new ArrayList<>();
 
 		public PositionAndErrorCase(String input, boolean hasError, SimulationPositions.Location[] locs) {
-			this.expected = new SimulationPositions(input, locs) ;
+			this.expected = new SimulationPositions(input, locs);
 			this.hasError = hasError;
 		}
 		
 		@Override
 		public void assertCase() {
-			Scanner scanner = ScannerFactory.newScanner("position and error", expected.input) ;
+			Logger logger = getLogger();
+			Scanner scanner = ScannerFactory.newScanner("position and error", expected.input);
 			while (scanner.hasNextToken()) {
-				Token tk = scanner.peek() ;
+				Token tk = scanner.peek();
 				if (!hasError) {
-					actualPos.add(tk.getPos()) ;
+					actualPos.add(tk.getPos());
 				}
-				scanner.nextToken() ;
+				scanner.nextToken();
 			}
 			
 			if (hasError) {
-				assertTrue(logger.hadErrors()) ;
+				assertTrue(logger.hadErrors());
 				for (Logger.LogMessage msg : logger.getErrorMessages()) {
-					actualPos.add(msg.getPos()) ;
+					actualPos.add(msg.getPos());
 				}
 				try {
-					logger.printErrors(System.err) ;
+					logger.printErrors(System.err);
 				} catch (IOException e) {
-					fail(e.getMessage()) ;
+					fail(e.getMessage());
+				} finally {
+					logger.clearAllMessages();
 				}
-				logger.clearAllMessages() ;
 			}
-			assertArrayEquals(expected.positions, actualPos.toArray()) ;
+			assertArrayEquals(expected.positions, actualPos.toArray());
 		}
 	}
 	

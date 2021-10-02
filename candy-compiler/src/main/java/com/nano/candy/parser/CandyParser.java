@@ -7,6 +7,7 @@ import com.nano.candy.ast.Stmt;
 import com.nano.candy.std.AttributeModifiers;
 import com.nano.candy.std.CandyAttrSymbol;
 import com.nano.candy.std.Names;
+import com.nano.candy.utils.Context;
 import com.nano.candy.utils.Logger;
 import com.nano.candy.utils.Position;
 import com.nano.common.text.StringUtils;
@@ -21,8 +22,6 @@ import java.util.Set;
 import static com.nano.candy.parser.TokenKind.*;
 
 class CandyParser implements Parser {
-	
-	static final Logger logger = Logger.getLogger();
 	
 	private static final String INITIALIZER_NAME = Names.METHOD_INITALIZER;
 	
@@ -83,26 +82,6 @@ class CandyParser implements Parser {
 		return FIRST_SET_OF_EXPR.get(tk.ordinal());
 	}
 	
-	private static void reportError(Token tok, String message, Object... args) {
-		reportError(tok.getPos(), message, args);
-	}
-
-	private static void reportError(Position pos, String message, Object... args) {
-		logger.error(pos, message, args);
-	}
-	
-	private static void reportError(ASTreeNode node, String msg, Object... args) {
-		logger.error(node.pos, msg, args);
-	}
-
-	private static void reportWarn(ASTreeNode node, String msg, Object... args) {
-		logger.warn(node.pos, msg, args);
-	}
-	
-	private static void reportWarn(Token tok, String message, Object... args) {
-		logger.warn(tok.getPos(), message, args);
-	}
-	
 	private enum FunctionType {
 		NONE,
 		FUNCTION,
@@ -115,6 +94,12 @@ class CandyParser implements Parser {
 	private Token[] lookahead;
 	private Token previous;
 	private Token peek;
+	
+	/**
+	 * The logger to be used for error diagnostics.
+	 */
+	protected Logger logger;
+	
 	
 	/**
 	 * lookahead pointer.
@@ -140,7 +125,8 @@ class CandyParser implements Parser {
 	
 	private FunctionType curFunctionType = FunctionType.NONE;
 
-	public CandyParser(Scanner scanner) {
+	protected CandyParser(Context context, Scanner scanner) {
+		this.logger = context.get(Logger.class);
 		this.scanner = scanner;
 		this.peek = scanner.peek();
 		// avoid null pointer.
@@ -155,6 +141,27 @@ class CandyParser implements Parser {
 
 
 	/* =================== helper =================== */
+	
+	private void reportError(Token tok, String message, Object... args) {
+		reportError(tok.getPos(), message, args);
+	}
+
+	private void reportError(Position pos, String message, Object... args) {
+		logger.error(pos, message, args);
+	}
+
+	private void reportError(ASTreeNode node, String msg, Object... args) {
+		logger.error(node.pos, msg, args);
+	}
+
+	private void reportWarn(ASTreeNode node, String msg, Object... args) {
+		logger.warn(node.pos, msg, args);
+	}
+
+	private void reportWarn(Token tok, String message, Object... args) {
+		logger.warn(tok.getPos(), message, args);
+	}
+	
 	
 	private static String tokStr(TokenKind tok) {
 		if (StringUtils.isEmpty(tok.getLiteral())) {

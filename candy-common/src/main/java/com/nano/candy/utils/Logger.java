@@ -7,10 +7,8 @@ import java.util.List;
 
 public abstract class Logger {
 	
-	private static CandyLogger logger = new CandyLogger();
-
-	public static CandyLogger getLogger() {
-		return logger;
+	public static CandyLogger newLogger() {
+		return new CandyLogger();
 	}
 	
 	public boolean printAllMessage(boolean exitIfError) throws IOException {
