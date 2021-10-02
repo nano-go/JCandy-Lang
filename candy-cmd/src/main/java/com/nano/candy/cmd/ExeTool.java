@@ -1,14 +1,16 @@
 package com.nano.candy.cmd;
 
-import com.nano.candy.ast.Program;
 import com.nano.candy.code.Chunk;
 import com.nano.candy.codegen.CodeGenerator;
 import com.nano.candy.interpreter.Interpreter;
 import com.nano.candy.parser.ParserFactory;
 import com.nano.candy.std.Names;
 import com.nano.candy.sys.CandySystem;
+import com.nano.candy.utils.CandySourceFile;
 import com.nano.candy.utils.Context;
 import com.nano.candy.utils.Logger;
+import com.nano.candy.utils.Result;
+import com.nano.candy.utils.Task;
 import com.nano.common.io.FileUtils;
 import java.io.File;
 import java.io.IOException;
@@ -78,16 +80,19 @@ public class ExeTool implements CandyTool {
 	                      String content, 
 	                      boolean exitIfError) throws IOException
 	{
-		Context c = new Context();
-		Logger logger = c.get(Logger.class);
-		Program program = ParserFactory.newParser(c, fileName, content).parse();
-		if (!logger.printAllMessage(exitIfError)) {
+		Context ctx = Context.getThreadLocalContext();
+		Result<Chunk> res = Task.newTask(ParserFactory.newPhase())
+			.then(new CodeGenerator())
+			.apply(ctx, new CandySourceFile(fileName, content, true));
+		if (!res.isPresent()) {
+			if (res.detailsInLogger()) {
+				Logger logger = ctx.get(Logger.class);
+				logger.printAllMessage(exitIfError);
+			} else {
+				System.err.println(res.getReason());
+			}
 			return 65;
 		}
-		Chunk chunk = new CodeGenerator(false, false).genCode(program);
-		if (!logger.printAllMessage(exitIfError)) {
-			return 65;
-		}
-		return interpreter.execute(chunk);
+		return interpreter.execute(res.getResult());
 	}
 }

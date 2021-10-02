@@ -1,11 +1,18 @@
 package com.nano.candy.parser;
 
+import com.nano.candy.ast.ASTreeNode;
+import com.nano.candy.utils.CandySourceFile;
 import com.nano.candy.utils.Context;
+import com.nano.candy.utils.Phase;
 import com.nano.common.io.FileUtils;
 import java.io.File;
 import java.io.IOException;
 
 public class ParserFactory {
+	
+	public static Phase<CandySourceFile, ASTreeNode> newPhase() {
+		return new CandyParser();
+	}
 	
 	public static Parser newParser(File file) throws IOException {
 		return newParser(

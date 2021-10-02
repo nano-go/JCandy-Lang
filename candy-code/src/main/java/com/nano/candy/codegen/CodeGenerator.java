@@ -10,6 +10,9 @@ import com.nano.candy.code.ConstantValue;
 import com.nano.candy.parser.TokenKind;
 import com.nano.candy.std.Names;
 import com.nano.candy.utils.ArrayUtils;
+import com.nano.candy.utils.Context;
+import com.nano.candy.utils.Phase;
+import com.nano.candy.utils.Result;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedList;
@@ -21,7 +24,7 @@ import static com.nano.candy.code.ConstantValue.*;
 /**
  * This converts a Candy syntax tree to a code chunk.
  */
-public class CodeGenerator implements AstVisitor<Void, Void> {
+public class CodeGenerator implements AstVisitor<Void, Void>, Phase<ASTreeNode, Chunk> {
 	
 	private static class LoopMarker {
 		
@@ -82,11 +85,20 @@ public class CodeGenerator implements AstVisitor<Void, Void> {
 	 */
 	private ArrayList<String> globalVariableNames;
 	
+	/**
+	 * This empty constructor for {@link Phase}.
+	 */
+	public CodeGenerator() {}
+	
 	public CodeGenerator(boolean isInteractionMode) {
 		this(isInteractionMode, false);
 	}
 
 	public CodeGenerator(boolean isInteractionMode, boolean debugMode) {
+		init(isInteractionMode, debugMode);
+	}
+
+	private void init(boolean isInteractionMode, boolean debugMode) {
 		this.builder = new ChunkBuilder();
 		this.locals = new LocalTable();
 		this.loopMarkers = new LinkedList<>();
@@ -94,6 +106,24 @@ public class CodeGenerator implements AstVisitor<Void, Void> {
 		this.isDebugMode = debugMode;
 		this.globalVariableTable = new HashMap<>();
 		this.globalVariableNames = new ArrayList<>();
+	}
+	
+	private void clearStatus() {
+		this.builder = null;
+		this.locals = null;
+		this.loopMarkers = null;
+		this.isInteractionMode = false;
+		this.isDebugMode = false;
+		this.globalVariableTable = null;
+		this.globalVariableNames = null;
+	}
+
+	@Override
+	public Result<Chunk> apply(Context context, ASTreeNode input) {
+		init(false, false);
+		Result<Chunk> chunk = Result.success(genCode(input));
+		clearStatus();
+		return chunk;
 	}
 	
 	public Chunk genCode(ASTreeNode node) {

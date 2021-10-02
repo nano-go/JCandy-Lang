@@ -7,9 +7,11 @@ import com.nano.candy.ast.Stmt;
 import com.nano.candy.std.AttributeModifiers;
 import com.nano.candy.std.CandyAttrSymbol;
 import com.nano.candy.std.Names;
+import com.nano.candy.utils.CandySourceFile;
 import com.nano.candy.utils.Context;
 import com.nano.candy.utils.Logger;
 import com.nano.candy.utils.Position;
+import com.nano.candy.utils.Result;
 import com.nano.common.text.StringUtils;
 import java.util.ArrayList;
 import java.util.BitSet;
@@ -124,8 +126,15 @@ class CandyParser implements Parser {
 	private boolean inStaticBlock;
 	
 	private FunctionType curFunctionType = FunctionType.NONE;
+	private boolean isInitialized;
+	
+	protected CandyParser() {}
 
 	protected CandyParser(Context context, Scanner scanner) {
+		init(context, scanner);
+	}
+	
+	private void init(Context context, Scanner scanner) {
 		this.logger = context.get(Logger.class);
 		this.scanner = scanner;
 		this.peek = scanner.peek();
@@ -137,8 +146,30 @@ class CandyParser implements Parser {
 			lookahead[i] = scanner.nextToken();
 		}
 		this.lp = 0;
+		this.isInitialized = true;
 	}
 
+	private void clearStatus() {
+		this.logger = null;
+		this.scanner = null;
+		this.peek = this.previous = null;
+		this.lookahead = null;
+		this.lp = 0;
+		this.isInitialized = false;
+	}
+
+	@Override
+	public Result<ASTreeNode> apply(Context context, CandySourceFile input) {
+		if (this.isInitialized) {
+			throw new IllegalStateException("This parser has initialized.");
+		}
+		init(context, ScannerFactory.newScanner(input.getPath(), input.getContent()));
+		Logger logger = this.logger;
+		// parse() will clear status.
+		Program p = parse();
+		return logger.hadErrors() ? 
+			Result.<ASTreeNode>failure("syntax error", true) : Result.success(p);
+	}
 
 	/* =================== helper =================== */
 	
@@ -508,10 +539,14 @@ class CandyParser implements Parser {
 	 */ 
 	@Override
 	public Program parse() {
+		if (!isInitialized) {
+			throw new IllegalStateException("The parser has not been initialized.");
+		}
 		Program program = new Program();
 		program.setPosition(scanner.basePos());
 		parseStmts(program.block.stmts, EOF);
-		consume(); // must be EOF.
+		consume(); // must be EOF
+		clearStatus();
 		return program;
 	}
 	
