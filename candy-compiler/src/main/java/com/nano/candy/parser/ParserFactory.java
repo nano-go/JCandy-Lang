@@ -29,7 +29,8 @@ public class ParserFactory {
 	}
 
 	public static Parser newParser(Scanner scanner) {
-		return new CandyParser(Context.getThreadLocalContext(), scanner);
+		return new ParserBuilder(Context.getThreadLocalContext())
+			.newParser(scanner);
 	}
 
 	public static Parser newParser(Context context, File file) throws IOException {
@@ -46,6 +47,6 @@ public class ParserFactory {
 	}
 	
 	public static Parser newParser(Context context, Scanner scanner) {
-		return new CandyParser(context, scanner);
+		return new ParserBuilder(context).newParser(scanner);
 	}
 }

@@ -29,6 +29,10 @@ public class CandySystem {
 		return CANDY_LIBS;
 	}
 	
+	public static void setCandyLibsPath(String path) {
+		CANDY_LIBS = path;
+	}
+	
 	public static boolean isCandySource(String fileName) {
 		return fileName.endsWith("." + FILE_SUFFIX);
 	}

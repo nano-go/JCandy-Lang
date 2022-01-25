@@ -16,7 +16,7 @@ public class ScannerFactory {
 	}
 
 	public static Scanner newScanner(String fileName, char[] input) {
-		return new CandyScanner(Context.getThreadLocalContext(), fileName, input);
+		return new CandyScanner(Context.getThreadLocalContext(), false, fileName, input);
 	}
 	
 	public static Scanner newScanner(Context context, File file) throws IOException {
@@ -28,6 +28,6 @@ public class ScannerFactory {
 	}
 
 	public static Scanner newScanner(Context context, String fileName, char[] input) {
-		return new CandyScanner(context, fileName, input);
+		return new CandyScanner(context, false, fileName, input);
 	}
 }

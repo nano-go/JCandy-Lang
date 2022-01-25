@@ -19,7 +19,6 @@ public class Context {
 		return context.get();
 	}
 	
-	
 	protected final HashMap<Class<?>, Factory<?>> kf = new HashMap<>();
 	protected final HashMap<Class<?>, Object> kv = new HashMap<>();
 	
@@ -27,8 +26,8 @@ public class Context {
 		put(Logger.class, Logger.newLogger());
 	}
 
-	public <T> void put(Class<T> logger, T newLogger) {
-		kv.put(logger, Objects.requireNonNull(newLogger));
+	public <T> void put(Class<T> key, T val) {
+		kv.put(key, Objects.requireNonNull(val));
 	}
 	
 	public <T> void put(Class<T> key, Factory<T> fac) {
@@ -39,17 +38,11 @@ public class Context {
 		Object value = kv.get(key);
 		if (value == null) {
 			Factory<T> fac = (Context.Factory<T>) kf.get(key);
-			checkNullabl(key, fac);
-			value = Objects.requireNonNull(fac.make(this));
-			kv.put(key, value);
+			if (fac != null) {
+				value = Objects.requireNonNull(fac.make(this));
+				kv.put(key, value);
+			}
 		}
 		return (T) value;
-	}
-
-	private void checkNullabl(Class<?> key, Object value) {
-		if (value == null) {
-			throw new IllegalArgumentException(
-				"The value dosen't exists for the class key " + key.getName());
-		}
 	}
 }
