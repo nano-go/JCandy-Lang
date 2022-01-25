@@ -20,11 +20,15 @@ class CandyScanner implements Scanner {
 	 * If true, '\n' or EOF will be replaced with SEMI.
 	 */
 	private boolean insertSemi;
+	
+	private boolean keepComment;
 
-	protected CandyScanner(Context context, String fileName, char[] in) {
-		reader = new SourceCodeReader(context, fileName, in);
-		basePos = reader.pos();
-		nextToken();
+	protected CandyScanner(Context context, boolean keepComment, 
+	                       String fileName, char[] in) {
+		this.reader = new SourceCodeReader(context, fileName, in);
+		this.keepComment = keepComment;
+		this.basePos = reader.pos();
+		this.nextToken();
 	}
 
 	@Override
@@ -111,7 +115,10 @@ class CandyScanner implements Scanner {
 						skipSingleLineComment();
 						continue scanAgain;
 					} else if (ch == '*') {
-						skipMultiLineComment();
+						Token docComment = readMultiLineComment();
+						if (keepComment) {
+							return docComment;
+						}
 						continue scanAgain;
 					}
 					kind = switch2('=', TokenKind.DIV_ASSIGN, TokenKind.DIV);
@@ -574,22 +581,24 @@ class CandyScanner implements Scanner {
 		}
 	}
 	
-	private void skipMultiLineComment() {
+	private Token readMultiLineComment() {
 		// consume '*'
 		reader.consume();
+		Position pos = reader.pos();
 		while (true) {
 			if (reader.isAtEnd()) {
 				reader.error("Unterminated comment.");
-				return;
+				return new Token(pos, reader.savedString(), TokenKind.COMMENT);
 			}
 			char ch = reader.peek();
 			reader.consume();
 			if (ch == '*') {
 				if (reader.peek() == '/') {
 					reader.consume();
-					return;
+					return new Token(pos, reader.savedString(), TokenKind.COMMENT);
 				}
 			}
+			reader.putChar(ch);
 		}
 	}
 

@@ -235,6 +235,7 @@ public abstract class Stmt extends ASTreeNode {
 	}
 	
 	public static class FuncDef extends Stmt {
+		public Optional<String> docComment;
 		public Optional<String> name;
 		public Parameters parameters;
 		public Stmt.Block body;
@@ -242,7 +243,8 @@ public abstract class Stmt extends ASTreeNode {
 		
 		public FuncDef(String name, Parameters parameters, 
 					   Stmt.Block body) {
-			this.name = Optional.ofNullable(name) ;
+			this.name = Optional.ofNullable(name);
+			this.docComment = Optional.empty();
 			this.parameters = parameters;
 			this.body = body;
 		}
@@ -311,6 +313,7 @@ public abstract class Stmt extends ASTreeNode {
 	}
 	
 	public static class VarDef extends Stmt {
+		public Optional<String> docComment;
 		public String name;
 		public Optional<Expr> init;
 		public boolean isStatic;
@@ -323,6 +326,7 @@ public abstract class Stmt extends ASTreeNode {
 			this.isStatic = isStatic;
 			this.name = name;
 			this.init = Optional.ofNullable(init);
+			this.docComment  = Optional.empty();
 		}
 		
 		@Override
@@ -332,6 +336,8 @@ public abstract class Stmt extends ASTreeNode {
 	}
 	
 	public static class ClassDef extends Stmt {
+		
+		public Optional<String> docComment;
 
 		/**
 		 * The declared name of this class.
@@ -407,7 +413,8 @@ public abstract class Stmt extends ASTreeNode {
 			this.superClass = Optional.ofNullable(superClass);
 			this.staticBlock = Optional.ofNullable(staticBlock);
 			this.initializer = Optional.empty();
-			this.endPos = Optional.ofNullable(null);
+			this.endPos = Optional.empty();
+			this.docComment = Optional.empty();
 		}
 		
 		public void createNewStaticBlockIfNotPresent() {

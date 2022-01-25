@@ -78,6 +78,7 @@ public enum TokenKind {
 	SUPER("super"),
 	
 	EOF,
+	COMMENT,
 	IDENTIFIER,
 	AT_IDENTIFIER,
 	DOUBLE,

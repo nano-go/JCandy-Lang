@@ -18,6 +18,7 @@ import java.util.BitSet;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 
@@ -126,11 +127,18 @@ class CandyParser implements Parser {
 	private boolean inStaticBlock;
 	
 	private FunctionType curFunctionType = FunctionType.NONE;
+	
+	private ParserBuilder opts;
 	private boolean isInitialized;
 	
 	protected CandyParser() {}
+	
+	protected CandyParser(ParserBuilder opts) {
+		this.opts = opts;
+	}
 
-	protected CandyParser(Context context, Scanner scanner) {
+	protected CandyParser(Context context, Scanner scanner, ParserBuilder opts) {
+		this.opts = Objects.requireNonNull(opts);
 		init(context, scanner);
 	}
 	
@@ -161,9 +169,12 @@ class CandyParser implements Parser {
 	@Override
 	public Result<ASTreeNode> apply(Context context, CandySourceFile input) {
 		if (this.isInitialized) {
-			throw new IllegalStateException("This parser has initialized.");
+			throw new IllegalStateException("This parser has been initialized.");
 		}
-		init(context, ScannerFactory.newScanner(input.getPath(), input.getContent()));
+		if (this.opts == null) {
+			this.opts = ParserBuilder.instance(context);
+		}
+		init(context, opts.newScanner(input));
 		Logger logger = this.logger;
 		// parse() will clear status.
 		Program p = parse();
@@ -172,28 +183,7 @@ class CandyParser implements Parser {
 	}
 
 	/* =================== helper =================== */
-	
-	private void reportError(Token tok, String message, Object... args) {
-		reportError(tok.getPos(), message, args);
-	}
 
-	private void reportError(Position pos, String message, Object... args) {
-		logger.error(pos, message, args);
-	}
-
-	private void reportError(ASTreeNode node, String msg, Object... args) {
-		logger.error(node.pos, msg, args);
-	}
-
-	private void reportWarn(ASTreeNode node, String msg, Object... args) {
-		logger.warn(node.pos, msg, args);
-	}
-
-	private void reportWarn(Token tok, String message, Object... args) {
-		logger.warn(tok.getPos(), message, args);
-	}
-	
-	
 	private static String tokStr(TokenKind tok) {
 		if (StringUtils.isEmpty(tok.getLiteral())) {
 			return tok.name();
@@ -217,15 +207,50 @@ class CandyParser implements Parser {
 		return node;
 	}
 	
-	private TokenKind peekKind() {
-		return peek.getKind();
+	private void reportError(Token tok, String message, Object... args) {
+		reportError(tok.getPos(), message, args);
+	}
+
+	private void reportError(Position pos, String message, Object... args) {
+		logger.error(pos, message, args);
+	}
+
+	private void reportError(ASTreeNode node, String msg, Object... args) {
+		logger.error(node.pos, msg, args);
+	}
+
+	private void reportWarn(ASTreeNode node, String msg, Object... args) {
+		logger.warn(node.pos, msg, args);
+	}
+
+	private void reportWarn(Token tok, String message, Object... args) {
+		logger.warn(tok.getPos(), message, args);
 	}
 	
-	private Token peek() {
+	private void skipCommentTokens() {
+		while (peek.getKind() == COMMENT) {
+			nextToken(true);
+		}
+	}
+	
+	private Token peek(boolean skipComments) {
+		if (skipComments || !opts.keepComment) {
+			skipCommentTokens();
+		}
 		return peek;
 	}
 	
+	private Token peek() {
+		skipCommentTokens();
+		return peek;
+	}
+	
+	private TokenKind peekKind() {
+		return peek().getKind();
+	}
+	
 	private Token peek(int k) {
+		skipCommentTokens();
 		return lookahead[(lp + k) % LOOKAHEAD_K];
 	}
 
@@ -234,14 +259,19 @@ class CandyParser implements Parser {
 	}
 	
 	private void consume() {
-		nextToken();
+		nextToken(false);
 	}
 
-	private Token nextToken() {
-		previous = peek();
-		lookahead[lp] = scanner.nextToken();
-		lp = (lp + 1) % LOOKAHEAD_K;
-		peek = lookahead[lp];
+	private Token nextToken(boolean skipComment) {
+		while (true) {
+			previous = peek;
+			lookahead[lp] = scanner.nextToken();
+			lp = (lp + 1) % LOOKAHEAD_K;
+			peek = lookahead[lp];
+			if (!skipComment || peek.getKind() != TokenKind.COMMENT) {
+				break;
+			}
+		}
 		return peek;
 	}
 
@@ -251,7 +281,7 @@ class CandyParser implements Parser {
 
 	private boolean matchIf(TokenKind expected, boolean error) {
 		if (peek().getKind() == expected) {
-			consume();
+			nextToken(!opts.keepComment);
 			return true;
 		}
 		if (error) {
@@ -263,7 +293,7 @@ class CandyParser implements Parser {
 	private Token matchIf(TokenKind tok, String errmsg, Object... args) {
 		Token actual = peek();
 		if (peek().getKind() == tok) {
-			consume();
+			nextToken(!opts.keepComment);
 			return actual;
 		}
 		reportError(actual, errmsg, args);
@@ -280,7 +310,7 @@ class CandyParser implements Parser {
 	private Token match(TokenKind tok, String errmsg, Object... args) {
 		Token actual = peek();
 		if (peek().getKind() == tok) {
-			consume();
+			nextToken(!opts.keepComment);
 			return actual;
 		}
 		reportError(actual, errmsg, args);
@@ -544,6 +574,10 @@ class CandyParser implements Parser {
 		}
 		Program program = new Program();
 		program.setPosition(scanner.basePos());
+		if (opts.keepComment && peek.getKind() == TokenKind.COMMENT) {
+			program.docComment = Optional.of(peek.getLiteral());
+			consume();
+		}
 		parseStmts(program.block.stmts, EOF);
 		consume(); // must be EOF
 		clearStatus();
@@ -559,7 +593,7 @@ class CandyParser implements Parser {
 		block = new Stmt.Block();
 		parseStmts(block.stmts, RBRACE);
 		Token endPos = peek();
-		if (matchIf(RBRACE, true)) {
+		if (matchIf(RBRACE, true) && opts.keepEndPos) {
 			block.endPos = Optional.of(endPos.getPos());
 		}
 		return locate(location, block);
@@ -571,11 +605,12 @@ class CandyParser implements Parser {
 	 * @param stopAt Ensures the last token kind is the stopAt or EOF.
 	 */
 	private void parseStmts(List<Stmt> stmts, TokenKind stopAt) {
-		while (peekKind() != EOF) {
+		while (peek.getKind() != EOF) {
 			try {
 				Stmt stmt = parseStmt();
 				if (stmt == null) {
-					if (peekKind() == EOF || peekKind() == stopAt) {
+					TokenKind peekKind = peekKind();
+					if (peekKind == EOF || peekKind == stopAt) {
 						break;
 					}
 					unexpected(peek());
@@ -601,8 +636,9 @@ class CandyParser implements Parser {
 	 *        ]
 	 */
 	private Stmt parseStmt() {
-		loop: while (true) { 
-			TokenKind kind = peek().getKind();
+		String docComment = null;
+		loop: while (true) {
+			TokenKind kind = peek(false).getKind();
 			switch (kind) {
 				case IF:
 					return parseIfStmt();
@@ -623,17 +659,22 @@ class CandyParser implements Parser {
 				case RAISE:
 					return parseRaiseStmt();
 				case VAR:
-					return parseVarDef(false);
+					return parseVarDef(false, docComment);
 				case FUN:
-					return parseFunDef();
+					return parseFunDef(docComment);
 				case CLASS:
-					return parseClassDef(false);
+					return parseClassDef(false, docComment);
 				case IMPORT:
 					return parseImports();
 				case LBRACE:
-					return parseBlock();		
+					return parseBlock();
+				case COMMENT:
+					docComment = peek.getLiteral();
+					nextToken(false);
+					continue loop;
 				case SEMI:
 					consume();
+					docComment = null;
 					continue loop;
 				default:
 					if (isFirstSetOfExpr(kind)) {
@@ -690,7 +731,7 @@ class CandyParser implements Parser {
 	/**
 	 * ClassDef = "class" Name SuperClass ClassBody
 	 */
-	private Stmt parseClassDef(boolean isStatic) {
+	private Stmt parseClassDef(boolean isStatic, String docComment) {
 		boolean previousInClass = this.inClass;
 		boolean previousInStaticBlock = this.inStaticBlock;
 		boolean previousInLoop = this.inLoop;
@@ -718,6 +759,7 @@ class CandyParser implements Parser {
 				isStaticName || isStatic, name, superClass, 
 				new ArrayList<Stmt.FuncDef>()
 			);
+			classDef.docComment = Optional.ofNullable(docComment);
 			parseClassBody(classDef);		
 			return checkClass(locate(location, classDef));
 		} finally {
@@ -734,8 +776,13 @@ class CandyParser implements Parser {
 	@SuppressWarnings("fallthrough")
 	private void parseClassBody(Stmt.ClassDef classDef) {
 		matchIf(LBRACE, true);
-		loop: while (peekKind() != RBRACE && peekKind() != EOF) {
-			switch (peekKind()) {
+		String docComment = null;
+		loop: while (peek(false).getKind() != RBRACE && peek(false).getKind() != EOF) {
+			switch (peek.getKind()) {
+				case COMMENT:
+					docComment = peek.getLiteral();
+					consume();
+					continue loop;
 				case PRIVATE:
 				case PUBLIC:
 				case READER:
@@ -744,14 +791,14 @@ class CandyParser implements Parser {
 					break;
 				case FUN: 
 				case IDENTIFIER: {
-					Stmt.FuncDef method = parseMethod(false);
+					Stmt.FuncDef method = parseMethod(false, docComment);
 					if (!INITIALIZER_NAME.equals(method.name.get())) {
 						classDef.methods.add(method);
-						continue loop;
+						break;
 					}
 					if (!classDef.initializer.isPresent()) {
 						classDef.initializer = Optional.of(method);
-						continue loop;
+						break;
 					}
 					reportError(method.pos, "Duplicate initializer in the '%s' class.",
 						classDef.name
@@ -760,7 +807,7 @@ class CandyParser implements Parser {
 				}	
 				case STATIC: {
 					try {
-						parseStaticStatement(classDef);
+						parseStaticStatement(classDef, docComment);
 					} catch (ParserError e) {
 						synchronize(true, true, SEMI, STATIC, FUN, RBRACE);
 					}
@@ -768,9 +815,10 @@ class CandyParser implements Parser {
 				}		
 				default:
 					break loop;
-			}		
+			}
+			docComment = null;
 		}
-		if (matchIf(RBRACE, true)) {
+		if (matchIf(RBRACE, true) && opts.keepEndPos) {
 			classDef.endPos = Optional.of(previous().getPos());
 		}
 	}
@@ -828,7 +876,7 @@ class CandyParser implements Parser {
 	/**
 	 * StaticStmt = "static" ( Block | VarDef | ClassDef | Metnod )
 	 */
-	private void parseStaticStatement(Stmt.ClassDef classDef) {
+	private void parseStaticStatement(Stmt.ClassDef classDef, String docComment) {
 		consume(); // consume "static"
 		boolean previousInStaticBlock = this.inStaticBlock;
 		this.inStaticBlock = true;
@@ -845,17 +893,17 @@ class CandyParser implements Parser {
 				}
 				case FUN: {
 					classDef.createNewStaticBlockIfNotPresent();
-					classDef.staticBlock.get().stmts.add(parseMethod(true));
+					classDef.staticBlock.get().stmts.add(parseMethod(true, docComment));
 					break;
 				}
 				case VAR: {
 					classDef.createNewStaticBlockIfNotPresent();
-					classDef.staticBlock.get().stmts.add(parseVarDef(true));
+					classDef.staticBlock.get().stmts.add(parseVarDef(true, docComment));
 					break;
 				}
 				case CLASS: {
 					classDef.createNewStaticBlockIfNotPresent();
-					classDef.staticBlock.get().stmts.add(parseClassDef(true));
+					classDef.staticBlock.get().stmts.add(parseClassDef(true, docComment));
 					break;
 				}
 				
@@ -873,7 +921,7 @@ class CandyParser implements Parser {
 	/**
 	 * Method = [ "fun" ] <IDENTIFIER> Params [ "\n" ] Block
 	 */
-	private Stmt.FuncDef parseMethod(boolean isStatic) {
+	private Stmt.FuncDef parseMethod(boolean isStatic, String docComment) {
 		FunctionType previousFuncType = curFunctionType;
 		// We do not need to reset 'inLoop' here because we are inside of a
 		// class and the class statement will reset it.
@@ -889,10 +937,10 @@ class CandyParser implements Parser {
 			if (curFunctionType != FunctionType.INIT) {
 				body = toFuncBlock(body);
 			}
-			return checkFunc(
-				locate(name, 
-					new Stmt.FuncDef(isStatic, name.getLiteral(), params, body))
-			);
+			Stmt.FuncDef method = 
+				new Stmt.FuncDef(isStatic, name.getLiteral(), params, body);
+			method.docComment = Optional.ofNullable(docComment);
+			return checkFunc(locate(name, method));
 		} finally {
 			this.curFunctionType = previousFuncType;
 		}
@@ -1076,7 +1124,7 @@ class CandyParser implements Parser {
 	/**
 	 * VarDef = "var" <IDENTIFIER> [ "=" Expr ] <SEMI>
 	 */
-	private Stmt.VarDef parseVarDef(boolean isStatic) {
+	private Stmt.VarDef parseVarDef(boolean isStatic, String docComment) {
 		Token position = match(VAR);
 		Token varName = matchIf(IDENTIFIER, "Expecting a variable name.");
 		Expr initializer = null;
@@ -1084,15 +1132,16 @@ class CandyParser implements Parser {
 			initializer = parseExpr();
 		}
 		matchSEMI();
-		return locate(position, 
-			new Stmt.VarDef(isStatic, varName.getLiteral(), initializer)
-		);
+		Stmt.VarDef varDef = 
+			new Stmt.VarDef(isStatic, varName.getLiteral(), initializer);
+		varDef.docComment = Optional.ofNullable(docComment);
+		return locate(position, varDef);
 	}
 
 	/**
 	 * FunDef = "fun" Name Params Block
 	 */
-	private Stmt.FuncDef parseFunDef() {
+	private Stmt.FuncDef parseFunDef(String docComment) {
 		FunctionType previousFuncType = curFunctionType;
 		boolean previousInLoop = inLoop;
 		this.curFunctionType = FunctionType.FUNCTION;
@@ -1106,6 +1155,7 @@ class CandyParser implements Parser {
 			Stmt.FuncDef funcDef = locate(
 				location, new Stmt.FuncDef(isStaticFunc, name, params, body)
 			);
+			funcDef.docComment = Optional.ofNullable(docComment);
 			return checkFunc(funcDef);
 		} finally {
 			this.curFunctionType = previousFuncType;
@@ -1254,7 +1304,7 @@ class CandyParser implements Parser {
 	/**
 	 * AssertStmt = "assert" Expr [ ":" Expr ] <SEMI>
 	 */
-	private Stmt.Assert parseAssertStmt() {
+	private Stmt parseAssertStmt() {
 		Token location = match(ASSERT);
 		Expr expected = parseExpr();
 		Expr errorInfo = null;
@@ -1262,7 +1312,10 @@ class CandyParser implements Parser {
 			errorInfo = parseExpr();
 		}
 		matchSEMI();
-		return new Stmt.Assert(location.getPos(), expected, errorInfo);
+		if (opts.isDebugMode) {
+			return new Stmt.Assert(location.getPos(), expected, errorInfo);
+		}
+		return EMPTY_STMT;
 	}
 
 	/**

@@ -1,17 +1,20 @@
 package com.nano.candy.ast;
 
 import com.nano.candy.utils.Position;
+import java.util.Optional;
 
 public class Program extends ASTreeNode {
-
+	
 	public Stmt.Block block;
+	public Optional<String> docComment;
 
 	public Program() {
-		this.block = new Stmt.Block();
+		this(new Stmt.Block());
 	}
 	
 	public Program(Stmt.Block block) {
 		this.block = block;
+		this.docComment = Optional.empty();
 	}
 	
 	public void setPosition(Position basePos) {
