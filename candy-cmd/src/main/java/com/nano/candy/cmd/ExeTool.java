@@ -64,7 +64,8 @@ public class ExeTool implements CandyTool {
 	public static int run(Interpreter interpreter, 
 	                      File sourceFile, 
 	                      boolean exitIfError) throws IOException {
-		return run(interpreter,
+		return run(
+			interpreter,
 			sourceFile.getPath(), 
 			FileUtils.readText(sourceFile), 
 			exitIfError

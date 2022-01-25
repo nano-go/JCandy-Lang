@@ -16,8 +16,7 @@ public class InterpreterImpl implements Interpreter {
 	
 	@Override
 	public int execute(Chunk chunk) {
-		CandyThread mainThread = 
-			new CandyThread(Thread.currentThread(), options);
+		CandyThread mainThread = new CandyThread(Thread.currentThread(), options);
 		int code = 0;
 		try {
 			mainThread.run(chunk);

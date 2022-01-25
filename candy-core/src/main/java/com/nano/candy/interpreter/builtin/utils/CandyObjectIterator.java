@@ -8,7 +8,7 @@ import com.nano.candy.std.Names;
 import java.util.Iterator;
 
 /**
- * Help to iterate the iterable Candy object.
+ * You can use this to iterate over an iterable object.
  */
 public class CandyObjectIterator implements Iterator<CandyObject> {
 

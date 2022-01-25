@@ -12,7 +12,7 @@ public class ElementsUnpacker {
 	
 	/**
 	 * Fetches n elements and unpacks them into the target elements and returns 
-	 * them.
+	 * it.
 	 *
 	 * <p>This method is used for calling functions.
 	 *

@@ -24,13 +24,11 @@ import java.util.Set;
  * <p>In Candy language, everything is an object, including numbers, classes, 
  * functions and modules...
  * 
- * <p>There is a Candy class for each object and the Candy class is also an object.
- * It's an instance of the `Callable` class.
+ * <p>There is a Candy class for each object and the Candy class is also an object which 
+ * is an instance of the `Callable` class.
  *
- * <p>Each object has a symbol table used to store attributes of the object.
- *
- * <p>The {@code NativeClass} annotation helps we to create a CandyClass object 
- * correspoding a Java class. For more details see the {@code candy-cni-processor} 
+ * <p>The {@code NativeClass} annotation helps us to create a CandyClass object 
+ * correspoding to a Java class. For more details see the {@code candy-cni-processor} 
  * module and {@link com.nano.candy.interpreter.cni.NativeClassRegister}.
  */
 @NativeClass(name = "Object", isInheritable = true)
@@ -82,9 +80,15 @@ public class CandyObject {
 	
 	/**
 	 * If the constructor with no-args is present, the object can
-	 * be created in the Candy language level.
+	 * be created in the Candy language.
 	 *
-	 * This constructor is reflectly called by the CandyClass.
+	 * <p> For Example:
+	 * 
+	 * <pre>{@code
+	 * var instanceA = Object() // create an object. 
+	 * }</pre>
+	 *
+	 * <p> This constructor is reflectly called by the CandyClass.
 	 */
 	protected CandyObject() {
 		this(null);
@@ -96,11 +100,6 @@ public class CandyObject {
 	
 	/**
 	 * This method is provided for the Candy class.
-	 *
-	 * <p>When a class creates an object, it will set the class of the 
-	 * object by this method.
-	 *
-	 * @see CandyClass
 	 */
 	protected final void setCandyClass(CandyClass klass) {
 		this.klass = klass;
@@ -126,7 +125,7 @@ public class CandyObject {
 	}
 	
 	/**
-	 * Returns whether this object is a class.
+	 * Returns {@code true} if this object is a class, otherwise {@false}.
 	 */
 	public final boolean isCandyClass() {
 		return this instanceof CandyClass;
@@ -140,7 +139,7 @@ public class CandyObject {
 	}
 
 	/**
-	 * Returns whether this object is frozen.
+	 * Returns {@code true} this object is frozen, otherwise {@code false}.
 	 */
 	public final boolean frozen() {
 		return frozen;
@@ -157,21 +156,18 @@ public class CandyObject {
 	}
 	
 	/**
-	 * Returns whether this object is callable.
+	 * Returns {@code true} this object is callable, otherwise {@code false}.
 	 */
 	public boolean isCallable() {
 		return false;
 	}
 	
 	/**
-	 * Returns this object is an instance of the specified class.
+	 * Returns {@code true} if this object is an instance of the specified
+	 * class, otherwise {@code false}.
 	 *
 	 * <p>Note that if the specified object is not a class, A type error
 	 * will be thrown.
-	 *
-	 * @param klass The class object.
-	 *
-	 * @return True if this object is an instance of the specified class.
 	 */
 	public boolean isInstanceOf(CandyObject klass) {
 		return getCandyClass().isSubClassOf(TypeError.requiresClass(klass));
@@ -184,6 +180,15 @@ public class CandyObject {
 		return this.metaData.size();
 	}
 	
+	/**
+	 * Associates the specified name with the specified value.
+	 *
+	 * <p> If the attribute(name) is present, the attribute's modifiers will not be 
+	 * changed.
+	 *
+	 * <p> If the attribute is not present, A new attribute with the modifiers
+	 * {@code PUBLIC} will be inserted.
+	 */
 	public void setMetaData(String name, CandyObject value) {
 		if (metaData.isEmpty()) {
 			metaData = providesSymbolTable();
@@ -264,7 +269,7 @@ public class CandyObject {
 	
 	public final CandyObject callSetAttr(CNIEnv env, String name, CandyObject value) {
 		if (isBuiltinMetnod(SET_ATTR_MASK)) {
-			return ObjectHelper.preventNull(setAttr(env, name, value));
+			return ObjectHelper.preventNull(setAttrMet(env, name, value));
 		}
 		checkFrozen();
 		return getBoundMethod(Names.METHOD_SET_ATTR, SET_ATTR_MASK)

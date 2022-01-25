@@ -23,8 +23,7 @@ public class Main {
 				return;
 			}
 			
-			interpreter = InterpreterFactory
-				.newInterpreter(options.getInterpreterOptions());
+			interpreter = InterpreterFactory.newInterpreter(options.getInterpreterOptions());
 			options.getTool().run(interpreter, options);
 		} catch (Options.ParseException |
 		         CmdToolException |

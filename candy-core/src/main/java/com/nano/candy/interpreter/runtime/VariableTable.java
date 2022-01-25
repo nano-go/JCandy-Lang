@@ -8,6 +8,10 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
 
+/**
+ * This class is used to save the top variables of a file. It's a faster 
+ * implementation of the variables storage.
+ */
 public class VariableTable {
 	
 	private ArrayList<String> variableNames;
@@ -40,10 +44,6 @@ public class VariableTable {
 		return vars;
 	}
 	
-	/**
-	 * Sets the value to the variable specified by the index if the variable
-	 * exists.
-	 */
 	public boolean setVariableIfExists(int index, CandyObject value) {
 		if (vars[index] != null) {
 			vars[index].setValue(value);
@@ -51,12 +51,7 @@ public class VariableTable {
 		}
 		return false;
 	}
-
-	/**
-	 * Sets the value to the variable specified by the index.
-	 *
-	 * We assume the index is valid.
-	 */
+	
 	public void setVariable(int index, CandyObject value) {
 		if (vars[index] == null) {
 			vars[index] = Variable.getVariable(variableNames.get(index), value);
