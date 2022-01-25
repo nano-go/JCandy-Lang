@@ -1,0 +1,272 @@
+import "unit" as unit
+
+class FileTest : unit.TestCase {
+
+	fun init() {
+		@tmpDir = null
+	}
+
+	fun createTmpFile(fileName) {
+		var f = File.createFile(@tmpDir.path, fileName)
+		f.deleteOnExit()
+		return f
+	}
+
+	fun createTmpDir(fileName) {
+		var dir = File.mkdirs(@tmpDir.path, fileName)
+		dir.deleteOnExit()
+		return dir
+	}
+
+	fun assertExistingFile(file, type) {
+		var fileOrDir = type == "file"
+		@assertEquals(file.isFile(), fileOrDir)
+		@assertEquals(file.isDirectory(), !fileOrDir)
+		@assertTrue(file.exists())
+	}
+
+	fun setUp() {
+		if (@tmpDir != null) {
+			@tearDown()
+		}
+		@tmpDir = File.mkdir("./tmp")
+		@assertExistingFile(@tmpDir, "dir")
+		@tmpDir.deleteOnExit()
+	}
+
+	fun tearDown() {
+		@assertTrue(File.rm(@tmpDir.path, true))
+		@assertFalse(@tmpDir.exists())
+		@tmpDir = null
+	}
+
+	fun attrs_test() {
+
+		fun assertFileAttrs(expectedAttrs, file) {
+			@assertEquals(expectedAttrs["path"], file.path)
+			@assertEquals(expectedAttrs["name"], file.name)
+			@assertEquals(expectedAttrs["baseName"], file.baseName)
+			@assertEquals(expectedAttrs["suffix"], file.suffix)
+			@assertEquals(expectedAttrs["parent"], file.parent)
+		}
+
+		assertFileAttrs({
+			"path": ".", 
+			"name": ".",
+			"baseName": ".",
+			"suffix": "",
+			"parent": "",
+		}, File("./"))
+
+	}
+
+	fun name_test() {
+
+		fun assertName(expectedBaseName, expectedSuffix, path) {
+			@assertEquals(expectedBaseName, File(path).baseName)
+			@assertEquals(expectedSuffix, File(path).suffix)
+		}
+
+		assertName("", "", "")
+		assertName(".cd", "", ".cd")
+		assertName("123", "", "123.")
+		assertName(".", "", ".")
+		assertName("tmp", "cd", "tmp.cd")
+		assertName("dear", "png", "dear.png")
+		assertName("TODO", "txt", "TODO.txt")
+	}
+
+	fun join_test() {
+		var s= File.separator
+		@assertEquals("", File.join())
+		@assertEquals(s, File.join("", ""))
+		@assertEquals(s, File.join("", "", "", ""))
+		@assertEquals("${s}abc${s}e", File.join("", "abc", "e"))
+		@assertEquals("abc${s}e", File.join("abc", "e"))
+		@assertEquals("${s}abc${s}e", File.join("${s}abc", "e"))
+		@assertEquals("${s}abc${s}e", File.join("${s}abc${s}", "e"))
+		@assertEquals("${s}abc${s}e", File.join("${s}abc${s}", "${s}e"))
+		@assertEquals("${s}abc${s}e", File.join("${s}abc${s}", "${s}e"))
+		@assertEquals("abc${s}def", File.join("abc", "", "", "${s}def"))
+		@assertEquals("abc${s}def", File.join("abc", "", "", "", "def"))
+		@assertEquals("abc${s}def", File.join("abc${s}", "", "", "", "def"))
+
+		@expectedErrorRaised(TypeError, -> File.join(1, 2, 3))
+		@expectedErrorRaised(TypeError, -> File.join("", 1, 3))
+	}
+
+	fun io_test() {
+		var f = @createTmpFile("test.txt")
+		f.write("1234")
+		@assertEquals("1234", f.read())
+		@assertEquals(["1234"], f.readLines())
+		f.write("123\n\n123")
+		@assertEquals(["123", "", "123"], f.readLines())
+
+		var f = File(@tmpDir.path, "test_write.txtx")
+		f.deleteOnExit()
+		@expectedErrorRaised(IOError, -> f.read())
+		f.write("abcd")
+		@assertEquals("abcd", f.read())
+
+		var f = File(@tmpDir.path, "test_append.txt")
+		f.deleteOnExit()
+		@expectedErrorRaised(IOError, -> f.read())
+		f.append("abcd")
+		@assertEquals("abcd", f.read())
+		f.append("efg")
+		@assertEquals("abcdefg", f.read())
+	}
+
+	fun mv_test() {
+		// tmp
+		//  ├ dir1
+		//  ├ dir2
+		var dir1 = @createTmpDir("dir1")
+		var dir2 = @createTmpDir("dir2")
+
+		// Rename dir1 -> dirdir1
+		// tmp
+		//  ├ dirdir1
+		//  ├ dir2
+		var dirdir1 = File.mv(dir1.path, File.join(@tmpDir.path, "dirdir1"))
+		@assertExistingFile(dirdir1, "dir")
+		@assertEquals("dirdir1", dirdir1.name)
+		@assertFalse(dir1.exists())
+
+		// Move dirdir1 -> dir2/
+		// tmp
+		//  ├ dir2
+		//     ├ dirdir1
+		var old = dirdir1
+		dirdir1 = File.mv(dirdir1.path, dir2.path)
+		@assertExistingFile(dirdir1, "dir")
+		@assertEquals(File(dir2.path, "dirdir1"), dirdir1)
+		@assertFalse(old.exists())
+
+		// Create a file dir2/tmp.txt
+		// tmp
+		//  ├ dir2
+		//     ├ dirdir1
+		//     ├ tmp.txt
+		var tmpTxtFile = File.createFile(File.join(dir2.path, "tmp.txt"))
+		
+		// Rename dir2/dirdir1 -> dir2/tmp.txt
+		// Expected an error.
+		@expectedErrorRaised(IOError, -> File.mv(dirdir1.path, tmpTxtFile.path))
+
+		// Add the option 'r', Rename dir2/dirdir1 -> dir2/tmp.txt
+		// tmp
+		//  ├ dir2
+		//     ├ tmp.txt (old dirdir1, is a directory)
+		tmpTxtFile = File.mv(dirdir1.path, tmpTxtFile.path, "r")
+		@assertExistingFile(tmpTxtFile, "dir")
+		@assertEquals(File(dir2.path, "tmp.txt"), tmpTxtFile)
+		@assertFalse(dirdir1.exists())
+	}
+
+	fun cp_test() {
+		// tmp
+		//  ├ dir1
+		//     ├ 1.txt (abc)
+		//  ├ dir2
+		//     ├ 2.txt ()
+		var dir1 = @createTmpDir("dir1")
+		var dir2 = @createTmpDir("dir2")
+		var f1txt = File(dir1.path, "1.txt").write("abc")
+		var f2txt = File(dir2.path, "2.txt").write("")
+
+		// Copy dir1/1.txt -> dir2/2.txt
+		// tmp
+		//  ├ dir1
+		//     ├ 1.txt (abc)
+		//  ├ dir2
+		//     ├ 2.txt (abc)
+		File.cp(f1txt.path, f2txt.path, "f")
+		@assertExistingFile(f1txt, "file")
+		@assertExistingFile(f2txt, "file")
+		@assertEquals("1.txt", f1txt.name)
+		@assertEquals("2.txt", f2txt.name)
+		@assertEquals("abc", f1txt.read())
+		@assertEquals("abc", f2txt.read())
+
+		// Copy dir1/1.txt -> dir2/3.txt
+		// tmp
+		//  ├ dir1
+		//     ├ 1.txt (abc)
+		//  ├ dir2
+		//     ├ 2.txt (abc)
+		//     ├ 3.txt (abc)
+		var f3txt = File(dir2.path, "3.txt")
+		File.cp(f1txt.path, f3txt.path)
+		@assertExistingFile(f1txt, "file")
+		@assertExistingFile(f3txt, "file")
+		@assertEquals("1.txt", f1txt.name)
+		@assertEquals("3.txt", f3txt.name)
+		@assertEquals("abc", f1txt.read())
+		@assertEquals("abc", f3txt.read())
+
+		// Copy dir2 -> dir3
+		// Expected an error
+		@expectedErrorRaised(IOError, -> File.cp(dir2.path, File.join(@tmpDir.path, "dir3")))
+		var dir3 = @createTmpDir("dir3")
+		@expectedErrorRaised(IOError, -> File.cp(dir2.path, dir3.path))
+
+		// Copy dir2 -> dir3
+		// tmp
+		//  ├ dir1
+		//     ├ 1.txt (abc)
+		//  ├ dir2
+		//     ├ 2.txt (abc)
+		//     ├ 3.txt (abc)
+		//  ├ dir3
+		//     ├ dir2
+		//        ├ 2.txt (abc)
+		//        ├ 3.txt (abc)
+		File.cp(dir2.path, dir3.path, "r")
+		@assertEquals("abc", File(dir3.path, "dir2", "2.txt").read())
+		@assertEquals("abc", File(dir3.path, "dir2", "3.txt").read())
+
+		// Remove dir2
+		File.rm(dir2.path, "r")
+		@assertFalse(dir2.exists())
+
+		// Copy dir3 -> dir3/dir2
+		// tmp
+		//  ├ dir1
+		//     ├ 1.txt (abc)
+		//  ├ dir3
+		//     ├ dir2
+		//        ├ dir3
+		//           ├ dir2
+		//              ├ 2.txt (abc)
+		//              ├ 3.txt (abc)
+		//        ├ 2.txt (abc)
+		//        ├ 3.txt (abc)
+		File.cp(dir3.path, File.join(dir3.path, "dir2"), "r")
+		@assertEquals("abc", File(dir3.path, "dir2", "dir3", "dir2", "2.txt").read())
+		@assertEquals("abc", File(dir3.path, "dir2", "dir3", "dir2", "3.txt").read())
+	}
+
+	fun delete_text() {
+		var f = @createTmpFile("tmp1.txt")
+		@assertTrue(f.delete())
+		@assertFalse(f.exists())
+		
+		var d = @createTmpDir("tmpDir")
+		@assertTrue(f.delete())
+		d = @createTmpDir("tmpDir")
+		File(d.path, "a").createFile()
+		@expectedErrorRaised(IOError, -> d.delete())
+
+		var f = File(@tmpDir.path, "abc")
+		@assertFalse(f.delete())
+	}
+
+	fun list_test() {
+		var f = @createTmpFile("dir1")
+		@expectedErrorRaised(IOError, -> f.list())
+		@expectedErrorRaised(IOError, -> File(@tmpDir.path, "ddd").list())
+	}
+	
+}

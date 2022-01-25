@@ -6,6 +6,7 @@ import com.nano.candy.interpreter.builtin.ObjectClass;
 import com.nano.candy.interpreter.builtin.type.ArrayObj;
 import com.nano.candy.interpreter.builtin.type.BoolObj;
 import com.nano.candy.interpreter.builtin.type.DoubleObj;
+import com.nano.candy.interpreter.builtin.type.FileObj;
 import com.nano.candy.interpreter.builtin.type.IntegerObj;
 import com.nano.candy.interpreter.builtin.type.LockObj;
 import com.nano.candy.interpreter.builtin.type.MapObj;
@@ -63,9 +64,10 @@ public class BuiltinVariables {
 		defineClass(TupleObj.TUPLE_CLASS);
 		defineClass(ModuleObj.MOUDLE_CLASS);
 		defineClass(MapObj.MAP_CLASS);
+		defineClass(FileObj.FILE_CLASS);
 		defineClass(ObjectClass.getObjClass());
 	}
-
+	
 	private static void defineBuiltinErrorClasses() {
 		defineClass(ErrorObj.ERROR_CLASS);
 		defineClass(ModuleError.MODULE_ERROR_CLASS);
