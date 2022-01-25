@@ -185,6 +185,20 @@ class ArrayTest : unit.TestCase {
 			@expectedErrorRaised(ArgumentError, -> array(0..1).map((e,i,arr)->1))
 		}
 
+		fun flatMap_test() {
+			var arr = array(["0", 1, "2", 3])
+			@assertEquals(
+				["0", 0, 1, 1, "2", 2, 3, 3],
+				arr.flatMap((e, i) -> [e, i])
+			)
+			@assertEquals(
+				["0", "0", 1, 1, "2", "2", 3, 3],
+				arr.flatMap(e -> [e, e])
+			)
+			var arr = array(5..15)
+			indexParameter_test(arr, arr.flatMap)
+		}
+
 		/**
 		 * Tests Array#foreach
 		 */
@@ -247,9 +261,10 @@ class ArrayTest : unit.TestCase {
 			@assertEquals(3, arr.min())
 			@assertEquals(14, arr.min((x, y) -> y-x))
 		}
-
+	
 		filter_test()
 		map_test()
+		flatMap_test()
 		foreach_test()
 		reduce_test()
 		max_min_test()
@@ -270,5 +285,37 @@ class ArrayTest : unit.TestCase {
 		@assertEquals(1, arr.pop())
 		@expectedErrorRaised(StateError, -> arr.pop())
 	}
+
+
+	fun shift_unshift_test() {
+		var arr = array(0..5)
+		@assertEquals(0, arr.shift())
+		@assertEquals(1, arr.shift())
+		@assertEquals(2, arr.shift())
+		@assertEquals(3, arr.shift())
+		@assertEquals(1, arr.length())
+		arr.unshift(1)
+		@assertEquals([1, 4], arr)
+		arr.unshift(2)
+		@assertEquals([2, 1, 4], arr)
+		@assertEquals(3, arr.length())
+	}
+
+	fun join_test() {
+		@assertEquals(", ".join(array(0..15)), array(0..15).join(", "))
+	}
+
+	fun slice_test() {
+		var arr = [0, 1, 2, 3, 4]
+		@assertEquals(arr[0..2], arr.slice(0, 2))
+		@assertEquals(arr[2..-1], arr.slice(2))
+		@assertEquals(arr[2..0], arr.slice(2, 0))
+		@assertEquals(arr[2..-2], arr.slice(2, -2))
+		@assertEquals(arr[-2..-1], arr.slice(-2))
+		@assertEquals(arr[-2..-1], arr.slice(-2..-1))
+		@assertEquals(arr[0..-1], arr.slice(0..-1))
+		@assertEquals(arr[0..3], arr.slice(0..3))
+	}
+
 
 }
